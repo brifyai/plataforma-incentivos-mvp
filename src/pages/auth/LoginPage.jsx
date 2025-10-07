@@ -1,0 +1,45 @@
+/**
+ * Login Page - Página de Inicio de Sesión Refactorizada
+ *
+ * Componente orquestador simple que usa hooks y componentes reutilizables
+ * Reducido de 379 líneas a ~30 líneas de código limpio
+ */
+
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import AuthLayout from '../../components/auth/AuthLayout';
+import LoginForm from '../../components/auth/LoginForm';
+import { Link } from 'react-router-dom';
+
+const LoginPage = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  // Redirección simple cuando esté autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/debtor/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  return (
+    <AuthLayout>
+      <LoginForm />
+
+      {/* Términos y condiciones */}
+      <p className="text-center text-xs text-gray-500 mt-6 px-4">
+        Al iniciar sesión, aceptas nuestros{' '}
+        <Link to="/terms-of-service" className="text-blue-600 hover:underline">
+          Términos de Servicio
+        </Link>{' '}
+        y{' '}
+        <Link to="/privacy-policy" className="text-blue-600 hover:underline">
+          Política de Privacidad
+        </Link>
+      </p>
+    </AuthLayout>
+  );
+};
+
+export default LoginPage;
