@@ -41,18 +41,26 @@ const AuthCallbackPage = () => {
     handleCallback();
   }, [handleOAuthCallback, navigate]);
 
-  // Redirigir cuando el perfil esté disponible
+  // Redirigir cuando el perfil esté disponible y tenga rol asignado
   useEffect(() => {
-    if (callbackProcessed && !loading && user && profile) {
+    if (callbackProcessed && !loading && user && profile && profile.role) {
+      console.log('🔄 Redirigiendo usuario OAuth con rol:', profile.role);
+
       if (profile.role === 'god_mode') {
+        console.log('👑 Redirigiendo a dashboard de administrador');
         navigate('/admin/dashboard');
       } else if (profile.role === 'debtor') {
+        console.log('👤 Redirigiendo a dashboard de deudor');
         navigate('/personas/dashboard');
       } else if (profile.role === 'company') {
+        console.log('🏢 Redirigiendo a dashboard de empresa');
         navigate('/empresa/dashboard');
       } else {
+        console.warn('⚠️ Rol desconocido, redirigiendo al home:', profile.role);
         navigate('/');
       }
+    } else if (callbackProcessed && !loading && user && profile && !profile.role) {
+      console.warn('⚠️ Usuario autenticado pero sin rol asignado, esperando...');
     }
   }, [callbackProcessed, loading, user, profile, navigate]);
 
