@@ -9,6 +9,13 @@ import { Link } from 'react-router-dom';
 import { Card, Button, Input, Modal, LoadingSpinner } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
 import { updateCompanyProfile, updateUserProfile, getCompanyAnalytics } from '../../services/databaseService';
+import {
+  getCompanyVerification,
+  upsertCompanyVerification,
+  uploadVerificationDocument,
+  submitVerificationForReview,
+  VERIFICATION_STATUS
+} from '../../services/verificationService';
 import Swal from 'sweetalert2';
 import PaymentTools from './components/PaymentTools';
 import {
@@ -31,6 +38,11 @@ import {
   Activity,
   CheckCircle,
   AlertCircle,
+  Upload,
+  Send,
+  Eye,
+  Clock,
+  RefreshCw,
 } from 'lucide-react';
 
 const ProfilePage = () => {
@@ -46,6 +58,13 @@ const ProfilePage = () => {
     newPassword: '',
     confirmPassword: ''
   });
+
+  // Verification state
+  const [verification, setVerification] = useState(null);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const [formData, setFormData] = useState({
     company_name: '',
     contact_email: '',
@@ -58,6 +77,18 @@ const ProfilePage = () => {
 
   // Determinar si es modo administrador
   const isGodMode = profile?.role === 'god_mode';
+
+  // Debug logging
+  console.log('🔍 ProfilePage Debug:', {
+    user: user?.email,
+    profileRole: profile?.role,
+    isGodMode,
+    hasCompany: !!profile?.company,
+    companyId: profile?.company?.id,
+    shouldShowVerification: !isGodMode && !!profile?.company
+  });
+
+
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -107,6 +138,32 @@ const ProfilePage = () => {
     };
 
     loadAnalytics();
+  }, [profile, isGodMode]);
+
+  // Load verification data for companies
+  useEffect(() => {
+    const loadVerification = async () => {
+      if (!isGodMode && profile?.company?.id) {
+        try {
+          setVerificationLoading(true);
+          const { verification: data, error } = await getCompanyVerification(profile.company.id);
+
+          if (error) {
+            console.error('Error loading verification:', error);
+          } else {
+            setVerification(data);
+          }
+        } catch (error) {
+          console.error('Error loading verification:', error);
+        } finally {
+          setVerificationLoading(false);
+        }
+      } else {
+        setVerificationLoading(false);
+      }
+    };
+
+    loadVerification();
   }, [profile, isGodMode]);
 
   const handleSave = async () => {
@@ -299,12 +356,183 @@ const ProfilePage = () => {
     }
   };
 
+  // Verification functions
+  const handleDocumentUpload = async (documentType, file) => {
+    try {
+      setUploading(true);
+
+      if (!profile?.company?.id) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo encontrar la información de la empresa',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#EF4444'
+        });
+        return;
+      }
+
+      const { url, error } = await uploadVerificationDocument(profile.company.id, documentType, file);
+
+      if (error) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al subir documento',
+          text: error,
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#EF4444'
+        });
+        return;
+      }
+
+      // Update verification data
+      const updatedVerification = {
+        ...verification,
+        [documentType === 'certificado_vigencia' ? 'certificado_vigencia_url' : 'informe_equifax_url']: url,
+        status: verification?.status || VERIFICATION_STATUS.PENDING,
+        updated_at: new Date().toISOString()
+      };
+
+      const { verification: savedVerification, error: saveError } = await upsertCompanyVerification(profile.company.id, updatedVerification);
+
+      if (saveError) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al guardar',
+          text: 'El documento se subió pero no se pudo guardar la información',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#EF4444'
+        });
+        return;
+      }
+
+      setVerification(savedVerification);
+
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Documento subido!',
+        text: `El ${documentType === 'certificado_vigencia' ? 'Certificado de Vigencia' : 'Informe Equifax'} se ha subido exitosamente`,
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#3B82F6',
+        timer: 3000,
+        timerProgressBar: true
+      });
+
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al subir el documento. Por favor, intenta de nuevo.',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#EF4444'
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleViewDocument = (documentUrl, documentName) => {
+    if (documentUrl) {
+      window.open(documentUrl, '_blank');
+    } else {
+      Swal.fire({
+        icon: 'info',
+        title: 'Documento no disponible',
+        text: `El ${documentName} aún no ha sido subido`,
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#3B82F6'
+      });
+    }
+  };
+
+  const handleSubmitVerification = async () => {
+    try {
+      if (!profile?.company?.id) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo encontrar la información de la empresa',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#EF4444'
+        });
+        return;
+      }
+
+      const { success, error } = await submitVerificationForReview(profile.company.id);
+
+      if (!success) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al enviar',
+          text: error,
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#EF4444'
+        });
+        return;
+      }
+
+      // Reload verification data
+      const { verification: updatedVerification, error: loadError } = await getCompanyVerification(profile.company.id);
+
+      if (!loadError && updatedVerification) {
+        setVerification(updatedVerification);
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Verificación enviada!',
+        text: 'Tu solicitud de verificación ha sido enviada para revisión. Te notificaremos cuando sea aprobada.',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#3B82F6',
+        timer: 5000,
+        timerProgressBar: true
+      });
+
+    } catch (error) {
+      console.error('Error submitting verification:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al enviar la verificación. Por favor, intenta de nuevo.',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#EF4444'
+      });
+    }
+  };
+
+  const getVerificationStatusInfo = (status) => {
+    switch (status) {
+      case VERIFICATION_STATUS.APPROVED:
+        return { color: 'green', text: 'Aprobado', icon: CheckCircle };
+      case VERIFICATION_STATUS.REJECTED:
+        return { color: 'red', text: 'Rechazado', icon: AlertCircle };
+      case VERIFICATION_STATUS.UNDER_REVIEW:
+        return { color: 'yellow', text: 'En Revisión', icon: Clock };
+      case VERIFICATION_STATUS.SUBMITTED:
+        return { color: 'blue', text: 'Enviado', icon: Send };
+      default:
+        return { color: 'gray', text: 'Pendiente', icon: Clock };
+    }
+  };
+
   if (analyticsLoading && !isGodMode) {
     return <LoadingSpinner fullScreen />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* DEBUG: Force show verification section */}
+      <div style={{ background: 'red', color: 'white', padding: '20px', margin: '20px', border: '2px solid yellow' }}>
+        <h1>DEBUG: ProfilePage is rendering</h1>
+        <p>isGodMode: {isGodMode ? 'true' : 'false'}</p>
+        <p>hasCompany: {!!profile?.company ? 'true' : 'false'}</p>
+        <p>companyId: {profile?.company?.id || 'null'}</p>
+        <p>shouldShowVerification: {!isGodMode && !!profile?.company ? 'true' : 'false'}</p>
+        <p>verification: {verification ? 'loaded' : 'null'}</p>
+        <p>verificationLoading: {verificationLoading ? 'true' : 'false'}</p>
+      </div>
+
       {/* Modern Hero Section */}
       <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl mx-4 mt-6 p-8 text-white shadow-2xl relative overflow-hidden">
         {/* Background Pattern */}
@@ -363,6 +591,212 @@ const ProfilePage = () => {
                 <PaymentTools />
               </div>
             )}
+
+            {/* Verification Section - Only for Companies */}
+            {true && (  // TEMPORARILY FORCE SHOW FOR DEBUGGING
+              <div className="mb-8">
+                <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl text-white">
+                        <Shield className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">
+                          Verificación de Empresa (DEBUG: FORCE SHOW)
+                        </h2>
+                        <p className="text-gray-600">
+                          Sube tus documentos para verificar tu empresa
+                        </p>
+                      </div>
+                    </div>
+
+                    {verification && (
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const statusInfo = getVerificationStatusInfo(verification.status);
+                          const StatusIcon = statusInfo.icon;
+                          return (
+                            <>
+                              <StatusIcon className={`w-5 h-5 text-${statusInfo.color}-500`} />
+                              <span className={`text-sm font-semibold text-${statusInfo.color}-600`}>
+                                {statusInfo.text}
+                              </span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                {verificationLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <LoadingSpinner />
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Document Upload Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Certificado de Vigencia */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <FileText className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Certificado de Vigencia</h3>
+                            <p className="text-sm text-gray-600">Documento que certifica la existencia legal de tu empresa</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) handleDocumentUpload('certificado_vigencia', file);
+                            }}
+                            className="hidden"
+                            id="certificado-upload"
+                            disabled={uploading}
+                          />
+
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => document.getElementById('certificado-upload').click()}
+                              loading={uploading}
+                              disabled={uploading}
+                              className="flex-1 bg-white/50"
+                              leftIcon={<Upload className="w-4 h-4" />}
+                            >
+                              {verification?.certificado_vigencia_url ? 'Cambiar' : 'Subir'}
+                            </Button>
+
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleViewDocument(verification?.certificado_vigencia_url, 'Certificado de Vigencia')}
+                              disabled={!verification?.certificado_vigencia_url}
+                              className="bg-white/50"
+                              leftIcon={<Eye className="w-4 h-4" />}
+                            >
+                              Ver
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Informe Equifax */}
+                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-purple-100 rounded-lg">
+                            <TrendingUp className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Informe Empresarial Equifax</h3>
+                            <p className="text-sm text-gray-600">Análisis crediticio y de riesgo empresarial</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) handleDocumentUpload('informe_equifax', file);
+                            }}
+                            className="hidden"
+                            id="equifax-upload"
+                            disabled={uploading}
+                          />
+
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => document.getElementById('equifax-upload').click()}
+                              loading={uploading}
+                              disabled={uploading}
+                              className="flex-1 bg-white/50"
+                              leftIcon={<Upload className="w-4 h-4" />}
+                            >
+                              {verification?.informe_equifax_url ? 'Cambiar' : 'Subir'}
+                            </Button>
+
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleViewDocument(verification?.informe_equifax_url, 'Informe Equifax')}
+                              disabled={!verification?.informe_equifax_url}
+                              className="bg-white/50"
+                              leftIcon={<Eye className="w-4 h-4" />}
+                            >
+                              Ver
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    {verification?.certificado_vigencia_url && verification?.informe_equifax_url && (
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-green-900 mb-1">¡Documentos completos!</h3>
+                            <p className="text-sm text-green-700">
+                              Ambos documentos han sido subidos. Ahora puedes enviar tu verificación para revisión.
+                            </p>
+                          </div>
+
+                          <Button
+                            variant="gradient"
+                            onClick={handleSubmitVerification}
+                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                            leftIcon={<Send className="w-4 h-4" />}
+                          >
+                            Enviar para Revisión
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Status Messages */}
+                    {verification?.status === VERIFICATION_STATUS.APPROVED && (
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 border border-green-100">
+                        <div className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <div>
+                            <p className="font-semibold text-green-900">¡Verificación Aprobada!</p>
+                            <p className="text-sm text-green-700">Tu empresa ha sido verificada exitosamente.</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {verification?.status === VERIFICATION_STATUS.REJECTED && (
+                      <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-2xl p-4 border border-red-100">
+                        <div className="flex items-center gap-3">
+                          <AlertCircle className="w-5 h-5 text-red-600" />
+                          <div>
+                            <p className="font-semibold text-red-900">Verificación Rechazada</p>
+                            <p className="text-sm text-red-700">
+                              {verification.rejection_reason || 'Contacta al soporte para más información.'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            </div>
+            )}
+
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">

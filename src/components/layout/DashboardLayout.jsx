@@ -86,7 +86,7 @@ const DashboardLayout = ({ children }) => {
   // Menú para empresa
   const companyMenu = [
     { name: 'Dashboard', path: '/empresa/dashboard', icon: Home, description: 'Vista general' },
-    { name: 'Perfil', path: '/empresa/perfil', icon: User, description: 'Editar perfil' },
+    { name: 'Perfil', path: '/empresa/perfil', icon: User, description: 'Editar perfil y verificación' },
     { name: 'Propuestas', path: '/empresa/propuestas', icon: Users, description: 'Propuestas de pago' },
     { name: 'Transferencias', path: '/empresa/transferencias', icon: FileText, description: 'Transferencias bancarias' },
     { name: 'Crear Oferta', path: '/empresa/ofertas', icon: CreditCard, description: 'Crear ofertas de pago' },
@@ -150,13 +150,7 @@ const DashboardLayout = ({ children }) => {
     );
   }
 
-  // Debug logging removed - was causing console spam
-  // console.log('🎯 DashboardLayout render:', {
-  //   pathname: location.pathname,
-  //   displayMode,
-  //   menuItemsCount: menuItems.length,
-  //   profileRole: profile?.role
-  // });
+  // Debug logging removed - issue resolved
 
   const isActive = (path) => {
     return location.pathname === path;

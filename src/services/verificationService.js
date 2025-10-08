@@ -37,29 +37,80 @@ export const DOCUMENT_TYPES = {
  */
 export const getCompanyVerification = async (companyId) => {
   try {
+    // First get the basic verification data with a simpler query
     const { data, error } = await supabase
       .from('company_verifications')
       .select(`
-        *,
-        assigned_to_user:assigned_to (
-          id,
-          full_name,
-          email
-        ),
-        reviewed_by_user:reviewed_by (
-          id,
-          full_name,
-          email
-        )
+        id,
+        company_id,
+        status,
+        certificado_vigencia_url,
+        informe_equifax_url,
+        submitted_at,
+        approved_at,
+        rejected_at,
+        assigned_to,
+        reviewed_by,
+        decision_notes,
+        rejection_reason,
+        correction_requests,
+        correction_deadline,
+        created_at,
+        updated_at
       `)
       .eq('company_id', companyId)
       .single();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No verification found - this is normal for new companies
+        return { verification: null, error: null };
+      }
+      console.error('Error querying company_verifications:', error);
       return { verification: null, error: error.message };
     }
 
-    return { verification: data, error: null };
+    // If no verification found, return null (this is expected for new companies)
+    if (!data) {
+      return { verification: null, error: null };
+    }
+
+    let verification = { ...data };
+
+    // If there are assigned_to or reviewed_by users, fetch their info separately
+    if (data.assigned_to) {
+      try {
+        const { data: assignedUser, error: assignedError } = await supabase
+          .from('users')
+          .select('id, full_name, email')
+          .eq('id', data.assigned_to)
+          .single();
+
+        if (!assignedError && assignedUser) {
+          verification.assigned_to_user = assignedUser;
+        }
+      } catch (userError) {
+        console.warn('Could not fetch assigned user info:', userError.message);
+      }
+    }
+
+    if (data.reviewed_by) {
+      try {
+        const { data: reviewedUser, error: reviewedError } = await supabase
+          .from('users')
+          .select('id, full_name, email')
+          .eq('id', data.reviewed_by)
+          .single();
+
+        if (!reviewedError && reviewedUser) {
+          verification.reviewed_by_user = reviewedUser;
+        }
+      } catch (userError) {
+        console.warn('Could not fetch reviewed user info:', userError.message);
+      }
+    }
+
+    return { verification, error: null };
   } catch (error) {
     console.error('Error getting company verification:', error);
     return { verification: null, error: 'Error al obtener verificación' };
@@ -106,6 +157,25 @@ export const upsertCompanyVerification = async (companyId, data) => {
  */
 export const uploadVerificationDocument = async (companyId, documentType, file) => {
   try {
+    // Verificar que el bucket existe
+    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+
+    if (bucketError) {
+      return {
+        url: null,
+        error: 'Error de configuración: No se puede acceder al almacenamiento. Contacte al administrador.'
+      };
+    }
+
+    const verificationBucket = buckets.find(b => b.name === 'verification-documents');
+
+    if (!verificationBucket) {
+      return {
+        url: null,
+        error: 'Error de configuración: Bucket de documentos no encontrado. El administrador debe crear el bucket "verification-documents" en Supabase Storage.'
+      };
+    }
+
     // Generar nombre único para el archivo
     const fileExt = file.name.split('.').pop();
     const fileName = `${companyId}/${documentType}_${Date.now()}.${fileExt}`;
@@ -119,7 +189,11 @@ export const uploadVerificationDocument = async (companyId, documentType, file) 
       });
 
     if (error) {
-      return { url: null, error: error.message };
+      console.error('Storage upload error:', error);
+      return {
+        url: null,
+        error: `Error al subir archivo: ${error.message}`
+      };
     }
 
     // Obtener URL pública
@@ -130,7 +204,10 @@ export const uploadVerificationDocument = async (companyId, documentType, file) 
     return { url: publicUrl, fileName, error: null };
   } catch (error) {
     console.error('Error uploading verification document:', error);
-    return { url: null, error: 'Error al subir documento' };
+    return {
+      url: null,
+      error: 'Error al subir documento. Verifique su conexión e intente nuevamente.'
+    };
   }
 };
 

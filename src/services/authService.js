@@ -1329,43 +1329,11 @@ export const setupCompanyBankAccount = async (bankAccountData) => {
       'santander light': '037'
     };
 
-    // Registrar como beneficiario en Mercado Pago
-    try {
-      const mercadoPagoService = (await import('./integrations/mercadopago.service.js')).default;
-
-      const bankName = bankAccountData.bankName.toLowerCase();
-      const bankId = bankCodeMap[bankName] || '000';
-
-      // Crear beneficiario en Mercado Pago
-      const beneficiaryResult = await mercadoPagoService.createPayout({
-        amount: 1000, // Monto mínimo para registro
-        currency: 'CLP',
-        beneficiary: {
-          firstName: company.company_name.split(' ')[0],
-          lastName: company.company_name.split(' ').slice(1).join(' ') || 'Empresa',
-          email: company.contact_email,
-          phone: company.contact_phone,
-          identificationType: 'RUT',
-          identificationNumber: company.rut,
-          bankId: bankId,
-          accountType: bankAccountData.accountType,
-          accountNumber: bankAccountData.accountNumber
-        },
-        description: `Registro de beneficiario - ${company.company_name}`,
-        externalReference: `beneficiary-${user.id}-${Date.now()}`
-      });
-
-      if (beneficiaryResult.success) {
-        mercadopagoBeneficiaryId = beneficiaryResult.payoutId;
-        console.log('✅ Beneficiario registrado en Mercado Pago:', mercadopagoBeneficiaryId);
-      } else {
-        console.warn('⚠️ No se pudo registrar beneficiario en Mercado Pago:', beneficiaryResult.error);
-        // Continuar sin el registro en MP, pero guardar los datos bancarios
-      }
-    } catch (mpError) {
-      console.warn('⚠️ Error registrando beneficiario en Mercado Pago:', mpError.message);
-      // Continuar sin el registro en MP
-    }
+    // Nota: Mercado Pago no requiere registro previo de beneficiarios.
+    // Los datos del beneficiario se proporcionan con cada solicitud de pago.
+    // Simplemente marcamos como "registrado" ya que tenemos la información necesaria.
+    mercadopagoBeneficiaryId = `verified-${user.id}-${Date.now()}`;
+    console.log('✅ Beneficiario listo para Mercado Pago (no requiere registro previo)');
 
     // Guardar información bancaria
     bankAccountInfo = {
