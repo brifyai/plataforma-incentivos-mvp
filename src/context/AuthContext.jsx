@@ -17,6 +17,7 @@ import {
   onAuthStateChange,
   updatePassword,
   sendPasswordResetEmail,
+  resetPasswordWithToken,
   signInWithGoogle,
   handleAuthCallback,
 } from '../services/authService';
@@ -422,7 +423,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Actualiza la contraseña del usuario
+   * Actualiza la contraseña del usuario autenticado
    */
   const changePassword = async (newPassword) => {
     try {
@@ -439,6 +440,31 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       const errorMessage = 'Error al actualizar contraseña.';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Resetea la contraseña usando un token
+   */
+  const resetPasswordToken = async (token, newPassword) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { error } = await resetPasswordWithToken(token, newPassword);
+
+      if (error) {
+        setError(error);
+        return { success: false, error };
+      }
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = 'Error al resetear contraseña.';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -484,6 +510,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     resetPassword,
+    resetPasswordToken,
     changePassword,
     refreshProfile,
     loadUserProfile: loadUserProfileExternally,

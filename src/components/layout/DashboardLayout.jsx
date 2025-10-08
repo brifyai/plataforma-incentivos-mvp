@@ -37,8 +37,9 @@ const DashboardLayout = ({ children }) => {
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -53,6 +54,42 @@ const DashboardLayout = ({ children }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Handle mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 1024; // lg breakpoint
+      setIsMobile(mobile);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle sidebar state based on device type
+  useEffect(() => {
+    if (isMobile) {
+      // On mobile, always start closed
+      setSidebarOpen(false);
+    } else {
+      // On desktop, always start open
+      setSidebarOpen(true);
+    }
+  }, [isMobile]);
+
+  // Handle body scroll lock when mobile sidebar is open
+  useEffect(() => {
+    if (isMobile && sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobile, sidebarOpen]);
 
 
   // Menú para admin
@@ -87,6 +124,7 @@ const DashboardLayout = ({ children }) => {
   const companyMenu = [
     { name: 'Dashboard', path: '/empresa/dashboard', icon: Home, description: 'Vista general' },
     { name: 'Perfil', path: '/empresa/perfil', icon: User, description: 'Editar perfil y verificación' },
+    { name: 'Clientes', path: '/empresa/clientes', icon: Users, description: 'Gestión de deudores' },
     { name: 'Propuestas', path: '/empresa/propuestas', icon: Users, description: 'Propuestas de pago' },
     { name: 'Transferencias', path: '/empresa/transferencias', icon: FileText, description: 'Transferencias bancarias' },
     { name: 'Crear Oferta', path: '/empresa/ofertas', icon: CreditCard, description: 'Crear ofertas de pago' },
@@ -183,9 +221,11 @@ const DashboardLayout = ({ children }) => {
             <div className="flex items-center gap-6">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-3 rounded-xl hover:bg-secondary-100/80 transition-all duration-200 hover:scale-105"
+                className="lg:hidden p-3 rounded-xl hover:bg-secondary-100/80 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 bg-white/90 shadow-soft"
+                aria-label={sidebarOpen ? "Cerrar menú" : "Abrir menú"}
+                aria-expanded={sidebarOpen}
               >
-                {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {sidebarOpen ? <X className="w-6 h-6 text-secondary-700" /> : <Menu className="w-6 h-6 text-secondary-700" />}
               </button>
 
               <Link
@@ -278,12 +318,24 @@ const DashboardLayout = ({ children }) => {
       )}
 
       <div className="relative">
+        {/* Mobile Backdrop */}
+        {isMobile && sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Sidebar */}
         <aside
           className={`
             fixed top-20 left-0 h-[calc(100vh-5rem)] w-72
-            transform transition-all duration-500 ease-out z-40
-            translate-x-0
+            transform transition-all duration-300 ease-out z-40
+            ${isMobile
+              ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full')
+              : 'lg:translate-x-0'
+            }
           `}
           role="navigation"
           aria-label="Menú de navegación principal"
@@ -309,7 +361,7 @@ const DashboardLayout = ({ children }) => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={() => isMobile && setSidebarOpen(false)}
                     className={`
                       group flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300
                       hover:scale-[1.02] hover:shadow-medium
@@ -351,7 +403,10 @@ const DashboardLayout = ({ children }) => {
 
         {/* Main Content */}
         <main
-          className="ml-72 p-6 lg:p-8 relative"
+          className={`
+            transition-all duration-300 ease-out p-6 lg:p-8 relative
+            ${isMobile ? 'ml-0' : 'lg:ml-72'}
+          `}
           role="main"
           aria-label="Contenido principal"
         >
@@ -367,7 +422,11 @@ const DashboardLayout = ({ children }) => {
 
       {/* Footer */}
       <footer
-        className="bg-white/60 backdrop-blur-sm border-t border-secondary-200/50 mt-16 lg:ml-72"
+        className={`
+          bg-white/60 backdrop-blur-sm border-t border-secondary-200/50 mt-16
+          transition-all duration-300 ease-out
+          ${isMobile ? 'ml-0' : 'lg:ml-72'}
+        `}
         role="contentinfo"
         aria-label="Pie de página"
       >

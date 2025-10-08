@@ -250,6 +250,33 @@ CREATE INDEX idx_notifications_status ON public.notifications(status);
 CREATE INDEX idx_notifications_created_at ON public.notifications(created_at DESC);
 
 -- =============================================
+-- TABLA: proposals
+-- Propuestas de pago personalizadas (deudor -> empresa)
+-- =============================================
+CREATE TABLE public.proposals (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+    debt_id UUID NOT NULL REFERENCES public.debts(id) ON DELETE CASCADE,
+    proposed_amount DECIMAL(15, 2) NOT NULL,
+    payment_plan JSONB, -- Array de pagos propuestos
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'responded', 'accepted', 'rejected'
+    company_response TEXT,
+    counter_amount DECIMAL(15, 2), -- Contraoferta de la empresa
+    accepted BOOLEAN DEFAULT FALSE,
+    responded_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices para proposals
+CREATE INDEX idx_proposals_user_id ON public.proposals(user_id);
+CREATE INDEX idx_proposals_company_id ON public.proposals(company_id);
+CREATE INDEX idx_proposals_debt_id ON public.proposals(debt_id);
+CREATE INDEX idx_proposals_status ON public.proposals(status);
+
+-- =============================================
 -- TABLA: conversations
 -- Conversaciones entre usuarios y empresas
 -- =============================================
@@ -316,6 +343,7 @@ ALTER TABLE public.agreements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallet_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.proposals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
@@ -422,6 +450,41 @@ CREATE POLICY "Companies can view conversations for their company" ON public.con
         )
     );
 
+-- Políticas para proposals
+CREATE POLICY "Users can view their own proposals" ON public.proposals
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create proposals for their debts" ON public.proposals
+    FOR INSERT WITH CHECK (
+        auth.uid() = user_id
+        AND EXISTS (
+            SELECT 1 FROM public.debts
+            WHERE debts.id = proposals.debt_id
+            AND debts.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can update their own proposals" ON public.proposals
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Companies can view proposals for their company" ON public.proposals
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.companies
+            WHERE companies.id = proposals.company_id
+            AND companies.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Companies can update proposals for their company" ON public.proposals
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM public.companies
+            WHERE companies.id = proposals.company_id
+            AND companies.user_id = auth.uid()
+        )
+    );
+
 -- Políticas para messages
 CREATE POLICY "Users can view messages in their conversations" ON public.messages
     FOR SELECT USING (
@@ -483,6 +546,9 @@ CREATE TRIGGER update_agreements_updated_at BEFORE UPDATE ON public.agreements
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON public.payments
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_proposals_updated_at BEFORE UPDATE ON public.proposals
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_conversations_updated_at BEFORE UPDATE ON public.conversations

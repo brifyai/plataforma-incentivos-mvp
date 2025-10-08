@@ -1,23 +1,21 @@
 /**
  * Hook personalizado para Mercado Pago
- * 
+ *
  * Proporciona funcionalidades para procesar pagos usando Mercado Pago,
  * crear preferencias de pago, y manejar transacciones.
- * 
+ *
  * @module useMercadoPago
  */
 
 import { useState, useCallback, useEffect } from 'react';
 import mercadoPagoService from '../../services/integrations/mercadopago.service';
 import { useAuth } from '../../context/AuthContext';
-import { useNotification } from '../../context/NotificationContext';
 
 export const useMercadoPago = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isConfigured, setIsConfigured] = useState(false);
   const { user } = useAuth();
-  const { addNotification } = useNotification();
 
   /**
    * Verifica si Mercado Pago está configurado al montar el hook
@@ -32,10 +30,6 @@ export const useMercadoPago = () => {
    */
   const createPaymentPreference = useCallback(async (paymentData) => {
     if (!isConfigured) {
-      addNotification({
-        type: 'error',
-        message: 'Mercado Pago no está configurado'
-      });
       return { success: false, error: 'Mercado Pago no está configurado' };
     }
 
@@ -45,37 +39,24 @@ export const useMercadoPago = () => {
     try {
       const result = await mercadoPagoService.createPaymentPreference(paymentData);
 
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: 'Link de pago generado exitosamente'
-        });
-      } else {
+      if (!result.success) {
         throw new Error(result.error);
       }
 
       return result;
     } catch (err) {
       setError(err.message);
-      addNotification({
-        type: 'error',
-        message: `Error al crear preferencia de pago: ${err.message}`
-      });
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  }, [isConfigured, addNotification]);
+  }, [isConfigured]);
 
   /**
    * Crea una preferencia de pago con cuotas
    */
   const createInstallmentPayment = useCallback(async (paymentData) => {
     if (!isConfigured) {
-      addNotification({
-        type: 'error',
-        message: 'Mercado Pago no está configurado'
-      });
       return { success: false, error: 'Mercado Pago no está configurado' };
     }
 
@@ -84,14 +65,6 @@ export const useMercadoPago = () => {
 
     try {
       const result = await mercadoPagoService.createInstallmentPaymentPreference(paymentData);
-
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: `Link de pago para cuota ${paymentData.installmentNumber} generado`
-        });
-      }
-
       return result;
     } catch (err) {
       setError(err.message);
@@ -99,7 +72,7 @@ export const useMercadoPago = () => {
     } finally {
       setLoading(false);
     }
-  }, [isConfigured, addNotification]);
+  }, [isConfigured]);
 
   /**
    * Obtiene información de un pago
@@ -128,14 +101,6 @@ export const useMercadoPago = () => {
 
     try {
       const result = await mercadoPagoService.processWebhook(webhookData);
-
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: 'Webhook procesado exitosamente'
-        });
-      }
-
       return result;
     } catch (err) {
       setError(err.message);
@@ -143,7 +108,7 @@ export const useMercadoPago = () => {
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Crea un reembolso
@@ -155,27 +120,18 @@ export const useMercadoPago = () => {
     try {
       const result = await mercadoPagoService.createRefund(paymentId, amount);
 
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: 'Reembolso procesado exitosamente'
-        });
-      } else {
+      if (!result.success) {
         throw new Error(result.error);
       }
 
       return result;
     } catch (err) {
       setError(err.message);
-      addNotification({
-        type: 'error',
-        message: `Error al crear reembolso: ${err.message}`
-      });
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Busca pagos por filtros
@@ -270,26 +226,8 @@ export const useMercadoPago = () => {
    */
   const checkPaymentStatus = useCallback(async (paymentId) => {
     const result = await getPayment(paymentId);
-
-    if (result.success) {
-      const status = result.payment.status;
-      const statusMessages = {
-        approved: 'Pago aprobado',
-        pending: 'Pago pendiente',
-        in_process: 'Pago en proceso',
-        rejected: 'Pago rechazado',
-        cancelled: 'Pago cancelado',
-        refunded: 'Pago reembolsado'
-      };
-
-      addNotification({
-        type: status === 'approved' ? 'success' : 'info',
-        message: statusMessages[status] || `Estado: ${status}`
-      });
-    }
-
     return result;
-  }, [getPayment, addNotification]);
+  }, [getPayment]);
 
   return {
     loading,

@@ -5,9 +5,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { ChevronUp } from 'lucide-react';
 import { Card, Button, Input, Modal, LoadingSpinner } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../config/supabase';
 import { updateCompanyProfile, updateUserProfile, getCompanyAnalytics } from '../../services/databaseService';
 import {
   getCompanyVerification,
@@ -16,8 +18,24 @@ import {
   submitVerificationForReview,
   VERIFICATION_STATUS
 } from '../../services/verificationService';
+import { getCompanyCRMConfig } from '../../services/companyCRMService';
+import { initiateEmailChange, hashPassword } from '../../services/authService.js';
 import Swal from 'sweetalert2';
 import PaymentTools from './components/PaymentTools';
+import VerificationProgress from '../../components/company/VerificationProgress';
+import CRMConfiguration from '../../components/company/CRMConfiguration';
+import CRMSyncDashboard from '../../components/company/CRMSyncDashboard';
+import CRMCustomFields from '../../components/company/CRMCustomFields';
+import BulkImportDebts from '../../components/company/BulkImportDebts';
+
+// New organized section components
+import CompanyMetricsDashboard from '../../components/company/CompanyMetricsDashboard';
+import CompanyInformationSection from '../../components/company/CompanyInformationSection';
+import OperationsSection from '../../components/company/OperationsSection';
+import IntegrationsSection from '../../components/company/IntegrationsSection';
+import ComplianceSection from '../../components/company/ComplianceSection';
+import CorporateClientsSection from '../../components/company/CorporateClientsSection';
+import ProfileTabs from '../../components/company/ProfileTabs';
 import {
   Building,
   Mail,
@@ -47,6 +65,7 @@ import {
 
 const ProfilePage = () => {
   const { user, profile, refreshProfile } = useAuth();
+  const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
@@ -59,12 +78,17 @@ const ProfilePage = () => {
     confirmPassword: ''
   });
 
+  // CRM Configuration state
+  const [crmConfig, setCrmConfig] = useState(null);
+  const [crmLoading, setCrmLoading] = useState(false);
+
   // Verification state
   const [verification, setVerification] = useState(null);
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const [formData, setFormData] = useState({
     company_name: '',
     contact_email: '',
@@ -75,18 +99,39 @@ const ProfilePage = () => {
     company_type: 'direct_creditor',
   });
 
+  const handleFormDataChange = (newFormData) => {
+    setFormData(newFormData);
+  };
+
   // Determinar si es modo administrador
   const isGodMode = profile?.role === 'god_mode';
 
-  // Debug logging
-  console.log('🔍 ProfilePage Debug:', {
-    user: user?.email,
-    profileRole: profile?.role,
-    isGodMode,
-    hasCompany: !!profile?.company,
-    companyId: profile?.company?.id,
-    shouldShowVerification: !isGodMode && !!profile?.company
-  });
+  // Determinar qué sección mostrar basado en la ruta actual
+  const getCurrentSection = () => {
+    const path = location.pathname;
+    if (path === '/empresa/perfil/operaciones') return 'operations';
+    if (path === '/empresa/perfil/integraciones') return 'integrations';
+    if (path === '/empresa/perfil/verificacion') return 'compliance';
+    if (path === '/empresa/perfil/clientes') return 'clients';
+    return 'info'; // default
+  };
+
+  const currentSection = getCurrentSection();
+
+  // Scroll to top functionality
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
 
 
 
@@ -166,6 +211,30 @@ const ProfilePage = () => {
     loadVerification();
   }, [profile, isGodMode]);
 
+  // Load CRM configuration for companies
+  useEffect(() => {
+    const loadCRMConfig = async () => {
+      if (!isGodMode && profile?.company?.id) {
+        try {
+          setCrmLoading(true);
+          const result = await getCompanyCRMConfig(profile.company.id);
+
+          if (result.success) {
+            setCrmConfig(result.config);
+          }
+        } catch (error) {
+          console.error('Error loading CRM config:', error);
+        } finally {
+          setCrmLoading(false);
+        }
+      } else {
+        setCrmLoading(false);
+      }
+    };
+
+    loadCRMConfig();
+  }, [profile, isGodMode]);
+
   const handleSave = async () => {
     try {
       setLoading(true);
@@ -193,7 +262,65 @@ const ProfilePage = () => {
           return;
         }
 
-        // Actualizar datos del usuario (representante)
+        // Actualizar email del usuario si cambió
+        if (formData.contact_email !== user.email) {
+          console.log('🔄 Iniciando cambio de email de', user.email, 'a', formData.contact_email);
+          try {
+            const result = await initiateEmailChange(
+              user.id,
+              formData.contact_email,
+              user.email,
+              formData.full_name || user.user_metadata?.full_name || 'Usuario'
+            );
+
+            if (!result.success) {
+              console.error('❌ Error iniciando cambio de email:', result.error);
+              await Swal.fire({
+                icon: 'error',
+                title: 'Error al Cambiar Email',
+                text: result.error,
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#EF4444'
+              });
+              return;
+            }
+
+            console.log('✅ Email de cambio enviado exitosamente');
+
+            // Mostrar mensaje informativo sobre el proceso de cambio
+            const isSimulated = result.simulated;
+            await Swal.fire({
+              icon: isSimulated ? 'warning' : 'success',
+              title: isSimulated ? 'Email Simulado (Desarrollo)' : 'Email de Confirmación Enviado',
+              html: isSimulated ?
+                `
+                  <p><strong>MODO DESARROLLO:</strong> El email ha sido simulado para testing.</p>
+                  <p>El cambio de email se procesó exitosamente en el sistema.</p>
+                  <p>En producción, se enviaría un email real a <strong>${formData.contact_email}</strong></p>
+                  <p><small>Para testing, puedes simular la confirmación manualmente.</small></p>
+                ` :
+                `
+                  <p>Hemos enviado un email de confirmación a <strong>${formData.contact_email}</strong></p>
+                  <p>Para completar el cambio, haz clic en el enlace del email.</p>
+                  <p><small>El enlace expirará en 24 horas.</small></p>
+                `,
+              confirmButtonText: 'Entendido',
+              confirmButtonColor: isSimulated ? '#F59E0B' : '#10B981'
+            });
+          } catch (emailChangeError) {
+            console.error('❌ Error en proceso de cambio de email:', emailChangeError);
+            await Swal.fire({
+              icon: 'error',
+              title: 'Error de Conexión',
+              text: 'Error al procesar cambio de email. Por favor, verifica tu conexión e intenta de nuevo.',
+              confirmButtonText: 'Entendido',
+              confirmButtonColor: '#EF4444'
+            });
+            return;
+          }
+        }
+
+        // Actualizar datos del usuario (representante) - excluyendo email que ya se actualizó
         const userUpdates = {
           full_name: formData.full_name,
           rut: formData.representative_rut,
@@ -201,12 +328,21 @@ const ProfilePage = () => {
           updated_at: new Date().toISOString(),
         };
 
+        console.log('🔄 Actualizando perfil de usuario:', userUpdates);
         const { error: userError } = await updateUserProfile(user.id, userUpdates);
 
         if (userError) {
-          setError('Error al actualizar datos del representante: ' + userError);
+          console.error('❌ Error actualizando perfil de usuario:', userError);
+          await Swal.fire({
+            icon: 'error',
+            title: 'Error al Actualizar Datos',
+            text: 'Error al actualizar datos del representante. Por favor, intenta de nuevo.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#EF4444'
+          });
           return;
         }
+        console.log('✅ Perfil de usuario actualizado');
 
         // Actualizar datos de la empresa (todos los campos disponibles)
         const companyUpdates = {
@@ -223,12 +359,21 @@ const ProfilePage = () => {
           console.warn('company_type column may not exist, skipping...');
         }
 
-        const { error: companyError } = await updateCompanyProfile(profile.company.id, companyUpdates);
+        console.log('🔄 Actualizando empresa:', companyUpdates);
+        const { error: companyUpdateError } = await updateCompanyProfile(profile.company.id, companyUpdates);
 
-        if (companyError) {
-          setError('Error al actualizar datos de la empresa: ' + companyError);
+        if (companyUpdateError) {
+          console.error('❌ Error actualizando empresa:', companyUpdateError);
+          await Swal.fire({
+            icon: 'error',
+            title: 'Error al Actualizar Empresa',
+            text: 'Error al actualizar datos de la empresa. Por favor, intenta de nuevo.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#EF4444'
+          });
           return;
         }
+        console.log('✅ Empresa actualizada');
       }
 
       // Recargar el perfil desde la base de datos
@@ -269,7 +414,14 @@ const ProfilePage = () => {
         timerProgressBar: true
       });
     } catch (err) {
-      setError('Error al guardar los cambios. Por favor, intenta de nuevo.');
+      console.error('❌ Error general en handleSave:', err);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error Inesperado',
+        text: 'Error al guardar los cambios. Por favor, intenta de nuevo.',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
     } finally {
       setLoading(false);
     }
@@ -315,9 +467,12 @@ const ProfilePage = () => {
 
       setLoading(true);
 
-      // Actualizar la contraseña en la base de datos
+      // Hashear la nueva contraseña antes de guardarla
+      const hashedPassword = await hashPassword(passwordData.newPassword);
+
+      // Actualizar la contraseña hasheada en la base de datos
       const { error } = await updateUserProfile(user.id, {
-        password: passwordData.newPassword,
+        password: hashedPassword,
         updated_at: new Date().toISOString()
       });
 
@@ -522,19 +677,8 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* DEBUG: Force show verification section */}
-      <div style={{ background: 'red', color: 'white', padding: '20px', margin: '20px', border: '2px solid yellow' }}>
-        <h1>DEBUG: ProfilePage is rendering</h1>
-        <p>isGodMode: {isGodMode ? 'true' : 'false'}</p>
-        <p>hasCompany: {!!profile?.company ? 'true' : 'false'}</p>
-        <p>companyId: {profile?.company?.id || 'null'}</p>
-        <p>shouldShowVerification: {!isGodMode && !!profile?.company ? 'true' : 'false'}</p>
-        <p>verification: {verification ? 'loaded' : 'null'}</p>
-        <p>verificationLoading: {verificationLoading ? 'true' : 'false'}</p>
-      </div>
-
-      {/* Modern Hero Section */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl mx-4 mt-6 p-8 text-white shadow-2xl relative overflow-hidden">
+      {/* Modern Hero Section - Mobile Optimized */}
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl mx-4 mt-6 p-4 md:p-8 text-white shadow-2xl relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
@@ -543,20 +687,20 @@ const ProfilePage = () => {
           <div className="absolute bottom-0 right-1/3 w-16 h-16 bg-white rounded-full translate-y-8"></div>
         </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/30">
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-8">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="p-3 md:p-4 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/30">
               {isGodMode ? (
-                <Shield className="w-10 h-10" />
+                <Shield className="w-8 h-8 md:w-10 md:h-10" />
               ) : (
-                <Building className="w-10 h-10" />
+                <Building className="w-8 h-8 md:w-10 md:h-10" />
               )}
             </div>
-            <div>
-              <h1 className="text-xl md:text-3xl font-display font-bold tracking-tight mb-2">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl md:text-3xl font-display font-bold tracking-tight mb-1 md:mb-2 truncate">
                 {isGodMode ? 'Panel de Administrador' : 'Perfil Corporativo'}
               </h1>
-              <p className="text-indigo-100 text-lg max-w-md">
+              <p className="text-indigo-100 text-sm md:text-lg max-w-md line-clamp-2">
                 {isGodMode
                   ? 'Gestiona la configuración global del sistema y supervisa todas las operaciones'
                   : 'Administra la información de tu empresa y accede a métricas clave de rendimiento'
@@ -565,13 +709,13 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <Activity className="w-6 h-6 text-green-300" />
-                <div>
-                  <p className="text-sm text-indigo-200">Estado del Sistema</p>
-                  <p className="font-semibold text-white">Activo</p>
+          <div className="flex items-center gap-2 md:gap-4 w-full lg:w-auto">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-white/20 flex-1 lg:flex-initial">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Activity className="w-5 h-5 md:w-6 md:h-6 text-green-300 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs md:text-sm text-indigo-200 truncate">Estado del Sistema</p>
+                  <p className="font-semibold text-white text-sm md:text-base">Activo</p>
                 </div>
               </div>
             </div>
@@ -581,422 +725,87 @@ const ProfilePage = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
 
-        {/* Profile Information Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Profile Card */}
-          <div className="lg:col-span-2">
-            {/* Payment Tools Section */}
-            {!isGodMode && (
-              <div className="mb-8">
-                <PaymentTools />
-              </div>
+        {/* Dashboard Ejecutivo - Only for Companies */}
+        {!isGodMode && !!profile?.company && (
+          <CompanyMetricsDashboard
+            analytics={analytics}
+            loading={analyticsLoading}
+          />
+        )}
+
+        {/* Navigation Tabs - Only for Companies */}
+        {!isGodMode && !!profile?.company && (
+          <ProfileTabs />
+        )}
+
+        {/* Tab Content */}
+        {!isGodMode && !!profile?.company && (
+          <>
+            {/* Información Corporativa */}
+            {currentSection === 'info' && (
+              <CompanyInformationSection
+                formData={formData}
+                isEditing={isEditing}
+                onFormDataChange={handleFormDataChange}
+                onEditToggle={setIsEditing}
+                onSave={handleSave}
+                loading={loading}
+                isGodMode={isGodMode}
+              />
             )}
 
-            {/* Verification Section - Only for Companies */}
-            {true && (  // TEMPORARILY FORCE SHOW FOR DEBUGGING
-              <div className="mb-8">
-                <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl text-white">
-                        <Shield className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-gray-900">
-                          Verificación de Empresa (DEBUG: FORCE SHOW)
-                        </h2>
-                        <p className="text-gray-600">
-                          Sube tus documentos para verificar tu empresa
-                        </p>
-                      </div>
-                    </div>
-
-                    {verification && (
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          const statusInfo = getVerificationStatusInfo(verification.status);
-                          const StatusIcon = statusInfo.icon;
-                          return (
-                            <>
-                              <StatusIcon className={`w-5 h-5 text-${statusInfo.color}-500`} />
-                              <span className={`text-sm font-semibold text-${statusInfo.color}-600`}>
-                                {statusInfo.text}
-                              </span>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    )}
-                  </div>
-
-                {verificationLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <LoadingSpinner />
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {/* Document Upload Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Certificado de Vigencia */}
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="p-2 bg-blue-100 rounded-lg">
-                            <FileText className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Certificado de Vigencia</h3>
-                            <p className="text-sm text-gray-600">Documento que certifica la existencia legal de tu empresa</p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <input
-                            type="file"
-                            accept=".pdf"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) handleDocumentUpload('certificado_vigencia', file);
-                            }}
-                            className="hidden"
-                            id="certificado-upload"
-                            disabled={uploading}
-                          />
-
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => document.getElementById('certificado-upload').click()}
-                              loading={uploading}
-                              disabled={uploading}
-                              className="flex-1 bg-white/50"
-                              leftIcon={<Upload className="w-4 h-4" />}
-                            >
-                              {verification?.certificado_vigencia_url ? 'Cambiar' : 'Subir'}
-                            </Button>
-
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleViewDocument(verification?.certificado_vigencia_url, 'Certificado de Vigencia')}
-                              disabled={!verification?.certificado_vigencia_url}
-                              className="bg-white/50"
-                              leftIcon={<Eye className="w-4 h-4" />}
-                            >
-                              Ver
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Informe Equifax */}
-                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="p-2 bg-purple-100 rounded-lg">
-                            <TrendingUp className="w-5 h-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Informe Empresarial Equifax</h3>
-                            <p className="text-sm text-gray-600">Análisis crediticio y de riesgo empresarial</p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <input
-                            type="file"
-                            accept=".pdf"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) handleDocumentUpload('informe_equifax', file);
-                            }}
-                            className="hidden"
-                            id="equifax-upload"
-                            disabled={uploading}
-                          />
-
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => document.getElementById('equifax-upload').click()}
-                              loading={uploading}
-                              disabled={uploading}
-                              className="flex-1 bg-white/50"
-                              leftIcon={<Upload className="w-4 h-4" />}
-                            >
-                              {verification?.informe_equifax_url ? 'Cambiar' : 'Subir'}
-                            </Button>
-
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleViewDocument(verification?.informe_equifax_url, 'Informe Equifax')}
-                              disabled={!verification?.informe_equifax_url}
-                              className="bg-white/50"
-                              leftIcon={<Eye className="w-4 h-4" />}
-                            >
-                              Ver
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Submit Button */}
-                    {verification?.certificado_vigencia_url && verification?.informe_equifax_url && (
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold text-green-900 mb-1">¡Documentos completos!</h3>
-                            <p className="text-sm text-green-700">
-                              Ambos documentos han sido subidos. Ahora puedes enviar tu verificación para revisión.
-                            </p>
-                          </div>
-
-                          <Button
-                            variant="gradient"
-                            onClick={handleSubmitVerification}
-                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                            leftIcon={<Send className="w-4 h-4" />}
-                          >
-                            Enviar para Revisión
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Status Messages */}
-                    {verification?.status === VERIFICATION_STATUS.APPROVED && (
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 border border-green-100">
-                        <div className="flex items-center gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
-                          <div>
-                            <p className="font-semibold text-green-900">¡Verificación Aprobada!</p>
-                            <p className="text-sm text-green-700">Tu empresa ha sido verificada exitosamente.</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {verification?.status === VERIFICATION_STATUS.REJECTED && (
-                      <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-2xl p-4 border border-red-100">
-                        <div className="flex items-center gap-3">
-                          <AlertCircle className="w-5 h-5 text-red-600" />
-                          <div>
-                            <p className="font-semibold text-red-900">Verificación Rechazada</p>
-                            <p className="text-sm text-red-700">
-                              {verification.rejection_reason || 'Contacta al soporte para más información.'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </Card>
-            </div>
+            {/* Operaciones Diarias */}
+            {currentSection === 'operations' && (
+              <OperationsSection
+                profile={profile}
+                onImportComplete={refreshProfile}
+              />
             )}
 
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white">
-                    {isGodMode ? <Shield className="w-6 h-6" /> : <Building className="w-6 h-6" />}
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {isGodMode ? 'Información del Administrador' : 'Información Corporativa'}
-                    </h2>
-                    <p className="text-gray-600">
-                      {isGodMode ? 'Detalles del administrador del sistema' : 'Datos principales de tu empresa'}
-                    </p>
-                  </div>
-                </div>
+            {/* Integraciones Externas */}
+            {currentSection === 'integrations' && (
+              <IntegrationsSection
+                profile={profile}
+                crmConfig={crmConfig}
+                onUpdate={refreshProfile}
+              />
+            )}
 
-                <Button
-                  variant={isEditing ? 'primary' : 'secondary'}
-                  onClick={isEditing ? handleSave : () => setIsEditing(true)}
-                  loading={loading}
-                  disabled={loading}
-                  className="shadow-lg whitespace-nowrap flex-shrink-0 min-w-fit inline-flex"
-                  style={{ width: 'auto' }}
-                >
-                  {isEditing ? (
-                    <>
-                      <Save className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span className="whitespace-nowrap">Guardar Cambios</span>
-                    </>
-                  ) : (
-                    <>
-                      <Edit className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span className="whitespace-nowrap">Editar Perfil</span>
-                    </>
-                  )}
-                </Button>
-              </div>
+            {/* Verificación y Cumplimiento */}
+            {currentSection === 'compliance' && (
+              <ComplianceSection
+                profile={profile}
+                verification={verification}
+                verificationLoading={verificationLoading}
+                uploading={uploading}
+                onDocumentUpload={handleDocumentUpload}
+                onViewDocument={handleViewDocument}
+                onSubmitVerification={handleSubmitVerification}
+              />
+            )}
 
-              {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                    <p className="text-sm text-red-700">{error}</p>
-                  </div>
-                </div>
-              )}
+            {/* Clientes Corporativos */}
+            {currentSection === 'clients' && (
+              <CorporateClientsSection
+                profile={profile}
+                onUpdate={refreshProfile}
+              />
+            )}
+          </>
+        )}
 
-              <div className="space-y-12">
-                {isGodMode ? (
-                  /* Admin Profile Form */
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input
-                      label="Nombre Completo"
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                      leftIcon={<User className="w-4 h-4" />}
-                      disabled={!isEditing}
-                      className="bg-gray-50/50"
-                    />
 
-                    <Input
-                      label="Email Corporativo"
-                      type="email"
-                      value={formData.contact_email}
-                      onChange={(e) => setFormData({...formData, contact_email: e.target.value})}
-                      leftIcon={<Mail className="w-4 h-4" />}
-                      disabled={!isEditing}
-                      className="bg-gray-50/50"
-                    />
-
-                    <Input
-                      label="Teléfono de Contacto"
-                      value={formData.contact_phone}
-                      onChange={(e) => setFormData({...formData, contact_phone: e.target.value})}
-                      leftIcon={<Phone className="w-4 h-4" />}
-                      disabled={!isEditing}
-                      className="bg-gray-50/50"
-                    />
-
-                    <Input
-                      label="RUT Administrador"
-                      value={formData.rut}
-                      onChange={(e) => setFormData({...formData, rut: e.target.value})}
-                      leftIcon={<Shield className="w-4 h-4" />}
-                      disabled={!isEditing}
-                      className="bg-gray-50/50"
-                    />
-                  </div>
-                ) : (
-                  /* Company Profile Form */
-                  <>
-                    {/* Legal Representative Section */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <User className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Representante Legal</h3>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          label="Nombre Completo"
-                          value={formData.full_name}
-                          onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                          leftIcon={<User className="w-4 h-4" />}
-                          disabled={!isEditing}
-                          className="bg-white/50"
-                        />
-
-                        <Input
-                          label="RUT del Representante"
-                          value={formData.representative_rut}
-                          onChange={(e) => setFormData({...formData, representative_rut: e.target.value})}
-                          leftIcon={<User className="w-4 h-4" />}
-                          disabled={!isEditing}
-                          className="bg-white/50"
-                        />
-
-                        <Input
-                          label="Email Corporativo"
-                          type="email"
-                          value={formData.contact_email}
-                          onChange={(e) => setFormData({...formData, contact_email: e.target.value})}
-                          leftIcon={<Mail className="w-4 h-4" />}
-                          disabled={!isEditing}
-                          className="bg-white/50"
-                        />
-
-                        <Input
-                          label="Teléfono de Contacto"
-                          value={formData.contact_phone}
-                          onChange={(e) => setFormData({...formData, contact_phone: e.target.value})}
-                          leftIcon={<Phone className="w-4 h-4" />}
-                          disabled={!isEditing}
-                          className="bg-white/50"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Company Information Section */}
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Building className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Información de la Empresa</h3>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          label="Nombre de la Empresa"
-                          value={formData.company_name}
-                          onChange={(e) => setFormData({...formData, company_name: e.target.value})}
-                          leftIcon={<Building className="w-4 h-4" />}
-                          disabled={!isEditing}
-                          className="bg-white/50"
-                        />
-
-                        <Input
-                          label="RUT de la Empresa"
-                          value={formData.company_rut}
-                          onChange={(e) => setFormData({...formData, company_rut: e.target.value})}
-                          leftIcon={<Building className="w-4 h-4" />}
-                          disabled={!isEditing}
-                          className="bg-white/50"
-                        />
-
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Tipo de Empresa
-                          </label>
-                          <select
-                            value={formData.company_type}
-                            onChange={(e) => setFormData({...formData, company_type: e.target.value})}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white/50 disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200"
-                            disabled={!isEditing}
-                          >
-                            <option value="direct_creditor">🏢 Acreedor Directo</option>
-                            <option value="collection_agency">📊 Empresa de Cobranza</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Account Status Card */}
+        {/* Sidebar Informativo - Layout Horizontal - Solo mostrar en secciones que no sean operaciones, integraciones, verificación ni clientes */}
+        {currentSection !== 'operations' && currentSection !== 'integrations' && currentSection !== 'compliance' && currentSection !== 'clients' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Account Status Card - Izquierda */}
             <Card className="shadow-lg border-0 bg-gradient-to-br from-slate-50 to-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-500" />
                 Estado de la Cuenta
               </h3>
 
-              <div className="space-y-8">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-blue-500" />
@@ -1033,7 +842,7 @@ const ProfilePage = () => {
               </div>
             </Card>
 
-            {/* Security Card */}
+            {/* Security Card - Derecha */}
             <Card className="shadow-lg border-0 bg-gradient-to-br from-red-50 to-pink-50">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-red-500" />
@@ -1049,54 +858,10 @@ const ProfilePage = () => {
                 >
                   Cambiar Contraseña
                 </Button>
-
-              </div>
-            </Card>
-
-            {/* Quick Actions Card */}
-            <Card className="shadow-lg border-0 bg-gradient-to-br from-indigo-50 to-blue-50">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-indigo-500" />
-                Acciones Rápidas
-              </h3>
-
-              <div className="space-y-4">
-                <Link to="/empresa/mensajes">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start bg-white/50 hover:bg-white whitespace-nowrap"
-                    leftIcon={<Mail className="w-4 h-4" />}
-                  >
-                    Enviar Mensaje
-                  </Button>
-                </Link>
-
-                <Link to="/empresa/analiticas">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start bg-white/50 hover:bg-white whitespace-nowrap"
-                    leftIcon={<FileText className="w-4 h-4" />}
-                  >
-                    Ver Reportes
-                  </Button>
-                </Link>
-
-                <Link to="/empresa/clientes">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start bg-white/50 hover:bg-white whitespace-nowrap"
-                    leftIcon={<Users className="w-4 h-4" />}
-                  >
-                    Gestionar Clientes
-                  </Button>
-                </Link>
               </div>
             </Card>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Password Change Modal */}
@@ -1186,6 +951,17 @@ const ProfilePage = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
+          aria-label="Volver arriba"
+        >
+          <ChevronUp className="w-6 h-6" />
+        </button>
+      )}
     </div>
   );
 };

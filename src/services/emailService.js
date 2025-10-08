@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '../config/supabase';
+import { getEmailTemplate } from './emailTemplates';
 
 /**
  * Verifica si el servicio de email está configurado
@@ -28,15 +29,12 @@ export const isEmailConfigured = () => {
  */
 export const sendEmail = async (emailData) => {
   try {
-    if (!isEmailConfigured().configured) {
-      console.warn('⚠️ Servicio de email no está configurado, simulando envío de email');
-      console.log('📧 Email simulado:', {
-        to: emailData.to,
-        subject: emailData.subject,
-        html: emailData.html?.substring(0, 100) + '...'
-      });
-      return { success: true, error: null, messageId: 'simulated_' + Date.now() };
-    }
+    console.log('📧 Intentando enviar email:', {
+      to: emailData.to,
+      subject: emailData.subject,
+      hasHtml: !!emailData.html,
+      htmlLength: emailData.html?.length || 0
+    });
 
     // Llamar a la función edge de Supabase
     const { data, error } = await supabase.functions.invoke('send-email', {
@@ -47,6 +45,8 @@ export const sendEmail = async (emailData) => {
         text: emailData.text
       }
     });
+
+    console.log('📡 Respuesta de Supabase function:', { data, error });
 
     if (error) {
       console.error('❌ Error enviando email:', error);
@@ -59,9 +59,16 @@ export const sendEmail = async (emailData) => {
 
     if (!data.success) {
       console.error('❌ Error en respuesta de email:', data.error);
+
+      // Proporcionar mensaje más específico si es error de función no desplegada
+      let errorMessage = data.error || 'Error en envío de email';
+      if (data.error?.includes('404') || data.error?.includes('Not Found')) {
+        errorMessage = 'Función de email no desplegada. Contacta al administrador para desplegar la función en Supabase.';
+      }
+
       return {
         success: false,
-        error: data.error || 'Error en envío de email',
+        error: errorMessage,
         messageId: null
       };
     }
@@ -298,98 +305,199 @@ const generateEmailTemplate = (options) => {
 };
 
 /**
- * Envía un email de confirmación de cuenta
- * @param {string} to - Email del destinatario
- * @param {string} fullName - Nombre completo del usuario
- * @param {string} confirmationToken - Token de confirmación
- * @param {string} userType - Tipo de usuario (debtor, company, god_mode)
- * @returns {Promise<{success, error, messageId}>}
+ * Envía email de confirmación de cambio de email usando plantillas
  */
-export const sendConfirmationEmail = async (to, fullName, confirmationToken, userType = 'debtor') => {
-  const confirmationUrl = `${window.location.origin}/confirm-email?token=${confirmationToken}`;
+export const sendEmailChangeConfirmation = async (to, fullName, changeToken, currentEmail) => {
+  try {
+    // URL encode the token to handle special characters in JWT
+    const encodedToken = encodeURIComponent(changeToken);
 
-  // Personalizar mensaje según tipo de usuario
-  const userTypeMessages = {
-    debtor: {
-      greeting: `¡Hola ${fullName}!`,
-      content: `
-        <p>Gracias por registrarte como <strong>Deudor</strong> en <strong>NexuPay</strong>.</p>
-        <p>Para completar tu registro y comenzar a acceder a ofertas de negociación de deudas, necesitas confirmar tu dirección de email.</p>
-        <p>Haz clic en el botón de abajo para activar tu cuenta:</p>
-      `
-    },
-    company: {
-      greeting: `¡Hola ${fullName}!`,
-      content: `
-        <p>Gracias por registrarte como <strong>Empresa</strong> en <strong>NexuPay</strong>.</p>
-        <p>Para completar tu registro y comenzar a gestionar tus cobranzas de manera eficiente, necesitas confirmar tu dirección de email.</p>
-        <p>Haz clic en el botón de abajo para activar tu cuenta:</p>
-      `
-    },
-    god_mode: {
-      greeting: `¡Hola Administrador ${fullName}!`,
-      content: `
-        <p>Tu cuenta de <strong>Administrador GOD MODE</strong> ha sido configurada en <strong>NexuPay</strong>.</p>
-        <p>Para acceder al panel de administración completo, necesitas confirmar tu dirección de email.</p>
-        <p>Haz clic en el botón de abajo para activar tu cuenta administrativa:</p>
-      `
-    }
-  };
+    // Usar plantilla de confirmación de cambio de email
+    const html = getEmailTemplate('email', 'emailChange', {
+      fullName,
+      newEmail: to,
+      currentEmail,
+      confirmationToken: encodedToken, // Pass encoded token to template
+      confirmUrl: `${window.location.origin}/confirm-email-change?token=${encodedToken}`
+    });
 
-  const messageConfig = userTypeMessages[userType] || userTypeMessages.debtor;
-
-  const subject = 'Confirma tu cuenta en NexuPay';
-  const htmlContent = generateEmailTemplate({
-    title: 'Confirma tu cuenta',
-    greeting: messageConfig.greeting,
-    content: messageConfig.content,
-    buttonText: 'Confirmar mi cuenta',
-    buttonUrl: confirmationUrl,
-    footerText: 'Este es un email automático generado por NexuPay. Por favor no respondas a esta dirección.'
-  });
-
-  return await sendEmail({
-    to,
-    subject,
-    html: htmlContent
-  });
+    const result = await sendEmail({
+      to,
+      subject: 'Confirma tu cambio de email - NexuPay',
+      html: html
+    });
+    return result;
+  } catch (error) {
+    console.error('Error sending email change confirmation:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 /**
- * Envía un email de recuperación de contraseña
- * @param {string} to - Email del destinatario
- * @param {string} fullName - Nombre completo del usuario
- * @param {string} resetToken - Token de recuperación
- * @returns {Promise<{success, error, messageId}>}
+ * Envía email de confirmación de registro usando plantillas
+ */
+export const sendConfirmationEmail = async (email, fullName, confirmationToken, userRole) => {
+  try {
+    // URL encode the token to handle special characters in JWT
+    const encodedToken = encodeURIComponent(confirmationToken);
+
+    // Usar plantilla de confirmación de cuenta
+    const html = getEmailTemplate('email', 'accountConfirmation', {
+      fullName,
+      email,
+      confirmationToken: encodedToken, // Pass encoded token to template
+      confirmUrl: `${window.location.origin}/auth/confirm-email?token=${encodedToken}`
+    });
+
+    const result = await sendEmail({
+      to: email,
+      subject: 'Activa tu cuenta - NexuPay',
+      html: html
+    });
+    return result;
+  } catch (error) {
+    console.error('Error sending confirmation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Envía email de recuperación de contraseña usando plantillas
  */
 export const sendPasswordResetEmail = async (to, fullName, resetToken) => {
-  const resetUrl = `${window.location.origin}/reset-password?token=${resetToken}`;
+  try {
+    // URL encode the token to handle special characters in JWT
+    const encodedToken = encodeURIComponent(resetToken);
 
-  const subject = 'Recupera tu contraseña - NexuPay';
-  const htmlContent = generateEmailTemplate({
-    title: 'Recupera tu contraseña',
-    greeting: `¡Hola ${fullName}!`,
-    content: `
-      <p>Recibimos una solicitud para restablecer tu contraseña en <strong>NexuPay</strong>.</p>
-      <p>Haz clic en el botón de abajo para crear una nueva contraseña segura:</p>
-    `,
-    buttonText: 'Restablecer contraseña',
-    buttonUrl: resetUrl,
-    footerText: 'Este es un email automático generado por NexuPay. Por favor no respondas a esta dirección.',
-    brandColor: '#f59e0b',
-    secondaryColor: '#d97706'
-  });
+    // Usar plantilla de recuperación de contraseña
+    const html = getEmailTemplate('password', 'passwordReset', {
+      fullName,
+      email: to,
+      resetToken: encodedToken, // Pass encoded token to template
+      resetUrl: `${window.location.origin}/reset-password?token=${encodedToken}`
+    });
 
-  return await sendEmail({
-    to,
-    subject,
-    html: htmlContent
-  });
+    const result = await sendEmail({
+      to,
+      subject: 'Recupera tu contraseña - NexuPay',
+      html: html
+    });
+    return result;
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Envía email de bienvenida para deudores
+ */
+export const sendWelcomeEmailDebtor = async (userData) => {
+  try {
+    const html = getEmailTemplate('welcome', 'debtor', userData);
+    const result = await sendEmail({
+      to: userData.email,
+      subject: `¡Bienvenido a NexuPay, ${userData.fullName}!`,
+      html: html
+    });
+    return result;
+  } catch (error) {
+    console.error('Error sending welcome email to debtor:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Envía email de bienvenida para empresas
+ */
+export const sendWelcomeEmailCompany = async (userData) => {
+  try {
+    const html = getEmailTemplate('welcome', 'company', userData);
+    const result = await sendEmail({
+      to: userData.email,
+      subject: `¡Bienvenido a NexuPay, ${userData.companyName}!`,
+      html: html
+    });
+    return result;
+  } catch (error) {
+    console.error('Error sending welcome email to company:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Envía email de bienvenida para administradores
+ */
+export const sendWelcomeEmailAdmin = async (userData) => {
+  try {
+    const html = getEmailTemplate('welcome', 'admin', userData);
+    const result = await sendEmail({
+      to: userData.email,
+      subject: `Acceso Administrativo - NexuPay`,
+      html: html
+    });
+    return result;
+  } catch (error) {
+    console.error('Error sending welcome email to admin:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Envía email de notificación de pago recibido (para empresas)
+ */
+export const sendPaymentReceivedNotification = async (paymentData) => {
+  try {
+    if (import.meta.env.DEV) {
+      console.log('📧 [SIMULADO] Notificación de pago enviado a:', paymentData.companyEmail);
+      return { success: true, simulated: true, messageId: 'simulated_' + Date.now() };
+    }
+
+    const html = getEmailTemplate('notification', 'paymentReceived', paymentData);
+    const result = await sendEmail({
+      to: paymentData.companyEmail,
+      subject: `Pago Recibido - $${paymentData.amount.toLocaleString('es-CL')}`,
+      html: html
+    });
+    return result;
+  } catch (error) {
+    console.error('Error sending payment notification:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Envía email de incentivo ganado (para deudores)
+ */
+export const sendIncentiveEarnedNotification = async (incentiveData) => {
+  try {
+    if (import.meta.env.DEV) {
+      console.log('📧 [SIMULADO] Notificación de incentivo enviado a:', incentiveData.debtorEmail);
+      return { success: true, simulated: true, messageId: 'simulated_' + Date.now() };
+    }
+
+    const html = getEmailTemplate('notification', 'incentiveEarned', incentiveData);
+    const result = await sendEmail({
+      to: incentiveData.debtorEmail,
+      subject: `¡Has ganado $${incentiveData.amount.toLocaleString('es-CL')} en incentivos!`,
+      html: html
+    });
+    return result;
+  } catch (error) {
+    console.error('Error sending incentive notification:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 export default {
   isEmailConfigured,
   sendEmail,
+  sendEmailChangeConfirmation,
   sendConfirmationEmail,
   sendPasswordResetEmail,
+  sendWelcomeEmailDebtor,
+  sendWelcomeEmailCompany,
+  sendWelcomeEmailAdmin,
+  sendPaymentReceivedNotification,
+  sendIncentiveEarnedNotification,
 };

@@ -1,19 +1,21 @@
 /**
  * Servicio de Autenticación
- * 
+ *
  * Maneja todas las operaciones de autenticación con Supabase:
  * - Registro de usuarios
  * - Login
  * - Logout
  * - Recuperación de contraseña
  * - Gestión de sesiones
+ *
+ * Última actualización: 2025-10-08 - Agregada exportación de hashPassword
  */
 
 import { supabase, handleSupabaseError } from '../config/supabase';
 import { USER_ROLES } from '../config/constants';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
-import { sendConfirmationEmail as sendEmailConfirmation, sendPasswordResetEmail as sendPasswordReset } from './emailService';
+import { sendConfirmationEmail as sendEmailConfirmation, sendPasswordResetEmail as sendPasswordReset, sendEmailChangeConfirmation, sendWelcomeEmailDebtor, sendWelcomeEmailCompany, sendWelcomeEmailAdmin } from './emailService';
 
 /**
  * Clase de error personalizada para autenticación
@@ -30,7 +32,7 @@ class AuthError extends Error {
 /**
  * Tipos de errores de autenticación
  */
-export const AUTH_ERROR_CODES = {
+const AUTH_ERROR_CODES = {
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   ACCOUNT_BLOCKED: 'ACCOUNT_BLOCKED',
@@ -63,7 +65,7 @@ const blockedUsers = new Map();
  * @param {string} password - Contraseña en texto plano
  * @returns {Promise<string>} Contraseña hasheada
  */
-const hashPassword = async (password) => {
+export const hashPassword = async (password) => {
   try {
     return await bcrypt.hash(password, SALT_ROUNDS);
   } catch (error) {
@@ -323,7 +325,7 @@ const initializeGodModeUser = async () => {
  * @param {string} [currentUserRole] - Rol del usuario actual (para validaciones)
  * @returns {Promise<{user, error}>}
  */
-export const signUp = async (userData, currentUserRole = null) => {
+const signUp = async (userData, currentUserRole = null) => {
   try {
     const { email, password, fullName, rut, role = USER_ROLES.DEBTOR, companyData } = userData;
 
@@ -439,6 +441,42 @@ export const signUp = async (userData, currentUserRole = null) => {
       }
     }
 
+    // Enviar email de bienvenida después del registro exitoso
+    try {
+      console.log('🎉 Enviando email de bienvenida...');
+
+      let welcomeResult;
+      if (role === USER_ROLES.COMPANY) {
+        welcomeResult = await sendWelcomeEmailCompany({
+          fullName,
+          email,
+          companyName: companyData?.businessName || fullName,
+          companyEmail: email
+        });
+      } else if (role === 'god_mode') {
+        welcomeResult = await sendWelcomeEmailAdmin({
+          fullName,
+          email
+        });
+      } else {
+        // Default to debtor
+        welcomeResult = await sendWelcomeEmailDebtor({
+          fullName,
+          email
+        });
+      }
+
+      if (!welcomeResult.success) {
+        console.warn('⚠️ No se pudo enviar email de bienvenida:', welcomeResult.error);
+        // No fallar el registro por esto
+      } else {
+        console.log('✅ Email de bienvenida enviado, ID:', welcomeResult.messageId);
+      }
+    } catch (welcomeError) {
+      console.warn('⚠️ Error enviando email de bienvenida:', welcomeError.message);
+      // No fallar el registro por problemas de email
+    }
+
     // Crear un objeto user simulado para mantener compatibilidad
     const mockUser = {
       id: userDataResult.id,
@@ -463,7 +501,7 @@ export const signUp = async (userData, currentUserRole = null) => {
  * @param {string} password - Contraseña del usuario
  * @returns {Promise<{user, session, error}>}
  */
-export const signIn = async (email, password) => {
+const signIn = async (email, password) => {
   try {
     console.log('🔍 Intentando login con:', email);
 
@@ -598,7 +636,7 @@ export const signIn = async (email, password) => {
  * Cierra la sesión del usuario actual
  * @returns {Promise<{error}>}
  */
-export const signOut = async () => {
+const signOut = async () => {
   try {
     // Limpiar sesiones seguras
     localStorage.removeItem('secure_session');
@@ -641,7 +679,7 @@ const validateSession = async (session) => {
  * Obtiene el usuario actualmente autenticado desde localStorage con verificación JWT
  * @returns {Promise<{user, error}>}
  */
-export const getCurrentUser = async () => {
+const getCurrentUser = async () => {
   try {
     // Intentar obtener sesión segura primero
     const secureSessionData = localStorage.getItem('secure_session');
@@ -670,7 +708,7 @@ export const getCurrentUser = async () => {
  * Obtiene la sesión actual desde localStorage con verificación JWT
  * @returns {Promise<{session, error}>}
  */
-export const getSession = async () => {
+const getSession = async () => {
   try {
     // Intentar obtener sesión segura primero
     const secureSessionData = localStorage.getItem('secure_session');
@@ -705,14 +743,18 @@ export const getSession = async () => {
  * @param {string} email - Email del usuario
  * @returns {Promise<{error}>}
  */
-export const sendPasswordResetEmail = async (email) => {
+const sendPasswordResetEmail = async (email) => {
   try {
+    console.log('🔑 Iniciando proceso de reset de contraseña para:', email);
+
     // Obtener datos del usuario
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('full_name')
+      .select('email, full_name')
       .eq('email', email)
       .single();
+
+    console.log('👤 Resultado búsqueda usuario:', { found: !!userData, error: userError });
 
     if (userError) {
       console.warn('Usuario no encontrado para reset de contraseña:', email);
@@ -727,14 +769,19 @@ export const sendPasswordResetEmail = async (email) => {
       exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hora
     });
 
+    console.log('🎫 Token generado, llamando a sendPasswordReset...');
+
     // Enviar email usando nuestro servicio personalizado
     const emailResult = await sendPasswordReset(userData.email, userData.full_name, resetToken);
+
+    console.log('📧 Resultado envío email:', emailResult);
 
     if (!emailResult.success) {
       console.error('Error enviando email de reset:', emailResult.error);
       return { error: 'Error al enviar email de recuperación.' };
     }
 
+    console.log('✅ Reset de contraseña enviado exitosamente');
     return { error: null };
   } catch (error) {
     console.error('Error in sendPasswordResetEmail:', error);
@@ -743,11 +790,11 @@ export const sendPasswordResetEmail = async (email) => {
 };
 
 /**
- * Actualiza la contraseña del usuario
+ * Actualiza la contraseña del usuario autenticado
  * @param {string} newPassword - Nueva contraseña
  * @returns {Promise<{error}>}
  */
-export const updatePassword = async (newPassword) => {
+const updatePassword = async (newPassword) => {
   try {
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
@@ -765,11 +812,67 @@ export const updatePassword = async (newPassword) => {
 };
 
 /**
+ * Resetea la contraseña usando un token JWT
+ * @param {string} token - Token de reset de contraseña
+ * @param {string} newPassword - Nueva contraseña
+ * @returns {Promise<{error}>}
+ */
+const resetPasswordWithToken = async (token, newPassword) => {
+  try {
+    // Intentar decodificar el token si está URL-encoded
+    let tokenToVerify = token;
+    try {
+      const decodedToken = decodeURIComponent(token);
+      if (decodedToken !== token) {
+        tokenToVerify = decodedToken;
+      }
+    } catch (decodeError) {
+      // Token no estaba URL-encoded o ya estaba decodificado
+    }
+
+    // Verificar el token JWT
+    const payload = await verifyToken(tokenToVerify);
+    if (!payload || payload.type !== 'password_reset') {
+      console.error('❌ Token inválido para reset de contraseña');
+      return { error: 'Token de recuperación inválido o expirado.' };
+    }
+
+    const { email } = payload;
+    console.log('📧 Email extraído del token:', email);
+
+    // Hashear la nueva contraseña
+    console.log('🔐 Hasheando nueva contraseña...');
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Actualizar la contraseña en la base de datos
+    console.log('💾 Actualizando contraseña en base de datos...');
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        password: hashedPassword,
+        updated_at: new Date().toISOString()
+      })
+      .eq('email', email);
+
+    if (updateError) {
+      console.error('❌ Error actualizando contraseña:', updateError);
+      return { error: handleSupabaseError(updateError) };
+    }
+
+    console.log('✅ Contraseña actualizada exitosamente');
+    return { error: null };
+  } catch (error) {
+    console.error('Error in resetPasswordWithToken:', error);
+    return { error: 'Error al actualizar contraseña. Por favor, intenta de nuevo.' };
+  }
+};
+
+/**
  * Verifica si el email ya está registrado
  * @param {string} email - Email a verificar
  * @returns {Promise<{exists, error}>}
  */
-export const checkEmailExists = async (email) => {
+const checkEmailExists = async (email) => {
   try {
     const { data, error } = await supabase.rpc('check_email_exists', { check_email: email });
 
@@ -789,7 +892,7 @@ export const checkEmailExists = async (email) => {
  * @param {string} rut - RUT a verificar
  * @returns {Promise<{exists, error}>}
  */
-export const checkRutExists = async (rut) => {
+const checkRutExists = async (rut) => {
   try {
     const { data, error } = await supabase.rpc('check_rut_exists', { check_rut: rut });
 
@@ -809,7 +912,7 @@ export const checkRutExists = async (rut) => {
  * @param {string} phone - Teléfono a verificar
  * @returns {Promise<{exists, error}>}
  */
-export const checkPhoneExists = async (phone) => {
+const checkPhoneExists = async (phone) => {
   try {
     const { data, error } = await supabase.rpc('check_phone_exists', { check_phone: phone });
 
@@ -829,7 +932,7 @@ export const checkPhoneExists = async (phone) => {
  * @param {Function} callback - Función a ejecutar cuando cambia el estado
  * @returns {Object} Subscription object
  */
-export const onAuthStateChange = (callback) => {
+const onAuthStateChange = (callback) => {
   return supabase.auth.onAuthStateChange((event, session) => {
     callback(event, session);
   });
@@ -839,7 +942,7 @@ export const onAuthStateChange = (callback) => {
  * Inicia sesión con Google OAuth
  * @returns {Promise<{user, session, error}>}
  */
-export const signInWithGoogle = async () => {
+const signInWithGoogle = async () => {
   try {
     console.log('🔍 Iniciando autenticación con Google...');
 
@@ -871,7 +974,7 @@ export const signInWithGoogle = async () => {
  * Maneja el callback de OAuth después de la autenticación
  * @returns {Promise<{user, session, error}>}
  */
-export const handleAuthCallback = async () => {
+const handleAuthCallback = async () => {
   try {
     console.log('🔄 Procesando callback de autenticación...');
 
@@ -1052,7 +1155,7 @@ export const handleAuthCallback = async () => {
  * @param {Object} updates - Datos a actualizar
  * @returns {Promise<{error}>}
  */
-export const updateUserProfile = async (updates) => {
+const updateUserProfile = async (updates) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -1082,10 +1185,21 @@ export const updateUserProfile = async (updates) => {
  * @param {string} token - Token de confirmación
  * @returns {Promise<{user, error}>}
  */
-export const confirmEmail = async (token) => {
+const confirmEmail = async (token) => {
   try {
+    // Intentar decodificar el token si está URL-encoded
+    let tokenToVerify = token;
+    try {
+      const decodedToken = decodeURIComponent(token);
+      if (decodedToken !== token) {
+        tokenToVerify = decodedToken;
+      }
+    } catch (decodeError) {
+      // Token no estaba URL-encoded o ya estaba decodificado
+    }
+
     // Verificar el token JWT
-    const payload = await verifyToken(token);
+    const payload = await verifyToken(tokenToVerify);
     if (!payload || payload.type !== 'email_confirmation') {
       return { user: null, error: 'Token de confirmación inválido o expirado.' };
     }
@@ -1130,11 +1244,154 @@ export const confirmEmail = async (token) => {
 };
 
 /**
+ * Inicia el proceso de cambio de email del usuario
+ * @param {string} userId - ID del usuario
+ * @param {string} newEmail - Nuevo email
+ * @param {string} currentEmail - Email actual
+ * @param {string} fullName - Nombre completo del usuario
+ * @returns {Promise<{success, error}>}
+ */
+const initiateEmailChange = async (userId, newEmail, currentEmail, fullName) => {
+  try {
+    console.log('🔄 Iniciando cambio de email:', { userId, newEmail, currentEmail });
+
+    // Verificar que el nuevo email no esté en uso por otro usuario
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', newEmail)
+      .single();
+
+    // Si el email existe y no pertenece al usuario actual, rechazar
+    if (existingUser && existingUser.id !== userId) {
+      return { success: false, error: 'Este email ya está registrado por otro usuario.' };
+    }
+
+    // Generar token de cambio de email
+    const changeToken = await createAccessToken({
+      userId,
+      newEmail,
+      currentEmail,
+      type: 'email_change',
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 horas
+    });
+
+    // Enviar email personalizado de cambio de email
+    const emailResult = await sendEmailChangeConfirmation(newEmail, fullName, changeToken, currentEmail);
+
+    if (!emailResult.success) {
+      console.error('❌ Error enviando email de cambio:', emailResult.error);
+      return { success: false, error: 'Error al enviar email de confirmación.' };
+    }
+
+    console.log('✅ Email de cambio enviado exitosamente');
+    return { success: true, error: null };
+
+  } catch (error) {
+    console.error('Error initiating email change:', error);
+    return { success: false, error: 'Error al iniciar cambio de email.' };
+  }
+};
+
+/**
+ * Confirma el cambio de email usando el token
+ * @param {string} token - Token de cambio de email
+ * @returns {Promise<{user, error}>}
+ */
+const confirmEmailChange = async (token) => {
+  try {
+    // Intentar decodificar el token si está URL-encoded
+    let tokenToVerify = token;
+    try {
+      const decodedToken = decodeURIComponent(token);
+      if (decodedToken !== token) {
+        tokenToVerify = decodedToken;
+      }
+    } catch (decodeError) {
+      // Token no estaba URL-encoded o ya estaba decodificado
+    }
+
+    // Verificar el token JWT
+    const payload = await verifyToken(tokenToVerify);
+    if (!payload || payload.type !== 'email_change') {
+      return { user: null, error: 'Token de cambio de email inválido o expirado.' };
+    }
+
+    const { userId, newEmail, currentEmail } = payload;
+
+    // Verificar que el nuevo email no esté en uso por otro usuario
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', newEmail)
+      .neq('id', userId)
+      .single();
+
+    if (existingUser) {
+      return { user: null, error: 'Este email ya está siendo usado por otro usuario.' };
+    }
+
+    // Primero actualizar el email en Supabase Auth
+    console.log('🔄 Actualizando email en Supabase Auth...');
+    const { error: authUpdateError } = await supabase.auth.updateUser({
+      email: newEmail
+    });
+
+    if (authUpdateError) {
+      console.error('❌ Error actualizando email en Supabase Auth:', authUpdateError);
+      return { user: null, error: handleSupabaseError(authUpdateError) };
+    }
+
+    // Luego actualizar el email en nuestra tabla users
+    console.log('🔄 Actualizando email en tabla users...');
+    const { data: userData, error: updateError } = await supabase
+      .from('users')
+      .update({
+        email: newEmail,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('❌ Error actualizando email en tabla users:', updateError);
+      // Si falla la actualización en users pero funcionó en Auth, al menos el email cambió
+      console.warn('⚠️ Email cambió en Supabase Auth pero no en tabla users');
+    }
+
+    console.log('✅ Email cambiado exitosamente:', { from: currentEmail, to: newEmail });
+
+    // Nota: Después de cambiar el email en Supabase Auth, el usuario puede necesitar
+    // confirmar el cambio a través del email que Supabase envía automáticamente.
+    // La sesión actual podría mantenerse válida, pero recomendamos que el usuario
+    // haga logout y login nuevamente para asegurar consistencia.
+
+    // Crear objeto user para retorno
+    const user = {
+      id: userData?.id || userId,
+      email: newEmail,
+      user_metadata: userData ? {
+        full_name: userData.full_name,
+        rut: userData.rut,
+        role: userData.role,
+      } : undefined,
+    };
+
+    return { user, error: null };
+
+  } catch (error) {
+    console.error('Error confirming email change:', error);
+    return { user: null, error: 'Error al confirmar cambio de email. El token puede haber expirado.' };
+  }
+};
+
+/**
  * Valida manualmente un usuario (solo para administradores)
  * @param {string} userId - ID del usuario a validar
  * @returns {Promise<{user, error}>}
  */
-export const validateUserManually = async (userId) => {
+const validateUserManually = async (userId) => {
   try {
     console.log('🔍 Validando usuario manualmente:', userId);
 
@@ -1181,7 +1438,7 @@ export const validateUserManually = async (userId) => {
  * @param {string} userId - ID del usuario a rechazar
  * @returns {Promise<{user, error}>}
  */
-export const rejectUser = async (userId) => {
+const rejectUser = async (userId) => {
   try {
     console.log('🔍 Rechazando usuario:', userId);
 
@@ -1227,7 +1484,7 @@ export const rejectUser = async (userId) => {
  * @param {string} userId - ID del usuario
  * @returns {Promise<{success, error, messageId}>}
  */
-export const sendPasswordResetForUser = async (userId) => {
+const sendPasswordResetForUser = async (userId) => {
   try {
     console.log('🔑 Enviando reset de contraseña para usuario:', userId);
 
@@ -1274,7 +1531,7 @@ export const sendPasswordResetForUser = async (userId) => {
  * @param {Object} bankAccountData - Datos bancarios
  * @returns {Promise<{success, error, beneficiaryId}>}
  */
-export const setupCompanyBankAccount = async (bankAccountData) => {
+const setupCompanyBankAccount = async (bankAccountData) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -1371,7 +1628,7 @@ export const setupCompanyBankAccount = async (bankAccountData) => {
   }
 };
 
-export default {
+export {
   signUp,
   signIn,
   signOut,
@@ -1379,6 +1636,7 @@ export default {
   getSession,
   sendPasswordResetEmail,
   updatePassword,
+  resetPasswordWithToken,
   checkEmailExists,
   checkRutExists,
   checkPhoneExists,
@@ -1387,6 +1645,8 @@ export default {
   signInWithGoogle,
   handleAuthCallback,
   confirmEmail,
+  initiateEmailChange,
+  confirmEmailChange,
   validateUserManually,
   rejectUser,
   sendPasswordResetForUser,

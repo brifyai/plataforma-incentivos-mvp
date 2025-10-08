@@ -26,9 +26,9 @@ import {
 
 const PaymentTools = () => {
   const { profile } = useAuth();
-  const [clients, setClients] = useState([]);
+  const [corporateClients, setCorporateClients] = useState([]);
   const [debts, setDebts] = useState([]);
-  const [selectedClient, setSelectedClient] = useState('');
+  const [selectedCorporateClient, setSelectedCorporateClient] = useState('');
   const [selectedDebt, setSelectedDebt] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('mercadopago');
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -36,47 +36,121 @@ const PaymentTools = () => {
   const [generatedLink, setGeneratedLink] = useState('');
   const [loading, setLoading] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [filterCorporateClient, setFilterCorporateClient] = useState('');
 
   useEffect(() => {
-    loadClients();
+    loadCorporateClients();
   }, []);
 
   useEffect(() => {
-    if (selectedClient) {
-      loadClientDebts();
-    } else {
-      setDebts([]);
-      setSelectedDebt('');
-    }
-  }, [selectedClient]);
+    loadCorporateClientDebts();
+    // Reset selections when filter changes
+    setSelectedCorporateClient('');
+    setSelectedDebt('');
+  }, [filterCorporateClient]);
 
-  const loadClients = async () => {
+  const loadCorporateClients = async () => {
     if (!profile?.company?.id) return;
 
     try {
-      const result = await getCompanyClients(profile.company.id);
-      if (result.error) {
-        console.error('Error loading clients:', result.error);
-      } else {
-        setClients(result.clients || []);
-      }
+      // Por ahora simulamos los datos de clientes corporativos
+      // En producción, esto debería consultar una tabla real de clientes corporativos
+      const mockCorporateClients = [
+        {
+          id: '1',
+          company_name: 'TechCorp S.A.',
+          contact_name: 'María González',
+          contact_email: 'maria@techcorp.cl',
+          contact_phone: '+56912345678',
+          company_rut: '76.543.210-1',
+          address: 'Av. Providencia 123, Santiago',
+          industry: 'Tecnología',
+          contract_value: 5000000,
+          contract_start_date: '2024-01-15',
+          status: 'active',
+          created_at: '2024-01-10'
+        },
+        {
+          id: '2',
+          company_name: 'RetailMax Ltda.',
+          contact_name: 'Carlos Rodríguez',
+          contact_email: 'carlos@retailmax.cl',
+          contact_phone: '+56987654321',
+          company_rut: '98.765.432-1',
+          address: 'Calle Comercio 456, Concepción',
+          industry: 'Retail',
+          contract_value: 3200000,
+          contract_start_date: '2024-02-01',
+          status: 'active',
+          created_at: '2024-01-25'
+        }
+      ];
+
+      setCorporateClients(mockCorporateClients);
     } catch (error) {
-      console.error('Error loading clients:', error);
+      console.error('Error loading corporate clients:', error);
     }
   };
 
-  const loadClientDebts = async () => {
-    if (!selectedClient) return;
+  // Función para obtener clientes corporativos filtrados
+  const getFilteredCorporateClients = () => {
+    if (!filterCorporateClient) {
+      return corporateClients;
+    }
+    return corporateClients.filter(client => client.id === filterCorporateClient);
+  };
 
+  const loadCorporateClientDebts = async () => {
     try {
-      const result = await getCompanyDebts(profile.company.id, selectedClient);
-      if (result.error) {
-        console.error('Error loading debts:', result.error);
-      } else {
-        setDebts(result.debts || []);
-      }
+      // Aquí cargaríamos las deudas asociadas al cliente corporativo filtrado
+      // Por ahora simulamos datos con relación a clientes corporativos
+      const mockDebts = [
+        {
+          id: 'debt-1',
+          description: 'Factura Servicios TechCorp',
+          current_amount: 150000,
+          user: { full_name: 'Juan Pérez' },
+          corporateClientId: '1', // TechCorp
+          status: 'active',
+          created_at: '2024-01-20'
+        },
+        {
+          id: 'debt-2',
+          description: 'Deuda RetailMax Mensual',
+          current_amount: 250000,
+          user: { full_name: 'Ana López' },
+          corporateClientId: '2', // RetailMax
+          status: 'active',
+          created_at: '2024-02-05'
+        },
+        {
+          id: 'debt-3',
+          description: 'Pago Pendiente TechCorp',
+          current_amount: 320000,
+          user: { full_name: 'Carlos Rodríguez' },
+          corporateClientId: '1', // TechCorp
+          status: 'active',
+          created_at: '2024-02-10'
+        },
+        {
+          id: 'debt-4',
+          description: 'Factura RetailMax Q1',
+          current_amount: 180000,
+          user: { full_name: 'María González' },
+          corporateClientId: '2', // RetailMax
+          status: 'active',
+          created_at: '2024-02-15'
+        }
+      ];
+
+      // Filtrar deudas según el cliente corporativo seleccionado en el filtro
+      const filteredDebts = filterCorporateClient
+        ? mockDebts.filter(debt => debt.corporateClientId === filterCorporateClient)
+        : mockDebts;
+
+      setDebts(filteredDebts);
     } catch (error) {
-      console.error('Error loading debts:', error);
+      console.error('Error loading corporate client debts:', error);
     }
   };
 
@@ -177,53 +251,89 @@ Si tienes dudas, contáctanos.`;
             <LinkIcon className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Herramientas de Pago</h3>
-            <p className="text-gray-600">Genera links de pago y gestiona transferencias bancarias</p>
+            <h3 className="text-xl font-bold text-gray-900">
+              Herramientas de Pago
+              {filterCorporateClient && (
+                <span className="ml-2 text-sm font-normal text-blue-600">
+                  - {corporateClients.find(c => c.id === filterCorporateClient)?.company_name || 'Cliente filtrado'}
+                </span>
+              )}
+            </h3>
+            <p className="text-gray-600">
+              {filterCorporateClient
+                ? `Operaciones para ${corporateClients.find(c => c.id === filterCorporateClient)?.company_name || 'cliente seleccionado'}`
+                : 'Genera links de pago y gestiona transferencias bancarias'
+              }
+            </p>
           </div>
         </div>
 
         <div className="space-y-6">
-          {/* Client Selection */}
-          <div className="bg-white/60 rounded-xl p-4 border border-green-100">
+          {/* Corporate Client Filter */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
             <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <Building className="w-4 h-4" />
-              Seleccionar Cliente
+              <Building className="w-4 h-4 text-blue-600" />
+              Filtrar por Cliente Corporativo
             </label>
             <select
-              value={selectedClient}
-              onChange={(e) => setSelectedClient(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white transition-all"
+              value={filterCorporateClient}
+              onChange={(e) => {
+                setFilterCorporateClient(e.target.value);
+                // Reset selections when changing filter
+                setSelectedCorporateClient('');
+                setSelectedDebt('');
+                setDebts([]);
+              }}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all"
             >
-              <option value="">Selecciona un cliente...</option>
-              {clients.map(client => (
+              <option value="">Mostrar todos los clientes corporativos</option>
+              {corporateClients.map(client => (
                 <option key={client.id} value={client.id}>
-                  {client.business_name} - {client.rut}
+                  {client.company_name} - {client.company_rut}
                 </option>
               ))}
             </select>
+            <p className="text-xs text-gray-500 mt-2">
+              Selecciona un cliente corporativo para filtrar las operaciones, o deja en blanco para ver todos.
+            </p>
           </div>
 
-          {/* Debt Selection */}
-          {selectedClient && (
+          {/* Debtor Selection - Only show if there are debts to select from */}
+          {debts.length > 0 && (
             <div className="bg-white/60 rounded-xl p-4 border border-green-100">
               <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                Seleccionar Deuda
+                <User className="w-4 h-4" />
+                Seleccionar Persona Deudora
               </label>
               <select
                 value={selectedDebt}
-                onChange={(e) => setSelectedDebt(e.target.value)}
+                onChange={(e) => {
+                  setSelectedDebt(e.target.value);
+                  // Auto-select the corporate client based on the selected debt
+                  if (e.target.value) {
+                    const selectedDebtData = debts.find(d => d.id === e.target.value);
+                    if (selectedDebtData && selectedDebtData.corporateClientId) {
+                      setSelectedCorporateClient(selectedDebtData.corporateClientId);
+                    }
+                  }
+                }}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white transition-all"
               >
-                <option value="">Selecciona una deuda...</option>
+                <option value="">
+                  {filterCorporateClient
+                    ? `Selecciona una persona deudora de ${corporateClients.find(c => c.id === filterCorporateClient)?.company_name || 'cliente filtrado'}...`
+                    : 'Selecciona una persona deudora...'
+                  }
+                </option>
                 {debts.map(debt => (
                   <option key={debt.id} value={debt.id}>
-                    ${debt.current_amount?.toLocaleString('es-CL')} - {debt.description || 'Sin descripción'}
+                    {debt.user?.full_name || 'Sin nombre'} - ${debt.current_amount?.toLocaleString('es-CL')} ({debt.description || 'Sin descripción'})
                   </option>
                 ))}
               </select>
             </div>
           )}
+
 
           {/* Payment Method Selection */}
           {selectedDebt && (
@@ -268,7 +378,7 @@ Si tienes dudas, contáctanos.`;
           )}
 
           {/* Action Buttons */}
-          {selectedDebt && (
+          {selectedDebt && selectedCorporateClient && (
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="gradient"
@@ -294,20 +404,30 @@ Si tienes dudas, contáctanos.`;
           )}
 
           {/* Selected Debt Info */}
-          {selectedDebtInfo && (
+          {selectedDebtInfo && selectedCorporateClient && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
               <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
                 <User className="w-4 h-4" />
-                Información de la Deuda Seleccionada
+                Información del Deudor Seleccionado
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-blue-700">Cliente Corporativo:</span>
+                  <span className="font-semibold ml-2">
+                    {corporateClients.find(c => c.id === selectedCorporateClient)?.company_name || 'N/A'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-blue-700">Persona Deudora:</span>
+                  <span className="font-semibold ml-2">{selectedDebtInfo.user?.full_name || 'N/A'}</span>
+                </div>
                 <div>
                   <span className="text-blue-700">Monto:</span>
                   <span className="font-semibold ml-2">${selectedDebtInfo.current_amount?.toLocaleString('es-CL')}</span>
                 </div>
                 <div>
-                  <span className="text-blue-700">Deudor:</span>
-                  <span className="font-semibold ml-2">{selectedDebtInfo.user?.full_name || 'N/A'}</span>
+                  <span className="text-blue-700">Descripción:</span>
+                  <span className="font-semibold ml-2">{selectedDebtInfo.description || 'Sin descripción'}</span>
                 </div>
                 <div>
                   <span className="text-blue-700">Fecha:</span>

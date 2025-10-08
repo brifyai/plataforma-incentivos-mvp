@@ -44,9 +44,14 @@ const CompanyVerificationPage = () => {
   const loadVerification = async () => {
     try {
       setLoading(true);
-      // Asumimos que tenemos el companyId del usuario
-      // En una implementación real, esto vendría del contexto o de una consulta
-      const companyId = user?.companyId || 'temp-company-id';
+      // Obtener el companyId del perfil del usuario
+      const companyId = profile?.company?.id;
+
+      if (!companyId) {
+        console.warn('No company ID found in user profile');
+        setLoading(false);
+        return;
+      }
 
       const { verification: data, error } = await getCompanyVerification(companyId);
 

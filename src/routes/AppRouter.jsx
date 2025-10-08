@@ -18,6 +18,8 @@ import RegisterPersonPage from '../pages/auth/RegisterPersonPage';
 import RegisterCompanyPage from '../pages/auth/RegisterCompanyPage';
 import ConfirmEmailPage from '../pages/auth/ConfirmEmailPage';
 import AuthCallbackPage from '../pages/auth/AuthCallbackPage';
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
 import TermsOfServicePage from '../pages/auth/TermsOfServicePage';
 import PrivacyPolicyPage from '../pages/auth/PrivacyPolicyPage';
 import SecurityPage from '../pages/SecurityPage';
@@ -66,6 +68,9 @@ import CompanyAgreementsPage from '../pages/company/AgreementsPage';
 import CompanyAnalyticsPage from '../pages/company/CompanyAnalyticsPage';
 import CompanyMessagesPage from '../pages/company/CompanyMessagesPage';
 import CompanyNotificationsPage from '../pages/company/CompanyNotificationsPage';
+import BulkImportPage from '../pages/company/BulkImportPage';
+import NewDebtorPage from '../pages/company/NewDebtorPage';
+import ClientsPage from '../pages/company/ClientsPage';
 
 // Páginas de administrador
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -164,6 +169,8 @@ const AppContent = () => {
         <Route path="/registro" element={<RegisterPage />} />
         <Route path="/registro/persona" element={<RegisterPersonPage />} />
         <Route path="/registro/empresa" element={<RegisterCompanyPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
@@ -349,6 +356,46 @@ const AppContent = () => {
           }
         />
         <Route
+          path="/empresa/perfil/operaciones"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <CompanyProfilePage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/perfil/integraciones"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <CompanyProfilePage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/perfil/verificacion"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <CompanyProfilePage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/perfil/clientes"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <CompanyProfilePage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/empresa/ofertas"
           element={
             <ProtectedRoute allowedRoles={['company']}>
@@ -424,6 +471,36 @@ const AppContent = () => {
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
                 <CompanyNotificationsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/importar"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <BulkImportPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/clientes"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <ClientsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/clientes/nuevo"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <NewDebtorPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -614,7 +691,7 @@ const AppContent = () => {
 
 const AppRouter = () => {
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter>
       <AppContent />
     </BrowserRouter>
   );

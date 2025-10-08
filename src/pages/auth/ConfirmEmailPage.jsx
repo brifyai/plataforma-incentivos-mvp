@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, Button, LoadingSpinner } from '../../components/common';
 import { CheckCircle, XCircle, Mail, ArrowRight } from 'lucide-react';
-import { confirmEmail } from '../../services/authService';
+import { confirmEmail, confirmEmailChange } from '../../services/authService';
 
 const ConfirmEmailPage = () => {
   const [searchParams] = useSearchParams();
@@ -28,15 +28,25 @@ const ConfirmEmailPage = () => {
       }
 
       try {
-        const { user: confirmedUser, error } = await confirmEmail(token);
+        // First try to confirm email change
+        let result = await confirmEmailChange(token);
 
-        if (error) {
+        // If that fails, try regular email confirmation
+        if (result.error) {
+          console.log('Not an email change token, trying regular confirmation...');
+          result = await confirmEmail(token);
+        }
+
+        if (result.error) {
           setStatus('error');
-          setMessage(error);
+          setMessage(result.error);
         } else {
           setStatus('success');
-          setUser(confirmedUser);
-          setMessage('¡Tu cuenta ha sido confirmada exitosamente!');
+          setUser(result.user);
+          setMessage(result.user?.email
+            ? '¡Tu email ha sido cambiado exitosamente!'
+            : '¡Tu cuenta ha sido confirmada exitosamente!'
+          );
         }
       } catch (error) {
         console.error('Error confirming email:', error);

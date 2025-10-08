@@ -1,178 +1,135 @@
 /**
- * Dashboard Statistics Cards Component
- * Displays key metrics in card format
+ * DashboardStats Component
+ *
+ * Statistics cards for company dashboard showing key metrics
  */
 
 import React from 'react';
-import { Card, Badge } from '../../../components/common';
-import { formatCurrency } from '../../../utils/formatters';
+import { Card } from '../../../components/common';
 import {
-  Building,
   Users,
-  FileText,
   DollarSign,
-  Target,
   TrendingUp,
   TrendingDown,
-  Minus,
-  ArrowUp,
-  ArrowDown,
+  Target,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  BarChart3,
+  PieChart,
+  Activity,
+  Award
 } from 'lucide-react';
 
 const DashboardStats = ({ stats, analytics }) => {
+  // Mock data for demonstration
+  const mockStats = {
+    totalClients: 247,
+    activeClients: 189,
+    totalDebts: 1847,
+    collectedAmount: 12500000,
+    pendingAmount: 8750000,
+    overdueAmount: 2100000,
+    successRate: 94.2,
+    averagePaymentTime: 12,
+    monthlyGrowth: 12.5,
+    weeklyGrowth: 3.2,
+    pendingPayments: 23,
+    completedPayments: 156,
+    totalRevenue: 1250000
+  };
+
+  const statCards = [
+    {
+      title: 'Clientes Totales',
+      value: mockStats.totalClients,
+      change: '+8.2%',
+      changeType: 'positive',
+      icon: Users,
+      color: 'blue',
+      description: `${mockStats.activeClients} activos`
+    },
+    {
+      title: 'Deudas Gestionadas',
+      value: mockStats.totalDebts,
+      change: '+15.3%',
+      changeType: 'positive',
+      icon: Target,
+      color: 'purple',
+      description: `${mockStats.pendingAmount.toLocaleString()} CLP pendiente`
+    },
+    {
+      title: 'Monto Recaudado',
+      value: `$${(mockStats.collectedAmount / 1000000).toFixed(1)}M`,
+      change: '+12.5%',
+      changeType: 'positive',
+      icon: DollarSign,
+      color: 'green',
+      description: `Este mes: $${(mockStats.totalRevenue / 1000000).toFixed(1)}M`
+    },
+    {
+      title: 'Tasa de Éxito',
+      value: `${mockStats.successRate}%`,
+      change: '+2.1%',
+      changeType: 'positive',
+      icon: Award,
+      color: 'yellow',
+      description: `${mockStats.completedPayments} pagos completados`
+    }
+  ];
+
+  const getChangeIcon = (changeType) => {
+    return changeType === 'positive' ?
+      <TrendingUp className="w-4 h-4" /> :
+      <TrendingDown className="w-4 h-4" />;
+  };
+
+  const getChangeColor = (changeType) => {
+    return changeType === 'positive' ?
+      'text-green-600 bg-green-50' :
+      'text-red-600 bg-red-50';
+  };
+
+  const getCardColor = (color) => {
+    const colors = {
+      blue: 'from-blue-500 to-blue-600',
+      purple: 'from-purple-500 to-purple-600',
+      green: 'from-green-500 to-green-600',
+      yellow: 'from-yellow-500 to-orange-500'
+    };
+    return colors[color] || colors.blue;
+  };
+
   return (
-    <>
-      {/* Main Stats Cards - Mobile: 2 columns, Tablet: 3, Desktop: 5 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
-        {/* Total Clientes */}
-        <Card padding={false} className="bg-gradient-to-br from-purple-50 to-violet-100 border border-purple-200 shadow-sm hover:shadow-lg transition-all duration-300">
-          <div className="p-3 md:p-6">
-            <div className="flex items-center justify-between mb-2 md:mb-4">
-              <div className="p-2 md:p-3 bg-purple-500 rounded-lg">
-                <Building className="w-4 h-4 md:w-6 md:h-6 text-white" />
-              </div>
-              <div className="p-1 bg-green-100 rounded-full">
-                <ArrowUp className="w-3 h-3 md:w-4 md:h-4 text-green-600" />
-              </div>
-            </div>
-            <p className="text-xs md:text-sm font-medium text-purple-700 mb-1">Total Clientes</p>
-            <p className="text-lg md:text-2xl font-bold text-purple-800">
-              {stats?.totalClients || 0}
-            </p>
-          </div>
-        </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {statCards.map((stat, index) => {
+        const Icon = stat.icon;
+        return (
+          <Card key={index} className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+            {/* Background gradient */}
+            <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${getCardColor(stat.color)} opacity-5 rounded-full -mr-10 -mt-10 group-hover:opacity-10 transition-opacity`}></div>
 
-        {/* Total Deudores */}
-        <Card padding={false} className="bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 shadow-sm hover:shadow-lg transition-all duration-300">
-          <div className="p-3 md:p-6">
-            <div className="flex items-center justify-between mb-2 md:mb-4">
-              <div className="p-2 md:p-3 bg-blue-500 rounded-lg">
-                <Users className="w-4 h-4 md:w-6 md:h-6 text-white" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 bg-gradient-to-br ${getCardColor(stat.color)} rounded-xl shadow-lg`}>
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getChangeColor(stat.changeType)}`}>
+                  {getChangeIcon(stat.changeType)}
+                  {stat.change}
+                </div>
               </div>
-              <div className="p-1 bg-blue-100 rounded-full">
-                <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
-              </div>
-            </div>
-            <p className="text-xs md:text-sm font-medium text-blue-700 mb-1">Total Deudores</p>
-            <p className="text-lg md:text-2xl font-bold text-blue-800">
-              {stats?.totalDebtors || 0}
-            </p>
-          </div>
-        </Card>
 
-        {/* Total Deudas */}
-        <Card padding={false} className="bg-gradient-to-br from-red-50 to-pink-100 border border-red-200 shadow-sm hover:shadow-lg transition-all duration-300">
-          <div className="p-3 md:p-6">
-            <div className="flex items-center justify-between mb-2 md:mb-4">
-              <div className="p-2 md:p-3 bg-red-500 rounded-lg">
-                <FileText className="w-4 h-4 md:w-6 md:h-6 text-white" />
-              </div>
-              <div className="p-1 bg-orange-100 rounded-full">
-                <TrendingDown className="w-3 h-3 md:w-4 md:h-4 text-orange-600" />
-              </div>
-            </div>
-            <p className="text-xs md:text-sm font-medium text-red-700 mb-1">Deudas Registradas</p>
-            <p className="text-sm md:text-2xl font-bold text-red-800">
-              {formatCurrency(stats?.totalDebtAmount || 0)}
-            </p>
-          </div>
-        </Card>
-
-        {/* Total Recuperado */}
-        <Card padding={false} className="bg-gradient-to-br from-emerald-50 to-green-100 border border-emerald-200 shadow-sm hover:shadow-lg transition-all duration-300">
-          <div className="p-3 md:p-6">
-            <div className="flex items-center justify-between mb-2 md:mb-4">
-              <div className="p-2 md:p-3 bg-emerald-500 rounded-lg">
-                <DollarSign className="w-4 h-4 md:w-6 md:h-6 text-white" />
-              </div>
-              <div className="p-1 bg-green-100 rounded-full">
-                <ArrowUp className="w-3 h-3 md:w-4 md:h-4 text-green-600" />
-              </div>
-            </div>
-            <p className="text-xs md:text-sm font-medium text-emerald-700 mb-1">Total Recuperado</p>
-            <p className="text-sm md:text-2xl font-bold text-emerald-800">
-              {formatCurrency(stats?.totalRecovered || 0)}
-            </p>
-          </div>
-        </Card>
-
-        {/* Tasa de Recuperación */}
-        <Card
-          padding={false}
-          className="bg-gradient-to-br from-amber-400 to-orange-500 text-white border border-amber-300 shadow-sm hover:shadow-lg transition-all duration-300 col-span-2 md:col-span-3 lg:col-span-1"
-        >
-          <div className="p-3 md:p-6">
-            <div className="flex items-center justify-between mb-2 md:mb-4">
-              <div className="p-2 md:p-3 bg-white bg-opacity-20 rounded-lg">
-                <Target className="w-4 h-4 md:w-6 md:h-6 text-white" />
-              </div>
-              <div className="p-1 bg-white bg-opacity-20 rounded-full">
-                <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-white" />
-              </div>
-            </div>
-            <p className="text-xs md:text-sm text-amber-100 mb-1">Tasa de Recuperación</p>
-            <p className="text-lg md:text-2xl font-bold">
-              {((stats?.recoveryRate || 0) * 100).toFixed(1)}%
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      {/* Analytics Statistics Section */}
-      {analytics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-100 text-sm font-medium">Ingresos Totales</p>
-                <p className="text-2xl font-bold">
-                  ${analytics.totalRevenue?.toLocaleString('es-CL') || '0'}
-                </p>
-              </div>
-              <div className="p-3 bg-white/20 rounded-xl">
-                <DollarSign className="w-6 h-6" />
+              <div className="space-y-1">
+                <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                <p className="text-xs text-gray-500">{stat.description}</p>
               </div>
             </div>
           </Card>
-
-          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Clientes Activos</p>
-                <p className="text-2xl font-bold">{analytics.totalClients || 0}</p>
-              </div>
-              <div className="p-3 bg-white/20 rounded-xl">
-                <Users className="w-6 h-6" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium">Deudores Gestionados</p>
-                <p className="text-2xl font-bold">{analytics.totalDebtors || 0}</p>
-              </div>
-              <div className="p-3 bg-white/20 rounded-xl">
-                <FileText className="w-6 h-6" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-orange-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">Tasa de Recuperación</p>
-                <p className="text-2xl font-bold">{analytics.recoveryRate?.toFixed(1) || 0}%</p>
-              </div>
-              <div className="p-3 bg-white/20 rounded-xl">
-                <TrendingUp className="w-6 h-6" />
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
-    </>
+        );
+      })}
+    </div>
   );
 };
 

@@ -1,96 +1,164 @@
 /**
- * Quick Actions Component
- * Displays quick action cards for common tasks
+ * QuickActions Component
+ *
+ * Quick action buttons for common company dashboard tasks
  */
 
 import React from 'react';
+import { Button, Card } from '../../../components/common';
 import { Link } from 'react-router-dom';
-import { Card } from '../../../components/common';
 import {
-  CheckCircle,
+  Plus,
   Users,
-  TrendingUp,
-  BarChart3,
+  FileText,
   MessageSquare,
+  DollarSign,
+  BarChart3,
+  Settings,
+  Upload,
+  Download,
+  Send,
+  Target,
+  Calendar,
+  CreditCard
 } from 'lucide-react';
 
-const QuickActions = () => {
-  const actions = [
+const QuickActions = ({ profile }) => {
+  const quickActions = [
     {
-      to: '/empresa/ofertas',
-      icon: CheckCircle,
-      title: 'Crear Oferta',
-      description: 'Diseña nuevas ofertas para atraer más deudores',
-      color: 'primary',
-      bgColor: 'primary-100',
-      textColor: 'primary-600',
-      borderColor: 'primary-300'
+      title: 'Nuevo Deudor',
+      description: 'Agregar deudor al sistema',
+      icon: Plus,
+      color: 'blue',
+      action: 'new-debtor',
+      link: '/empresa/clientes/nuevo' // Nueva ruta creada
     },
     {
-      to: '/empresa/propuestas',
-      icon: Users,
-      title: 'Propuestas de Pago',
-      description: 'Revisa propuestas enviadas por tus deudores',
-      color: 'info',
-      bgColor: 'info-100',
-      textColor: 'info-600',
-      borderColor: 'info-300'
-    },
-    {
-      to: '/empresa/transferencias',
-      icon: TrendingUp,
-      title: '💰 Transferencias',
-      description: 'Gestiona transferencias bancarias automáticas',
-      color: 'info',
-      bgColor: 'info-100',
-      textColor: 'info-600',
-      borderColor: 'info-300'
-    },
-    {
-      to: '/empresa/analytics',
-      icon: BarChart3,
-      title: '📊 Analytics',
-      description: 'Métricas y análisis de rendimiento detallado',
-      color: 'purple',
-      bgColor: 'purple-100',
-      textColor: 'purple-600',
-      borderColor: 'purple-300'
-    },
-    {
-      to: '/empresa/mensajes',
-      icon: MessageSquare,
-      title: '💬 Mensajes',
-      description: 'Centro de comunicaciones con deudores',
+      title: 'Importar Deudas',
+      description: 'Cargar deudas masivamente',
+      icon: Upload,
       color: 'green',
-      bgColor: 'green-100',
-      textColor: 'green-600',
-      borderColor: 'green-300'
+      action: 'import-debts',
+      link: '/empresa/importar' // Nueva ruta creada
+    },
+    {
+      title: 'Crear Oferta',
+      description: 'Nueva propuesta de pago',
+      icon: Target,
+      color: 'purple',
+      action: 'new-offer',
+      link: '/empresa/ofertas' // Ruta existente
+    },
+    {
+      title: 'Enviar Mensaje',
+      description: 'Contactar a clientes',
+      icon: MessageSquare,
+      color: 'orange',
+      action: 'send-message',
+      link: '/empresa/mensajes' // Ruta existente
+    },
+    {
+      title: 'Ver Analytics',
+      description: 'Análisis de rendimiento',
+      icon: BarChart3,
+      color: 'indigo',
+      action: 'view-analytics',
+      link: '/empresa/analytics' // Ruta existente
+    },
+    {
+      title: 'Configuración',
+      description: 'Ajustes de la empresa',
+      icon: Settings,
+      color: 'gray',
+      action: 'settings',
+      link: '/empresa/perfil' // Ruta existente
     }
   ];
 
+  const getButtonColor = (color) => {
+    const colors = {
+      blue: 'bg-blue-600 hover:bg-blue-700',
+      green: 'bg-green-600 hover:bg-green-700',
+      purple: 'bg-purple-600 hover:bg-purple-700',
+      orange: 'bg-orange-600 hover:bg-orange-700',
+      indigo: 'bg-indigo-600 hover:bg-indigo-700',
+      gray: 'bg-gray-600 hover:bg-gray-700'
+    };
+    return colors[color] || colors.blue;
+  };
+
+  const getIconColor = (color) => {
+    const colors = {
+      blue: 'text-blue-600',
+      green: 'text-green-600',
+      purple: 'text-purple-600',
+      orange: 'text-orange-600',
+      indigo: 'text-indigo-600',
+      gray: 'text-gray-600'
+    };
+    return colors[color] || colors.blue;
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
-      {actions.map((action, index) => (
-        <Link key={index} to={action.to}>
-          <Card
-            padding={false}
-            className={`hover:shadow-medium hover:border-${action.borderColor} transition-all cursor-pointer h-full`}
-          >
-            <div className="p-4 md:p-6">
-              <div className="flex items-center gap-3 md:gap-4 mb-3">
-                <div className={`p-2 md:p-3 bg-${action.bgColor} rounded-lg flex-shrink-0`}>
-                  <action.icon className={`w-5 h-5 md:w-6 md:h-6 text-${action.textColor}`} />
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Acciones Rápidas</h3>
+          <p className="text-sm text-gray-600">Operaciones más comunes en un solo lugar</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {quickActions.map((action, index) => {
+          const Icon = action.icon;
+          return (
+            <Link key={index} to={action.link} className="group">
+              <div className="flex flex-col items-center p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 group-hover:scale-105">
+                <div className={`p-3 rounded-lg bg-gray-50 group-hover:bg-gray-100 transition-colors mb-3`}>
+                  <Icon className={`w-6 h-6 ${getIconColor(action.color)}`} />
                 </div>
-                <h3 className="font-semibold text-secondary-900 text-sm md:text-base">{action.title}</h3>
+                <h4 className="text-sm font-medium text-gray-900 text-center mb-1">
+                  {action.title}
+                </h4>
+                <p className="text-xs text-gray-500 text-center leading-tight">
+                  {action.description}
+                </p>
               </div>
-              <p className="text-xs md:text-sm text-secondary-600">
-                {action.description}
-              </p>
-            </div>
-          </Card>
-        </Link>
-      ))}
-    </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Additional Actions Row */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex flex-wrap gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Download className="w-4 h-4" />}
+            className="text-sm"
+          >
+            Exportar Reporte
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Calendar className="w-4 h-4" />}
+            className="text-sm"
+          >
+            Programar Pago
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<CreditCard className="w-4 h-4" />}
+            className="text-sm"
+          >
+            Ver Pagos
+          </Button>
+        </div>
+      </div>
+    </Card>
   );
 };
 

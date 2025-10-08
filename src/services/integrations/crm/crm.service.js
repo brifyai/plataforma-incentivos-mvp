@@ -1,23 +1,27 @@
 /**
  * Servicio Genérico de CRM
- * 
+ *
  * Este servicio proporciona una interfaz unificada para interactuar con diferentes
- * sistemas CRM (Salesforce, HubSpot, Zoho). Actúa como fachada para los adaptadores
- * específicos de cada plataforma.
- * 
+ * sistemas CRM (Salesforce, HubSpot, Zoho, Upnify, Pipedrive). Actúa como fachada
+ * para los adaptadores específicos de cada plataforma.
+ *
  * @module CRMService
  */
 
 import salesforceService from './salesforce.service';
 import hubspotService from './hubspot.service';
 import zohoService from './zoho.service';
+import upnifyService from './upnify.service';
+import pipedriveService from './pipedrive.service';
 
 class CRMService {
   constructor() {
     this.adapters = {
       salesforce: salesforceService,
       hubspot: hubspotService,
-      zoho: zohoService
+      zoho: zohoService,
+      upnify: upnifyService,
+      pipedrive: pipedriveService
     };
     
     // CRM activo por defecto (puede configurarse desde la UI)
@@ -41,7 +45,7 @@ class CRMService {
 
   /**
    * Establece el CRM activo manualmente
-   * @param {string} crmName - Nombre del CRM (salesforce, hubspot, zoho)
+   * @param {string} crmName - Nombre del CRM (salesforce, hubspot, zoho, upnify, pipedrive)
    */
   setActiveCRM(crmName) {
     if (this.adapters[crmName]) {

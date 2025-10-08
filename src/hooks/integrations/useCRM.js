@@ -1,22 +1,20 @@
 /**
  * Hook personalizado para integración con CRM
- * 
+ *
  * Proporciona funcionalidades para interactuar con sistemas CRM
- * (Salesforce, HubSpot, Zoho) de forma unificada.
- * 
+ * (Salesforce, HubSpot, Zoho, Upnify, Pipedrive) de forma unificada.
+ *
  * @module useCRM
  */
 
 import { useState, useCallback, useEffect } from 'react';
 import crmService from '../../services/integrations/crm/crm.service';
-import { useNotification } from '../../context/NotificationContext';
 
 export const useCRM = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeCRM, setActiveCRM] = useState(null);
   const [availableCRMs, setAvailableCRMs] = useState([]);
-  const { addNotification } = useNotification();
 
   /**
    * Detecta y obtiene información de CRMs disponibles al montar el hook
@@ -24,7 +22,7 @@ export const useCRM = () => {
   useEffect(() => {
     const crms = crmService.getAvailableCRMs();
     setAvailableCRMs(crms);
-    
+
     const active = crms.find(crm => crm.active);
     if (active) {
       setActiveCRM(active.name);
@@ -38,19 +36,10 @@ export const useCRM = () => {
     try {
       crmService.setActiveCRM(crmName);
       setActiveCRM(crmName);
-      
-      addNotification({
-        type: 'success',
-        message: `CRM activo cambiado a ${crmName}`
-      });
     } catch (err) {
       setError(err.message);
-      addNotification({
-        type: 'error',
-        message: `Error al cambiar CRM: ${err.message}`
-      });
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Sincroniza un deudor con el CRM
@@ -62,27 +51,18 @@ export const useCRM = () => {
     try {
       const result = await crmService.syncDebtor(debtorData);
 
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: `Deudor ${result.action === 'created' ? 'creado' : 'actualizado'} en CRM`
-        });
-      } else {
+      if (!result.success) {
         throw new Error(result.error);
       }
 
       return result;
     } catch (err) {
       setError(err.message);
-      addNotification({
-        type: 'error',
-        message: `Error al sincronizar deudor: ${err.message}`
-      });
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Sincroniza múltiples deudores
@@ -93,24 +73,14 @@ export const useCRM = () => {
 
     try {
       const result = await crmService.syncDebtors(debtorsData);
-
-      addNotification({
-        type: 'info',
-        message: `Sincronización: ${result.successful} exitosos, ${result.failed} fallidos`
-      });
-
       return result;
     } catch (err) {
       setError(err.message);
-      addNotification({
-        type: 'error',
-        message: `Error en sincronización masiva: ${err.message}`
-      });
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Obtiene deudores desde el CRM
@@ -157,24 +127,14 @@ export const useCRM = () => {
 
     try {
       const debts = await crmService.importDebts(filters);
-      
-      addNotification({
-        type: 'success',
-        message: `${debts.length} deudas importadas desde CRM`
-      });
-
       return { success: true, debts };
     } catch (err) {
       setError(err.message);
-      addNotification({
-        type: 'error',
-        message: `Error al importar deudas: ${err.message}`
-      });
       return { success: false, error: err.message, debts: [] };
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Actualiza el estado de una deuda en el CRM
@@ -185,26 +145,14 @@ export const useCRM = () => {
 
     try {
       const result = await crmService.updateDebtStatus(debtId, updateData);
-
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: 'Estado de deuda actualizado en CRM'
-        });
-      }
-
       return result;
     } catch (err) {
       setError(err.message);
-      addNotification({
-        type: 'error',
-        message: `Error al actualizar deuda: ${err.message}`
-      });
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Registra una actividad en el CRM
@@ -215,14 +163,6 @@ export const useCRM = () => {
 
     try {
       const result = await crmService.logActivity(activityData);
-
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: 'Actividad registrada en CRM'
-        });
-      }
-
       return result;
     } catch (err) {
       setError(err.message);
@@ -230,7 +170,7 @@ export const useCRM = () => {
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Registra un pago en el CRM
@@ -241,14 +181,6 @@ export const useCRM = () => {
 
     try {
       const result = await crmService.logPayment(paymentData);
-
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: 'Pago registrado en CRM'
-        });
-      }
-
       return result;
     } catch (err) {
       setError(err.message);
@@ -256,7 +188,7 @@ export const useCRM = () => {
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Crea un acuerdo de pago en el CRM
@@ -267,26 +199,14 @@ export const useCRM = () => {
 
     try {
       const result = await crmService.createPaymentAgreement(agreementData);
-
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: 'Acuerdo de pago creado en CRM'
-        });
-      }
-
       return result;
     } catch (err) {
       setError(err.message);
-      addNotification({
-        type: 'error',
-        message: `Error al crear acuerdo: ${err.message}`
-      });
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Actualiza un acuerdo de pago en el CRM
@@ -297,14 +217,6 @@ export const useCRM = () => {
 
     try {
       const result = await crmService.updatePaymentAgreement(agreementId, updateData);
-
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: 'Acuerdo de pago actualizado en CRM'
-        });
-      }
-
       return result;
     } catch (err) {
       setError(err.message);
@@ -312,7 +224,7 @@ export const useCRM = () => {
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Obtiene el historial de actividades de un deudor
@@ -358,34 +270,15 @@ export const useCRM = () => {
     setError(null);
 
     try {
-      addNotification({
-        type: 'info',
-        message: 'Iniciando sincronización completa con CRM...'
-      });
-
       const result = await crmService.fullSync(options);
-
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: `Sincronización completa: ${result.summary.debtors} deudores, ${result.summary.debts} deudas`
-        });
-      } else {
-        throw new Error(result.error);
-      }
-
       return result;
     } catch (err) {
       setError(err.message);
-      addNotification({
-        type: 'error',
-        message: `Error en sincronización: ${err.message}`
-      });
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   /**
    * Sincronización incremental
@@ -395,20 +288,7 @@ export const useCRM = () => {
     setError(null);
 
     try {
-      addNotification({
-        type: 'info',
-        message: 'Sincronizando cambios recientes...'
-      });
-
       const result = await crmService.incrementalSync(since);
-
-      if (result.success) {
-        addNotification({
-          type: 'success',
-          message: 'Sincronización incremental completada'
-        });
-      }
-
       return result;
     } catch (err) {
       setError(err.message);
@@ -416,7 +296,7 @@ export const useCRM = () => {
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   return {
     loading,

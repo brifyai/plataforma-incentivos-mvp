@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Card, Button, Input, Modal } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserProfile } from '../../services/databaseService';
+import { hashPassword } from '../../services/authService.js';
 import Swal from 'sweetalert2';
 import {
   User,
@@ -129,9 +130,12 @@ const ProfilePage = () => {
 
       setLoading(true);
 
-      // Actualizar la contraseña en la base de datos
+      // Hashear la nueva contraseña antes de guardarla
+      const hashedPassword = await hashPassword(passwordData.newPassword);
+
+      // Actualizar la contraseña hasheada en la base de datos
       const { error } = await updateUserProfile(user.id, {
-        password: passwordData.newPassword,
+        password: hashedPassword,
         updated_at: new Date().toISOString()
       });
 
