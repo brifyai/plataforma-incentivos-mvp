@@ -26,14 +26,6 @@ import {
 const QuickActions = ({ profile }) => {
   const quickActions = [
     {
-      title: 'Nuevo Deudor',
-      description: 'Agregar deudor al sistema',
-      icon: Plus,
-      color: 'blue',
-      action: 'new-debtor',
-      link: '/empresa/clientes/nuevo' // Nueva ruta creada
-    },
-    {
       title: 'Importar Deudas',
       description: 'Cargar deudas masivamente',
       icon: Upload,
@@ -108,12 +100,12 @@ const QuickActions = ({ profile }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {quickActions.map((action, index) => {
           const Icon = action.icon;
           return (
             <Link key={index} to={action.link} className="group">
-              <div className="flex flex-col items-center p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 group-hover:scale-105">
+              <div className="flex flex-col items-center p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 group-hover:scale-105 h-32">
                 <div className={`p-3 rounded-lg bg-gray-50 group-hover:bg-gray-100 transition-colors mb-3`}>
                   <Icon className={`w-6 h-6 ${getIconColor(action.color)}`} />
                 </div>

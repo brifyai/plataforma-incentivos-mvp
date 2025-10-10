@@ -15,27 +15,84 @@ import { COMMISSION_CONFIG, PAYMENT_METHODS, NOTIFICATION_TYPES } from '../confi
 import { createBankTransfer } from './bankTransferService';
 
 /**
- * Calcula la comisión e incentivo para un pago (MODELO ECONÓMICO ACTUALIZADO)
+ * Calcula las comisiones para diferentes métodos de pago (MODELO ECONÓMICO ACTUALIZADO)
+ *
+ * Mercado Pago comisiones en Chile (aproximadas):
+ * - Tarjeta de crédito: 2.9% + $300 CLP
+ * - Tarjeta de débito: 1.5% + $300 CLP
  *
  * Nuevo modelo:
  * - Comisión fija: $60.000 por negocio cerrado (pagada mensualmente por empresa)
  * - Incentivo usuario: $30.000 fijo por cierre de negocio
  * - Comisiones de MP: Asumidas completamente por la empresa
  *
- * @param {number} amount - Monto del pago (ya no afecta cálculo)
- * @returns {Object} Objeto con valores fijos según nuevo modelo
+ * @param {number} amount - Monto del pago
+ * @param {string} paymentMethod - Método de pago ('mercadopago', 'bank_transfer', 'wallet')
+ * @returns {Object} Objeto con desglose completo de comisiones
  */
-export const calculateCommissionAndIncentive = (amount) => {
+export const calculateCommissions = (amount, paymentMethod = 'mercadopago') => {
   // Valores fijos según nuevo modelo económico
   const businessClosureFee = 60000; // $60.000 comisión fija por negocio cerrado
   const userIncentive = 30000; // $30.000 incentivo fijo al usuario
-  const platformCommission = 0; // Comisiones de MP asumidas por empresa
+
+  let mercadopagoCommission = 0;
+  let mercadopagoFee = 0;
+
+  // Calcular comisión de Mercado Pago si aplica
+  if (paymentMethod === 'mercadopago') {
+    // Tarjeta de crédito: 2.9% + $300 CLP (valores aproximados para Chile)
+    const percentageFee = amount * 0.029; // 2.9%
+    const fixedFee = 300; // $300 CLP fijos
+    mercadopagoCommission = percentageFee + fixedFee;
+    mercadopagoFee = fixedFee;
+  }
+
+  // Monto que recibe la empresa después de todas las comisiones
+  const netAmountToCompany = amount - mercadopagoCommission;
 
   return {
-    businessClosureFee, // Comisión que empresa paga mensualmente
-    userIncentive, // Incentivo que usuario recibe
-    platformCommission, // Comisión de pasarela (0 - asumida por empresa)
-    totalPlatformRevenue: businessClosureFee, // Ingreso total plataforma por este negocio
+    // Montos originales
+    originalAmount: amount,
+    paymentMethod,
+
+    // Comisiones de pasarela
+    mercadopagoCommission, // Comisión total de MP
+    mercadopagoPercentage: paymentMethod === 'mercadopago' ? 0.029 : 0, // 2.9%
+    mercadopagoFixedFee: mercadopagoFee, // $300 CLP
+
+    // Modelo económico de la plataforma
+    businessClosureFee, // $60.000 que empresa paga mensualmente
+    userIncentive, // $30.000 que usuario recibe
+
+    // Monto neto que recibe la empresa
+    netAmountToCompany,
+
+    // Ingresos totales de la plataforma
+    totalPlatformRevenue: businessClosureFee, // Solo la comisión mensual
+
+    // Breakdown para display
+    breakdown: {
+      amountPaidByDebtor: amount,
+      mercadopagoCommission: mercadopagoCommission,
+      amountReceivedByCompany: netAmountToCompany,
+      platformMonthlyFee: businessClosureFee,
+      userIncentive: userIncentive,
+    }
+  };
+};
+
+/**
+ * Calcula la comisión e incentivo para un pago (MANTENIDO POR COMPATIBILIDAD)
+ *
+ * @deprecated Use calculateCommissions() instead for more detailed breakdown
+ */
+export const calculateCommissionAndIncentive = (amount) => {
+  const result = calculateCommissions(amount, 'mercadopago');
+  return {
+    businessClosureFee: result.businessClosureFee,
+    userIncentive: result.userIncentive,
+    platformCommission: result.mercadopagoCommission,
+    totalPlatformRevenue: result.totalPlatformRevenue,
   };
 };
 
@@ -120,8 +177,9 @@ export const processPayment = async (paymentInfo) => {
       paymentGatewayId = null,
     } = paymentInfo;
 
-    // Calcular valores fijos según nuevo modelo económico
-    const { businessClosureFee, userIncentive, platformCommission } = calculateCommissionAndIncentive(amount);
+    // Calcular valores según nuevo modelo económico con comisiones detalladas
+    const commissionData = calculateCommissions(amount, paymentMethod);
+    const { businessClosureFee, userIncentive, mercadopagoCommission } = commissionData;
 
     // Crear registro de pago
     const paymentData = {
@@ -132,16 +190,23 @@ export const processPayment = async (paymentInfo) => {
       amount: parseFloat(amount),
       payment_method: paymentMethod,
       status: 'pending',
-      platform_commission: platformCommission, // 0 - asumido por empresa
+      platform_commission: mercadopagoCommission, // Comisión real de MP
       user_incentive: userIncentive, // $30.000 fijo
       business_closure_fee: businessClosureFee, // $60.000 fijo
       installment_number: installmentNumber || null,
       payment_gateway_id: paymentGatewayId,
       metadata: {
         economic_model: 'fixed_commission_v2',
+        commission_breakdown: commissionData.breakdown,
+        mercadopago_details: {
+          commission: mercadopagoCommission,
+          percentage: commissionData.mercadopagoPercentage,
+          fixed_fee: commissionData.mercadopagoFixedFee,
+        },
         business_closure_fee: businessClosureFee,
         user_incentive: userIncentive,
         monthly_billing: true, // Empresa paga mensualmente
+        net_amount_to_company: commissionData.netAmountToCompany,
       },
     };
 
@@ -492,8 +557,9 @@ export const processBankTransferPayment = async (bankTransferData) => {
       installmentNumber,
     } = bankTransferData;
 
-    // Usar valores fijos del nuevo modelo económico
-    const { businessClosureFee, userIncentive, platformCommission } = calculateCommissionAndIncentive(amount);
+    // Usar valores del nuevo modelo económico (sin comisión de MP para transferencias)
+    const commissionData = calculateCommissions(amount, 'bank_transfer');
+    const { businessClosureFee, userIncentive } = commissionData;
 
     // Crear registro de pago con estado awaiting_validation
     const paymentData = {
@@ -505,14 +571,16 @@ export const processBankTransferPayment = async (bankTransferData) => {
       payment_method: 'bank_transfer',
       status: 'awaiting_validation',
       requires_validation: true,
-      platform_commission: platformCommission, // 0
+      platform_commission: 0, // Sin comisión de MP en transferencias
       user_incentive: userIncentive, // $30.000 fijo
       business_closure_fee: businessClosureFee, // $60.000 fijo
       installment_number: installmentNumber || null,
       metadata: {
         economic_model: 'fixed_commission_v2',
+        commission_breakdown: commissionData.breakdown,
         transfer_instructions: 'Usuario debe subir comprobante de pago',
         monthly_billing: true,
+        net_amount_to_company: amount, // En transferencias, empresa recibe el monto completo
       },
     };
 
@@ -772,8 +840,9 @@ export const processMercadoPagoSplitPayment = async (mercadopagoPaymentData) => 
       paymentGatewayId,
     } = mercadopagoPaymentData;
 
-    // Usar valores fijos - sin comisiones por transacción
-    const { businessClosureFee, userIncentive, platformCommission } = calculateCommissionAndIncentive(amount);
+    // Calcular comisiones detalladas para Mercado Pago
+    const commissionData = calculateCommissions(amount, 'mercadopago');
+    const { businessClosureFee, userIncentive, mercadopagoCommission } = commissionData;
 
     // Crear registro de pago
     const paymentData = {
@@ -784,7 +853,7 @@ export const processMercadoPagoSplitPayment = async (mercadopagoPaymentData) => 
       amount: parseFloat(amount),
       payment_method: 'mercadopago',
       status: 'pending', // Se confirmará vía webhook
-      platform_commission: platformCommission, // 0 - asumido por empresa
+      platform_commission: mercadopagoCommission, // Comisión real de MP
       user_incentive: userIncentive, // $30.000 fijo
       business_closure_fee: businessClosureFee, // $60.000 fijo
       installment_number: installmentNumber || null,
@@ -792,9 +861,15 @@ export const processMercadoPagoSplitPayment = async (mercadopagoPaymentData) => 
       requires_validation: false, // MP es automático
       metadata: {
         economic_model: 'fixed_commission_v2',
+        commission_breakdown: commissionData.breakdown,
+        mercadopago_details: {
+          commission: mercadopagoCommission,
+          percentage: commissionData.mercadopagoPercentage,
+          fixed_fee: commissionData.mercadopagoFixedFee,
+        },
         monthly_billing: true,
-        no_transaction_fees: true, // Empresa asume todas las comisiones de MP
         platform_revenue: businessClosureFee, // $60.000 pagados mensualmente
+        net_amount_to_company: commissionData.netAmountToCompany,
       },
     };
 

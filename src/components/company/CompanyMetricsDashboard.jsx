@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '../common';
 import { formatCurrency } from '../../utils/formatters';
+import { getPaymentGoals } from '../../services/databaseService';
 import {
   TrendingUp,
   DollarSign,
@@ -28,25 +29,72 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
     avgRecoveryTime: 0
   });
 
-  useEffect(() => {
-    if (analytics) {
-      // Calcular métricas basadas en los datos disponibles
-      const totalDebts = analytics.total_debts || 0;
-      const totalRecovered = analytics.total_recovered || 0;
-      const recoveryRate = totalDebts > 0 ? (totalRecovered / totalDebts) * 100 : 0;
-      const activeClients = analytics.active_clients || 0;
-      const monthlyGrowth = analytics.monthly_growth || 0;
-      const avgRecoveryTime = analytics.avg_recovery_time || 0;
+  const [additionalMetrics, setAdditionalMetrics] = useState({
+    bestMonth: null,
+    monthlyGoalProgress: 0,
+    paymentGoals: null
+  });
 
-      setMetrics({
-        totalDebts,
-        totalRecovered,
-        recoveryRate,
-        activeClients,
-        monthlyGrowth,
-        avgRecoveryTime
-      });
-    }
+  useEffect(() => {
+    const loadAdditionalMetrics = async () => {
+      if (analytics) {
+        // Calcular métricas básicas
+        const totalDebts = analytics.total_debts || 0;
+        const totalRecovered = analytics.total_recovered || 0;
+        const recoveryRate = totalDebts > 0 ? (totalRecovered / totalDebts) * 100 : 0;
+        const activeClients = analytics.active_clients || 0;
+        const monthlyGrowth = analytics.monthly_growth || 0;
+        const avgRecoveryTime = analytics.avgRecoveryTime || analytics.avg_recovery_time || 45;
+
+        setMetrics({
+          totalDebts,
+          totalRecovered,
+          recoveryRate,
+          activeClients,
+          monthlyGrowth,
+          avgRecoveryTime
+        });
+
+        // Calcular métricas adicionales
+        try {
+          // Obtener objetivos de pago
+          const { goals } = await getPaymentGoals();
+          const monthlyGoal = goals?.monthlyCommissionGoal || 2500000;
+
+          // Usar mejor mes calculado desde analytics o calcular desde monthlyTrend
+          let bestMonth = analytics.bestMonth || 'Sin datos';
+          if (bestMonth === 'Sin datos' && analytics.monthlyTrend && analytics.monthlyTrend.length > 0) {
+            let bestMonthRevenue = 0;
+            analytics.monthlyTrend.forEach(month => {
+              if (month.revenue > bestMonthRevenue) {
+                bestMonthRevenue = month.revenue;
+                bestMonth = month.month;
+              }
+            });
+          }
+
+          // Calcular progreso de meta mensual (último mes vs meta)
+          const currentMonthRevenue = analytics.monthlyTrend?.[analytics.monthlyTrend.length - 1]?.revenue || 0;
+          const monthlyGoalProgress = monthlyGoal > 0 ? (currentMonthRevenue / monthlyGoal) * 100 : 0;
+
+          setAdditionalMetrics({
+            bestMonth,
+            monthlyGoalProgress: Math.min(monthlyGoalProgress, 100), // Máximo 100%
+            paymentGoals: goals
+          });
+
+        } catch (error) {
+          console.error('Error loading additional metrics:', error);
+          setAdditionalMetrics({
+            bestMonth: analytics?.bestMonth || 'Sin datos',
+            monthlyGoalProgress: 0,
+            paymentGoals: null
+          });
+        }
+      }
+    };
+
+    loadAdditionalMetrics();
   }, [analytics]);
 
   const MetricCard = ({ title, value, icon: Icon, color, trend, trendValue, subtitle }) => {
@@ -170,7 +218,9 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
             </div>
             <div>
               <p className="text-sm font-medium text-blue-900">Mejor Mes</p>
-              <p className="text-lg font-bold text-blue-700">Agosto 2024</p>
+              <p className="text-lg font-bold text-blue-700">
+                {additionalMetrics.bestMonth === 'Sin datos' ? 'Sin datos históricos' : additionalMetrics.bestMonth}
+              </p>
             </div>
           </div>
         </Card>
@@ -182,7 +232,14 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
             </div>
             <div>
               <p className="text-sm font-medium text-green-900">Meta Mensual</p>
-              <p className="text-lg font-bold text-green-700">85% alcanzado</p>
+              <p className="text-lg font-bold text-green-700">
+                {additionalMetrics.monthlyGoalProgress.toFixed(1)}% alcanzado
+              </p>
+              {additionalMetrics.paymentGoals && (
+                <p className="text-xs text-green-600 mt-1">
+                  Meta: {formatCurrency(additionalMetrics.paymentGoals.monthlyCommissionGoal)}
+                </p>
+              )}
             </div>
           </div>
         </Card>
@@ -194,7 +251,12 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
             </div>
             <div>
               <p className="text-sm font-medium text-purple-900">Tiempo Promedio</p>
-              <p className="text-lg font-bold text-purple-700">{metrics.avgRecoveryTime || 45} días</p>
+              <p className="text-lg font-bold text-purple-700">
+                {Math.round(metrics.avgRecoveryTime || 45)} días
+              </p>
+              <p className="text-xs text-purple-600 mt-1">
+                Tiempo de recuperación promedio
+              </p>
             </div>
           </div>
         </Card>

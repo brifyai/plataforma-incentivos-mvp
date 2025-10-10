@@ -5,8 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, Badge, Modal } from '../../../components/common';
-import { Link } from 'react-router-dom';
+import { Card, Button, Input, Badge } from '../../../components/common';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Users,
   Search,
@@ -29,15 +29,26 @@ import {
 } from 'lucide-react';
 
 const ClientManagement = ({ clients, loading, selectedCorporateClient, corporateClients }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filteredClients, setFilteredClients] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showContactModal, setShowContactModal] = useState(false);
-  const [selectedClientForContact, setSelectedClientForContact] = useState(null);
-  const [contactMessage, setContactMessage] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
   const itemsPerPage = 10;
+
+  // Función para calcular días de atraso
+  const calculateDaysOverdue = (client) => {
+    // Para datos mock, asumimos que las deudas vencen 30 días después del último pago
+    // En producción, esto vendría de la base de datos (due_date)
+    const lastPaymentDate = new Date(client.lastPayment);
+    const assumedDueDate = new Date(lastPaymentDate);
+    assumedDueDate.setDate(assumedDueDate.getDate() + 30); // 30 días de gracia
+
+    const today = new Date();
+    const daysOverdue = Math.max(0, Math.floor((today - assumedDueDate) / (1000 * 60 * 60 * 24)));
+
+    return daysOverdue;
+  };
 
   // Función para calcular el nivel de riesgo basado en datos del cliente
   const calculateRiskLevel = (client) => {
@@ -68,6 +79,12 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
     const paymentProgress = (client.paidAmount / client.totalDebt) * 100;
     if (paymentProgress < 20) riskScore += 2;
     else if (paymentProgress < 50) riskScore += 1;
+
+    // Factor 6: Días de atraso
+    const daysOverdue = calculateDaysOverdue(client);
+    if (daysOverdue > 60) riskScore += 3;
+    else if (daysOverdue > 30) riskScore += 2;
+    else if (daysOverdue > 0) riskScore += 1;
 
     // Determinar nivel de riesgo basado en el score
     if (riskScore >= 7) return 'high';
@@ -226,10 +243,11 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
   useEffect(() => {
     let filtered = clients && clients.length > 0 ? clients : mockClients;
 
-    // Calcular nivel de riesgo para cada cliente si no lo tiene
+    // Calcular nivel de riesgo y días de atraso para cada cliente si no lo tiene
     filtered = filtered.map(client => ({
       ...client,
-      riskLevel: client.riskLevel || calculateRiskLevel(client)
+      riskLevel: client.riskLevel || calculateRiskLevel(client),
+      daysOverdue: client.daysOverdue !== undefined ? client.daysOverdue : calculateDaysOverdue(client)
     }));
 
     // Filter by corporate client
@@ -273,32 +291,8 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
   // Contact functions
   const handleContactClient = (client) => {
-    setSelectedClientForContact(client);
-    setContactMessage('');
-    setShowContactModal(true);
-  };
-
-  const handleSendMessage = async () => {
-    if (!contactMessage.trim()) {
-      alert('Por favor, escribe un mensaje antes de enviar.');
-      return;
-    }
-
-    try {
-      setSendingMessage(true);
-      // Aquí iría la lógica para enviar el mensaje
-      // Por ahora simulamos el envío
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      alert('Mensaje enviado exitosamente');
-      setShowContactModal(false);
-      setSelectedClientForContact(null);
-      setContactMessage('');
-    } catch (error) {
-      alert('Error al enviar el mensaje. Por favor, intenta de nuevo.');
-    } finally {
-      setSendingMessage(false);
-    }
+    // Navigate to messages page with client ID as query parameter
+    navigate(`/empresa/mensajes?client=${client.id}`);
   };
 
   const getStatusBadge = (status) => {
@@ -354,14 +348,6 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           >
             Exportar
           </Button>
-          <Link to="/empresa/clientes/nuevo">
-            <Button
-              size="sm"
-              leftIcon={<UserPlus className="w-4 h-4" />}
-            >
-              Nuevo Cliente
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -416,7 +402,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-gray-400" />
                 <span className="text-sm text-gray-600">{client.email}</span>
@@ -435,6 +421,12 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                 <Calendar className="w-4 h-4 text-gray-400" />
                 <span className="text-sm text-gray-600">
                   Último pago: {new Date(client.lastPayment).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${client.daysOverdue > 0 ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                <span className={`text-sm ${client.daysOverdue > 0 ? 'text-red-600 font-medium' : 'text-green-600'}`}>
+                  {client.daysOverdue > 0 ? `${client.daysOverdue} días atraso` : 'Al día'}
                 </span>
               </div>
             </div>
@@ -482,17 +474,12 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           <div className="text-center py-12">
             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron clientes</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600">
               {searchTerm || filterStatus !== 'all' || selectedCorporateClient
                 ? 'Intenta ajustar los filtros de búsqueda'
-                : 'Comienza agregando tu primer cliente'
+                : 'No hay clientes disponibles en este momento'
               }
             </p>
-            <Link to="/empresa/clientes/nuevo">
-              <Button leftIcon={<UserPlus className="w-4 h-4" />}>
-                Agregar Primer Cliente
-              </Button>
-            </Link>
           </div>
         )}
       </div>
@@ -574,7 +561,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
       {/* Summary */}
       <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
           <div>
             <div className="text-2xl font-bold text-gray-900">{filteredClients.length}</div>
             <div className="text-sm text-gray-600">Clientes mostrados</div>
@@ -584,6 +571,12 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
               {filteredClients.filter(c => c.status === 'active').length}
             </div>
             <div className="text-sm text-gray-600">Clientes activos</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-red-600">
+              {filteredClients.filter(c => c.daysOverdue > 0).length}
+            </div>
+            <div className="text-sm text-gray-600">Clientes con atraso</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-green-600">
@@ -600,87 +593,6 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
         </div>
       </div>
 
-      {/* Contact Modal */}
-      <Modal
-        isOpen={showContactModal}
-        onClose={() => setShowContactModal(false)}
-        title={`Contactar a ${selectedClientForContact?.name}`}
-        size="md"
-      >
-        <div className="space-y-6">
-          {selectedClientForContact && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <MessageSquare className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-blue-900 mb-1">Enviar Mensaje</h4>
-                  <p className="text-sm text-blue-700 mb-2">
-                    Contacta a {selectedClientForContact.name} sobre sus deudas pendientes
-                  </p>
-                  <div className="text-xs text-blue-600">
-                    Email: {selectedClientForContact.email}<br />
-                    Teléfono: {selectedClientForContact.phone}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mensaje
-              </label>
-              <textarea
-                value={contactMessage}
-                onChange={(e) => setContactMessage(e.target.value)}
-                placeholder="Escribe tu mensaje aquí..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                rows={4}
-              />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl border border-yellow-200">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <MessageSquare className="w-4 h-4 text-yellow-600" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-yellow-800 mb-1">Recomendaciones</h4>
-                <ul className="text-sm text-yellow-700 space-y-1">
-                  <li>• Sé claro y específico sobre las deudas</li>
-                  <li>• Menciona opciones de negociación disponibles</li>
-                  <li>• Incluye información de contacto para respuesta</li>
-                  <li>• Mantén un tono profesional y respetuoso</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowContactModal(false)}
-              className="flex-1"
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="gradient"
-              onClick={handleSendMessage}
-              className="flex-1"
-              leftIcon={<MessageSquare className="w-4 h-4" />}
-              loading={sendingMessage}
-              disabled={sendingMessage || !contactMessage.trim()}
-            >
-              {sendingMessage ? 'Enviando...' : 'Enviar Mensaje'}
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </Card>
   );
 };

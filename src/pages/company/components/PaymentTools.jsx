@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, Modal, Badge, LoadingSpinner } from '../../../components/common';
 import { useAuth } from '../../../context/AuthContext';
 import { getCompanyClients, getCompanyDebts } from '../../../services/databaseService';
+import { calculateCommissions } from '../../../services/paymentService';
 import {
   Link as LinkIcon,
   Copy,
@@ -37,6 +38,7 @@ const PaymentTools = () => {
   const [loading, setLoading] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [filterCorporateClient, setFilterCorporateClient] = useState('');
+  const [commissionInfo, setCommissionInfo] = useState(null);
 
   useEffect(() => {
     loadCorporateClients();
@@ -48,6 +50,22 @@ const PaymentTools = () => {
     setSelectedCorporateClient('');
     setSelectedDebt('');
   }, [filterCorporateClient]);
+
+  // Calculate commission information when debt or payment method changes
+  useEffect(() => {
+    if (selectedDebt) {
+      const debtInfo = debts.find(d => d.id === selectedDebt);
+      if (debtInfo) {
+        const paymentMethod = paymentMethod === 'mercadopago' ? 'mercadopago' : 'bank_transfer';
+        const commission = calculateCommissions(debtInfo.current_amount, paymentMethod);
+        setCommissionInfo(commission);
+      } else {
+        setCommissionInfo(null);
+      }
+    } else {
+      setCommissionInfo(null);
+    }
+  }, [selectedDebt, paymentMethod, debts]);
 
   const loadCorporateClients = async () => {
     if (!profile?.company?.id) return;
@@ -442,6 +460,39 @@ Si tienes dudas, contáctanos.`;
                   </Badge>
                 </div>
               </div>
+
+              {/* Commission Breakdown */}
+              {commissionInfo && (
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <h5 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4" />
+                    Desglose de Comisiones - {paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'}
+                  </h5>
+                  <div className="bg-white/60 rounded-lg p-3 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-blue-700">Monto pagado por deudor:</span>
+                      <span className="font-semibold">${commissionInfo.breakdown.amountPaidByDebtor.toLocaleString('es-CL')}</span>
+                    </div>
+
+                    {commissionInfo.mercadopagoCommission > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-red-600">Comisión Mercado Pago ({(commissionInfo.mercadopagoPercentage * 100).toFixed(1)}% + ${commissionInfo.mercadopagoFixedFee}):</span>
+                        <span className="font-semibold text-red-600">-${commissionInfo.mercadopagoCommission.toLocaleString('es-CL')}</span>
+                      </div>
+                    )}
+
+                    <div className="border-t border-blue-200 pt-2 flex justify-between text-sm font-semibold">
+                      <span className="text-green-700">Monto que recibe la empresa:</span>
+                      <span className="text-green-700">${commissionInfo.breakdown.amountReceivedByCompany.toLocaleString('es-CL')}</span>
+                    </div>
+
+                    <div className="text-xs text-blue-600 mt-2 p-2 bg-blue-50 rounded">
+                      <strong>Nota:</strong> La empresa paga mensualmente $60.000 por comisiones de plataforma + $30.000 incentivo al usuario.
+                      {commissionInfo.mercadopagoCommission > 0 && ' Las comisiones de Mercado Pago son asumidas por la empresa.'}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -500,6 +551,35 @@ Si tienes dudas, contáctanos.`;
               Enviar por WhatsApp
             </Button>
           </div>
+
+          {/* Commission Information */}
+          {commissionInfo && paymentMethod === 'mercadopago' && (
+            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+              <div className="flex items-start gap-3">
+                <DollarSign className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-orange-900 mb-2">Información de Comisiones</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-orange-700">Monto que paga el deudor:</span>
+                      <span className="font-semibold">${commissionInfo.breakdown.amountPaidByDebtor.toLocaleString('es-CL')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-orange-700">Comisión Mercado Pago:</span>
+                      <span className="font-semibold text-red-600">-${commissionInfo.mercadopagoCommission.toLocaleString('es-CL')}</span>
+                    </div>
+                    <div className="border-t border-orange-300 pt-1 flex justify-between font-semibold">
+                      <span className="text-green-700">Monto que recibe la empresa:</span>
+                      <span className="text-green-700">${commissionInfo.breakdown.amountReceivedByCompany.toLocaleString('es-CL')}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-orange-600 mt-2">
+                    * Las comisiones de Mercado Pago son asumidas completamente por la empresa.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-start gap-3">

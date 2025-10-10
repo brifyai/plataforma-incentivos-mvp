@@ -10,6 +10,7 @@ import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select, DateFilter }
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import Swal from 'sweetalert2';
 import { getPaymentStats, getRecentPayments, getPendingPayments, getAllDebtors, getAllCompanies, createPayment, updatePayment } from '../../services/databaseService';
+import { calculateCommissions } from '../../services/paymentService';
 import {
   CreditCard,
   TrendingUp,
@@ -709,34 +710,69 @@ const PaymentsDashboard = () => {
         }
       >
         <div className="space-y-4">
-          {recentPayments.map((payment) => (
-            <div
-              key={payment.id}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                {getStatusIcon(payment.status)}
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-gray-900">{payment.user}</span>
-                    <span className="text-gray-500">→</span>
-                    <span className="font-medium text-gray-700">{payment.company}</span>
+          {recentPayments.map((payment) => {
+            // Calculate commission breakdown for display
+            const commissionData = calculateCommissions(payment.amount, payment.method === 'mercadopago' ? 'mercadopago' : 'bank_transfer');
+
+            return (
+              <div
+                key={payment.id}
+                className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-4">
+                    {getStatusIcon(payment.status)}
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">{payment.user}</span>
+                        <span className="text-gray-500">→</span>
+                        <span className="font-medium text-gray-700">{payment.company}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-600">
+                        <span>{payment.method}</span>
+                        <span>•</span>
+                        <span>{formatDate(payment.date)}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <span>{payment.method}</span>
-                    <span>•</span>
-                    <span>{formatDate(payment.date)}</span>
+                  <div className="flex items-center gap-4">
+                    {getStatusBadge(payment.status)}
+                  </div>
+                </div>
+
+                {/* Commission Breakdown */}
+                <div className="bg-white/60 rounded-lg p-3 border border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="text-center">
+                      <div className="text-gray-600 mb-1">Monto Pagado</div>
+                      <div className="font-semibold text-gray-900">{formatCurrency(payment.amount)}</div>
+                    </div>
+
+                    {commissionData.mercadopagoCommission > 0 && (
+                      <div className="text-center">
+                        <div className="text-red-600 mb-1">Comisión MP</div>
+                        <div className="font-semibold text-red-600">-{formatCurrency(commissionData.mercadopagoCommission)}</div>
+                        <div className="text-xs text-gray-500">
+                          ({(commissionData.mercadopagoPercentage * 100).toFixed(1)}% + ${commissionData.mercadopagoFixedFee})
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-center">
+                      <div className="text-green-600 mb-1">Empresa Recibe</div>
+                      <div className="font-semibold text-green-600">{formatCurrency(commissionData.netAmountToCompany)}</div>
+                      <div className="text-xs text-gray-500">Monto neto</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-500 text-center">
+                    Comisión plataforma: ${commissionData.businessClosureFee.toLocaleString('es-CL')} (mensual) •
+                    Incentivo usuario: ${commissionData.userIncentive.toLocaleString('es-CL')}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-xl font-bold text-gray-900">
-                  {formatCurrency(payment.amount)}
-                </span>
-                {getStatusBadge(payment.status)}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
 
@@ -779,48 +815,69 @@ const PaymentsDashboard = () => {
 
             {/* Payments List */}
             <div className="space-y-3">
-              {pendingPayments.map((payment) => (
-                <div
-                  key={payment.id}
-                  className={`flex items-center gap-4 p-4 border rounded-lg transition-all ${
-                    selectedPayments.includes(payment.id)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedPayments.includes(payment.id)}
-                    onChange={() => handlePaymentSelect(payment.id)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
+              {pendingPayments.map((payment) => {
+                // Calculate commission breakdown for display
+                const commissionData = calculateCommissions(payment.amount, payment.payment_method === 'mercadopago' ? 'mercadopago' : 'bank_transfer');
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="font-semibold text-gray-900">{payment.debtor}</span>
-                      <span className="text-gray-500">→</span>
-                      <span className="font-medium text-gray-700">{payment.company}</span>
-                      <Badge variant="warning">Pendiente</Badge>
+                return (
+                  <div
+                    key={payment.id}
+                    className={`p-4 border rounded-lg transition-all ${
+                      selectedPayments.includes(payment.id)
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 mb-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedPayments.includes(payment.id)}
+                        onChange={() => handlePaymentSelect(payment.id)}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      />
+
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="font-semibold text-gray-900">{payment.debtor}</span>
+                          <span className="text-gray-500">→</span>
+                          <span className="font-medium text-gray-700">{payment.company}</span>
+                          <Badge variant="warning">Pendiente</Badge>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span>Ref: {payment.debt_reference}</span>
+                          <span>•</span>
+                          <span>{payment.payment_method}</span>
+                          <span>•</span>
+                          <span>{formatDate(payment.submitted_date)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span>Ref: {payment.debt_reference}</span>
-                      <span>•</span>
-                      <span>{payment.payment_method}</span>
-                      <span>•</span>
-                      <span>{formatDate(payment.submitted_date)}</span>
+
+                    {/* Commission Breakdown */}
+                    <div className="bg-white/60 rounded-lg p-3 border border-gray-200">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div className="text-center">
+                          <div className="text-gray-600 mb-1">Monto Pagado</div>
+                          <div className="font-semibold text-gray-900">{formatCurrency(payment.amount)}</div>
+                        </div>
+
+                        {commissionData.mercadopagoCommission > 0 && (
+                          <div className="text-center">
+                            <div className="text-red-600 mb-1">Comisión MP</div>
+                            <div className="font-semibold text-red-600">-{formatCurrency(commissionData.mercadopagoCommission)}</div>
+                          </div>
+                        )}
+
+                        <div className="text-center">
+                          <div className="text-green-600 mb-1">Empresa Recibe</div>
+                          <div className="font-semibold text-green-600">{formatCurrency(commissionData.netAmountToCompany)}</div>
+                          <div className="text-xs text-gray-500">Monto neto</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-gray-900">
-                      {formatCurrency(payment.amount)}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Monto a transferir
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -1256,16 +1313,34 @@ const PaymentsDashboard = () => {
                 <span className="text-gray-600">Pagos seleccionados:</span>
                 <span className="font-semibold">{selectedPayments.length}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Monto total a transferir:</span>
-                <span className="font-semibold text-green-600">
-                  {formatCurrency(
-                    pendingPayments
-                      .filter(p => selectedPayments.includes(p.id))
-                      .reduce((sum, p) => sum + p.amount, 0)
-                  )}
-                </span>
-              </div>
+              {(() => {
+                const selectedPaymentsData = pendingPayments.filter(p => selectedPayments.includes(p.id));
+                const totalGrossAmount = selectedPaymentsData.reduce((sum, p) => sum + p.amount, 0);
+                const totalCommissions = selectedPaymentsData.reduce((sum, p) => {
+                  const commissionData = calculateCommissions(p.amount, p.payment_method === 'mercadopago' ? 'mercadopago' : 'bank_transfer');
+                  return sum + commissionData.mercadopagoCommission;
+                }, 0);
+                const totalNetAmount = totalGrossAmount - totalCommissions;
+
+                return (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Monto total bruto:</span>
+                      <span className="font-semibold">{formatCurrency(totalGrossAmount)}</span>
+                    </div>
+                    {totalCommissions > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-red-600">Total comisiones MP:</span>
+                        <span className="font-semibold text-red-600">-{formatCurrency(totalCommissions)}</span>
+                      </div>
+                    )}
+                    <div className="border-t border-gray-300 pt-2 flex justify-between font-semibold">
+                      <span className="text-green-600">Monto total a transferir:</span>
+                      <span className="text-green-600">{formatCurrency(totalNetAmount)}</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 

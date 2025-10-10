@@ -10,6 +10,7 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as EmptyState } from './EmptyState';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as ThemeToggle } from './ThemeToggle';
+export { default as ToggleSwitch } from './ToggleSwitch';
 export { default as PaymentMethodSelector } from './PaymentMethodSelector';
 export { default as PaymentReceiptManager } from './PaymentReceiptManager';
 export { default as DateFilter } from './DateFilter';

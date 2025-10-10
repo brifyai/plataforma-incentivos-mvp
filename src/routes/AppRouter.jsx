@@ -42,6 +42,7 @@ import MessagesPage from '../pages/debtor/MessagesPage';
 import HelpPage from '../pages/debtor/HelpPage';
 import ProfilePage from '../pages/debtor/ProfilePage';
 import NotificationsPage from '../pages/debtor/NotificationsPage';
+import SecureOfferPage from '../pages/debtor/SecureOfferPage';
 
 // Página de prueba
 import TestPage from '../pages/TestPage';
@@ -61,12 +62,14 @@ import ProposalsPage from '../pages/company/ProposalsPage';
 import TransferDashboard from '../pages/company/TransferDashboard';
 import CompanyProfilePage from '../pages/company/ProfilePage';
 import CompanyOffersPage from '../pages/company/OffersPage';
+import CampaignsPage from '../pages/company/CampaignsPage';
 import ClientDetailsPage from '../pages/company/ClientDetailsPage';
 import ClientDebtsPage from '../pages/company/ClientDebtsPage';
 import AgreementDetailsPage from '../pages/company/AgreementDetailsPage';
 import CompanyAgreementsPage from '../pages/company/AgreementsPage';
 import CompanyAnalyticsPage from '../pages/company/CompanyAnalyticsPage';
 import CompanyMessagesPage from '../pages/company/CompanyMessagesPage';
+import NewMessagePage from '../pages/company/NewMessagePage';
 import CompanyNotificationsPage from '../pages/company/CompanyNotificationsPage';
 import BulkImportPage from '../pages/company/BulkImportPage';
 import NewDebtorPage from '../pages/company/NewDebtorPage';
@@ -87,12 +90,15 @@ import MercadoPagoConfigPage from '../pages/admin/MercadoPagoConfigPage';
 import BankConfigPage from '../pages/admin/BankConfigPage';
 import AnalyticsConfigPage from '../pages/admin/AnalyticsConfigPage';
 import NotificationsConfigPage from '../pages/admin/NotificationsConfigPage';
+import GeneralConfigPage from '../pages/admin/GeneralConfigPage';
+import AIConfigPage from '../pages/admin/AIConfigPage';
 
 // Componente de ruta protegida
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, initializing } = useAuth();
 
-  if (loading) {
+  // Wait for both loading and initializing to complete
+  if (loading || initializing) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -106,6 +112,15 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // Usar profile si está disponible, sino user_metadata
   const role = profile?.role || user?.user_metadata?.role;
+
+  // If we have a user but no role yet, wait for profile to load
+  if (!role) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   // Check allowed roles (god_mode can access everything)
   const isAllowed = !allowedRoles ||
@@ -158,8 +173,8 @@ const AppContent = () => {
   return (
     <>
       <Routes>
-        {/* Ruta raíz - redirige según rol */}
-        <Route path="/" element={<RoleBasedRedirect />} />
+        {/* Ruta raíz - mostrar landing page directamente para testing */}
+        <Route path="/" element={<LandingPage />} />
 
         {/* Landing Page */}
         <Route path="/landing" element={<LandingPage />} />
@@ -181,6 +196,9 @@ const AppContent = () => {
 
         {/* Página de pago - accesible sin autenticación */}
         <Route path="/pagar/:debtId" element={<PaymentPage />} />
+
+        {/* Página de oferta segura - accesible sin autenticación completa */}
+        <Route path="/oferta-segura/:token" element={<SecureOfferPage />} />
 
         {/* Rutas de personas */}
         <Route
@@ -406,23 +424,29 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/empresa/clientes/:clientId"
+          path="/empresa/campanas"
           element={
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
-                <ClientDetailsPage />
+                <CampaignsPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
         />
         <Route
+          path="/empresa/clientes/:clientId"
+          element={
+            <DashboardLayout>
+              <ClientDetailsPage />
+            </DashboardLayout>
+          }
+        />
+        <Route
           path="/empresa/clientes/:clientId/deudas"
           element={
-            <ProtectedRoute allowedRoles={['company']}>
-              <DashboardLayout>
-                <ClientDebtsPage />
-              </DashboardLayout>
-            </ProtectedRoute>
+            <DashboardLayout>
+              <ClientDebtsPage />
+            </DashboardLayout>
           }
         />
         <Route
@@ -461,6 +485,16 @@ const AppContent = () => {
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
                 <CompanyMessagesPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/mensajes/nuevo"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <NewMessagePage />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -643,6 +677,26 @@ const AppContent = () => {
             <ProtectedRoute allowedRoles={['god_mode']}>
               <DashboardLayout>
                 <NotificationsConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/general"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <GeneralConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/ia"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <AIConfigPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

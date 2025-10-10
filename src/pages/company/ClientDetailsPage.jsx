@@ -39,30 +39,42 @@ const ClientDetailsPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (clientId && profile?.company?.id) {
+    if (clientId) {
       loadClientData();
     }
-  }, [clientId, profile]);
+  }, [clientId]);
 
   const loadClientData = async () => {
     try {
       setLoading(true);
+
+      // Para desarrollo, siempre usar datos mock si están disponibles
+      const mockClient = getMockClientById(clientId);
+      if (mockClient) {
+        console.log('Using mock data for client ID:', clientId);
+        setClient(mockClient);
+        setDebts(getMockClientDebts(clientId));
+        setStats(getMockClientStats(clientId));
+        return;
+      }
+
+      // Intentar cargar datos reales para otros clientes
       const [clientResult, debtsResult, statsResult] = await Promise.all([
         getClientById(clientId),
         getClientDebts(clientId),
         getClientStats(clientId)
       ]);
 
-      if (clientResult.error) {
+      if (clientResult.error || !clientResult.client) {
         console.error('Error loading client:', clientResult.error);
-        // Si no se encuentra en la base de datos, usar datos de ejemplo
+        // Si no se encuentra en la base de datos o hay error, usar datos de ejemplo
         const mockClient = getMockClientById(clientId);
         if (mockClient) {
           setClient(mockClient);
           setDebts(getMockClientDebts(clientId));
           setStats(getMockClientStats(clientId));
         } else {
-          navigate('/empresa/dashboard');
+          setClient(null);
         }
         return;
       }
@@ -93,7 +105,7 @@ const ClientDetailsPage = () => {
         setDebts(getMockClientDebts(clientId));
         setStats(getMockClientStats(clientId));
       } else {
-        navigate('/empresa/dashboard');
+        setClient(null);
       }
     } finally {
       setLoading(false);
@@ -255,7 +267,7 @@ const ClientDetailsPage = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate('/company/dashboard')}
+          onClick={() => navigate('/empresa/dashboard')}
           leftIcon={<ArrowLeft className="w-4 h-4" />}
         >
           Volver
@@ -401,7 +413,7 @@ const ClientDetailsPage = () => {
           <Button
             variant="gradient"
             size="sm"
-            onClick={() => navigate(`/company/clients/${clientId}/debts`)}
+            onClick={() => navigate(`/empresa/clientes/${clientId}/deudas`)}
             leftIcon={<FileText className="w-4 h-4" />}
           >
             Gestionar Deudas
@@ -416,7 +428,7 @@ const ClientDetailsPage = () => {
             </p>
             <Button
               variant="primary"
-              onClick={() => navigate(`/company/clients/${clientId}/debts`)}
+              onClick={() => navigate(`/empresa/clientes/${clientId}/deudas`)}
               leftIcon={<FileText className="w-4 h-4" />}
             >
               Registrar Primera Deuda
@@ -476,14 +488,14 @@ const ClientDetailsPage = () => {
       <div className="flex gap-4">
         <Button
           variant="primary"
-          onClick={() => navigate(`/company/clients/${clientId}/debts`)}
+          onClick={() => navigate(`/empresa/clientes/${clientId}/deudas`)}
           leftIcon={<FileText className="w-4 h-4" />}
         >
           Gestionar Deudas
         </Button>
         <Button
           variant="outline"
-          onClick={() => navigate('/company/dashboard')}
+          onClick={() => navigate('/empresa/dashboard')}
         >
           Volver al Dashboard
         </Button>

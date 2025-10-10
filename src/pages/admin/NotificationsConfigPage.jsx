@@ -1,254 +1,166 @@
 /**
- * Notifications Configuration Page
+ * Notifications Configuration Page - Configuración de Notificaciones
  *
- * Página para configurar sistemas de notificaciones push y email
+ * Página dedicada a la configuración de notificaciones (Email, Push, SMS)
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Button, Input, Modal, Badge, Select } from '../../components/common';
-import { formatCurrency, formatDate } from '../../utils/formatters';
-import {
-  Bell,
-  Settings,
-  CheckCircle,
-  AlertCircle,
-  RefreshCw,
-  Mail,
-  Smartphone,
-  MessageSquare,
-  Send,
-  TestTube,
-  Users,
-  TrendingUp
-} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Card, Badge, Button, LoadingSpinner, Input, Select } from '../../components/common';
+import { Bell, Mail, Smartphone, MessageSquare, CheckCircle, ArrowLeft, TestTube, Settings } from 'lucide-react';
+import { updateSystemConfig } from '../../services/databaseService';
+import Swal from 'sweetalert2';
 
 const NotificationsConfigPage = () => {
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Configuración de notificaciones
   const [notificationConfig, setNotificationConfig] = useState({
     emailService: {
-      provider: '',
+      provider: 'sendgrid',
       apiKey: '',
+      fromEmail: 'noreply@plataforma.com',
+      fromName: 'Plataforma de Cobranzas',
       smtpHost: '',
-      smtpPort: '',
+      smtpPort: '587',
       smtpUser: '',
       smtpPassword: '',
-      fromEmail: '',
-      fromName: '',
-      isActive: false
+      isActive: true
     },
     pushService: {
-      provider: '',
+      provider: 'firebase',
       apiKey: '',
-      projectId: '',
+      projectId: 'plataforma-cobranzas',
       senderId: '',
       serverKey: '',
       isActive: false
     },
     smsService: {
-      provider: '',
-      apiKey: '',
+      provider: 'twilio',
       accountSid: '',
       authToken: '',
-      phoneNumber: '',
+      apiKey: '',
+      phoneNumber: '+56912345678',
       isActive: false
     }
   });
-  const [testResults, setTestResults] = useState({});
-  const [showTestModal, setShowTestModal] = useState(false);
-  const [testType, setTestType] = useState('');
 
-  const emailProviders = [
-    { value: 'sendgrid', label: 'SendGrid' },
-    { value: 'mailgun', label: 'Mailgun' },
-    { value: 'aws_ses', label: 'Amazon SES' },
-    { value: 'smtp', label: 'SMTP Personalizado' }
-  ];
-
-  const pushProviders = [
-    { value: 'firebase', label: 'Firebase Cloud Messaging' },
-    { value: 'onesignal', label: 'OneSignal' },
-    { value: 'expo', label: 'Expo Push' }
-  ];
-
-  const smsProviders = [
-    { value: 'twilio', label: 'Twilio' },
-    { value: 'aws_sns', label: 'Amazon SNS' },
-    { value: 'messagebird', label: 'MessageBird' }
-  ];
-
-  useEffect(() => {
-    loadNotificationConfig();
-  }, []);
-
-  const loadNotificationConfig = async () => {
+  const handleSaveService = async (serviceType) => {
     try {
-      setLoading(true);
-      // Simular carga de configuración
-      setTimeout(() => {
-        setNotificationConfig({
-          emailService: {
-            provider: 'sendgrid',
-            apiKey: 'SG.1234567890...',
-            smtpHost: '',
-            smtpPort: '',
-            smtpUser: '',
-            smtpPassword: '',
-            fromEmail: 'noreply@plataforma.com',
-            fromName: 'Plataforma de Cobranzas',
-            isActive: true
-          },
-          pushService: {
-            provider: 'firebase',
-            apiKey: 'AIzaSy...',
-            projectId: 'plataforma-cobranzas',
-            senderId: '123456789',
-            serverKey: 'AAAA...',
-            isActive: true
-          },
-          smsService: {
-            provider: 'twilio',
-            apiKey: '',
-            accountSid: 'AC1234567890...',
-            authToken: 'sk-1234567890...',
-            phoneNumber: '+56912345678',
-            isActive: false
-          }
-        });
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error('Error loading notification config:', error);
-      setLoading(false);
-    }
-  };
+      setSaving(true);
 
-  const handleSaveConfig = async (serviceType) => {
-    try {
-      // Aquí iría la lógica para guardar la configuración
-      alert(`✅ Configuración de ${serviceType} guardada exitosamente`);
+      // Prepare config data based on service type
+      let configToSave = {};
+
+      if (serviceType === 'Email') {
+        configToSave = {
+          email_provider: notificationConfig.emailService.provider,
+          email_api_key: notificationConfig.emailService.apiKey,
+          email_from_address: notificationConfig.emailService.fromEmail,
+          email_from_name: notificationConfig.emailService.fromName,
+          email_smtp_host: notificationConfig.emailService.smtpHost,
+          email_smtp_port: notificationConfig.emailService.smtpPort,
+          email_smtp_user: notificationConfig.emailService.smtpUser,
+          email_smtp_password: notificationConfig.emailService.smtpPassword,
+          email_service_active: notificationConfig.emailService.isActive
+        };
+      } else if (serviceType === 'Push') {
+        configToSave = {
+          push_provider: notificationConfig.pushService.provider,
+          push_api_key: notificationConfig.pushService.apiKey,
+          push_project_id: notificationConfig.pushService.projectId,
+          push_sender_id: notificationConfig.pushService.senderId,
+          push_server_key: notificationConfig.pushService.serverKey,
+          push_service_active: notificationConfig.pushService.isActive
+        };
+      } else if (serviceType === 'SMS') {
+        configToSave = {
+          sms_provider: notificationConfig.smsService.provider,
+          sms_account_sid: notificationConfig.smsService.accountSid,
+          sms_auth_token: notificationConfig.smsService.authToken,
+          sms_api_key: notificationConfig.smsService.apiKey,
+          sms_phone_number: notificationConfig.smsService.phoneNumber,
+          sms_service_active: notificationConfig.smsService.isActive
+        };
+      }
+
+      const result = await updateSystemConfig(configToSave);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Configuración guardada',
+        text: `Configuración de ${serviceType} guardada exitosamente`,
+        confirmButtonText: 'Aceptar'
+      });
+
     } catch (error) {
-      alert('Error al guardar configuración: ' + error.message);
+      console.error(`Error saving ${serviceType}:`, error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al guardar',
+        text: error.message || `No se pudo guardar la configuración de ${serviceType}`,
+        confirmButtonText: 'Aceptar'
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleTestService = async (serviceType) => {
-    setTestType(serviceType);
-    setShowTestModal(true);
-    setTestResults({});
-
-    // Simular prueba del servicio
-    setTimeout(() => {
-      setTestResults({
-        success: true,
-        message: `Prueba de ${serviceType} exitosa`,
-        details: {
-          responseTime: '245ms',
-          statusCode: 200,
-          timestamp: new Date()
-        }
-      });
-    }, 2000);
-  };
-
-  const sendTestNotification = async (type) => {
     try {
-      alert(`📤 Enviando notificación de prueba (${type})...`);
-      setTimeout(() => {
-        alert(`✅ Notificación de prueba enviada exitosamente`);
-      }, 1500);
+      await Swal.fire({
+        icon: 'info',
+        title: 'Probando servicio',
+        text: `Probando servicio de ${serviceType}...`,
+        showConfirmButton: false,
+        timer: 2000
+      });
     } catch (error) {
-      alert('Error al enviar notificación de prueba: ' + error.message);
+      console.error(`Error testing ${serviceType}:`, error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error en la prueba',
+        text: `No se pudo probar el servicio de ${serviceType}`,
+        confirmButtonText: 'Aceptar'
+      });
     }
   };
-
-  const getServiceStatus = (service) => {
-    return service.isActive ? { label: 'Activo', variant: 'success' } : { label: 'Inactivo', variant: 'danger' };
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
+      <div className="bg-gradient-to-br from-orange-600 via-orange-700 to-red-800 rounded-3xl p-8 text-white shadow-strong">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/admin/configuracion')}
+              className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
               <Bell className="w-8 h-8" />
             </div>
             <div>
               <h1 className="text-3xl font-display font-bold tracking-tight">
-                Configuración de Notificaciones
+                Notificaciones
               </h1>
-              <p className="text-green-100 text-lg">
-                Gestiona sistemas de notificaciones push, email y SMS
+              <p className="text-orange-100 text-lg">
+                Configuración de emails, push y SMS
               </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Badge variant="info" size="lg">
-              {Object.values(notificationConfig).filter(s => s.isActive).length}/3 Activos
-            </Badge>
-            <Button
-              variant="gradient"
-              onClick={() => setShowTestModal(true)}
-              leftIcon={<TestTube className="w-4 h-4" />}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0"
-            >
-              Probar Servicios
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Mail className="w-6 h-6 text-green-300" />
-              <div>
-                <p className="text-sm text-green-100">Emails Enviados</p>
-                <p className="text-2xl font-bold">12,450</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Smartphone className="w-6 h-6 text-green-300" />
-              <div>
-                <p className="text-sm text-green-100">Push Enviados</p>
-                <p className="text-2xl font-bold">8,320</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="w-6 h-6 text-green-300" />
-              <div>
-                <p className="text-sm text-green-100">SMS Enviados</p>
-                <p className="text-2xl font-bold">1,245</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-green-300" />
-              <div>
-                <p className="text-sm text-green-100">Tasa de Apertura</p>
-                <p className="text-2xl font-bold">68.5%</p>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Services Configuration */}
+      {/* Configuration Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Email Service */}
         <Card>
@@ -258,8 +170,8 @@ const NotificationsConfigPage = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-bold text-secondary-900">Servicio de Email</h3>
-              <Badge variant={getServiceStatus(notificationConfig.emailService).variant} size="sm">
-                {getServiceStatus(notificationConfig.emailService).label}
+              <Badge variant={notificationConfig.emailService.isActive ? 'success' : 'danger'} size="sm">
+                {notificationConfig.emailService.isActive ? 'Activo' : 'Inactivo'}
               </Badge>
             </div>
           </div>
@@ -272,7 +184,12 @@ const NotificationsConfigPage = () => {
                 ...prev,
                 emailService: { ...prev.emailService, provider: value }
               }))}
-              options={emailProviders}
+              options={[
+                { value: 'sendgrid', label: 'SendGrid' },
+                { value: 'mailgun', label: 'Mailgun' },
+                { value: 'aws_ses', label: 'Amazon SES' },
+                { value: 'smtp', label: 'SMTP Personalizado' }
+              ]}
             />
 
             {notificationConfig.emailService.provider === 'smtp' ? (
@@ -367,7 +284,8 @@ const NotificationsConfigPage = () => {
             <div className="flex gap-2 pt-4">
               <Button
                 variant="gradient"
-                onClick={() => handleSaveConfig('Email')}
+                onClick={() => handleSaveService('Email')}
+                loading={saving}
                 leftIcon={<CheckCircle className="w-4 h-4" />}
                 className="flex-1"
               >
@@ -392,8 +310,8 @@ const NotificationsConfigPage = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-bold text-secondary-900">Notificaciones Push</h3>
-              <Badge variant={getServiceStatus(notificationConfig.pushService).variant} size="sm">
-                {getServiceStatus(notificationConfig.pushService).label}
+              <Badge variant={notificationConfig.pushService.isActive ? 'success' : 'danger'} size="sm">
+                {notificationConfig.pushService.isActive ? 'Activo' : 'Inactivo'}
               </Badge>
             </div>
           </div>
@@ -406,7 +324,11 @@ const NotificationsConfigPage = () => {
                 ...prev,
                 pushService: { ...prev.pushService, provider: value }
               }))}
-              options={pushProviders}
+              options={[
+                { value: 'firebase', label: 'Firebase Cloud Messaging' },
+                { value: 'onesignal', label: 'OneSignal' },
+                { value: 'expo', label: 'Expo Push' }
+              ]}
             />
 
             <Input
@@ -460,7 +382,7 @@ const NotificationsConfigPage = () => {
                   ...prev,
                   pushService: { ...prev.pushService, isActive: e.target.checked }
                 }))}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
               />
               <label htmlFor="pushActive" className="text-sm font-medium text-gray-700">
                 Servicio activo
@@ -470,7 +392,8 @@ const NotificationsConfigPage = () => {
             <div className="flex gap-2 pt-4">
               <Button
                 variant="gradient"
-                onClick={() => handleSaveConfig('Push')}
+                onClick={() => handleSaveService('Push')}
+                loading={saving}
                 leftIcon={<CheckCircle className="w-4 h-4" />}
                 className="flex-1"
               >
@@ -495,8 +418,8 @@ const NotificationsConfigPage = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-bold text-secondary-900">Servicio SMS</h3>
-              <Badge variant={getServiceStatus(notificationConfig.smsService).variant} size="sm">
-                {getServiceStatus(notificationConfig.smsService).label}
+              <Badge variant={notificationConfig.smsService.isActive ? 'success' : 'danger'} size="sm">
+                {notificationConfig.smsService.isActive ? 'Activo' : 'Inactivo'}
               </Badge>
             </div>
           </div>
@@ -509,7 +432,11 @@ const NotificationsConfigPage = () => {
                 ...prev,
                 smsService: { ...prev.smsService, provider: value }
               }))}
-              options={smsProviders}
+              options={[
+                { value: 'twilio', label: 'Twilio' },
+                { value: 'aws_sns', label: 'Amazon SNS' },
+                { value: 'messagebird', label: 'MessageBird' }
+              ]}
             />
 
             {notificationConfig.smsService.provider === 'twilio' && (
@@ -569,7 +496,7 @@ const NotificationsConfigPage = () => {
                   ...prev,
                   smsService: { ...prev.smsService, isActive: e.target.checked }
                 }))}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
               />
               <label htmlFor="smsActive" className="text-sm font-medium text-gray-700">
                 Servicio activo
@@ -579,7 +506,8 @@ const NotificationsConfigPage = () => {
             <div className="flex gap-2 pt-4">
               <Button
                 variant="gradient"
-                onClick={() => handleSaveConfig('SMS')}
+                onClick={() => handleSaveService('SMS')}
+                loading={saving}
                 leftIcon={<CheckCircle className="w-4 h-4" />}
                 className="flex-1"
               >
@@ -597,73 +525,76 @@ const NotificationsConfigPage = () => {
         </Card>
       </div>
 
-      {/* Test Modal */}
-      <Modal
-        isOpen={showTestModal}
-        onClose={() => setShowTestModal(false)}
-        title={`Prueba de ${testType}`}
-        size="md"
-      >
-        <div className="space-y-6">
-          {testResults.success ? (
-            <div className="text-center">
-              <div className="p-4 bg-green-100 rounded-2xl inline-block mb-4">
-                <CheckCircle className="w-12 h-12 text-green-600" />
+      {/* Information Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Email Templates Info */}
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <div className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Mail className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="text-xl font-bold text-secondary-900 mb-2">
-                ¡Prueba Exitosa!
-              </h3>
-              <p className="text-secondary-600 mb-4">
-                {testResults.message}
-              </p>
-
-              <div className="bg-gray-50 p-4 rounded-lg text-left mb-6">
-                <h4 className="font-semibold text-secondary-900 mb-3">Detalles técnicos:</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-secondary-600">Tiempo de respuesta:</span>
-                    <span className="font-semibold">{testResults.details.responseTime}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-secondary-600">Código de estado:</span>
-                    <span className="font-semibold">{testResults.details.statusCode}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-secondary-600">Timestamp:</span>
-                    <span className="font-semibold">{formatDate(testResults.details.timestamp)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => sendTestNotification(testType.toLowerCase())}
-                  leftIcon={<Send className="w-4 h-4" />}
-                >
-                  Enviar Notificación de Prueba
-                </Button>
-                <Button
-                  variant="gradient"
-                  onClick={() => setShowTestModal(false)}
-                >
-                  Continuar
-                </Button>
+              <div>
+                <h3 className="text-xl font-semibold text-secondary-900">Plantillas de Email</h3>
+                <p className="text-secondary-600">Información sobre plantillas disponibles</p>
               </div>
             </div>
-          ) : (
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <h3 className="text-xl font-bold text-secondary-900 mb-2">
-                Probando servicio...
-              </h3>
-              <p className="text-secondary-600">
-                Verificando configuración y conectividad del servicio de {testType.toLowerCase()}
-              </p>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                <span className="font-medium text-secondary-900">Bienvenida</span>
+                <Badge variant="success">Disponible</Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                <span className="font-medium text-secondary-900">Recordatorio de pago</span>
+                <Badge variant="success">Disponible</Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                <span className="font-medium text-secondary-900">Confirmación de pago</span>
+                <Badge variant="success">Disponible</Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                <span className="font-medium text-secondary-900">Propuesta aceptada</span>
+                <Badge variant="warning">En desarrollo</Badge>
+              </div>
             </div>
-          )}
-        </div>
-      </Modal>
+          </div>
+        </Card>
+
+        {/* Notification Types */}
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+          <div className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Bell className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-secondary-900">Tipos de Notificación</h3>
+                <p className="text-secondary-600">Eventos que generan notificaciones</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                <span className="font-medium text-secondary-900">Nuevo usuario registrado</span>
+                <Badge variant="success">Email + Push</Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                <span className="font-medium text-secondary-900">Pago realizado</span>
+                <Badge variant="success">Email + SMS</Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                <span className="font-medium text-secondary-900">Propuesta enviada</span>
+                <Badge variant="success">Email</Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                <span className="font-medium text-secondary-900">Acuerdo alcanzado</span>
+                <Badge variant="warning">Email</Badge>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

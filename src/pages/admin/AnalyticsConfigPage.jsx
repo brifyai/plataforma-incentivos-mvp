@@ -1,283 +1,271 @@
 /**
- * Analytics Configuration Page
+ * Analytics Configuration Page - Configuración de Analytics
  *
- * Página para configurar herramientas de análisis avanzado
+ * Página dedicada a la configuración de herramientas de analytics
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Button, Input, Modal, Badge, Select } from '../../components/common';
-import { formatCurrency, formatDate } from '../../utils/formatters';
-import {
-  BarChart3,
-  Settings,
-  CheckCircle,
-  AlertCircle,
-  RefreshCw,
-  Key,
-  TrendingUp,
-  Users,
-  DollarSign,
-  Eye,
-  Download,
-  Share,
-  Zap
-} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Card, Badge, Button, LoadingSpinner, Input, Select, Modal } from '../../components/common';
+import { BarChart3, Plus, Settings, Eye, Users, RefreshCw, CheckCircle, ArrowLeft, Edit, Trash2, Zap } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const AnalyticsConfigPage = () => {
-  const [loading, setLoading] = useState(true);
-  const [analyticsProviders, setAnalyticsProviders] = useState([]);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [showAddAnalyticsModal, setShowAddAnalyticsModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
+
+  // Estado de proveedores de analytics
+  const [analyticsProviders, setAnalyticsProviders] = useState([
+    {
+      id: '1',
+      name: 'Google Analytics 4',
+      type: 'google_analytics',
+      trackingId: 'GA-123456789',
+      domain: 'plataforma.com',
+      eventsTracked: 15420,
+      usersTracked: 2840,
+      isActive: true,
+      lastSync: new Date(Date.now() - 3600000) // 1 hora atrás
+    },
+    {
+      id: '2',
+      name: 'Mixpanel Analytics',
+      type: 'mixpanel',
+      trackingId: 'abcd1234efgh5678',
+      domain: 'plataforma.com',
+      eventsTracked: 8750,
+      usersTracked: 1920,
+      isActive: true,
+      lastSync: new Date(Date.now() - 7200000) // 2 horas atrás
+    }
+  ]);
+
+  // Formulario para agregar/editar analytics
   const [providerForm, setProviderForm] = useState({
     name: '',
     type: '',
-    apiKey: '',
-    apiSecret: '',
     trackingId: '',
     domain: '',
+    apiKey: '',
+    apiSecret: '',
     isActive: true
   });
 
+  // Proveedores disponibles
   const availableProviders = [
-    { value: 'google_analytics', label: 'Google Analytics 4', icon: '📊' },
-    { value: 'facebook_pixel', label: 'Facebook Pixel', icon: '📘' },
-    { value: 'hotjar', label: 'Hotjar', icon: '🔥' },
-    { value: 'mixpanel', label: 'Mixpanel', icon: '📈' },
-    { value: 'amplitude', label: 'Amplitude', icon: '📊' },
-    { value: 'segment', label: 'Segment', icon: '🔗' }
+    { value: 'google_analytics', label: 'Google Analytics' },
+    { value: 'mixpanel', label: 'Mixpanel' },
+    { value: 'amplitude', label: 'Amplitude' },
+    { value: 'segment', label: 'Segment' },
+    { value: 'hotjar', label: 'Hotjar' },
+    { value: 'fullstory', label: 'FullStory' }
   ];
 
-  useEffect(() => {
-    loadAnalyticsConfig();
-  }, []);
-
-  const loadAnalyticsConfig = async () => {
-    try {
-      setLoading(true);
-      // Simular carga de proveedores de analytics
-      setTimeout(() => {
-        setAnalyticsProviders([
-          {
-            id: '1',
-            name: 'Google Analytics 4',
-            type: 'google_analytics',
-            trackingId: 'GA-123456789',
-            domain: 'plataforma.com',
-            isActive: true,
-            lastSync: new Date(),
-            eventsTracked: 15420,
-            usersTracked: 2840
-          },
-          {
-            id: '2',
-            name: 'Facebook Pixel',
-            type: 'facebook_pixel',
-            trackingId: '123456789012345',
-            domain: 'plataforma.com',
-            isActive: true,
-            lastSync: new Date(),
-            eventsTracked: 8750,
-            usersTracked: 1920
-          }
-        ]);
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error('Error loading analytics config:', error);
-      setLoading(false);
-    }
+  const getProviderColor = (type) => {
+    const colors = {
+      google_analytics: 'from-blue-500 to-blue-600',
+      mixpanel: 'from-purple-500 to-purple-600',
+      amplitude: 'from-green-500 to-green-600',
+      segment: 'from-orange-500 to-orange-600',
+      hotjar: 'from-red-500 to-red-600',
+      fullstory: 'from-indigo-500 to-indigo-600'
+    };
+    return colors[type] || 'from-gray-500 to-gray-600';
   };
 
-  const handleAddProvider = () => {
+  const getProviderIcon = (type) => {
+    const icons = {
+      google_analytics: BarChart3,
+      mixpanel: BarChart3,
+      amplitude: BarChart3,
+      segment: BarChart3,
+      hotjar: BarChart3,
+      fullstory: BarChart3
+    };
+    return icons[type] || BarChart3;
+  };
+
+  const handleAddAnalytics = () => {
+    setSelectedProvider(null);
     setProviderForm({
       name: '',
       type: '',
-      apiKey: '',
-      apiSecret: '',
       trackingId: '',
       domain: '',
+      apiKey: '',
+      apiSecret: '',
       isActive: true
     });
-    setSelectedProvider(null);
-    setShowAddModal(true);
+    setShowAddAnalyticsModal(true);
   };
 
-  const handleEditProvider = (provider) => {
+  const handleEditAnalytics = (provider) => {
+    setSelectedProvider(provider);
     setProviderForm({
       name: provider.name,
       type: provider.type,
-      apiKey: provider.apiKey || '',
-      apiSecret: provider.apiSecret || '',
       trackingId: provider.trackingId,
       domain: provider.domain,
+      apiKey: provider.apiKey || '',
+      apiSecret: provider.apiSecret || '',
       isActive: provider.isActive
     });
-    setSelectedProvider(provider);
-    setShowAddModal(true);
+    setShowAddAnalyticsModal(true);
   };
 
-  const handleSaveProvider = async () => {
+  const handleDeleteAnalytics = async (providerId) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar herramienta?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      setAnalyticsProviders(prev => prev.filter(p => p.id !== providerId));
+      await Swal.fire({
+        icon: 'success',
+        title: 'Eliminado',
+        text: 'La herramienta de analytics ha sido eliminada',
+        timer: 2000
+      });
+    }
+  };
+
+  const handleSaveAnalytics = async () => {
     try {
-      if (!providerForm.name || !providerForm.type || !providerForm.trackingId) {
-        alert('Por favor complete todos los campos obligatorios');
+      if (!providerForm.name || !providerForm.type || !providerForm.trackingId || !providerForm.domain) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Campos requeridos',
+          text: 'Por favor completa todos los campos obligatorios'
+        });
         return;
       }
 
       if (selectedProvider) {
-        // Actualizar proveedor existente
-        setAnalyticsProviders(prev => prev.map(provider =>
-          provider.id === selectedProvider.id
-            ? { ...provider, ...providerForm }
-            : provider
+        // Editar proveedor existente
+        setAnalyticsProviders(prev => prev.map(p =>
+          p.id === selectedProvider.id
+            ? { ...p, ...providerForm }
+            : p
         ));
-        alert('✅ Proveedor de analytics actualizado exitosamente');
       } else {
         // Agregar nuevo proveedor
         const newProvider = {
           id: Date.now().toString(),
           ...providerForm,
-          lastSync: null,
           eventsTracked: 0,
-          usersTracked: 0
+          usersTracked: 0,
+          lastSync: null
         };
         setAnalyticsProviders(prev => [...prev, newProvider]);
-        alert('✅ Proveedor de analytics agregado exitosamente');
       }
 
-      setShowAddModal(false);
+      setShowAddAnalyticsModal(false);
+      await Swal.fire({
+        icon: 'success',
+        title: selectedProvider ? 'Actualizado' : 'Agregado',
+        text: `La herramienta de analytics ha sido ${selectedProvider ? 'actualizada' : 'agregada'} exitosamente`,
+        timer: 2000
+      });
+
     } catch (error) {
-      alert('Error al guardar proveedor: ' + error.message);
-    }
-  };
-
-  const handleDeleteProvider = async (providerId) => {
-    if (confirm('¿Está seguro de que desea eliminar este proveedor de analytics?')) {
-      try {
-        setAnalyticsProviders(prev => prev.filter(provider => provider.id !== providerId));
-        alert('✅ Proveedor eliminado exitosamente');
-      } catch (error) {
-        alert('Error al eliminar proveedor: ' + error.message);
-      }
+      console.error('Error saving analytics:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo guardar la configuración'
+      });
     }
   };
 
   const handleTestConnection = async (provider) => {
-    alert(`🔄 Probando conexión con ${provider.name}...`);
-    setTimeout(() => {
-      alert(`✅ Conexión exitosa con ${provider.name}`);
-    }, 1500);
+    await Swal.fire({
+      icon: 'info',
+      title: 'Probando conexión',
+      text: `Verificando conexión con ${provider.name}...`,
+      showConfirmButton: false,
+      timer: 2000
+    });
   };
 
-  const handleSyncData = async (provider) => {
-    alert(`🔄 Sincronizando datos con ${provider.name}...`);
-    setTimeout(() => {
-      alert(`✅ Datos sincronizados exitosamente con ${provider.name}`);
-      loadAnalyticsConfig();
-    }, 2000);
+  const formatDate = (date) => {
+    if (!date) return 'Nunca';
+    return new Date(date).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
-
-  const getProviderIcon = (type) => {
-    const provider = availableProviders.find(p => p.value === type);
-    return provider ? provider.icon : '📊';
-  };
-
-  const getProviderColor = (type) => {
-    switch (type) {
-      case 'google_analytics': return 'from-blue-500 to-blue-600';
-      case 'facebook_pixel': return 'from-blue-600 to-blue-700';
-      case 'hotjar': return 'from-orange-500 to-red-500';
-      case 'mixpanel': return 'from-blue-400 to-blue-500';
-      case 'amplitude': return 'from-purple-500 to-purple-600';
-      case 'segment': return 'from-green-500 to-green-600';
-      default: return 'from-gray-500 to-gray-600';
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/admin/configuracion')}
+              className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
               <BarChart3 className="w-8 h-8" />
             </div>
             <div>
               <h1 className="text-3xl font-display font-bold tracking-tight">
-                Configuración de Analytics
+                Analytics
               </h1>
               <p className="text-purple-100 text-lg">
-                Gestiona herramientas de análisis y seguimiento de usuarios
+                Herramientas de análisis y seguimiento
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Badge variant="info" size="lg">
-              {analyticsProviders.filter(p => p.isActive).length} Activos
-            </Badge>
-            <Button
-              variant="secondary"
-              onClick={handleAddProvider}
-              leftIcon={<Settings className="w-4 h-4" />}
-              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
-            >
-              Agregar Analytics
-            </Button>
+          <Button
+            variant="gradient"
+            onClick={handleAddAnalytics}
+            className="bg-white text-purple-600 hover:bg-purple-50"
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            Agregar Analytics
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <div className="text-sm font-medium text-purple-600">Proveedores</div>
+          <div className="text-2xl font-bold text-purple-900">{analyticsProviders.length}</div>
+        </div>
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="text-sm font-medium text-blue-600">Eventos Rastreados</div>
+          <div className="text-2xl font-bold text-blue-900">
+            {analyticsProviders.reduce((sum, p) => sum + p.eventsTracked, 0).toLocaleString()}
           </div>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <BarChart3 className="w-6 h-6 text-purple-300" />
-              <div>
-                <p className="text-sm text-purple-100">Proveedores</p>
-                <p className="text-2xl font-bold">{analyticsProviders.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Eye className="w-6 h-6 text-purple-300" />
-              <div>
-                <p className="text-sm text-purple-100">Eventos Rastreados</p>
-                <p className="text-2xl font-bold">{analyticsProviders.reduce((sum, p) => sum + p.eventsTracked, 0).toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Users className="w-6 h-6 text-purple-300" />
-              <div>
-                <p className="text-sm text-purple-100">Usuarios Rastreados</p>
-                <p className="text-2xl font-bold">{analyticsProviders.reduce((sum, p) => sum + p.usersTracked, 0).toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-purple-300" />
-              <div>
-                <p className="text-sm text-purple-100">Conversión</p>
-                <p className="text-2xl font-bold">24.5%</p>
-              </div>
-            </div>
+        <div className="bg-green-50 p-4 rounded-lg">
+          <div className="text-sm font-medium text-green-600">Usuarios Rastreados</div>
+          <div className="text-2xl font-bold text-green-900">
+            {analyticsProviders.reduce((sum, p) => sum + p.usersTracked, 0).toLocaleString()}
           </div>
         </div>
       </div>
 
-      {/* Analytics Providers List */}
-      <div className="space-y-6">
+      {/* Analytics Providers */}
+      <div className="space-y-4">
         {analyticsProviders.length === 0 ? (
           <Card className="text-center py-16">
             <div className="p-8 bg-gradient-to-br from-purple-100 to-purple-200 rounded-3xl inline-block mb-8">
@@ -291,7 +279,7 @@ const AnalyticsConfigPage = () => {
             </p>
             <Button
               variant="primary"
-              onClick={handleAddProvider}
+              onClick={handleAddAnalytics}
               leftIcon={<Settings className="w-4 h-4" />}
             >
               Configurar Primer Analytics
@@ -303,7 +291,7 @@ const AnalyticsConfigPage = () => {
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-6">
                   <div className={`p-4 bg-gradient-to-br ${getProviderColor(provider.type)} rounded-2xl text-white text-2xl group-hover:shadow-soft transition-all duration-300`}>
-                    {getProviderIcon(provider.type)}
+                    <BarChart3 className="w-6 h-6" />
                   </div>
 
                   <div className="flex-1">
@@ -363,7 +351,7 @@ const AnalyticsConfigPage = () => {
                     variant="primary"
                     size="sm"
                     className="shadow-soft hover:shadow-glow hover:scale-105 transition-all"
-                    onClick={() => handleEditProvider(provider)}
+                    onClick={() => handleEditAnalytics(provider)}
                     leftIcon={<Settings className="w-4 h-4" />}
                   >
                     Configurar
@@ -380,23 +368,13 @@ const AnalyticsConfigPage = () => {
                   </Button>
 
                   <Button
-                    variant="outline"
+                    variant="danger"
                     size="sm"
                     className="hover:scale-105 transition-all"
-                    onClick={() => handleSyncData(provider)}
-                    leftIcon={<RefreshCw className="w-4 h-4" />}
+                    onClick={() => handleDeleteAnalytics(provider.id)}
+                    leftIcon={<Trash2 className="w-4 h-4" />}
                   >
-                    Sincronizar
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="hover:scale-105 transition-all"
-                    onClick={() => window.open(`https://analytics.${provider.type}.com`, '_blank')}
-                    leftIcon={<Share className="w-4 h-4" />}
-                  >
-                    Dashboard
+                    Eliminar
                   </Button>
                 </div>
               </div>
@@ -405,10 +383,10 @@ const AnalyticsConfigPage = () => {
         )}
       </div>
 
-      {/* Add/Edit Provider Modal */}
+      {/* Add/Edit Analytics Modal */}
       <Modal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        isOpen={showAddAnalyticsModal}
+        onClose={() => setShowAddAnalyticsModal(false)}
         title={selectedProvider ? `Editar ${selectedProvider.name}` : "Agregar Herramienta de Analytics"}
         size="lg"
       >
@@ -473,7 +451,7 @@ const AnalyticsConfigPage = () => {
               id="analyticsActive"
               checked={providerForm.isActive}
               onChange={(e) => setProviderForm({...providerForm, isActive: e.target.checked})}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
             />
             <label htmlFor="analyticsActive" className="text-sm font-medium text-gray-700">
               Herramienta activa y rastreando eventos
@@ -498,14 +476,14 @@ const AnalyticsConfigPage = () => {
           <div className="flex gap-4">
             <Button
               variant="outline"
-              onClick={() => setShowAddModal(false)}
+              onClick={() => setShowAddAnalyticsModal(false)}
               className="flex-1"
             >
               Cancelar
             </Button>
             <Button
               variant="gradient"
-              onClick={handleSaveProvider}
+              onClick={handleSaveAnalytics}
               className="flex-1"
               leftIcon={<CheckCircle className="w-4 h-4" />}
             >

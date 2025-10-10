@@ -348,13 +348,6 @@ const ClientsPage = () => {
           >
             Exportar
           </Button>
-          <Link to="/empresa/clientes/nuevo">
-            <Button
-              leftIcon={<UserPlus className="w-4 h-4" />}
-            >
-              Nuevo Cliente
-            </Button>
-          </Link>
         </div>
       </div>
 

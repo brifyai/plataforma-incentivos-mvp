@@ -5,18 +5,22 @@
  */
 
 import { Card } from '../common';
-import { Link2, Database, MessageCircle, Settings } from 'lucide-react';
+import { Link2, Database, Settings } from 'lucide-react';
 import CRMConfiguration from './CRMConfiguration';
 import CRMSyncDashboard from './CRMSyncDashboard';
 import CRMCustomFields from './CRMCustomFields';
 import MatchingConfidence from './MatchingConfidence';
 import MatchingCriteria from './MatchingCriteria';
+import mercadoPagoService from '../../services/integrations/mercadopago.service';
 
 const IntegrationsSection = ({
   profile,
   crmConfig,
   onUpdate
 }) => {
+  // Check real integration statuses
+  const mercadoPagoStatus = mercadoPagoService.isConfigured();
+
   return (
     <div className="space-y-6 mb-8">
       <div className="flex items-center gap-3 mb-6">
@@ -44,7 +48,7 @@ const IntegrationsSection = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -53,20 +57,8 @@ const IntegrationsSection = ({
               <div>
                 <h4 className="font-semibold text-blue-900">CRM</h4>
                 <p className="text-sm text-blue-700">
-                  {crmConfig ? 'Configurado' : 'No configurado'}
+                  {crmConfig?.provider && crmConfig?.connected ? 'Configurado' : 'No configurado'}
                 </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <MessageCircle className="w-4 h-4 text-green-600" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-green-900">WhatsApp</h4>
-                <p className="text-sm text-green-700">Próximamente</p>
               </div>
             </div>
           </div>
@@ -78,7 +70,9 @@ const IntegrationsSection = ({
               </div>
               <div>
                 <h4 className="font-semibold text-purple-900">Mercado Pago</h4>
-                <p className="text-sm text-purple-700">Configurado</p>
+                <p className="text-sm text-purple-700">
+                  {mercadoPagoStatus.configured ? 'Configurado' : 'No configurado'}
+                </p>
               </div>
             </div>
           </div>

@@ -208,12 +208,6 @@ export const MERCADOPAGO_CONFIG = {
   CURRENCY: 'CLP',
 };
 
-// Configuración de WhatsApp
-export const WHATSAPP_CONFIG = {
-  PHONE_NUMBER: import.meta.env.VITE_WHATSAPP_PHONE_NUMBER || '56912345678',
-  DEFAULT_MESSAGE: import.meta.env.VITE_WHATSAPP_DEFAULT_MESSAGE || 'Hola, necesito ayuda con la plataforma de incentivos',
-};
-
 // Mensajes de error comunes
 export const ERROR_MESSAGES = {
   NETWORK_ERROR: 'Error de conexión. Por favor, verifica tu conexión a internet.',
@@ -284,7 +278,6 @@ export default {
   DATE_FORMATS,
   ROUTES,
   MERCADOPAGO_CONFIG,
-  WHATSAPP_CONFIG,
   ERROR_MESSAGES,
   SUCCESS_MESSAGES,
   STATUS_COLORS,

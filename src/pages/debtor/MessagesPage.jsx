@@ -24,6 +24,9 @@ import {
   Image,
   FileText,
   DollarSign,
+  CheckCircle,
+  XCircle,
+  MessageCircle,
 } from 'lucide-react';
 
 const MessagesPage = () => {
@@ -38,6 +41,9 @@ const MessagesPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [paymentProofFiles, setPaymentProofFiles] = useState([]);
+  const [showRejectionReason, setShowRejectionReason] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedProposalMessage, setSelectedProposalMessage] = useState(null);
   const fileInputRef = useRef(null);
   const conversationFileInputRef = useRef(null);
   const paymentProofInputRef = useRef(null);
@@ -159,6 +165,94 @@ const MessagesPage = () => {
     setPaymentAmount('');
     setPaymentMethod('');
     setPaymentProofFiles([]);
+  };
+
+  // Manejar respuesta a propuesta
+  const handleProposalResponse = async (message, response) => {
+    if (response === 'accept') {
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Propuesta Aceptada!',
+        text: 'La propuesta ha sido aceptada. La empresa será notificada automáticamente.',
+        confirmButtonText: 'Continuar',
+        customClass: { popup: 'swal-wide' }
+      });
+
+      // Aquí iría la lógica para actualizar el estado de la propuesta en la BD
+      console.log('Propuesta aceptada:', message.id);
+
+    } else if (response === 'reject') {
+      setSelectedProposalMessage(message);
+      setShowRejectionReason(true);
+
+    } else if (response === 'negotiate') {
+      // Abrir modal de negociación o simplemente mostrar input
+      const { value: negotiationMessage } = await Swal.fire({
+        title: 'Negociar Propuesta',
+        input: 'textarea',
+        inputLabel: 'Describe tu contrapropuesta',
+        inputPlaceholder: 'Ej: ¿Podrían reducir el descuento al 10%?',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Por favor escribe tu contrapropuesta';
+          }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Enviar Negociación',
+        cancelButtonText: 'Cancelar',
+        customClass: { popup: 'swal-wide' }
+      });
+
+      if (negotiationMessage) {
+        await Swal.fire({
+          icon: 'info',
+          title: 'Negociación Enviada',
+          text: 'Tu contrapropuesta ha sido enviada a la empresa.',
+          confirmButtonText: 'Ok',
+          customClass: { popup: 'swal-wide' }
+        });
+
+        // Aquí iría la lógica para enviar la negociación
+        console.log('Negociación enviada:', message.id, negotiationMessage);
+      }
+    }
+  };
+
+  // Enviar motivo de rechazo
+  const handleSendRejectionReason = async () => {
+    if (!rejectionReason.trim()) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Motivo requerido',
+        text: 'Por favor explica por qué rechazas la propuesta.',
+        confirmButtonText: 'Entendido',
+        customClass: { popup: 'swal-wide' }
+      });
+      return;
+    }
+
+    await Swal.fire({
+      icon: 'info',
+      title: 'Rechazo Enviado',
+      text: 'Tu motivo de rechazo ha sido enviado a la empresa.',
+      confirmButtonText: 'Continuar',
+      customClass: { popup: 'swal-wide' }
+    });
+
+    // Aquí iría la lógica para enviar el rechazo con motivo
+    console.log('Rechazo enviado:', selectedProposalMessage.id, rejectionReason);
+
+    setShowRejectionReason(false);
+    setRejectionReason('');
+    setSelectedProposalMessage(null);
+  };
+
+  // Verificar si un mensaje es una propuesta
+  const isProposalMessage = (message) => {
+    // Por ahora, detectar por contenido. En el futuro, usar un campo específico
+    const proposalKeywords = ['propuesta', 'oferta', 'descuento', 'acuerdo', 'negociación'];
+    const content = message.content?.toLowerCase() || '';
+    return proposalKeywords.some(keyword => content.includes(keyword));
   };
 
   const handleFileSelect = (event, isConversation = false) => {
@@ -397,7 +491,7 @@ const MessagesPage = () => {
                         {selectedConversation.messages.map((message) => (
                           <div
                             key={message.id}
-                            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                            className={`flex flex-col ${message.sender === 'user' ? 'items-end' : 'items-start'}`}
                           >
                             <div
                               className={`max-w-xs lg:max-w-md px-5 py-3 rounded-2xl shadow-soft ${
@@ -413,6 +507,39 @@ const MessagesPage = () => {
                                 {new Date(message.timestamp).toLocaleString()}
                               </p>
                             </div>
+
+                            {/* Botones de respuesta rápida para propuestas */}
+                            {message.sender === 'company' && isProposalMessage(message) && (
+                              <div className="flex gap-2 mt-3">
+                                <Button
+                                  variant="gradient"
+                                  size="sm"
+                                  onClick={() => handleProposalResponse(message, 'accept')}
+                                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold px-4 py-2 rounded-xl shadow-soft hover:shadow-glow transition-all"
+                                  leftIcon={<CheckCircle className="w-4 h-4" />}
+                                >
+                                  Sí Acepto
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleProposalResponse(message, 'reject')}
+                                  className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 px-4 py-2 rounded-xl transition-all"
+                                  leftIcon={<XCircle className="w-4 h-4" />}
+                                >
+                                  No Acepto
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleProposalResponse(message, 'negotiate')}
+                                  className="border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400 px-4 py-2 rounded-xl transition-all"
+                                  leftIcon={<MessageCircle className="w-4 h-4" />}
+                                >
+                                  Negociar
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -815,6 +942,70 @@ const MessagesPage = () => {
                 {companies.length === 0 ? 'No hay empresas disponibles' : 'Enviar Mensaje'}
               </Button>
             </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Motivo de Rechazo */}
+      <Modal
+        isOpen={showRejectionReason}
+        onClose={() => {
+          setShowRejectionReason(false);
+          setRejectionReason('');
+          setSelectedProposalMessage(null);
+        }}
+        title="¿Por qué rechazas la propuesta?"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="p-6 bg-gradient-to-br from-red-100 via-red-200 to-pink-100 rounded-3xl inline-block mb-4 shadow-soft">
+              <XCircle className="w-12 h-12 text-red-600" />
+            </div>
+            <p className="text-secondary-600 font-medium">
+              Ayúdanos a entender tu decisión para mejorar nuestras propuestas futuras.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-lg font-bold text-secondary-900 mb-3 font-display">
+              Motivo del Rechazo
+            </label>
+            <textarea
+              className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none bg-white text-lg"
+              rows={4}
+              placeholder="Ej: El descuento no es suficiente, prefiero pagar en más cuotas, etc."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+          </div>
+
+          <div className="bg-gradient-to-r from-red-50 to-red-100/50 border-2 border-red-200 rounded-2xl p-4">
+            <p className="text-red-800 font-medium text-sm">
+              💡 <strong>Importante:</strong> Tu respuesta será enviada automáticamente a la empresa para que puedan ajustar su oferta.
+            </p>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRejectionReason(false);
+                setRejectionReason('');
+                setSelectedProposalMessage(null);
+              }}
+              className="flex-1 hover:scale-105 transition-all"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="gradient"
+              onClick={handleSendRejectionReason}
+              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-soft hover:shadow-glow"
+              leftIcon={<Send className="w-4 h-4" />}
+            >
+              Enviar Motivo
+            </Button>
           </div>
         </div>
       </Modal>

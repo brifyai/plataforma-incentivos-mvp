@@ -15,7 +15,6 @@ import { getCompanyVerification, VERIFICATION_STATUS } from '../../services/veri
 import DashboardHero from './components/DashboardHero';
 import DashboardStats from './components/DashboardStats';
 import QuickActions from './components/QuickActions';
-import ClientManagement from './components/ClientManagement';
 import MobileNavigation from './components/MobileNavigation';
 import BankAccountSetup from '../../components/company/BankAccountSetup';
 import { FormField, FormSection, ActionButtons } from '../../components/common';
@@ -234,6 +233,8 @@ const CompanyDashboard = () => {
         profile={profile}
         dateFilter={dateFilter}
         onDateFilterChange={setDateFilter}
+        stats={stats}
+        analytics={analytics}
       />
 
       {/* Verification Status Banner */}
@@ -275,11 +276,6 @@ const CompanyDashboard = () => {
       {/* Quick Actions */}
       <QuickActions />
 
-      {/* Client Management */}
-      <ClientManagement
-        clients={clients}
-        onClientCreated={loadStats}
-      />
 
       {/* Mobile Navigation */}
       <MobileNavigation />

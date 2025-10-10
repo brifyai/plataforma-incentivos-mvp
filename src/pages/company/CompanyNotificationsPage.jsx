@@ -214,9 +214,13 @@ const CompanyNotificationsPage = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <Badge variant="info" size="lg">
+            <Button
+              variant="primary"
+              onClick={() => {}}
+              leftIcon={<Bell className="w-4 h-4" />}
+            >
               {notifications.length} Notificaciones
-            </Badge>
+            </Button>
             <Button
               variant="primary"
               onClick={() => setShowSettingsModal(true)}

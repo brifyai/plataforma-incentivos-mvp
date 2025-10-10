@@ -5,7 +5,6 @@
  */
 
 import { Card, Button } from '../../components/common';
-import { WHATSAPP_CONFIG } from '../../config/constants';
 import {
   HelpCircle,
   DollarSign,
@@ -385,17 +384,6 @@ const HelpPage = () => {
               💰 Calcular Mis Ganancias
             </Button>
           </div>
-          <p className="text-sm text-secondary-600 mt-6">
-            ¿Tienes más preguntas?{' '}
-            <a
-              href={`https://wa.me/${WHATSAPP_CONFIG.PHONE_NUMBER}?text=${encodeURIComponent(WHATSAPP_CONFIG.DEFAULT_MESSAGE)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-green-600 hover:underline font-medium"
-            >
-              Contacta nuestro soporte por WhatsApp
-            </a>
-          </p>
         </div>
       </Card>
     </div>

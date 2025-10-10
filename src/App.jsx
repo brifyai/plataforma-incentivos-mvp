@@ -1,6 +1,6 @@
 /**
  * Componente Principal de la Aplicación
- * 
+ *
  * Configura los providers y el router principal
  */
 
@@ -22,4 +22,5 @@ function App() {
     </div>
   );
 }
+
 export default App;

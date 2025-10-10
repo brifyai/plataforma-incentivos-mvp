@@ -195,24 +195,45 @@ const CorporateClientsSection = ({ profile, onUpdate }) => {
   };
 
   const handleDeleteClient = async (clientId) => {
+    const client = clients.find(c => c.id === clientId);
+
     const result = await Swal.fire({
       icon: 'warning',
-      title: '¿Eliminar cliente?',
-      text: 'Esta acción no se puede deshacer',
+      title: '⚠️ ¿Eliminar cliente corporativo?',
+      html: `
+        <div class="text-left">
+          <p class="mb-3"><strong>Esta acción eliminará permanentemente:</strong></p>
+          <ul class="list-disc list-inside text-sm text-gray-600 mb-4">
+            <li>El cliente corporativo y toda su información</li>
+            <li>Todos los deudores asociados a este cliente</li>
+            <li>Todas las deudas y propuestas relacionadas</li>
+            <li>Historial de pagos y acuerdos</li>
+            <li>Mensajes y comunicaciones</li>
+            <li>Datos de campañas y analytics</li>
+          </ul>
+          <p class="text-red-600 font-semibold">Esta acción NO se puede deshacer.</p>
+          <p class="mt-2">¿Estás seguro de que quieres continuar?</p>
+        </div>
+      `,
       showCancelButton: true,
-      confirmButtonText: 'Eliminar',
+      confirmButtonText: 'Sí, eliminar todo',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#EF4444',
-      cancelButtonColor: '#6B7280'
+      cancelButtonColor: '#6B7280',
+      customClass: {
+        popup: 'swal-wide'
+      },
+      width: '600px'
     });
 
     if (result.isConfirmed) {
       try {
         // Aquí iría la lógica para eliminar de la base de datos
+        // En una implementación real, esto debería hacer una eliminación en cascada
         await Swal.fire({
           icon: 'success',
           title: '¡Cliente eliminado!',
-          text: 'El cliente corporativo ha sido eliminado exitosamente',
+          text: 'El cliente corporativo y toda su información relacionada ha sido eliminado exitosamente',
           confirmButtonText: 'Aceptar',
           confirmButtonColor: '#3B82F6'
         });

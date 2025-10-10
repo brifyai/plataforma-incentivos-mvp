@@ -17,17 +17,21 @@ import {
   Activity
 } from 'lucide-react';
 
-const DashboardHero = ({ profile, dateFilter, onDateFilterChange }) => {
+const DashboardHero = ({ profile, dateFilter, onDateFilterChange, stats, analytics }) => {
   const company = profile?.company;
 
-  // Mock data for demonstration - in real app this would come from props
+  // Use real data from props, with fallbacks
+  const realStats = stats || {};
+  const realAnalytics = analytics || {};
+
+  // Calculate derived metrics from real data
   const heroStats = {
-    totalClients: 247,
-    activeDebts: 1847,
-    totalRevenue: 12500000,
-    monthlyGrowth: 12.5,
-    pendingPayments: 23,
-    successRate: 94.2
+    totalClients: realStats.totalClients || 0,
+    activeDebts: realStats.totalDebts || 0,
+    totalRevenue: realStats.totalRecovered || 0,
+    monthlyGrowth: realAnalytics.monthlyGrowth || 0,
+    pendingPayments: realStats.pendingPayments || 0,
+    successRate: realStats.recoveryRate || 0
   };
 
   return (

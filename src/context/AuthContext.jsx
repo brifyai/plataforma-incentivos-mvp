@@ -39,8 +39,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(false); // Cambiar a false para evitar parpadeo inicial
-  const [initializing, setInitializing] = useState(true); // Nuevo estado para evitar parpadeo
+  const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true); // Start as true to prevent redirects during initial check
   const [error, setError] = useState(null);
 
   // Expose loadUserProfile for external use
@@ -50,104 +50,77 @@ export const AuthProvider = ({ children }) => {
 
   // Cargar usuario y perfil al montar
   useEffect(() => {
-    let isMounted = true; // Flag para evitar actualizaciones en componentes desmontados
-
-    const initializeAuth = async () => {
-      console.log('🚀 Iniciando initializeAuth...');
-
-      try {
-        await checkUser();
-        console.log('✅ checkUser completado exitosamente');
-      } catch (error) {
-        console.error('❌ Error initializing auth:', error);
-        // En caso de error, continuar con estado no autenticado
-        if (isMounted) {
-          setUser(null);
-          setProfile(null);
-          setSession(null);
-        }
-      } finally {
-        // Cambiar initializing a false en lugar de loading
-        if (isMounted) {
-          setInitializing(false);
-          console.log('🏁 Inicialización completada, initializing = false');
-        }
-      }
-    };
-
-    initializeAuth();
-
-    // Cleanup function
-    return () => {
-      isMounted = false;
-    };
+    checkUser();
   }, []);
 
   /**
-    * Verifica si hay un usuario autenticado al cargar
-    */
-  const checkUser = async () => {
-    try {
-      // Primero verificar sesión de Supabase Auth (para OAuth)
-      const { data: supabaseSession, error: supabaseError } = await supabase.auth.getSession();
+      * Verifica si hay un usuario autenticado al cargar
+      */
+   const checkUser = async () => {
+     try {
+       setLoading(true);
+       // Primero verificar sesión de Supabase Auth (para OAuth)
+       const { data: supabaseSession, error: supabaseError } = await supabase.auth.getSession();
 
-      if (!supabaseError && supabaseSession?.session) {
-        // Hay sesión de Supabase, usar esa
-        const { user: supabaseUser } = supabaseSession.session;
-        console.log('🔄 Usando sesión de Supabase Auth');
+       if (!supabaseError && supabaseSession?.session) {
+         // Hay sesión de Supabase, usar esa
+         const { user: supabaseUser } = supabaseSession.session;
+         console.log('🔄 Usando sesión de Supabase Auth');
 
-        // Verificar si existe en nuestra tabla users
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', supabaseUser.email)
-          .single();
+         // Verificar si existe en nuestra tabla users
+         const { data: userData, error: userError } = await supabase
+           .from('users')
+           .select('*')
+           .eq('email', supabaseUser.email)
+           .single();
 
-        if (userData) {
-          const mockUser = {
-            id: userData.id,
-            email: userData.email,
-            user_metadata: {
-              full_name: userData.full_name,
-              role: userData.role,
-            },
-          };
+         if (userData) {
+           const mockUser = {
+             id: userData.id,
+             email: userData.email,
+             user_metadata: {
+               full_name: userData.full_name,
+               role: userData.role,
+             },
+           };
 
-          setUser(mockUser);
-          setSession(supabaseSession.session);
-          await loadUserProfile(userData.id);
-        } else {
-          // Usuario no existe en tabla, limpiar
-          await supabase.auth.signOut();
-          setUser(null);
-          setProfile(null);
-          setSession(null);
-        }
-      } else {
-        // No hay sesión de Supabase, verificar localStorage
-        const { user: currentUser, error } = await getCurrentUser();
+           setUser(mockUser);
+           setSession(supabaseSession.session);
+           await loadUserProfile(userData.id);
+         } else {
+           // Usuario no existe en tabla, limpiar
+           await supabase.auth.signOut();
+           setUser(null);
+           setProfile(null);
+           setSession(null);
+         }
+       } else {
+         // No hay sesión de Supabase, verificar localStorage
+         const { user: currentUser, error } = await getCurrentUser();
 
-        if (error || !currentUser) {
-          setUser(null);
-          setProfile(null);
-          setSession(null);
-          setLoading(false);
-          return;
-        }
+         if (error || !currentUser) {
+           setUser(null);
+           setProfile(null);
+           setSession(null);
+           setLoading(false);
+           setInitializing(false);
+           return;
+         }
 
-        setUser(currentUser);
-        setSession(null);
-        await loadUserProfile(currentUser.id);
-      }
-    } catch (error) {
-      console.error('Error checking user:', error);
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+         setUser(currentUser);
+         setSession(null);
+         await loadUserProfile(currentUser.id);
+       }
+     } catch (error) {
+       console.error('Error checking user:', error);
+       setUser(null);
+       setProfile(null);
+       setSession(null);
+     } finally {
+       setLoading(false);
+       setInitializing(false);
+     }
+   };
 
   /**
    * Carga el perfil completo del usuario desde la base de datos (100% real)

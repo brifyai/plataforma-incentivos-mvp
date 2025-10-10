@@ -1,1 +1,0 @@
-SELECT '✅ SISTEMA DE VERIFICACIÓN DE EMPRESAS INSTALADO' as status, NOW() as installed_at, (SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'company_verifications') as verification_table, (SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'verification_history') as history_table;

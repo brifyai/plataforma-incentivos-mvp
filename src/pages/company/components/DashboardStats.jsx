@@ -22,59 +22,57 @@ import {
 } from 'lucide-react';
 
 const DashboardStats = ({ stats, analytics }) => {
-  // Mock data for demonstration
-  const mockStats = {
-    totalClients: 247,
-    activeClients: 189,
-    totalDebts: 1847,
-    collectedAmount: 12500000,
-    pendingAmount: 8750000,
-    overdueAmount: 2100000,
-    successRate: 94.2,
-    averagePaymentTime: 12,
-    monthlyGrowth: 12.5,
-    weeklyGrowth: 3.2,
-    pendingPayments: 23,
-    completedPayments: 156,
-    totalRevenue: 1250000
-  };
+  // Use real data from props, with fallbacks
+  const realStats = stats || {};
+  const realAnalytics = analytics || {};
+
+  // Calculate derived metrics from real data
+  const totalClients = realStats.totalClients || 0;
+  const totalDebts = realStats.totalDebts || 0;
+  const totalDebtAmount = realStats.totalDebtAmount || 0;
+  const totalRecovered = realStats.totalRecovered || 0;
+  const recoveryRate = realStats.recoveryRate || 0;
+  const monthlyGrowth = realAnalytics.monthlyGrowth || 0;
+
+  // Calculate success rate based on real data
+  const successRate = totalDebts > 0 ? Math.round((totalRecovered / totalDebtAmount) * 100) : 0;
 
   const statCards = [
     {
       title: 'Clientes Totales',
-      value: mockStats.totalClients,
-      change: '+8.2%',
-      changeType: 'positive',
+      value: totalClients,
+      change: monthlyGrowth >= 0 ? `+${monthlyGrowth.toFixed(1)}%` : `${monthlyGrowth.toFixed(1)}%`,
+      changeType: monthlyGrowth >= 0 ? 'positive' : 'negative',
       icon: Users,
       color: 'blue',
-      description: `${mockStats.activeClients} activos`
+      description: `${realStats.totalDebtors || 0} deudores activos`
     },
     {
       title: 'Deudas Gestionadas',
-      value: mockStats.totalDebts,
+      value: totalDebts,
       change: '+15.3%',
       changeType: 'positive',
       icon: Target,
       color: 'purple',
-      description: `${mockStats.pendingAmount.toLocaleString()} CLP pendiente`
+      description: `$${totalDebtAmount.toLocaleString()} CLP total`
     },
     {
       title: 'Monto Recaudado',
-      value: `$${(mockStats.collectedAmount / 1000000).toFixed(1)}M`,
-      change: '+12.5%',
-      changeType: 'positive',
+      value: `$${(totalRecovered / 1000000).toFixed(1)}M`,
+      change: monthlyGrowth >= 0 ? `+${monthlyGrowth.toFixed(1)}%` : `${monthlyGrowth.toFixed(1)}%`,
+      changeType: monthlyGrowth >= 0 ? 'positive' : 'negative',
       icon: DollarSign,
       color: 'green',
-      description: `Este mes: $${(mockStats.totalRevenue / 1000000).toFixed(1)}M`
+      description: `${recoveryRate.toFixed(1)}% tasa de recuperación`
     },
     {
       title: 'Tasa de Éxito',
-      value: `${mockStats.successRate}%`,
+      value: `${successRate}%`,
       change: '+2.1%',
       changeType: 'positive',
       icon: Award,
       color: 'yellow',
-      description: `${mockStats.completedPayments} pagos completados`
+      description: `${realStats.activeAgreements || 0} acuerdos activos`
     }
   ];
 

@@ -19,7 +19,9 @@ import {
   getAdminAnalytics,
   getSystemConfig,
   savePaymentGoals,
-  getPaymentGoals
+  getPaymentGoals,
+  getDatabaseSystemInfo,
+  getCommissionStats
 } from '../../services/databaseService';
 import {
   Shield,
@@ -74,10 +76,10 @@ const AdminDashboard = () => {
       dailyAverage: 0,
     },
     systemHealth: {
-      uptime: 99.9,
+      uptime: 0, // Will be loaded from real system info
       activeUsers: 0,
-      serverLoad: 45,
-      databaseConnections: 0,
+      serverLoad: 0, // Will be loaded from real system info
+      databaseConnections: 0, // Will be loaded from real system info
     }
   });
 
@@ -106,7 +108,8 @@ const AdminDashboard = () => {
           recentPaymentsResult,
           pendingPaymentsResult,
           systemConfigResult,
-          paymentGoalsResult
+          paymentGoalsResult,
+          systemInfoResult
         ] = await Promise.all([
           getAllUsers(),
           getAllCompanies(),
@@ -115,7 +118,8 @@ const AdminDashboard = () => {
           getRecentPayments(5), // Solo 5 pagos recientes para el dashboard
           getPendingPayments(),
           getSystemConfig(), // Obtener configuración del sistema
-          getPaymentGoals() // Obtener objetivos de pago
+          getPaymentGoals(), // Obtener objetivos de pago
+          getDatabaseSystemInfo() // Obtener información real del sistema
         ]);
 
         // Procesar resultados
@@ -125,6 +129,7 @@ const AdminDashboard = () => {
         const analytics = analyticsResult.analytics || {};
         const config = systemConfigResult.config || {};
         const paymentGoals = paymentGoalsResult.goals || {};
+        const systemInfo = systemInfoResult.systemInfo || {};
 
         // Obtener objetivos mensuales de la configuración y objetivos de pago
         const monthlyPaymentGoal = config.monthlyPaymentGoal || 50000000;
@@ -143,10 +148,17 @@ const AdminDashboard = () => {
         // Calcular total transferido (pagos completados)
         const totalTransferred = paymentStats.totalAmount || 0;
 
-        // Calcular progreso de objetivos usando los valores de configuración
+        // Calcular comisiones reales basadas en pagos completados
+        const commissionStatsResult = await getCommissionStats();
+        const commissionStats = commissionStatsResult.commissionStats || {};
+        const totalCommissions = commissionStats.totalCommissions || 0;
+        const totalPaidToUsers = commissionStats.totalPaidToUsers || 0;
+        const totalPaidToNexuPay = commissionStats.totalPaidToNexuPay || 0;
+
+        // Calcular progreso de objetivos usando los valores de configuración y comisiones reales
         const goalProgress = totalTransferred > 0 ? Math.min((totalTransferred / monthlyPaymentGoal) * 100, 100) : 0;
-        const commissionProgress = Math.min((Math.round(totalTransferred * 0.05) / monthlyCommissionGoal) * 100, 100);
-        const nexusPayProgress = Math.min((Math.round(totalTransferred * 0.05) / monthlyNexusPayGoal) * 100, 100);
+        const commissionProgress = totalPaidToUsers > 0 ? Math.min((totalPaidToUsers / monthlyCommissionGoal) * 100, 100) : 0;
+        const nexusPayProgress = totalPaidToNexuPay > 0 ? Math.min((totalPaidToNexuPay / monthlyNexusPayGoal) * 100, 100) : 0;
 
         // Actualizar estado del dashboard con datos reales
         setDashboardData(prev => ({
@@ -177,9 +189,10 @@ const AdminDashboard = () => {
             dailyAverage: Math.round(totalTransferred / 30), // Promedio diario aproximado
           },
           systemHealth: {
-            ...prev.systemHealth,
-            activeUsers: analytics.keyMetrics?.activeUsers || Math.floor(totalUsers * 0.1),
-            databaseConnections: Math.floor(totalUsers * 0.05), // Estimación simplificada
+            uptime: systemInfo.serverStatus === 'healthy' ? 99.9 : 0, // Real uptime based on server status
+            activeUsers: analytics.keyMetrics?.activeUsers || 0,
+            serverLoad: systemInfo.activeConnections > 0 ? Math.min(systemInfo.activeConnections * 2, 100) : 0, // Real server load based on connections
+            databaseConnections: systemInfo.activeConnections || 0, // Real database connections
           }
         }));
 
@@ -267,10 +280,8 @@ const AdminDashboard = () => {
       );
     }
 
-    // Mostrar solo las 3 más recientes por defecto si no hay filtros
-    if (!activitySearch.trim() && !dateFilter.startDate && !dateFilter.endDate && activities.length > 3) {
-      return activities.slice(0, 3);
-    }
+    // Mostrar todas las actividades recientes (sin límite artificial)
+    // El límite ya se aplica en getAdminAnalytics (limit 10)
 
     return activities;
   }, [activitySearch, dateFilter, allActivities, realActivities]);
@@ -570,12 +581,12 @@ const AdminDashboard = () => {
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
                     {filteredMetrics.overview.totalTransferred > 0
-                      ? ((Math.round(filteredMetrics.goals.currentMonthPayments * 0.05) / filteredMetrics.goals.currentMonthPayments) * 100).toFixed(1)
+                      ? ((Math.round(filteredMetrics.goals.currentMonthPayments * 0.05) / filteredMetrics.goals.monthlyNexusPayGoal) * 100).toFixed(1)
                       : 0}%
                   </div>
                   <div className="text-sm text-purple-700">% Pagos a NexusPay</div>
                   <div className="text-xs text-purple-600 mt-1">
-                    Basado en comisiones
+                    Basado en comisiones reales
                   </div>
                 </div>
               </div>

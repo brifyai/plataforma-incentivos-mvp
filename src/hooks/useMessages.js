@@ -30,9 +30,69 @@ export const useMessages = () => {
       setLoading(true);
       setError(null);
 
-      // Por ahora, devolver conversaciones vacías hasta que se implemente el servicio
+      // Por ahora, devolver conversaciones de ejemplo con propuestas
       // En el futuro, esto debería llamar a un servicio que obtenga conversaciones de la BD
-      setConversations([]);
+      const mockConversations = [
+        {
+          id: 'conv1',
+          company_name: 'Banco Estado',
+          last_message: 'Tenemos una excelente propuesta de descuento del 25% para tu deuda pendiente.',
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 horas atrás
+          unread_count: 1,
+          messages: [
+            {
+              id: 'msg1',
+              sender: 'company',
+              content: 'Hola! Hemos revisado tu situación financiera y tenemos una propuesta especial para ti.',
+              timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            },
+            {
+              id: 'msg2',
+              sender: 'company',
+              content: 'Tenemos una excelente propuesta de descuento del 25% para tu deuda pendiente. Si aceptas, podrías ahorrar $125.000 en intereses.',
+              timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            }
+          ]
+        },
+        {
+          id: 'conv2',
+          company_name: 'Cencosud',
+          last_message: '¿Te interesa negociar un plan de pagos más flexible?',
+          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 horas atrás
+          unread_count: 0,
+          messages: [
+            {
+              id: 'msg3',
+              sender: 'company',
+              content: 'Hola, somos de Cencosud y queremos ayudarte con tu deuda.',
+              timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+            },
+            {
+              id: 'msg4',
+              sender: 'company',
+              content: '¿Te interesa negociar un plan de pagos más flexible? Podemos ofrecerte 12 cuotas sin intereses.',
+              timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+            }
+          ]
+        },
+        {
+          id: 'conv3',
+          company_name: 'Ripley',
+          last_message: 'Mensaje enviado',
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 día atrás
+          unread_count: 0,
+          messages: [
+            {
+              id: 'msg5',
+              sender: 'company',
+              content: 'Gracias por contactarnos. Estamos evaluando tu caso.',
+              timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            }
+          ]
+        }
+      ];
+
+      setConversations(mockConversations);
 
     } catch (err) {
       console.error('Error loading conversations:', err);

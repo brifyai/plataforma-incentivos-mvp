@@ -14,14 +14,23 @@ import { Link } from 'react-router-dom';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, profile } = useAuth();
 
-  // Redirección simple cuando esté autenticado
+  // Redirección según rol cuando esté autenticado
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/debtor/dashboard');
+    if (isAuthenticated && profile) {
+      const role = profile.role;
+      if (role === 'debtor') {
+        navigate('/personas/dashboard');
+      } else if (role === 'company') {
+        navigate('/empresa/dashboard');
+      } else if (role === 'god_mode') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/personas/dashboard'); // default
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, profile, navigate]);
 
   return (
     <AuthLayout>
