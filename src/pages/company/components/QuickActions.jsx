@@ -37,7 +37,7 @@ const QuickActions = ({ profile }) => {
       title: 'Crear Oferta',
       description: 'Nueva propuesta de pago',
       icon: Target,
-      color: 'purple',
+      color: 'blue',
       action: 'new-offer',
       link: '/empresa/ofertas' // Ruta existente
     },
@@ -71,7 +71,7 @@ const QuickActions = ({ profile }) => {
     const colors = {
       blue: 'bg-blue-600 hover:bg-blue-700',
       green: 'bg-green-600 hover:bg-green-700',
-      purple: 'bg-purple-600 hover:bg-purple-700',
+      purple: 'bg-blue-600 hover:bg-blue-700',
       orange: 'bg-orange-600 hover:bg-orange-700',
       indigo: 'bg-indigo-600 hover:bg-indigo-700',
       gray: 'bg-gray-600 hover:bg-gray-700'
@@ -83,7 +83,7 @@ const QuickActions = ({ profile }) => {
     const colors = {
       blue: 'text-blue-600',
       green: 'text-green-600',
-      purple: 'text-purple-600',
+      purple: 'text-blue-600',
       orange: 'text-orange-600',
       indigo: 'text-indigo-600',
       gray: 'text-gray-600'

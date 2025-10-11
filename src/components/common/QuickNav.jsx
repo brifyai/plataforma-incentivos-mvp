@@ -54,11 +54,11 @@ const QuickNav = () => {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 bg-white/95 backdrop-blur-sm rounded-2xl shadow-strong border border-purple-200/50 p-3">
+    <div className="fixed top-4 right-4 z-50 bg-white/95 backdrop-blur-sm rounded-2xl shadow-strong border border-blue-200/50 p-3">
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 px-3 py-1 bg-purple-100 rounded-xl">
-          <Crown className="w-4 h-4 text-purple-600" />
-          <span className="text-sm font-semibold text-purple-900">GOD MODE</span>
+        <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-xl">
+          <Crown className="w-4 h-4 text-blue-600" />
+          <span className="text-sm font-semibold text-blue-900">GOD MODE</span>
           <Zap className="w-4 h-4 text-yellow-500" />
         </div>
 
@@ -69,7 +69,7 @@ const QuickNav = () => {
               variant="outline"
               size="sm"
               onClick={() => window.location.href = mode.path}
-              className="px-3 py-1 text-xs font-medium hover:bg-purple-50 border-purple-200"
+              className="px-3 py-1 text-xs font-medium hover:bg-blue-50 border-blue-200"
             >
               {mode.title}
             </Button>

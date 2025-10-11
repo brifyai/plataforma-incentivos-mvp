@@ -12,8 +12,8 @@ const MatchingConfidence = ({ stats }) => {
     <Card>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
@@ -25,7 +25,7 @@ const MatchingConfidence = ({ stats }) => {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-purple-600">
+          <div className="text-2xl font-bold text-blue-600">
             {stats?.averageConfidence?.toFixed(1) || 0}%
           </div>
           <p className="text-xs text-gray-500">Confianza promedio</p>

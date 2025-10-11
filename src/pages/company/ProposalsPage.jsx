@@ -155,7 +155,7 @@ const ProposalsPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl p-4 md:p-8 shadow-strong border border-slate-200">
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-700 to-blue-800 rounded-2xl p-3 md:p-6 shadow-strong border border-slate-200">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-32 h-32 md:w-64 md:h-64 bg-white rounded-full -translate-y-16 md:-translate-y-32 translate-x-16 md:translate-x-32" />
@@ -164,68 +164,90 @@ const ProposalsPage = () => {
 
         <div className="relative">
           {/* Mobile: Stack vertically, Desktop: Side by side */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-8 mb-4 lg:mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-6 mb-3 lg:mb-4">
             {/* Left side - Title and description */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6">
-              <div className="p-3 md:p-4 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-lg flex-shrink-0">
-                <HeartHandshake className="w-8 h-8 md:w-10 md:h-10 text-white" />
-              </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-5">
               <div className="text-center sm:text-left">
-                <h1 className="text-xl md:text-3xl font-display font-bold tracking-tight text-white mb-2">
+                <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight text-white mb-1">
                   Propuestas de Pago
                 </h1>
-                <p className="text-white text-base md:text-lg font-medium max-w-lg">
+                <p className="text-white text-sm md:text-base font-medium max-w-lg">
                   Revisa y responde a las propuestas enviadas por tus deudores
                 </p>
               </div>
             </div>
 
-            {/* Right side - Date Filter */}
-            <div className="bg-white/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-200 shadow-sm w-full lg:min-w-fit">
-              <DateFilter
-                onFilterChange={setDateFilter}
-                className="mb-0"
-              />
-            </div>
           </div>
 
           {/* Quick stats in header */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4 border border-white/20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mt-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-3 border border-white/20">
               <div className="flex items-center gap-2 md:gap-3">
-                <Clock className="w-4 h-4 md:w-5 md:h-5 text-white flex-shrink-0" />
+                <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-white flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs md:text-sm font-medium text-white truncate">Pendientes</p>
-                  <p className="text-lg md:text-2xl font-bold text-white">{pendingProposals.length}</p>
+                  <p className="text-xs font-medium text-white truncate">Pendientes</p>
+                  <p className="text-sm md:text-lg font-bold text-white">{pendingProposals.length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4 border border-white/20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-3 border border-white/20">
               <div className="flex items-center gap-2 md:gap-3">
-                <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-white flex-shrink-0" />
+                <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4 text-white flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs md:text-sm font-medium text-white truncate">Respondidas</p>
-                  <p className="text-lg md:text-2xl font-bold text-white">{respondedProposals.length}</p>
+                  <p className="text-xs font-medium text-white truncate">Respondidas</p>
+                  <p className="text-sm md:text-lg font-bold text-white">{respondedProposals.length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4 border border-white/20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-3 border border-white/20">
               <div className="flex items-center gap-2 md:gap-3">
-                <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-white flex-shrink-0" />
+                <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-white flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs md:text-sm font-medium text-white truncate">Aceptadas</p>
-                  <p className="text-lg md:text-2xl font-bold text-white">{proposals.filter(p => p.status === 'accepted').length}</p>
+                  <p className="text-xs font-medium text-white truncate">Aceptadas</p>
+                  <p className="text-sm md:text-lg font-bold text-white">{proposals.filter(p => p.status === 'accepted').length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4 border border-white/20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-3 border border-white/20">
               <div className="flex items-center gap-2 md:gap-3">
-                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-white flex-shrink-0" />
+                <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4 text-white flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs md:text-sm font-medium text-white truncate">Monto Total</p>
-                  <p className="text-lg md:text-2xl font-bold text-white">{formatCurrency(proposals.reduce((sum, p) => sum + p.amount, 0))}</p>
+                  <p className="text-xs font-medium text-white truncate">Monto Total</p>
+                  <p className="text-sm md:text-lg font-bold text-white">{formatCurrency(proposals.reduce((sum, p) => sum + p.amount, 0))}</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
           </div>
         </div>
@@ -475,27 +497,27 @@ const ProposalsPage = () => {
               </div>
 
               {/* Información Temporal Detallada */}
-              <div className="bg-gradient-to-r from-purple-50 to-purple-100/50 border-2 border-purple-200 rounded-2xl p-6">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-2 border-blue-200 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-purple-500 rounded-lg">
+                  <div className="p-2 bg-blue-500 rounded-lg">
                     <Calendar className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-xl font-display font-bold text-purple-900">
+                  <h3 className="text-xl font-display font-bold text-blue-900">
                     Información Temporal
                   </h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white/60 rounded-xl p-4">
-                    <p className="text-sm font-medium text-purple-700 mb-2">📅 Fecha de Envío</p>
-                    <p className="text-xl font-bold text-purple-900">
+                    <p className="text-sm font-medium text-blue-700 mb-2">📅 Fecha de Envío</p>
+                    <p className="text-xl font-bold text-blue-900">
                       {formatDate(selectedProposal.submittedAt)}
                     </p>
                   </div>
 
                   <div className="bg-white/60 rounded-xl p-4">
-                    <p className="text-sm font-medium text-purple-700 mb-2">⏰ Hora Exacta</p>
-                    <p className="text-lg font-semibold text-purple-900">
+                    <p className="text-sm font-medium text-blue-700 mb-2">⏰ Hora Exacta</p>
+                    <p className="text-lg font-semibold text-blue-900">
                       {new Date(selectedProposal.submittedAt).toLocaleString('es-CL', {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -505,8 +527,8 @@ const ProposalsPage = () => {
                   </div>
 
                   <div className="bg-white/60 rounded-xl p-4 md:col-span-2">
-                    <p className="text-sm font-medium text-purple-700 mb-2">📆 Fecha Completa</p>
-                    <p className="text-lg font-semibold text-purple-900">
+                    <p className="text-sm font-medium text-blue-700 mb-2">📆 Fecha Completa</p>
+                    <p className="text-lg font-semibold text-blue-900">
                       {new Date(selectedProposal.submittedAt).toLocaleString('es-CL', {
                         weekday: 'long',
                         year: 'numeric',
@@ -675,12 +697,12 @@ const ProposalsPage = () => {
               </div>
 
               {/* Tu Respuesta - Diseño Interactivo */}
-              <div className="bg-gradient-to-r from-purple-50 to-purple-100/50 border-2 border-purple-200 rounded-2xl p-6">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-2 border-blue-200 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-purple-500 rounded-lg">
+                  <div className="p-2 bg-blue-500 rounded-lg">
                     <MessageSquare className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-xl font-display font-bold text-purple-900">
+                  <h3 className="text-xl font-display font-bold text-blue-900">
                     Tu Respuesta
                   </h3>
                 </div>
@@ -768,7 +790,7 @@ const ProposalsPage = () => {
                     📝 Mensaje de Respuesta
                   </label>
                   <textarea
-                    className="w-full px-4 py-4 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none bg-white text-lg"
+                    className="w-full px-4 py-4 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none bg-white text-lg"
                     rows={5}
                     placeholder="Explica tu decisión y agrega cualquier comentario adicional que consideres importante..."
                     value={responseData.message}

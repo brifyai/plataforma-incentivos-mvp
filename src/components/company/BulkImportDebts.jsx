@@ -415,18 +415,18 @@ const BulkImportDebts = ({ profile, onImportComplete }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-green-100 rounded-xl">
-            <Upload className="w-6 h-6 text-green-600" />
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-100 rounded-xl">
+            <Upload className="w-4 h-4 text-green-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-sm font-bold text-gray-900">
               Importación Masiva de Deudas
             </h2>
-            <p className="text-gray-600">
+            <p className="text-xs text-gray-600">
               Sube un archivo CSV o Excel con los datos de tus deudores
             </p>
           </div>
@@ -435,7 +435,8 @@ const BulkImportDebts = ({ profile, onImportComplete }) => {
         <Button
           variant="outline"
           onClick={downloadTemplate}
-          leftIcon={<Download className="w-4 h-4" />}
+          leftIcon={<Download className="w-3 h-3" />}
+          className="text-xs py-2"
         >
           Descargar Plantilla
         </Button>
@@ -444,25 +445,25 @@ const BulkImportDebts = ({ profile, onImportComplete }) => {
       {/* Corporate Client Selection */}
       {!file && corporateClients.length > 0 && (
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Building className="w-5 h-5 text-blue-600" />
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-1 bg-blue-100 rounded-lg">
+              <Building className="w-3 h-3 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-blue-900">
+              <h3 className="text-xs font-semibold text-blue-900">
                 Seleccionar Cliente Corporativo
               </h3>
-              <p className="text-sm text-blue-700">
+              <p className="text-xs text-blue-700">
                 Elige a qué cliente corporativo se cargarán las deudas
               </p>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             <select
               value={selectedCorporateClient}
               onChange={(e) => setSelectedCorporateClient(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all text-xs"
             >
               <option value="">Selecciona un cliente corporativo...</option>
               {corporateClients.map(client => (
@@ -473,11 +474,11 @@ const BulkImportDebts = ({ profile, onImportComplete }) => {
             </select>
 
             {selectedCorporateClient && (
-              <div className="bg-white p-4 rounded-lg border border-blue-200">
-                <h4 className="font-semibold text-gray-900 mb-2">
+              <div className="bg-white p-3 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-gray-900 mb-2 text-xs">
                   {corporateClients.find(c => c.id === selectedCorporateClient)?.company_name}
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs text-gray-600">
                   <div>RUT: {corporateClients.find(c => c.id === selectedCorporateClient)?.company_rut}</div>
                   <div>Industria: {corporateClients.find(c => c.id === selectedCorporateClient)?.industry}</div>
                   <div>Valor Contrato: ${corporateClients.find(c => c.id === selectedCorporateClient)?.contract_value?.toLocaleString('es-CL')}</div>
@@ -492,14 +493,14 @@ const BulkImportDebts = ({ profile, onImportComplete }) => {
       {/* Upload Area */}
       {!file && selectedCorporateClient && (
         <Card className="border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors">
-          <div className="text-center py-12">
-            <div className="p-8 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-3xl inline-block mb-6">
-              <FileText className="w-16 h-16 text-blue-600" />
+          <div className="text-center py-8">
+            <div className="p-4 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-3xl inline-block mb-4">
+              <FileText className="w-8 h-8 text-blue-600" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            <h3 className="text-sm font-bold text-gray-900 mb-3">
               Sube tu archivo de deudas
             </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            <p className="text-xs text-gray-600 mb-4 max-w-md mx-auto">
               Selecciona un archivo CSV o Excel con los datos de tus clientes.
               Máximo 10,000 registros por archivo.
             </p>
@@ -516,14 +517,14 @@ const BulkImportDebts = ({ profile, onImportComplete }) => {
             <Button
               variant="gradient"
               onClick={() => document.getElementById('debt-file-upload').click()}
-              leftIcon={<Upload className="w-4 h-4" />}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600"
+              leftIcon={<Upload className="w-3 h-3" />}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-xs py-2"
             >
               Seleccionar Archivo
             </Button>
 
-            <div className="mt-6 text-sm text-gray-500">
-              <p className="mb-2"><strong>Formatos soportados:</strong> CSV, Excel (.xls, .xlsx)</p>
+            <div className="mt-4 text-xs text-gray-500">
+              <p className="mb-1"><strong>Formatos soportados:</strong> CSV, Excel (.xls, .xlsx)</p>
               <p><strong>Tamaño máximo:</strong> 10MB</p>
             </div>
           </div>
@@ -533,25 +534,26 @@ const BulkImportDebts = ({ profile, onImportComplete }) => {
       {/* File Info & Actions */}
       {file && (
         <Card>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FileText className="w-5 h-5 text-green-600" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-green-100 rounded-lg">
+                <FileText className="w-3 h-3 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">{file.name}</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-semibold text-gray-900 text-xs">{file.name}</h3>
+                <p className="text-xs text-gray-600">
                   {(file.size / 1024 / 1024).toFixed(2)} MB • {parsedData.length} registros
                 </p>
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowPreview(true)}
-                leftIcon={<Eye className="w-4 h-4" />}
+                leftIcon={<Eye className="w-3 h-3" />}
+                className="text-xs py-1"
               >
                 Vista Previa
               </Button>
@@ -559,15 +561,17 @@ const BulkImportDebts = ({ profile, onImportComplete }) => {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowMapping(true)}
-                leftIcon={<Settings className="w-4 h-4" />}
+                leftIcon={<Settings className="w-3 h-3" />}
+                className="text-xs py-1"
               >
-                Mapear Campos
+                Mapear
               </Button>
               <Button
                 variant="danger"
                 size="sm"
                 onClick={clearAll}
-                leftIcon={<Trash2 className="w-4 h-4" />}
+                leftIcon={<Trash2 className="w-3 h-3" />}
+                className="text-xs py-1"
               >
                 Limpiar
               </Button>

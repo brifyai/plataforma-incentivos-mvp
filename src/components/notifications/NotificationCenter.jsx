@@ -46,12 +46,12 @@ const NotificationCenter = ({ isOpen, onClose }) => {
     const colors = {
       new_offer: 'bg-blue-50 border-blue-200',
       payment_confirmed: 'bg-green-50 border-green-200',
-      agreement_accepted: 'bg-purple-50 border-purple-200',
+      agreement_accepted: 'bg-blue-50 border-blue-200',
       incentive_credited: 'bg-yellow-50 border-yellow-200',
       payment_reminder: 'bg-orange-50 border-orange-200',
       agreement_completed: 'bg-green-50 border-green-200',
       message_received: 'bg-blue-50 border-blue-200',
-      achievement_unlocked: 'bg-purple-50 border-purple-200'
+      achievement_unlocked: 'bg-blue-50 border-blue-200'
     };
     return colors[type] || 'bg-gray-50 border-gray-200';
   };

@@ -22,7 +22,8 @@ import {
   Settings,
   Plus,
   Filter,
-  Search
+  Search,
+  Calendar
 } from 'lucide-react';
 
 const CompanyNotificationsPage = () => {
@@ -197,23 +198,20 @@ const CompanyNotificationsPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <Bell className="w-8 h-8" />
-            </div>
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-6 text-white shadow-strong">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="flex items-center gap-4 md:gap-5">
             <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
+              <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight">
                 Centro de Notificaciones
               </h1>
-              <p className="text-purple-100 text-lg">
+              <p className="text-blue-100 text-sm md:text-base">
                 Gestiona alertas y comunicaciones con tus deudores
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Button
               variant="primary"
               onClick={() => {}}
@@ -239,46 +237,46 @@ const CompanyNotificationsPage = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Send className="w-6 h-6 text-green-300" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+            <div className="flex items-center gap-2">
+              <Send className="w-4 h-4 text-green-300" />
               <div>
-                <p className="text-sm text-green-100">Enviadas</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xs text-green-100">Enviadas</p>
+                <p className="text-sm md:text-lg font-bold">
                   {notifications.filter(n => n.status === 'sent').length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-6 h-6 text-blue-300" />
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-blue-300" />
               <div>
-                <p className="text-sm text-blue-100">Leídas</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xs text-blue-100">Leídas</p>
+                <p className="text-sm md:text-lg font-bold">
                   {notifications.reduce((sum, n) => sum + n.readCount, 0)}
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Clock className="w-6 h-6 text-yellow-300" />
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-yellow-300" />
               <div>
-                <p className="text-sm text-yellow-100">Pendientes</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xs text-yellow-100">Pendientes</p>
+                <p className="text-sm md:text-lg font-bold">
                   {notifications.filter(n => n.status === 'draft').length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Mail className="w-6 h-6 text-purple-300" />
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+            <div className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-blue-300" />
               <div>
-                <p className="text-sm text-purple-100">Tasa de Apertura</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xs text-blue-100">Tasa de Apertura</p>
+                <p className="text-sm md:text-lg font-bold">
                   {notifications.length > 0
                     ? Math.round((notifications.reduce((sum, n) => sum + n.readCount, 0) /
                         notifications.reduce((sum, n) => sum + n.sentCount, 0)) * 100)
@@ -291,11 +289,35 @@ const CompanyNotificationsPage = () => {
       </div>
 
       {/* Date Filter */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/30 shadow-sm w-full lg:min-w-fit">
-        <DateFilter
-          onFilterChange={setDateFilter}
-          className="mb-0"
-        />
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -560,7 +582,7 @@ const CompanyNotificationsPage = () => {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <MessageSquare className="w-5 h-5 text-purple-600" />
+                <MessageSquare className="w-5 h-5 text-blue-600" />
                 <span className="font-medium">Notificaciones SMS</span>
               </div>
               <input

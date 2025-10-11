@@ -244,11 +244,11 @@ const PaymentMethodSelector = ({
 
       {/* Mercado Pago Notice */}
       {method === 'mercadopago' && (
-        <Card variant="elevated" className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+        <Card variant="elevated" className="bg-gradient-to-r from-blue-50 to-blue-50 border-blue-200">
           <div className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <CreditCard className="w-5 h-5 text-purple-600" />
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <CreditCard className="w-5 h-5 text-blue-600" />
               </div>
               <h4 className="font-semibold text-secondary-900">
                 Pago con Mercado Pago

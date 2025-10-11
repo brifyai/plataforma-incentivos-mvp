@@ -398,7 +398,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           <div key={client.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
                   {client.name.charAt(0)}
                 </div>
                 <div>
@@ -407,7 +407,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs text-blue-600 font-medium">{client.companyName}</span>
                     <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-purple-600 font-medium">{client.corporateClientName}</span>
+                    <span className="text-xs text-blue-600 font-medium">{client.corporateClientName}</span>
                   </div>
                 </div>
               </div>
@@ -454,7 +454,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${client.totalDebt ? (Number(client.paidAmount || 0) / Number(client.totalDebt)) * 100 : 0}%` }}
                 ></div>
               </div>

@@ -21,7 +21,8 @@ import {
   AlertCircle,
   RefreshCw,
   Plus,
-  Search
+  Search,
+  Calendar
 } from 'lucide-react';
 
 const CompanyMessagesPage = () => {
@@ -648,24 +649,21 @@ const CompanyMessagesPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <MessageSquare className="w-8 h-8" />
-            </div>
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-6 text-white shadow-strong">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4 md:gap-5">
             <div>
-              <h1 className="text-xl md:text-3xl font-display font-bold tracking-tight">
+              <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight">
                 Centro de Mensajes y Campañas
               </h1>
-              <p className="text-cyan-100 text-lg">
+              <p className="text-blue-100 text-sm md:text-base">
                 Gestiona comunicaciones masivas y campañas con IA
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Badge variant="info" size="lg">
+          <div className="flex items-center gap-3">
+            <Badge variant="info" size="md">
               {messages.length} Mensajes
             </Badge>
             <Button
@@ -688,66 +686,90 @@ const CompanyMessagesPage = () => {
       </div>
 
       {/* Date Filter */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/30 shadow-sm w-full lg:min-w-fit">
-        <DateFilter
-          onFilterChange={setDateFilter}
-          className="mb-0"
-        />
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Content */}
       <div>
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-primary-100 rounded-lg">
-                  <Send className="w-6 h-6 text-primary-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-primary-100 rounded-lg">
+                  <Send className="w-4 h-4 text-primary-600" />
                 </div>
                 <Badge variant="primary">2</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Campañas Enviadas</p>
-              <p className="text-2xl font-bold text-secondary-900">2</p>
+              <p className="text-xs text-secondary-600 mb-1">Campañas Enviadas</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">2</p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-success-100 rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-success-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-success-100 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-success-600" />
                 </div>
                 <Badge variant="success">57</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Mensajes Vistos</p>
-              <p className="text-2xl font-bold text-secondary-900">57</p>
+              <p className="text-xs text-secondary-600 mb-1">Mensajes Vistos</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">57</p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-warning-100 rounded-lg">
-                  <MessageSquare className="w-6 h-6 text-warning-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-warning-100 rounded-lg">
+                  <MessageSquare className="w-4 h-4 text-warning-600" />
                 </div>
                 <Badge variant="warning">20</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Respuestas Recibidas</p>
-              <p className="text-2xl font-bold text-secondary-900">20</p>
+              <p className="text-xs text-secondary-600 mb-1">Respuestas Recibidas</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">20</p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-info-100 rounded-lg">
-                  <AlertCircle className="w-6 h-6 text-info-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-info-100 rounded-lg">
+                  <AlertCircle className="w-4 h-4 text-info-600" />
                 </div>
                 <Badge variant="info">16</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Intervenciones IA</p>
-              <p className="text-2xl font-bold text-secondary-900">16</p>
+              <p className="text-xs text-secondary-600 mb-1">Intervenciones IA</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">16</p>
             </div>
           </Card>
         </div>
@@ -981,10 +1003,10 @@ const CompanyMessagesPage = () => {
                   <div className="text-sm text-green-700">Vistos</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
+                  <div className="text-2xl font-bold text-blue-600">
                     {campaign.stats.responded}
                   </div>
-                  <div className="text-sm text-purple-700">Respondieron</div>
+                  <div className="text-sm text-blue-700">Respondieron</div>
                 </div>
                 <div className="text-center">
                   <div className={`text-2xl font-bold ${
@@ -1169,12 +1191,12 @@ const CompanyMessagesPage = () => {
 
           {/* Paso 2: Aplicar Filtros de Segmentación */}
           {newMessage.selectedDebtors.length > 0 && (
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl p-6">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-indigo-500 rounded-lg">
+                <div className="p-2 bg-blue-500 rounded-lg">
                   <Search className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-display font-bold text-indigo-900">
+                <h3 className="text-xl font-display font-bold text-blue-900">
                   🎯 Paso 2: Aplicar Filtros de Segmentación (Opcional)
                 </h3>
               </div>
@@ -1187,7 +1209,7 @@ const CompanyMessagesPage = () => {
                   <select
                     value={debtorFilters.debtType}
                     onChange={(e) => setDebtorFilters(prev => ({ ...prev, debtType: e.target.value }))}
-                    className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm"
+                    className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                   >
                     <option value="">Todos los tipos</option>
                     <option value="credit_card">💳 Tarjeta de Crédito</option>
@@ -1205,7 +1227,7 @@ const CompanyMessagesPage = () => {
                   <select
                     value={debtorFilters.daysOverdue}
                     onChange={(e) => setDebtorFilters(prev => ({ ...prev, daysOverdue: e.target.value }))}
-                    className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm"
+                    className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                   >
                     <option value="">Todos</option>
                     <option value="1-30">1-30 días</option>
@@ -1224,7 +1246,7 @@ const CompanyMessagesPage = () => {
                     value={debtorFilters.minAmount}
                     onChange={(e) => setDebtorFilters(prev => ({ ...prev, minAmount: e.target.value }))}
                     placeholder="0"
-                    className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm"
+                    className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                   />
                 </div>
 
@@ -1237,7 +1259,7 @@ const CompanyMessagesPage = () => {
                     value={debtorFilters.maxAmount}
                     onChange={(e) => setDebtorFilters(prev => ({ ...prev, maxAmount: e.target.value }))}
                     placeholder="Sin límite"
-                    className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm"
+                    className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                   />
                 </div>
 
@@ -1258,8 +1280,8 @@ const CompanyMessagesPage = () => {
                 </div>
               </div>
 
-              <div className="mt-4 p-3 bg-indigo-100 rounded-lg">
-                <p className="text-sm text-indigo-800">
+              <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+                <p className="text-sm text-blue-800">
                   <strong>📊 Segmentación:</strong> {filteredDebtors.length} deudor{filteredDebtors.length !== 1 ? 'es' : ''} encontrado{filteredDebtors.length !== 1 ? 's' : ''} para este cliente corporativo
                 </p>
               </div>
@@ -1268,37 +1290,37 @@ const CompanyMessagesPage = () => {
 
           {/* Paso 3: Resumen de Destinatarios */}
           {newMessage.selectedDebtors.length > 0 && filteredDebtors.length > 0 && (
-            <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl p-6">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-emerald-500 rounded-lg">
+                <div className="p-2 bg-blue-500 rounded-lg">
                   <User className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-display font-bold text-emerald-900">
+                <h3 className="text-xl font-display font-bold text-blue-900">
                   📋 Paso 3: Resumen de Destinatarios
                 </h3>
               </div>
 
               <div className="space-y-4">
                 <div className="bg-white/60 rounded-xl p-4">
-                  <h4 className="font-semibold text-emerald-800 mb-3">👥 Destinatarios Seleccionados ({filteredDebtors.length})</h4>
+                  <h4 className="font-semibold text-blue-800 mb-3">👥 Destinatarios Seleccionados ({filteredDebtors.length})</h4>
                   <div className="max-h-40 overflow-y-auto space-y-2">
                     {filteredDebtors.slice(0, 5).map(debtor => (
-                      <div key={debtor.id} className="flex items-center justify-between p-2 bg-emerald-50 rounded-lg">
+                      <div key={debtor.id} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
                         <div>
-                          <span className="font-medium text-emerald-900">{debtor.name}</span>
+                          <span className="font-medium text-blue-900">{debtor.name}</span>
                           {debtor.debts?.length > 0 && (
-                            <span className="text-sm text-emerald-700 ml-2">
+                            <span className="text-sm text-blue-700 ml-2">
                               - {debtor.debts.length} deuda{debtor.debts.length !== 1 ? 's' : ''}
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-emerald-600">
+                        <div className="text-sm text-blue-600">
                           Total: ${debtor.debts?.reduce((sum, debt) => sum + debt.amount, 0)?.toLocaleString('es-CL') || 'N/A'}
                         </div>
                       </div>
                     ))}
                     {filteredDebtors.length > 5 && (
-                      <p className="text-sm text-emerald-600 text-center py-2">
+                      <p className="text-sm text-blue-600 text-center py-2">
                         ... y {filteredDebtors.length - 5} más
                       </p>
                     )}
@@ -1307,26 +1329,26 @@ const CompanyMessagesPage = () => {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-white/60 rounded-xl p-3 text-center">
-                    <div className="text-2xl font-bold text-emerald-600">{filteredDebtors.length}</div>
-                    <div className="text-sm text-emerald-700">Destinatarios</div>
+                    <div className="text-2xl font-bold text-blue-600">{filteredDebtors.length}</div>
+                    <div className="text-sm text-blue-700">Destinatarios</div>
                   </div>
                   <div className="bg-white/60 rounded-xl p-3 text-center">
-                    <div className="text-2xl font-bold text-emerald-600">
+                    <div className="text-2xl font-bold text-blue-600">
                       {filteredDebtors.reduce((sum, d) => sum + (d.debts?.length || 0), 0)}
                     </div>
-                    <div className="text-sm text-emerald-700">Total Deudas</div>
+                    <div className="text-sm text-blue-700">Total Deudas</div>
                   </div>
                   <div className="bg-white/60 rounded-xl p-3 text-center">
-                    <div className="text-2xl font-bold text-emerald-600">
+                    <div className="text-2xl font-bold text-blue-600">
                       ${filteredDebtors.reduce((sum, d) => sum + d.debts?.reduce((debtSum, debt) => debtSum + debt.amount, 0) || 0, 0).toLocaleString('es-CL')}
                     </div>
-                    <div className="text-sm text-emerald-700">Monto Total</div>
+                    <div className="text-sm text-blue-700">Monto Total</div>
                   </div>
                   <div className="bg-white/60 rounded-xl p-3 text-center">
-                    <div className="text-2xl font-bold text-emerald-600">
+                    <div className="text-2xl font-bold text-blue-600">
                       {Math.round(filteredDebtors.reduce((sum, d) => sum + d.debts?.reduce((debtSum, debt) => debtSum + debt.amount, 0) || 0, 0) / filteredDebtors.length).toLocaleString('es-CL')}
                     </div>
-                    <div className="text-sm text-emerald-700">Promedio</div>
+                    <div className="text-sm text-blue-700">Promedio</div>
                   </div>
                 </div>
               </div>
@@ -1335,12 +1357,12 @@ const CompanyMessagesPage = () => {
 
           {/* Paso 4: Configurar Mensaje y Oferta */}
           {newMessage.selectedDebtors.length > 0 && filteredDebtors.length > 0 && (
-            <div className="bg-gradient-to-r from-green-50 to-green-100/50 border-2 border-green-200 rounded-2xl p-6">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-2 border-blue-200 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-green-500 rounded-lg">
+                <div className="p-2 bg-blue-500 rounded-lg">
                   <MessageSquare className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-display font-bold text-green-900">
+                <h3 className="text-xl font-display font-bold text-blue-900">
                   📤 Paso 4: Configurar Mensaje y Oferta de Pago
                 </h3>
               </div>
@@ -1348,10 +1370,10 @@ const CompanyMessagesPage = () => {
               <div className="space-y-6">
                 {/* Configuración de Oferta */}
                 <div className="bg-white/60 rounded-xl p-4">
-                  <h4 className="font-semibold text-green-800 mb-3">🎁 Configuración de Oferta</h4>
+                  <h4 className="font-semibold text-blue-800 mb-3">🎁 Configuración de Oferta</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-green-700">
+                      <label className="block text-sm font-medium text-blue-700">
                         Descuento (%)
                       </label>
                       <input
@@ -1363,12 +1385,12 @@ const CompanyMessagesPage = () => {
                           ...prev,
                           offerDetails: { ...prev.offerDetails, discount: parseInt(e.target.value) || 0 }
                         }))}
-                        className="w-full px-3 py-2 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                        className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         placeholder="0"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-green-700">
+                      <label className="block text-sm font-medium text-blue-700">
                         Plan de Cuotas
                       </label>
                       <select
@@ -1377,7 +1399,7 @@ const CompanyMessagesPage = () => {
                           ...prev,
                           offerDetails: { ...prev.offerDetails, installmentPlan: e.target.value === 'true' }
                         }))}
-                        className="w-full px-3 py-2 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                        className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                       >
                         <option value={false}>Sin cuotas</option>
                         <option value={true}>Con cuotas</option>
@@ -1385,7 +1407,7 @@ const CompanyMessagesPage = () => {
                     </div>
                     {newMessage.offerDetails.installmentPlan && (
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-green-700">
+                        <label className="block text-sm font-medium text-blue-700">
                           Número de Cuotas
                         </label>
                         <input
@@ -1397,7 +1419,7 @@ const CompanyMessagesPage = () => {
                             ...prev,
                             offerDetails: { ...prev.offerDetails, totalInstallments: parseInt(e.target.value) || 1 }
                           }))}
-                          className="w-full px-3 py-2 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                          className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                           placeholder="1"
                         />
                       </div>
@@ -1415,7 +1437,7 @@ const CompanyMessagesPage = () => {
                       <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400 font-medium">📧</span>
                       <input
                         type="text"
-                        className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-lg transition-all"
+                        className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all"
                         placeholder="Ej: Oferta Especial de Descuento"
                         value={newMessage.subject}
                         onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
@@ -1429,7 +1451,7 @@ const CompanyMessagesPage = () => {
                       💬 Mensaje Detallado *
                     </label>
                     <textarea
-                      className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-lg transition-all resize-none"
+                      className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all resize-none"
                       rows={8}
                       placeholder="Escribe un mensaje claro y profesional con la oferta de pago..."
                       value={newMessage.message}
@@ -1450,7 +1472,7 @@ const CompanyMessagesPage = () => {
                       <select
                         value={newMessage.priority}
                         onChange={(e) => setNewMessage(prev => ({ ...prev, priority: e.target.value }))}
-                        className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-lg transition-all appearance-none"
+                        className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all appearance-none"
                       >
                         <option value="low">🟢 Baja - Información general</option>
                         <option value="normal">🟡 Normal - Oferta estándar</option>
@@ -1464,40 +1486,40 @@ const CompanyMessagesPage = () => {
           )}
 
           {/* Consejos y Recomendaciones */}
-          <div className="bg-gradient-to-r from-purple-50 to-purple-100/50 border-2 border-purple-200 rounded-2xl p-6">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-2 border-blue-200 rounded-2xl p-6">
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-purple-500 rounded-lg flex-shrink-0">
+              <div className="p-2 bg-blue-500 rounded-lg flex-shrink-0">
                 <AlertCircle className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-display font-bold text-purple-900 mb-4">
+                <h3 className="text-xl font-display font-bold text-blue-900 mb-4">
                   💡 Consejos para Mensajes Efectivos
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white/60 rounded-xl p-4">
-                    <h4 className="font-semibold text-purple-800 mb-2">🎯 Sé específico</h4>
-                    <p className="text-sm text-purple-700">
+                    <h4 className="font-semibold text-blue-800 mb-2">🎯 Sé específico</h4>
+                    <p className="text-sm text-blue-700">
                       Incluye montos exactos, fechas límite y consecuencias claras.
                     </p>
                   </div>
 
                   <div className="bg-white/60 rounded-xl p-4">
-                    <h4 className="font-semibold text-purple-800 mb-2">🤝 Mantén el respeto</h4>
-                    <p className="text-sm text-purple-700">
+                    <h4 className="font-semibold text-blue-800 mb-2">🤝 Mantén el respeto</h4>
+                    <p className="text-sm text-blue-700">
                       Usa un tono profesional y cortés, incluso en recordatorios urgentes.
                     </p>
                   </div>
 
                   <div className="bg-white/60 rounded-xl p-4">
-                    <h4 className="font-semibold text-purple-800 mb-2">⏰ Incluye plazos</h4>
-                    <p className="text-sm text-purple-700">
+                    <h4 className="font-semibold text-blue-800 mb-2">⏰ Incluye plazos</h4>
+                    <p className="text-sm text-blue-700">
                       Especifica cuándo vence el pago y qué sucede si no se realiza.
                     </p>
                   </div>
 
                   <div className="bg-white/60 rounded-xl p-4">
-                    <h4 className="font-semibold text-purple-800 mb-2">📱 Multi-canal</h4>
-                    <p className="text-sm text-purple-700">
+                    <h4 className="font-semibold text-blue-800 mb-2">📱 Multi-canal</h4>
+                    <p className="text-sm text-blue-700">
                       Los mensajes se envían por email y notificaciones push automáticamente.
                     </p>
                   </div>

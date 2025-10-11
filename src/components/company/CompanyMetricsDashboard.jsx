@@ -111,25 +111,26 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
     };
 
     return (
-      <Card className="p-6 bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`p-3 rounded-xl bg-gradient-to-br ${color}`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-          {trend && (
-            <div className={`flex items-center gap-1 text-sm font-medium ${getTrendColor()}`}>
-              {getTrendIcon()}
-              {trendValue}%
+      <Card className="relative overflow-hidden group hover:shadow-sm transition-all duration-300 py-2">
+        <div className="relative z-10 px-3">
+          <div className="flex items-center justify-between mb-1">
+            <div className={`p-1 bg-gradient-to-br ${color} rounded-sm shadow-sm`}>
+              <Icon className="w-3.5 h-3.5 text-white" />
             </div>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-600">{title}</h3>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {subtitle && (
-            <p className="text-xs text-gray-500">{subtitle}</p>
-          )}
+            {trend && (
+              <div className={`flex items-center gap-1 text-xs font-medium ${getTrendColor()}`}>
+                {getTrendIcon()}
+                {trendValue}%
+              </div>
+            )}
+          </div>
+          <div className="space-y-0">
+            <h3 className="text-xs font-medium text-gray-600">{title}</h3>
+            <p className="text-base font-bold text-gray-900">{value}</p>
+            {subtitle && (
+              <p className="text-xs text-gray-500">{subtitle}</p>
+            )}
+          </div>
         </div>
       </Card>
     );
@@ -137,17 +138,19 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
         {[...Array(4)].map((_, i) => (
-          <Card key={i} className="p-6 animate-pulse">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
-              <div className="w-16 h-4 bg-gray-200 rounded"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="w-20 h-4 bg-gray-200 rounded"></div>
-              <div className="w-16 h-8 bg-gray-200 rounded"></div>
-              <div className="w-24 h-3 bg-gray-200 rounded"></div>
+          <Card key={i} className="py-2 animate-pulse">
+            <div className="px-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-8 h-8 bg-gray-200 rounded-sm"></div>
+                <div className="w-12 h-3 bg-gray-200 rounded"></div>
+              </div>
+              <div className="space-y-0">
+                <div className="w-16 h-3 bg-gray-200 rounded"></div>
+                <div className="w-12 h-5 bg-gray-200 rounded"></div>
+                <div className="w-20 h-2 bg-gray-200 rounded"></div>
+              </div>
             </div>
           </Card>
         ))}
@@ -156,18 +159,8 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
   }
 
   return (
-    <div className="mb-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-          <TrendingUp className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dashboard Ejecutivo</h2>
-          <p className="text-gray-600">Métricas clave de rendimiento de tu empresa</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
         <MetricCard
           title="Total Deudas Activas"
           value={formatCurrency(metrics.totalDebts)}
@@ -202,7 +195,7 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
           title="Clientes Activos"
           value={metrics.activeClients.toLocaleString()}
           icon={Users}
-          color="from-purple-500 to-pink-600"
+          color="from-blue-500 to-blue-600"
           trend="up"
           trendValue={12.5}
           subtitle="Con deudas activas"
@@ -210,33 +203,33 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
       </div>
 
       {/* Additional insights */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TrendingUp className="w-4 h-4 text-blue-600" />
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Card className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-100 rounded-lg">
+              <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-blue-900">Mejor Mes</p>
-              <p className="text-lg font-bold text-blue-700">
+              <p className="text-xs font-medium text-blue-900">Mejor Mes</p>
+              <p className="text-sm font-bold text-blue-700">
                 {additionalMetrics.bestMonth === 'Sin datos' ? 'Sin datos históricos' : additionalMetrics.bestMonth}
               </p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Target className="w-4 h-4 text-green-600" />
+        <Card className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-green-100 rounded-lg">
+              <Target className="w-3.5 h-3.5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-green-900">Meta Mensual</p>
-              <p className="text-lg font-bold text-green-700">
+              <p className="text-xs font-medium text-green-900">Meta Mensual</p>
+              <p className="text-sm font-bold text-green-700">
                 {additionalMetrics.monthlyGoalProgress.toFixed(1)}% alcanzado
               </p>
               {additionalMetrics.paymentGoals && (
-                <p className="text-xs text-green-600 mt-1">
+                <p className="text-xs text-green-600 mt-0.5">
                   Meta: {formatCurrency(additionalMetrics.paymentGoals.monthlyCommissionGoal)}
                 </p>
               )}
@@ -244,17 +237,17 @@ const CompanyMetricsDashboard = ({ analytics, loading }) => {
           </div>
         </Card>
 
-        <Card className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Activity className="w-4 h-4 text-purple-600" />
+        <Card className="p-3 bg-gradient-to-r from-blue-50 to-blue-50 border border-blue-100">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-100 rounded-lg">
+              <Activity className="w-3.5 h-3.5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-purple-900">Tiempo Promedio</p>
-              <p className="text-lg font-bold text-purple-700">
+              <p className="text-xs font-medium text-blue-900">Tiempo Promedio</p>
+              <p className="text-sm font-bold text-blue-700">
                 {Math.round(metrics.avgRecoveryTime || 45)} días
               </p>
-              <p className="text-xs text-purple-600 mt-1">
+              <p className="text-xs text-blue-600 mt-0.5">
                 Tiempo de recuperación promedio
               </p>
             </div>

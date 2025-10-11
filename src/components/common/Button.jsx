@@ -32,7 +32,7 @@ const Button = ({
     outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700 focus:ring-blue-200/50 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] bg-white/80',
     ghost: 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 focus:ring-slate-100 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',
     glass: 'bg-white/10 backdrop-blur-xl border border-white/30 text-white hover:bg-white/20 focus:ring-white/30 shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98]',
-    gradient: 'bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white hover:from-violet-700 hover:via-purple-700 hover:to-indigo-700 focus:ring-purple-200/50 shadow-lg hover:shadow-xl hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98] border border-purple-500/20',
+    gradient: 'bg-gradient-to-r from-blue-600 via-blue-600 to-blue-700 text-white hover:from-blue-700 hover:via-blue-700 hover:to-blue-800 focus:ring-blue-200/50 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98] border border-blue-500/20',
   };
 
   const sizes = {

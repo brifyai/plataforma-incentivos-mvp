@@ -37,13 +37,13 @@ const LoginPage = () => {
       <LoginForm />
 
       {/* Términos y condiciones */}
-      <p className="text-center text-xs text-gray-500 mt-6 px-4">
+      <p className="text-center text-xs text-gray-400 mt-6 px-4">
         Al iniciar sesión, aceptas nuestros{' '}
-        <Link to="/terminos-servicio" className="text-blue-600 hover:underline">
+        <Link to="/terminos-servicio" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
           Términos de Servicio
         </Link>{' '}
         y{' '}
-        <Link to="/privacy-policy" className="text-blue-600 hover:underline">
+        <Link to="/privacy-policy" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
           Política de Privacidad
         </Link>
       </p>

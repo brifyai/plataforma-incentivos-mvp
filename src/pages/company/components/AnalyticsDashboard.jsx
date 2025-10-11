@@ -349,11 +349,11 @@ const AnalyticsDashboard = ({ companyId }) => {
                 </div>
                 <div className="text-sm text-info-700">ROI de IA</div>
               </div>
-              <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                <div className="text-2xl font-bold text-purple-600 mb-1">
+              <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                <div className="text-2xl font-bold text-blue-600 mb-1">
                   {aiRoi.totalAICalls}
                 </div>
-                <div className="text-sm text-purple-700">Llamadas a IA</div>
+                <div className="text-sm text-blue-700">Llamadas a IA</div>
               </div>
             </div>
           )}
@@ -431,9 +431,9 @@ const AnalyticsDashboard = ({ companyId }) => {
                   <div className="text-2xl font-bold text-danger-600 mb-1">{aiUsage.totalRequests}</div>
                   <div className="text-sm text-danger-700">Total Solicitudes</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">{aiUsage.totalTokens.toLocaleString()}</div>
-                  <div className="text-sm text-purple-700">Tokens Consumidos</div>
+                <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                  <div className="text-2xl font-bold text-blue-600 mb-1">{aiUsage.totalTokens.toLocaleString()}</div>
+                  <div className="text-sm text-blue-700">Tokens Consumidos</div>
                 </div>
                 <div className="text-center p-4 bg-gradient-to-r from-warning-50 to-warning-100 rounded-lg border border-warning-200">
                   <div className="text-2xl font-bold text-warning-600 mb-1">{formatCurrency(aiUsage.totalCost)}</div>

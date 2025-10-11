@@ -41,12 +41,12 @@ const MatchingCriteria = () => {
           <p className="text-sm text-green-700">Matching con tolerancia (80% confianza)</p>
         </div>
 
-        <div className="p-4 bg-purple-50 rounded-xl border border-purple-200">
+        <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-            <span className="font-semibold text-purple-900">Nombre</span>
+            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <span className="font-semibold text-blue-900">Nombre</span>
           </div>
-          <p className="text-sm text-purple-700">Distancia Levenshtein (50% confianza)</p>
+          <p className="text-sm text-blue-700">Distancia Levenshtein (50% confianza)</p>
         </div>
 
         <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">

@@ -329,30 +329,31 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
   const selectedCRM = crmOptions.find(option => option.value === crmConfig.provider);
 
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl text-white">
-              <Settings className="w-6 h-6" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl text-white">
+              <Settings className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-sm font-bold text-gray-900">
                 Configuración CRM
               </h2>
-              <p className="text-gray-600">
+              <p className="text-xs text-gray-600">
                 Conecta tu sistema CRM para sincronizar datos automáticamente
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {getStatusBadge()}
             <Button
               variant={isEditing ? 'primary' : 'secondary'}
               onClick={() => setIsEditing(!isEditing)}
               disabled={loading}
-              leftIcon={isEditing ? <CheckCircle className="w-4 h-4" /> : <Settings className="w-4 h-4" />}
+              leftIcon={isEditing ? <CheckCircle className="w-3 h-3" /> : <Settings className="w-3 h-3" />}
+              className="text-xs py-2"
             >
               {isEditing ? 'Cancelar' : 'Configurar'}
             </Button>
@@ -361,25 +362,26 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
 
         {/* Estado actual */}
         {crmConfig.connected && !isEditing && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-3 h-3 text-green-600" />
                 <div>
-                  <p className="font-semibold text-green-900">
+                  <p className="font-semibold text-green-900 text-xs">
                     {selectedCRM?.icon} {selectedCRM?.label} Conectado
                   </p>
-                  <p className="text-sm text-green-700">
+                  <p className="text-xs text-green-700">
                     Última sincronización: {crmConfig.lastSync ? new Date(crmConfig.lastSync).toLocaleString('es-CL') : 'Nunca'}
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleTestConnection}
-                  leftIcon={<TestTube className="w-4 h-4" />}
+                  leftIcon={<TestTube className="w-3 h-3" />}
+                  className="text-xs py-1"
                 >
                   Probar
                 </Button>
@@ -387,7 +389,8 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
                   variant="danger"
                   size="sm"
                   onClick={handleDisconnect}
-                  leftIcon={<Unlink className="w-4 h-4" />}
+                  leftIcon={<Unlink className="w-3 h-3" />}
+                  className="text-xs py-1"
                 >
                   Desconectar
                 </Button>
@@ -398,24 +401,24 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
 
         {/* Formulario de configuración */}
         {isEditing && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Selección de CRM */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-medium text-gray-700 mb-2">
                 Proveedor CRM
               </label>
               <Select
                 value={crmConfig.provider}
                 onChange={handleProviderChange}
                 options={crmOptions}
-                className="w-full"
+                className="w-full text-xs"
               />
             </div>
 
             {/* Campos específicos del CRM */}
             {crmConfig.provider && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   {selectedCRM?.icon} Configuración de {selectedCRM?.label}
                 </h3>
 
@@ -429,25 +432,26 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
                     placeholder={field.placeholder}
                     helperText={field.help}
                     required={field.required}
-                    leftIcon={field.type === 'password' ? <Key className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
+                    leftIcon={field.type === 'password' ? <Key className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+                    className="text-xs"
                   />
                 ))}
 
                 {/* Documentación */}
                 {selectedCRM?.docs && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                    <div className="flex items-start gap-3">
-                      <ExternalLink className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-start gap-2">
+                      <ExternalLink className="w-3 h-3 text-blue-600 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-semibold text-blue-900 mb-1">Documentación</p>
-                        <p className="text-sm text-blue-700 mb-2">
+                        <p className="font-semibold text-blue-900 mb-1 text-xs">Documentación</p>
+                        <p className="text-xs text-blue-700 mb-2">
                           Consulta la documentación oficial para obtener tus credenciales:
                         </p>
                         <a
                           href={selectedCRM.docs}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-800 underline"
+                          className="text-xs text-blue-600 hover:text-blue-800 underline"
                         >
                           {selectedCRM.label} API Documentation →
                         </a>
@@ -457,22 +461,23 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
                 )}
 
                 {/* Botones */}
-                <div className="flex gap-4 pt-4">
+                <div className="flex gap-2 pt-2">
                   <Button
                     variant="gradient"
                     onClick={handleSave}
                     loading={loading}
-                    leftIcon={<CheckCircle className="w-4 h-4" />}
-                    className="flex-1"
+                    leftIcon={<CheckCircle className="w-3 h-3" />}
+                    className="flex-1 text-xs py-2"
                   >
                     {loading ? 'Guardando...' : 'Guardar Configuración'}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={handleTestConnection}
-                    leftIcon={<TestTube className="w-4 h-4" />}
+                    leftIcon={<TestTube className="w-3 h-3" />}
+                    className="text-xs py-2"
                   >
-                    Probar Conexión
+                    Probar
                   </Button>
                 </div>
               </div>
@@ -482,20 +487,21 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
 
         {/* Información cuando no está configurado */}
         {!crmConfig.provider && !isEditing && (
-          <div className="text-center py-12">
-            <div className="p-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl inline-block mb-6">
-              <Settings className="w-16 h-16 text-gray-600" />
+          <div className="text-center py-8">
+            <div className="p-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl inline-block mb-4">
+              <Settings className="w-8 h-8 text-gray-600" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            <h3 className="text-sm font-bold text-gray-900 mb-3">
               Configura tu CRM
             </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            <p className="text-xs text-gray-600 mb-4 max-w-md mx-auto">
               Conecta tu sistema CRM para sincronizar automáticamente los datos de tus deudores y mantener todo actualizado.
             </p>
             <Button
               variant="primary"
               onClick={() => setIsEditing(true)}
-              leftIcon={<Link className="w-4 h-4" />}
+              leftIcon={<Link className="w-3 h-3" />}
+              className="text-xs py-2"
             >
               Configurar CRM
             </Button>

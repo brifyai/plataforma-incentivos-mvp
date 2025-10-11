@@ -18,7 +18,7 @@ const FormSection = ({
     primary: 'bg-gradient-to-r from-primary-50 to-primary-100/50 border-primary-200',
     success: 'bg-gradient-to-r from-success-50 to-success-100/50 border-success-200',
     blue: 'bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-200',
-    purple: 'bg-gradient-to-r from-purple-50 to-purple-100/50 border-purple-200',
+    purple: 'bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-200',
     green: 'bg-gradient-to-r from-green-50 to-green-100/50 border-green-200',
     amber: 'bg-gradient-to-r from-amber-50 to-amber-50 border-amber-200',
   };

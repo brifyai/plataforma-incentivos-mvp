@@ -74,11 +74,11 @@ const SimulationResults = ({ simulation }) => {
 
           {/* Tiempo hasta estar libre */}
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="flex items-center gap-2 text-purple-600 mb-2">
+            <div className="flex items-center gap-2 text-blue-600 mb-2">
               <Clock className="w-4 h-4" />
               <span className="text-sm font-medium">Tiempo</span>
             </div>
-            <p className="text-2xl font-bold text-purple-600">
+            <p className="text-2xl font-bold text-blue-600">
               {summary.timeToFreedom.months}
             </p>
             <p className="text-xs text-gray-500 mt-1">

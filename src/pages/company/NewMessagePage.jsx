@@ -646,7 +646,7 @@ const NewMessagePage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl p-8 text-white shadow-strong">
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-3xl p-8 text-white shadow-strong">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-6">
             <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
@@ -656,7 +656,7 @@ const NewMessagePage = () => {
               <h1 className="text-xl md:text-3xl font-display font-bold tracking-tight">
                 Nuevo Mensaje
               </h1>
-              <p className="text-cyan-100 text-lg">
+              <p className="text-blue-100 text-lg">
                 Crear y enviar campaña de mensajes masivos
               </p>
             </div>
@@ -750,12 +750,12 @@ const NewMessagePage = () => {
 
         {/* Paso 2: Seleccionar Destinatarios */}
         {newMessage.corporateClientId && (
-          <Card className="shadow-xl border-0 bg-gradient-to-r from-indigo-50 to-purple-50">
+          <Card className="shadow-xl border-0 bg-gradient-to-r from-blue-50 to-indigo-50">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-indigo-500 rounded-lg">
+              <div className="p-2 bg-blue-500 rounded-lg">
                 <Search className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-xl font-display font-bold text-indigo-900">
+              <h3 className="text-xl font-display font-bold text-blue-900">
                 🎯 Paso 2: Aplicar Filtros de Segmentación
               </h3>
             </div>
@@ -768,7 +768,7 @@ const NewMessagePage = () => {
                 <select
                   value={debtorFilters.debtType}
                   onChange={(e) => setDebtorFilters(prev => ({ ...prev, debtType: e.target.value }))}
-                  className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm"
+                  className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                 >
                   <option value="">Todos los tipos</option>
                   <option value="credit_card">💳 Tarjeta de Crédito</option>
@@ -786,7 +786,7 @@ const NewMessagePage = () => {
                 <select
                   value={debtorFilters.daysOverdue}
                   onChange={(e) => setDebtorFilters(prev => ({ ...prev, daysOverdue: e.target.value }))}
-                  className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm"
+                  className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                 >
                   <option value="">Todos</option>
                   <option value="1-30">1-30 días</option>
@@ -805,7 +805,7 @@ const NewMessagePage = () => {
                   value={debtorFilters.minAmount}
                   onChange={(e) => setDebtorFilters(prev => ({ ...prev, minAmount: e.target.value }))}
                   placeholder="0"
-                  className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm"
+                  className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                 />
               </div>
 
@@ -818,7 +818,7 @@ const NewMessagePage = () => {
                   value={debtorFilters.maxAmount}
                   onChange={(e) => setDebtorFilters(prev => ({ ...prev, maxAmount: e.target.value }))}
                   placeholder="Sin límite"
-                  className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm"
+                  className="w-full px-3 py-2 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                 />
               </div>
 
@@ -844,14 +844,14 @@ const NewMessagePage = () => {
               <div className="space-y-4 border-t border-secondary-200 pt-6">
                 <div className="flex items-center justify-between">
                   <h4 className="text-lg font-semibold text-secondary-900 flex items-center gap-2">
-                    <Target className="w-5 h-5 text-indigo-600" />
+                    <Target className="w-5 h-5 text-blue-600" />
                     Selección Específica de Deudores
                   </h4>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleToggleDebtorSelection}
-                    className="text-indigo-600 border-indigo-300 hover:bg-indigo-50"
+                    className="text-blue-600 border-blue-300 hover:bg-blue-50"
                   >
                     {newMessage.useSpecificDebtors ? 'Usar todos los deudores' : 'Seleccionar deudores específicos'}
                   </Button>
@@ -871,7 +871,7 @@ const NewMessagePage = () => {
                           placeholder="Buscar por nombre o RUT..."
                           value={debtorSearchTerm}
                           onChange={(e) => setDebtorSearchTerm(e.target.value)}
-                          className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-lg transition-all"
+                          className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all"
                         />
                       </div>
                     </div>
@@ -893,14 +893,14 @@ const NewMessagePage = () => {
                               <div
                                 key={debtor.id}
                                 className={`p-4 border-b border-secondary-100 last:border-b-0 cursor-pointer transition-all hover:bg-secondary-50 ${
-                                  isSelected ? 'bg-indigo-50 border-indigo-200' : ''
+                                  isSelected ? 'bg-blue-50 border-blue-200' : ''
                                 }`}
                                 onClick={() => handleDebtorSelect(debtor.id)}
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
                                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                      isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-secondary-300'
+                                      isSelected ? 'bg-blue-600 border-blue-600' : 'border-secondary-300'
                                     }`}>
                                       {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
                                     </div>
@@ -937,8 +937,8 @@ const NewMessagePage = () => {
 
                     {/* Deudores seleccionados */}
                     {newMessage.selectedDebtors.length > 0 && (
-                      <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                        <h5 className="font-semibold text-indigo-900 mb-2 flex items-center gap-2">
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <h5 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
                           <CheckCircle className="w-4 h-4" />
                           Deudores Seleccionados ({newMessage.selectedDebtors.length})
                         </h5>
@@ -946,7 +946,7 @@ const NewMessagePage = () => {
                           {newMessage.selectedDebtors.map(debtorId => {
                             const debtor = debtors.find(d => d.id === debtorId);
                             return debtor ? (
-                              <div key={debtorId} className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                              <div key={debtorId} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
                                 <span>{debtor.name}</span>
                                 <button
                                   onClick={() => handleRemoveSelectedDebtor(debtorId)}
@@ -966,11 +966,11 @@ const NewMessagePage = () => {
             )}
 
             <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
-              <div className="p-3 bg-indigo-100 rounded-lg w-full sm:w-auto">
-                <p className="text-sm text-indigo-800">
+              <div className="p-3 bg-blue-100 rounded-lg w-full sm:w-auto">
+                <p className="text-sm text-blue-800">
                   <strong>📊 Segmentación:</strong> {filteredDebtors.length} deudor{filteredDebtors.length !== 1 ? 'es' : ''} encontrado{filteredDebtors.length !== 1 ? 's' : ''} para este cliente corporativo
                   {newMessage.useSpecificDebtors && newMessage.selectedDebtors.length > 0 && (
-                    <span className="block mt-1 text-indigo-700">
+                    <span className="block mt-1 text-blue-700">
                       🎯 Selección específica: {newMessage.selectedDebtors.length} deudor{newMessage.selectedDebtors.length !== 1 ? 'es' : ''} elegido{newMessage.selectedDebtors.length !== 1 ? 's' : ''}
                     </span>
                   )}
@@ -989,37 +989,37 @@ const NewMessagePage = () => {
 
         {/* Paso 3: Resumen de Destinatarios */}
         {newMessage.corporateClientId && (filtersConfirmed || filteredDebtors.length > 0) && (
-          <Card id="step-3" className="shadow-xl border-0 bg-gradient-to-r from-emerald-50 to-green-50">
+          <Card id="step-3" className="shadow-xl border-0 bg-gradient-to-r from-blue-50 to-blue-100">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-emerald-500 rounded-lg">
+              <div className="p-2 bg-blue-500 rounded-lg">
                 <User className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-xl font-display font-bold text-emerald-900">
+              <h3 className="text-xl font-display font-bold text-blue-900">
                 📋 Paso 3: Resumen de Destinatarios
               </h3>
             </div>
 
             <div className="space-y-4">
               <div className="bg-white/60 rounded-xl p-4">
-                <h4 className="font-semibold text-emerald-800 mb-3">👥 Destinatarios Seleccionados ({filteredDebtors.length})</h4>
+                <h4 className="font-semibold text-blue-800 mb-3">👥 Destinatarios Seleccionados ({filteredDebtors.length})</h4>
                 <div className="max-h-40 overflow-y-auto space-y-2">
                   {filteredDebtors.slice(0, 5).map(debtor => (
-                    <div key={debtor.id} className="flex items-center justify-between p-2 bg-emerald-50 rounded-lg">
+                    <div key={debtor.id} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
                       <div>
-                        <span className="font-medium text-emerald-900">{debtor.name}</span>
+                        <span className="font-medium text-blue-900">{debtor.name}</span>
                         {debtor.debts?.length > 0 && (
-                          <span className="text-sm text-emerald-700 ml-2">
+                          <span className="text-sm text-blue-700 ml-2">
                             - {debtor.debts.length} deuda{debtor.debts.length !== 1 ? 's' : ''}
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-emerald-600">
+                      <div className="text-sm text-blue-600">
                         Total: ${debtor.debts?.reduce((sum, debt) => sum + debt.amount, 0)?.toLocaleString('es-CL') || 'N/A'}
                       </div>
                     </div>
                   ))}
                   {filteredDebtors.length > 5 && (
-                    <p className="text-sm text-emerald-600 text-center py-2">
+                    <p className="text-sm text-blue-600 text-center py-2">
                       ... y {filteredDebtors.length - 5} más
                     </p>
                   )}
@@ -1028,26 +1028,26 @@ const NewMessagePage = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white/60 rounded-xl p-3 text-center">
-                  <div className="text-2xl font-bold text-emerald-600">{filteredDebtors.length}</div>
-                  <div className="text-sm text-emerald-700">Destinatarios</div>
+                  <div className="text-2xl font-bold text-blue-600">{filteredDebtors.length}</div>
+                  <div className="text-sm text-blue-700">Destinatarios</div>
                 </div>
                 <div className="bg-white/60 rounded-xl p-3 text-center">
-                  <div className="text-2xl font-bold text-emerald-600">
+                  <div className="text-2xl font-bold text-blue-600">
                     {filteredDebtors.reduce((sum, d) => sum + (d.debts?.length || 0), 0)}
                   </div>
-                  <div className="text-sm text-emerald-700">Total Deudas</div>
+                  <div className="text-sm text-blue-700">Total Deudas</div>
                 </div>
                 <div className="bg-white/60 rounded-xl p-3 text-center">
-                  <div className="text-2xl font-bold text-emerald-600">
+                  <div className="text-2xl font-bold text-blue-600">
                     ${filteredDebtors.reduce((sum, d) => sum + d.debts?.reduce((debtSum, debt) => debtSum + debt.amount, 0) || 0, 0).toLocaleString('es-CL')}
                   </div>
-                  <div className="text-sm text-emerald-700">Monto Total</div>
+                  <div className="text-sm text-blue-700">Monto Total</div>
                 </div>
                 <div className="bg-white/60 rounded-xl p-3 text-center">
-                  <div className="text-2xl font-bold text-emerald-600">
+                  <div className="text-2xl font-bold text-blue-600">
                     {Math.round(filteredDebtors.reduce((sum, d) => sum + d.debts?.reduce((debtSum, debt) => debtSum + debt.amount, 0) || 0, 0) / filteredDebtors.length).toLocaleString('es-CL')}
                   </div>
-                  <div className="text-sm text-emerald-700">Promedio</div>
+                  <div className="text-sm text-blue-700">Promedio</div>
                 </div>
               </div>
             </div>
@@ -1056,12 +1056,12 @@ const NewMessagePage = () => {
 
         {/* Paso 4: Configurar Mensaje y Oferta */}
         {newMessage.corporateClientId && (filtersConfirmed || filteredDebtors.length > 0) && (
-          <Card className="shadow-xl border-0 bg-gradient-to-r from-green-50 to-green-100/50">
+          <Card className="shadow-xl border-0 bg-gradient-to-r from-blue-50 to-blue-100/50">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-green-500 rounded-lg">
+              <div className="p-2 bg-blue-500 rounded-lg">
                 <MessageSquare className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-xl font-display font-bold text-green-900">
+              <h3 className="text-xl font-display font-bold text-blue-900">
                 📤 Paso 4: Configurar Mensaje y Oferta de Pago
               </h3>
             </div>
@@ -1069,17 +1069,17 @@ const NewMessagePage = () => {
             <div className="space-y-6">
               {/* Selector de Ofertas */}
               <div className="bg-white/60 rounded-xl p-4">
-                <h4 className="font-semibold text-green-800 mb-3">🎁 Seleccionar Oferta</h4>
+                <h4 className="font-semibold text-blue-800 mb-3">🎁 Seleccionar Oferta</h4>
 
                 {loadingOffers ? (
                   <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                    <p className="text-sm text-green-600 mt-2">Cargando ofertas...</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-sm text-blue-600 mt-2">Cargando ofertas...</p>
                   </div>
                 ) : offers.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="text-4xl mb-2">📋</div>
-                    <p className="text-green-700 mb-4">No tienes ofertas creadas</p>
+                    <p className="text-blue-700 mb-4">No tienes ofertas creadas</p>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1095,21 +1095,21 @@ const NewMessagePage = () => {
                         key={offer.id}
                         className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                           selectedOfferId === offer.id
-                            ? 'border-green-500 bg-green-50'
-                            : 'border-green-200 hover:border-green-300 bg-white'
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-blue-200 hover:border-blue-300 bg-white'
                         }`}
                         onClick={() => setSelectedOfferId(offer.id)}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <h5 className="font-semibold text-green-900">{offer.title}</h5>
+                              <h5 className="font-semibold text-blue-900">{offer.title}</h5>
                               <Badge variant={offer.status === 'active' ? 'success' : 'secondary'} size="sm">
                                 {offer.status === 'active' ? 'Activa' : 'Inactiva'}
                               </Badge>
                             </div>
-                            <p className="text-sm text-green-700 mb-2">{offer.description}</p>
-                            <div className="flex items-center gap-4 text-xs text-green-600">
+                            <p className="text-sm text-blue-700 mb-2">{offer.description}</p>
+                            <div className="flex items-center gap-4 text-xs text-blue-600">
                               <span>Tipo: {offer.offer_type === 'discount' ? 'Descuento' : offer.offer_type === 'fixed_amount' ? 'Monto Fijo' : offer.offer_type}</span>
                               {offer.discount_percentage && <span>Descuento: {offer.discount_percentage}%</span>}
                               {offer.fixed_amount && <span>Monto: ${offer.fixed_amount.toLocaleString('es-CL')}</span>}
@@ -1118,11 +1118,11 @@ const NewMessagePage = () => {
                           </div>
                           <div className="ml-4">
                             {selectedOfferId === offer.id ? (
-                              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                                 <CheckCircle className="w-4 h-4 text-white" />
                               </div>
                             ) : (
-                              <div className="w-6 h-6 border-2 border-green-300 rounded-full"></div>
+                              <div className="w-6 h-6 border-2 border-blue-300 rounded-full"></div>
                             )}
                           </div>
                         </div>
@@ -1132,8 +1132,8 @@ const NewMessagePage = () => {
                 )}
 
                 {selectedOfferId && (
-                  <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
-                    <p className="text-sm text-green-800">
+                  <div className="mt-4 p-3 bg-blue-100 border border-blue-300 rounded-lg">
+                    <p className="text-sm text-blue-800">
                       ✅ <strong>Oferta seleccionada:</strong> {offers.find(o => o.id === selectedOfferId)?.title}
                     </p>
                   </div>
@@ -1150,7 +1150,7 @@ const NewMessagePage = () => {
                     <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400 font-medium">📧</span>
                     <input
                       type="text"
-                      className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-lg transition-all"
+                      className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all"
                       placeholder="Ej: Oferta Especial de Descuento 15%"
                       value={newMessage.subject}
                       onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
@@ -1164,7 +1164,7 @@ const NewMessagePage = () => {
                     💬 Mensaje Detallado *
                   </label>
                   <textarea
-                    className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-lg transition-all resize-none"
+                    className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all resize-none"
                     rows={8}
                     placeholder="Escribe un mensaje claro y profesional con la oferta de pago..."
                     value={newMessage.message}
@@ -1223,7 +1223,7 @@ const NewMessagePage = () => {
                     <select
                       value={newMessage.priority}
                       onChange={(e) => setNewMessage(prev => ({ ...prev, priority: e.target.value }))}
-                      className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-lg transition-all appearance-none"
+                      className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all appearance-none"
                     >
                       <option value="low">🟢 Baja - Información general</option>
                       <option value="normal">🟡 Normal - Oferta estándar</option>
@@ -1237,40 +1237,40 @@ const NewMessagePage = () => {
         )}
 
         {/* Consejos y Recomendaciones */}
-        <Card className="shadow-xl border-0 bg-gradient-to-r from-purple-50 to-purple-100/50">
+        <Card className="shadow-xl border-0 bg-gradient-to-r from-blue-50 to-blue-100/50">
           <div className="flex items-start gap-3">
-            <div className="p-2 bg-purple-500 rounded-lg flex-shrink-0">
+            <div className="p-2 bg-blue-500 rounded-lg flex-shrink-0">
               <AlertCircle className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-display font-bold text-purple-900 mb-4">
+              <h3 className="text-xl font-display font-bold text-blue-900 mb-4">
                 💡 Consejos para Mensajes Efectivos
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white/60 rounded-xl p-4">
-                  <h4 className="font-semibold text-purple-800 mb-2">🎯 Sé específico</h4>
-                  <p className="text-sm text-purple-700">
+                  <h4 className="font-semibold text-blue-800 mb-2">🎯 Sé específico</h4>
+                  <p className="text-sm text-blue-700">
                     Incluye montos exactos, fechas límite y consecuencias claras.
                   </p>
                 </div>
 
                 <div className="bg-white/60 rounded-xl p-4">
-                  <h4 className="font-semibold text-purple-800 mb-2">🤝 Mantén el respeto</h4>
-                  <p className="text-sm text-purple-700">
+                  <h4 className="font-semibold text-blue-800 mb-2">🤝 Mantén el respeto</h4>
+                  <p className="text-sm text-blue-700">
                     Usa un tono profesional y cortés, incluso en recordatorios urgentes.
                   </p>
                 </div>
 
                 <div className="bg-white/60 rounded-xl p-4">
-                  <h4 className="font-semibold text-purple-800 mb-2">⏰ Incluye plazos</h4>
-                  <p className="text-sm text-purple-700">
+                  <h4 className="font-semibold text-blue-800 mb-2">⏰ Incluye plazos</h4>
+                  <p className="text-sm text-blue-700">
                     Especifica cuándo vence el pago y qué sucede si no se realiza.
                   </p>
                 </div>
 
                 <div className="bg-white/60 rounded-xl p-4">
-                  <h4 className="font-semibold text-purple-800 mb-2">📱 Multi-canal</h4>
-                  <p className="text-sm text-purple-700">
+                  <h4 className="font-semibold text-blue-800 mb-2">📱 Multi-canal</h4>
+                  <p className="text-sm text-blue-700">
                     Los mensajes se envían por email y notificaciones push automáticamente.
                   </p>
                 </div>

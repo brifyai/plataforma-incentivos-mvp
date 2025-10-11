@@ -17,7 +17,10 @@ import {
   BarChart3,
   TrendingUp,
   DollarSign,
-  Building
+  Building,
+  Calendar,
+  Activity,
+  TrendingDown
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -29,6 +32,10 @@ const ClientsPage = () => {
   const [loading, setLoading] = useState(true);
   const [corporateClients, setCorporateClients] = useState([]);
   const [selectedCorporateClient, setSelectedCorporateClient] = useState('');
+  const [dateFilter, setDateFilter] = useState({
+    startDate: '',
+    endDate: ''
+  });
   const [stats, setStats] = useState({
     totalClients: 0,
     activeClients: 0,
@@ -207,34 +214,115 @@ const ClientsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl text-white">
-            <Users className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestión de Clientes</h1>
-            <p className="text-gray-600 mt-1">
-              Administra tus deudores, pagos y acuerdos de manera eficiente
-            </p>
-          </div>
+    <div className="space-y-6 pb-20 md:pb-8">
+      {/* Hero Section - Modern Dashboard Style */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 rounded-3xl p-4 text-white relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12"></div>
         </div>
 
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            leftIcon={<Upload className="w-4 h-4" />}
-          >
-            Importar
-          </Button>
-          <Button
-            variant="outline"
-            leftIcon={<Download className="w-4 h-4" />}
-          >
-            Exportar
-          </Button>
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold mb-1">
+                Gestión de Clientes
+              </h1>
+              <p className="text-blue-100 text-base">
+                Administra tus deudores, pagos y acuerdos de manera eficiente
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-xs">
+                <Users className="w-3 h-3 mr-1" />
+                {stats.totalClients} Clientes
+              </Badge>
+            </div>
+          </div>
+
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1 bg-white/20 rounded-lg">
+                  <Users className="w-3 h-3 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{stats.totalClients}</p>
+                  <p className="text-xs text-blue-100">Total Clientes</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1 bg-white/20 rounded-lg">
+                  <TrendingUp className="w-3 h-3 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{stats.activeClients}</p>
+                  <p className="text-xs text-blue-100">Clientes Activos</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1 bg-white/20 rounded-lg">
+                  <DollarSign className="w-3 h-3 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{formatCompactNumber(stats.totalDebt)}</p>
+                  <p className="text-xs text-blue-100">Deuda Total</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1 bg-white/20 rounded-lg">
+                  <BarChart3 className="w-3 h-3 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{formatCompactNumber(stats.totalPaid)}</p>
+                  <p className="text-xs text-blue-100">Total Recaudado</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -291,64 +379,119 @@ const ClientsPage = () => {
         </Card>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500 rounded-lg flex-shrink-0">
-              <Users className="w-5 h-5 text-white" />
+      {/* Modern Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          {/* Background gradient */}
+          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 opacity-5 rounded-full -mr-8 -mt-8 group-hover:opacity-10 transition-opacity"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                <Users className="w-3 h-3 text-white" />
+              </div>
+              <div className="flex items-center gap-1 px-1 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-50">
+                <TrendingUp className="w-3 h-3" />
+                +12.5%
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-lg font-bold text-blue-900 truncate">{stats.totalClients}</div>
-              <div className="text-xs text-blue-700 truncate">Total Clientes</div>
+
+            <div className="space-y-0.5">
+              <h3 className="text-lg font-bold text-gray-900">{stats.totalClients}</h3>
+              <p className="text-xs font-medium text-gray-600">Total Clientes</p>
+              <p className="text-xs text-gray-500">{stats.activeClients} activos</p>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-500 rounded-lg flex-shrink-0">
-              <TrendingUp className="w-5 h-5 text-white" />
+        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          {/* Background gradient */}
+          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 opacity-5 rounded-full -mr-8 -mt-8 group-hover:opacity-10 transition-opacity"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg">
+                <TrendingUp className="w-3 h-3 text-white" />
+              </div>
+              <div className="flex items-center gap-1 px-1 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-50">
+                <TrendingUp className="w-3 h-3" />
+                +8.3%
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-lg font-bold text-green-900 truncate">{stats.activeClients}</div>
-              <div className="text-xs text-green-700 truncate">Clientes Activos</div>
+
+            <div className="space-y-0.5">
+              <h3 className="text-lg font-bold text-gray-900">{stats.activeClients}</h3>
+              <p className="text-xs font-medium text-gray-600">Clientes Activos</p>
+              <p className="text-xs text-gray-500">Con deudas pendientes</p>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500 rounded-lg flex-shrink-0">
-              <DollarSign className="w-5 h-5 text-white" />
+        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          {/* Background gradient */}
+          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 opacity-5 rounded-full -mr-8 -mt-8 group-hover:opacity-10 transition-opacity"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                <DollarSign className="w-3 h-3 text-white" />
+              </div>
+              <div className="flex items-center gap-1 px-1 py-0.5 rounded-full text-xs font-medium text-red-600 bg-red-50">
+                <TrendingDown className="w-3 h-3" />
+                -2.1%
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-lg font-bold text-purple-900 truncate">{formatCompactNumber(stats.totalDebt)}</div>
-              <div className="text-xs text-purple-700 truncate">Deuda Total</div>
+
+            <div className="space-y-0.5">
+              <h3 className="text-lg font-bold text-gray-900">{formatCompactNumber(stats.totalDebt)}</h3>
+              <p className="text-xs font-medium text-gray-600">Deuda Total</p>
+              <p className="text-xs text-gray-500">Monto por cobrar</p>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500 rounded-lg flex-shrink-0">
-              <BarChart3 className="w-5 h-5 text-white" />
+        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          {/* Background gradient */}
+          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 opacity-5 rounded-full -mr-8 -mt-8 group-hover:opacity-10 transition-opacity"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                <BarChart3 className="w-3 h-3 text-white" />
+              </div>
+              <div className="flex items-center gap-1 px-1 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-50">
+                <TrendingUp className="w-3 h-3" />
+                +15.7%
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-lg font-bold text-emerald-900 truncate">{formatCompactNumber(stats.totalPaid)}</div>
-              <div className="text-xs text-emerald-700 truncate">Total Recaudado</div>
+
+            <div className="space-y-0.5">
+              <h3 className="text-lg font-bold text-gray-900">{formatCompactNumber(stats.totalPaid)}</h3>
+              <p className="text-xs font-medium text-gray-600">Total Recaudado</p>
+              <p className="text-xs text-gray-500">Pagos recibidos</p>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-500 rounded-lg flex-shrink-0">
-              <DollarSign className="w-5 h-5 text-white" />
+        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          {/* Background gradient */}
+          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 opacity-5 rounded-full -mr-8 -mt-8 group-hover:opacity-10 transition-opacity"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl shadow-lg">
+                <DollarSign className="w-3 h-3 text-white" />
+              </div>
+              <div className="flex items-center gap-1 px-1 py-0.5 rounded-full text-xs font-medium text-yellow-600 bg-yellow-50">
+                <Activity className="w-3 h-3" />
+                0.0%
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-lg font-bold text-orange-900 truncate">{formatCompactNumber(stats.totalPending)}</div>
-              <div className="text-xs text-orange-700 truncate">Pendiente</div>
+
+            <div className="space-y-0.5">
+              <h3 className="text-lg font-bold text-gray-900">{formatCompactNumber(stats.totalPending)}</h3>
+              <p className="text-xs font-medium text-gray-600">Pendiente</p>
+              <p className="text-xs text-gray-500">Por procesar</p>
             </div>
           </div>
         </Card>

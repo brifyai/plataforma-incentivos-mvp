@@ -37,7 +37,7 @@ const DashboardHero = ({ profile, dateFilter, onDateFilterChange, stats, analyti
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-3xl p-8 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 rounded-2xl p-6 text-white relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -mr-32 -mt-32"></div>
@@ -45,12 +45,12 @@ const DashboardHero = ({ profile, dateFilter, onDateFilterChange, stats, analyti
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2">
+              <h1 className="text-2xl font-bold mb-1">
                 ¡Bienvenido, {company?.business_name || profile?.full_name}!
               </h1>
-              <p className="text-blue-100 text-lg">
+              <p className="text-blue-100 text-base">
                 Gestiona tus deudas y maximiza tus ingresos con NexuPay
               </p>
             </div>
@@ -63,51 +63,51 @@ const DashboardHero = ({ profile, dateFilter, onDateFilterChange, stats, analyti
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <Users className="w-5 h-5 text-white" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white/20 rounded-md">
+                  <Users className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{heroStats.totalClients}</p>
-                  <p className="text-sm text-blue-100">Clientes</p>
+                  <p className="text-xl font-bold">{heroStats.totalClients}</p>
+                  <p className="text-xs text-blue-100">Clientes</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <Target className="w-5 h-5 text-white" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white/20 rounded-md">
+                  <Target className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{heroStats.activeDebts}</p>
-                  <p className="text-sm text-blue-100">Deudas Activas</p>
+                  <p className="text-xl font-bold">{heroStats.activeDebts}</p>
+                  <p className="text-xs text-blue-100">Deudas Activas</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-white" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white/20 rounded-md">
+                  <DollarSign className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">${heroStats.totalRevenue.toLocaleString()}</p>
-                  <p className="text-sm text-blue-100">Ingresos Totales</p>
+                  <p className="text-xl font-bold">${heroStats.totalRevenue.toLocaleString()}</p>
+                  <p className="text-xs text-blue-100">Ingresos</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-white" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white/20 rounded-md">
+                  <TrendingUp className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">+{heroStats.monthlyGrowth}%</p>
-                  <p className="text-sm text-blue-100">Crecimiento</p>
+                  <p className="text-xl font-bold">+{heroStats.monthlyGrowth}%</p>
+                  <p className="text-xs text-blue-100">Crecimiento</p>
                 </div>
               </div>
             </div>
@@ -116,7 +116,7 @@ const DashboardHero = ({ profile, dateFilter, onDateFilterChange, stats, analyti
       </div>
 
       {/* Date Filter */}
-      <Card className="p-4">
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Calendar className="w-5 h-5 text-gray-500" />
@@ -145,7 +145,7 @@ const DashboardHero = ({ profile, dateFilter, onDateFilterChange, stats, analyti
             </div>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

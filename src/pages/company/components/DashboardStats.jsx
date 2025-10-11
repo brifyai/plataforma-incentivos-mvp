@@ -53,7 +53,7 @@ const DashboardStats = ({ stats, analytics }) => {
       change: '+15.3%',
       changeType: 'positive',
       icon: Target,
-      color: 'purple',
+      color: 'blue',
       description: `$${totalDebtAmount.toLocaleString()} CLP total`
     },
     {
@@ -91,7 +91,7 @@ const DashboardStats = ({ stats, analytics }) => {
   const getCardColor = (color) => {
     const colors = {
       blue: 'from-blue-500 to-blue-600',
-      purple: 'from-purple-500 to-purple-600',
+      purple: 'from-blue-500 to-blue-600',
       green: 'from-green-500 to-green-600',
       yellow: 'from-yellow-500 to-orange-500'
     };
@@ -99,28 +99,28 @@ const DashboardStats = ({ stats, analytics }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
       {statCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={index} className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          <Card key={index} className="relative overflow-hidden group hover:shadow-sm transition-all duration-300 py-2">
             {/* Background gradient */}
-            <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${getCardColor(stat.color)} opacity-5 rounded-full -mr-10 -mt-10 group-hover:opacity-10 transition-opacity`}></div>
+            <div className={`absolute top-0 right-0 w-10 h-10 bg-gradient-to-br ${getCardColor(stat.color)} opacity-5 rounded-full -mr-5 -mt-5 group-hover:opacity-10 transition-opacity`}></div>
 
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 bg-gradient-to-br ${getCardColor(stat.color)} rounded-xl shadow-lg`}>
-                  <Icon className="w-6 h-6 text-white" />
+            <div className="relative z-10 px-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className={`p-1 bg-gradient-to-br ${getCardColor(stat.color)} rounded-sm shadow-sm`}>
+                  <Icon className="w-3.5 h-3.5 text-white" />
                 </div>
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getChangeColor(stat.changeType)}`}>
+                <div className={`flex items-center gap-0.5 px-1 py-0.5 rounded-full text-xs font-medium ${getChangeColor(stat.changeType)}`}>
                   {getChangeIcon(stat.changeType)}
                   {stat.change}
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+              <div className="space-y-0">
+                <h3 className="text-base font-bold text-gray-900">{stat.value}</h3>
+                <p className="text-xs font-medium text-gray-600">{stat.title}</p>
                 <p className="text-xs text-gray-500">{stat.description}</p>
               </div>
             </div>

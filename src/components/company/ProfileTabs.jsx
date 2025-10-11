@@ -91,7 +91,7 @@ const ProfileTabs = () => {
                 className={`
                   flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 whitespace-nowrap text-xs md:text-sm
                   ${isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md transform scale-[1.02]'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-[1.02]'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }
                 `}
@@ -107,7 +107,7 @@ const ProfileTabs = () => {
       </div>
 
       {/* Active Tab Indicator */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600" />
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-blue-700" />
     </div>
   );
 };

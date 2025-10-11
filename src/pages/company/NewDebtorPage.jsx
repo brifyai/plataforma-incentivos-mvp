@@ -166,10 +166,10 @@ const NewDebtorPage = () => {
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       {/* Background Effects */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 animate-gradient-x"></div>
-
-        {/* Floating orbs */}
-        <div className="absolute top-20 left-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-900 to-indigo-900 animate-gradient-x"></div>
+  
+          {/* Floating orbs */}
+          <div className="absolute top-20 left-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-float-delayed"></div>
 
         {/* Interactive mouse follower */}
@@ -219,12 +219,12 @@ const NewDebtorPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 mb-8">
-              <Users className="w-4 h-4 text-purple-400" />
-              <span className="text-sm font-medium text-purple-400">Nuevo Deudor</span>
+              <Users className="w-4 h-4 text-blue-400" />
+              <span className="text-sm font-medium text-blue-400">Nuevo Deudor</span>
             </div>
 
             <h1 className="text-6xl lg:text-8xl font-black mb-6 leading-none">
-              <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent animate-gradient-x">
+              <span className="bg-gradient-to-r from-white via-blue-200 to-blue-200 bg-clip-text text-transparent animate-gradient-x">
                 Agregar
               </span>
               <br />
@@ -253,7 +253,7 @@ const NewDebtorPage = () => {
                 <div className="text-sm text-gray-400 uppercase tracking-wider">Potencial</div>
               </div>
               <div className="group">
-                <div className="text-4xl font-black text-transparent bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text group-hover:scale-110 transition-transform">
+                <div className="text-4xl font-black text-transparent bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text group-hover:scale-110 transition-transform">
                   24/7
                 </div>
                 <div className="text-sm text-gray-400 uppercase tracking-wider">Disponible</div>
@@ -268,7 +268,7 @@ const NewDebtorPage = () => {
                 {/* Debtor Information */}
                 <div>
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl">
                       <User className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -287,7 +287,7 @@ const NewDebtorPage = () => {
                           value={formData.debtorName}
                           onChange={(e) => handleInputChange('debtorName', e.target.value)}
                           placeholder="Ej: Juan Pérez González"
-                          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                           required
                         />
                       </div>
@@ -302,7 +302,7 @@ const NewDebtorPage = () => {
                           value={formData.debtorRut}
                           onChange={(e) => handleInputChange('debtorRut', e.target.value)}
                           placeholder="Ej: 12.345.678-9"
-                          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         />
                       </div>
                     </div>
@@ -316,7 +316,7 @@ const NewDebtorPage = () => {
                           value={formData.debtorEmail}
                           onChange={(e) => handleInputChange('debtorEmail', e.target.value)}
                           placeholder="Ej: juan@email.com"
-                          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         />
                       </div>
                     </div>
@@ -330,7 +330,7 @@ const NewDebtorPage = () => {
                           value={formData.debtorPhone}
                           onChange={(e) => handleInputChange('debtorPhone', e.target.value)}
                           placeholder="Ej: +56912345678"
-                          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         />
                       </div>
                     </div>
@@ -397,7 +397,7 @@ const NewDebtorPage = () => {
                     type="submit"
                     loading={loading}
                     disabled={loading}
-                    className="bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600 shadow-2xl hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-300 px-12 py-4 text-lg font-semibold"
+                    className="bg-gradient-to-r from-blue-500 via-blue-500 to-indigo-500 hover:from-blue-600 hover:via-blue-600 hover:to-indigo-600 shadow-2xl hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-300 px-12 py-4 text-lg font-semibold"
                     leftIcon={<Save className="w-6 h-6" />}
                   >
                     {loading ? 'Guardando Deudor...' : 'Agregar Nuevo Deudor'}
@@ -451,7 +451,7 @@ const NewDebtorPage = () => {
                 icon: Zap,
                 title: "Pagos Instantáneos",
                 description: "Procesamiento automático de pagos con comisiones al instante",
-                color: "from-purple-500 to-pink-500"
+                color: "from-blue-500 to-cyan-500"
               }
             ].map((benefit, index) => (
               <div key={index} className="group text-center">

@@ -99,36 +99,38 @@ const CRMSyncDashboard = ({ profile, onUpdate }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-100 rounded-xl">
-            <BarChart3 className="w-6 h-6 text-blue-600" />
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-xl">
+            <BarChart3 className="w-4 h-4 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-sm font-bold text-gray-900">
               Dashboard de Sincronización CRM
             </h2>
-            <p className="text-gray-600">
+            <p className="text-xs text-gray-600">
               Monitorea el progreso de matching y sincronización de contactos
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             onClick={loadStats}
-            leftIcon={<RefreshCw className="w-4 h-4" />}
+            leftIcon={<RefreshCw className="w-3 h-3" />}
             disabled={loading}
+            className="text-xs py-2"
           >
             Actualizar
           </Button>
           <Button
             variant="gradient"
             onClick={handleSyncNow}
-            leftIcon={<Zap className="w-4 h-4" />}
+            leftIcon={<Zap className="w-3 h-3" />}
+            className="text-xs py-2"
           >
             Sincronizar Ahora
           </Button>
@@ -136,70 +138,70 @@ const CRMSyncDashboard = ({ profile, onUpdate }) => {
       </div>
 
       {/* Estadísticas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="text-center">
-          <div className="p-4">
-            <div className="flex items-center justify-center mb-3">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Users className="w-6 h-6 text-blue-600" />
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-2 bg-blue-100 rounded-xl">
+                <Users className="w-3 h-3 text-blue-600" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="text-lg font-bold text-gray-900 mb-1">
               {stats?.total || 0}
             </div>
-            <p className="text-sm text-gray-600">Contactos Procesados</p>
-            <Badge variant="info" size="sm" className="mt-2">
+            <p className="text-xs text-gray-600">Contactos Procesados</p>
+            <Badge variant="info" size="sm" className="mt-1">
               {stats?.period || 'Mes actual'}
             </Badge>
           </div>
         </Card>
 
         <Card className="text-center">
-          <div className="p-4">
-            <div className="flex items-center justify-center mb-3">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-2 bg-green-100 rounded-xl">
+                <CheckCircle className="w-3 h-3 text-green-600" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-green-600 mb-1">
+            <div className="text-lg font-bold text-green-600 mb-1">
               {stats?.autoAssigned || 0}
             </div>
-            <p className="text-sm text-gray-600">Asignados Automáticamente</p>
-            <Badge variant={getStatusColor(stats?.autoAssigned, stats?.total)} size="sm" className="mt-2">
+            <p className="text-xs text-gray-600">Asignados Automáticamente</p>
+            <Badge variant={getStatusColor(stats?.autoAssigned, stats?.total)} size="sm" className="mt-1">
               {formatPercentage(stats?.autoAssigned, stats?.total)}
             </Badge>
           </div>
         </Card>
 
         <Card className="text-center">
-          <div className="p-4">
-            <div className="flex items-center justify-center mb-3">
-              <div className="p-3 bg-yellow-100 rounded-xl">
-                <Clock className="w-6 h-6 text-yellow-600" />
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-2 bg-yellow-100 rounded-xl">
+                <Clock className="w-3 h-3 text-yellow-600" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-yellow-600 mb-1">
+            <div className="text-lg font-bold text-yellow-600 mb-1">
               {stats?.needsReview || 0}
             </div>
-            <p className="text-sm text-gray-600">Pendientes de Revisión</p>
-            <Badge variant={getStatusColor(stats?.needsReview, stats?.total)} size="sm" className="mt-2">
+            <p className="text-xs text-gray-600">Pendientes de Revisión</p>
+            <Badge variant={getStatusColor(stats?.needsReview, stats?.total)} size="sm" className="mt-1">
               {formatPercentage(stats?.needsReview, stats?.total)}
             </Badge>
           </div>
         </Card>
 
         <Card className="text-center">
-          <div className="p-4">
-            <div className="flex items-center justify-center mb-3">
-              <div className="p-3 bg-red-100 rounded-xl">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-2 bg-red-100 rounded-xl">
+                <AlertTriangle className="w-3 h-3 text-red-600" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-red-600 mb-1">
+            <div className="text-lg font-bold text-red-600 mb-1">
               {stats?.rejected || 0}
             </div>
-            <p className="text-sm text-gray-600">Matchings Rechazados</p>
-            <Badge variant={getStatusColor(stats?.rejected, stats?.total)} size="sm" className="mt-2">
+            <p className="text-xs text-gray-600">Matchings Rechazados</p>
+            <Badge variant={getStatusColor(stats?.rejected, stats?.total)} size="sm" className="mt-1">
               {formatPercentage(stats?.rejected, stats?.total)}
             </Badge>
           </div>

@@ -200,9 +200,6 @@ const CompanyVerificationPage = () => {
       <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-8 text-white shadow-strong">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <FileText className="w-8 h-8" />
-            </div>
             <div>
               <h1 className="text-3xl font-display font-bold tracking-tight">
                 Verificación de Empresa

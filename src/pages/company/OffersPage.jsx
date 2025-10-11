@@ -23,6 +23,7 @@ import {
   Calendar,
   Target,
   TrendingUp,
+  TrendingDown,
   XCircle,
   HelpCircle,
   CreditCard,
@@ -58,6 +59,16 @@ const OffersPage = () => {
   const [createOfferError, setCreateOfferError] = useState(null);
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [commissionInfo, setCommissionInfo] = useState(null);
+
+  // Función para formatear números grandes de manera compacta
+  const formatCompactNumber = (num) => {
+    if (num >= 1000000) {
+      return `$${(num / 1000000).toFixed(1)}M`;
+    } else if (num >= 1000) {
+      return `$${(num / 1000).toFixed(0)}K`;
+    }
+    return `$${num.toLocaleString()}`;
+  };
 
   // View/Edit Modal State
   const [showViewModal, setShowViewModal] = useState(false);
@@ -561,90 +572,208 @@ const OffersPage = () => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Gestión de Ofertas</h1>
-          <p className="text-primary-100">
-            Crea y administra ofertas para atraer más deudores
-          </p>
+    <div className="space-y-8 pb-20 md:pb-8">
+      {/* Hero Section - Modern Dashboard Style */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 rounded-2xl p-4 text-white relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -mr-32 -mt-32"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full -ml-24 -mb-24"></div>
+        </div>
+
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-lg md:text-2xl font-bold mb-1">
+                Gestión de Ofertas
+              </h1>
+              <p className="text-blue-100 text-xs">
+                Crea y administra ofertas para atraer más deudores
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                {offers.length} Ofertas
+              </Badge>
+            </div>
+          </div>
+
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white/20 rounded-md">
+                  <Target className="w-3 h-3 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{offers.filter(o => o.status === 'active').length}</p>
+                  <p className="text-xs text-blue-100">Ofertas Activas</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white/20 rounded-md">
+                  <Users className="w-3 h-3 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{offers.filter(o => o.status === 'active').length}</p>
+                  <p className="text-xs text-blue-100">Disponibles</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white/20 rounded-md">
+                  <TrendingUp className="w-3 h-3 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{offers.filter(o => o.status === 'expired').length}</p>
+                  <p className="text-xs text-blue-100">Expiradas</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-white/20 rounded-md">
+                  <DollarSign className="w-3 h-3 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{formatCompactNumber(offers.reduce((sum, o) => sum + (o.total_savings || 0), 0))}</p>
+                  <p className="text-xs text-blue-100">Ahorro Total</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Date Filter */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/30 shadow-sm w-full lg:min-w-fit">
-        <DateFilter
-          onFilterChange={setDateFilter}
-          className="mb-0"
-        />
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card padding={false} className="hover:shadow-medium transition-shadow">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-primary-100 rounded-lg">
-                <Target className="w-6 h-6 text-primary-600" />
+      {/* Modern Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+        <Card className="relative overflow-hidden group hover:shadow-sm transition-all duration-300 py-2">
+          {/* Background gradient */}
+          <div className="absolute top-0 right-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 opacity-5 rounded-full -mr-5 -mt-5 group-hover:opacity-10 transition-opacity"></div>
+
+          <div className="relative z-10 px-3">
+            <div className="flex items-center justify-between mb-1">
+              <div className="p-1 bg-gradient-to-br from-blue-500 to-blue-600 rounded-sm shadow-sm">
+                <Target className="w-3.5 h-3.5 text-white" />
               </div>
-              <Badge variant="primary">{offers.filter(o => o.status === 'active').length}</Badge>
+              <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-50">
+                <TrendingUp className="w-4 h-4" />
+                +12.5%
+              </div>
             </div>
-            <p className="text-sm text-secondary-600 mb-1">Ofertas Activas</p>
-            <p className="text-2xl font-bold text-secondary-900">
-              {offers.filter(o => o.status === 'active').length}
-            </p>
+
+            <div className="space-y-0">
+              <h3 className="text-base font-bold text-gray-900">{offers.filter(o => o.status === 'active').length}</h3>
+              <p className="text-xs font-medium text-gray-600">Ofertas Activas</p>
+              <p className="text-xs text-gray-500">Disponibles ahora</p>
+            </div>
           </div>
         </Card>
 
-        <Card padding={false} className="hover:shadow-medium transition-shadow">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-success-100 rounded-lg">
-                <Users className="w-6 h-6 text-success-600" />
+        <Card className="relative overflow-hidden group hover:shadow-sm transition-all duration-300 py-2">
+          {/* Background gradient */}
+          <div className="absolute top-0 right-0 w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 opacity-5 rounded-full -mr-5 -mt-5 group-hover:opacity-10 transition-opacity"></div>
+
+          <div className="relative z-10 px-3">
+            <div className="flex items-center justify-between mb-1">
+              <div className="p-1 bg-gradient-to-br from-green-500 to-green-600 rounded-sm shadow-sm">
+                <Users className="w-3.5 h-3.5 text-white" />
               </div>
-              <Badge variant="success">
-                {offers.filter(o => o.status === 'active').length}
-              </Badge>
+              <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-50">
+                <TrendingUp className="w-4 h-4" />
+                +8.3%
+              </div>
             </div>
-            <p className="text-sm text-secondary-600 mb-1">Ofertas Disponibles</p>
-            <p className="text-2xl font-bold text-secondary-900">
-              {offers.filter(o => o.status === 'active').length}
-            </p>
+
+            <div className="space-y-0">
+              <h3 className="text-base font-bold text-gray-900">{offers.filter(o => o.status === 'active').length}</h3>
+              <p className="text-xs font-medium text-gray-600">Disponibles</p>
+              <p className="text-xs text-gray-500">Para deudores</p>
+            </div>
           </div>
         </Card>
 
-        <Card padding={false} className="hover:shadow-medium transition-shadow">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-warning-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-warning-600" />
+        <Card className="relative overflow-hidden group hover:shadow-sm transition-all duration-300 py-2">
+          {/* Background gradient */}
+          <div className="absolute top-0 right-0 w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 opacity-5 rounded-full -mr-5 -mt-5 group-hover:opacity-10 transition-opacity"></div>
+
+          <div className="relative z-10 px-3">
+            <div className="flex items-center justify-between mb-1">
+              <div className="p-1 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-sm shadow-sm">
+                <TrendingUp className="w-3.5 h-3.5 text-white" />
               </div>
-              <Badge variant="warning">
-                {offers.filter(o => o.status === 'expired').length}
-              </Badge>
+              <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-full text-xs font-medium text-red-600 bg-red-50">
+                <TrendingDown className="w-4 h-4" />
+                -2.1%
+              </div>
             </div>
-            <p className="text-sm text-secondary-600 mb-1">Ofertas Expiradas</p>
-            <p className="text-2xl font-bold text-secondary-900">
-              {offers.filter(o => o.status === 'expired').length}
-            </p>
+
+            <div className="space-y-0">
+              <h3 className="text-base font-bold text-gray-900">{offers.filter(o => o.status === 'expired').length}</h3>
+              <p className="text-xs font-medium text-gray-600">Expiradas</p>
+              <p className="text-xs text-gray-500">Ya no disponibles</p>
+            </div>
           </div>
         </Card>
 
-        <Card padding={false} className="hover:shadow-medium transition-shadow">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-info-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-info-600" />
+        <Card className="relative overflow-hidden group hover:shadow-sm transition-all duration-300 py-2">
+          {/* Background gradient */}
+          <div className="absolute top-0 right-0 w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 opacity-5 rounded-full -mr-5 -mt-5 group-hover:opacity-10 transition-opacity"></div>
+
+          <div className="relative z-10 px-3">
+            <div className="flex items-center justify-between mb-1">
+              <div className="p-1 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-sm shadow-sm">
+                <DollarSign className="w-3.5 h-3.5 text-white" />
               </div>
-              <Badge variant="info">
-                {formatCurrency(offers.reduce((sum, o) => sum + (o.total_savings || 0), 0))}
-              </Badge>
+              <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-full text-xs font-medium text-green-600 bg-green-50">
+                <TrendingUp className="w-4 h-4" />
+                +15.7%
+              </div>
             </div>
-            <p className="text-sm text-secondary-600 mb-1">Ahorro Total</p>
-            <p className="text-2xl font-bold text-secondary-900">
-              {formatCurrency(offers.reduce((sum, o) => sum + (o.total_savings || 0), 0))}
-            </p>
+
+            <div className="space-y-0">
+              <h3 className="text-base font-bold text-gray-900">{formatCompactNumber(offers.reduce((sum, o) => sum + (o.total_savings || 0), 0))}</h3>
+              <p className="text-xs font-medium text-gray-600">Ahorro Total</p>
+              <p className="text-xs text-gray-500">Acumulado</p>
+            </div>
           </div>
         </Card>
       </div>
@@ -886,8 +1015,8 @@ const OffersPage = () => {
 
                     <label className={`flex flex-col items-center justify-center gap-3 p-6 border-2 rounded-xl cursor-pointer transition-all h-24 ${
                       createOfferForm.payment_method === 'both'
-                        ? 'border-purple-500 bg-purple-50 text-purple-700'
-                        : 'border-gray-200 bg-white hover:border-purple-300'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 bg-white hover:border-blue-300'
                     }`}>
                       <div className="flex items-center gap-3">
                         <input
@@ -895,7 +1024,7 @@ const OffersPage = () => {
                           value="both"
                           checked={createOfferForm.payment_method === 'both'}
                           onChange={(e) => setCreateOfferForm(prev => ({ ...prev, payment_method: e.target.value }))}
-                          className="text-purple-600 focus:ring-purple-500"
+                          className="text-blue-600 focus:ring-blue-500"
                         />
                         <div className="flex gap-1 flex-shrink-0">
                           <Banknote className="w-5 h-5" />
@@ -1056,7 +1185,7 @@ const OffersPage = () => {
                   <label className="flex items-center gap-2 text-sm font-bold text-secondary-900 font-display">
                     Comisión NexuPay
                     <div className="relative group">
-                      <HelpCircle className="w-5 h-5 text-purple-500 cursor-help" />
+                      <HelpCircle className="w-5 h-5 text-blue-500 cursor-help" />
                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 max-w-xs">
                         Comisión que cobra NexuPay por facilitar la transacción. Puede ser porcentaje o monto fijo.
                         <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
@@ -1068,30 +1197,30 @@ const OffersPage = () => {
                   <div className="flex gap-2">
                     <label className={`flex items-center gap-2 p-2 border-2 rounded-lg cursor-pointer transition-all ${
                       createOfferForm.nexupay_commission_type === 'percentage'
-                        ? 'border-purple-500 bg-purple-50 text-purple-700'
-                        : 'border-gray-200 bg-white hover:border-purple-300'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 bg-white hover:border-blue-300'
                     }`}>
                       <input
                         type="radio"
                         value="percentage"
                         checked={createOfferForm.nexupay_commission_type === 'percentage'}
                         onChange={(e) => setCreateOfferForm(prev => ({ ...prev, nexupay_commission_type: e.target.value }))}
-                        className="text-purple-600 focus:ring-purple-500"
+                        className="text-blue-600 focus:ring-blue-500"
                       />
                       <span className="text-sm font-medium">Porcentaje (%)</span>
                     </label>
 
                     <label className={`flex items-center gap-2 p-2 border-2 rounded-lg cursor-pointer transition-all ${
                       createOfferForm.nexupay_commission_type === 'fixed'
-                        ? 'border-purple-500 bg-purple-50 text-purple-700'
-                        : 'border-gray-200 bg-white hover:border-purple-300'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 bg-white hover:border-blue-300'
                     }`}>
                       <input
                         type="radio"
                         value="fixed"
                         checked={createOfferForm.nexupay_commission_type === 'fixed'}
                         onChange={(e) => setCreateOfferForm(prev => ({ ...prev, nexupay_commission_type: e.target.value }))}
-                        className="text-purple-600 focus:ring-purple-500"
+                        className="text-blue-600 focus:ring-blue-500"
                       />
                       <span className="text-sm font-medium">Monto fijo ($)</span>
                     </label>
@@ -1183,8 +1312,8 @@ const OffersPage = () => {
 
               <div className="bg-white/60 rounded-lg p-4 space-y-4">
                 {/* Cuadro Comisión NexuPay */}
-                <div className="border border-purple-200 rounded-lg p-3 bg-purple-50/50">
-                  <h4 className="font-semibold text-purple-800 mb-2 flex items-center gap-2">
+                <div className="border border-blue-200 rounded-lg p-3 bg-blue-50/50">
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
                     <DollarSign className="w-4 h-4" />
                     Comisión NexuPay ({createOfferForm.nexupay_commission_type === 'percentage'
                       ? `${createOfferForm.nexupay_commission_percentage}%`
@@ -1192,18 +1321,18 @@ const OffersPage = () => {
                   </h4>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-purple-700">
+                      <span className="text-blue-700">
                         {createOfferForm.nexupay_commission_type === 'percentage'
                           ? 'Sobre monto base ($100.000):'
                           : 'Monto fijo:'}
                       </span>
-                      <span className="font-semibold text-purple-600">
+                      <span className="font-semibold text-blue-600">
                         {createOfferForm.nexupay_commission_type === 'percentage'
                           ? `$${(100000 * (createOfferForm.nexupay_commission_percentage / 100)).toLocaleString('es-CL')}`
                           : `$${parseFloat(createOfferForm.nexupay_commission_fixed || 0).toLocaleString('es-CL')}`}
                       </span>
                     </div>
-                    <div className="text-xs text-purple-600/70 space-y-1">
+                    <div className="text-xs text-blue-600/70 space-y-1">
                       <div>💰 <strong>Pago:</strong> Cada 30 días</div>
                       <div>🏢 <strong>Define:</strong> La empresa que envía la oferta</div>
                       <div>🔧 <strong>Por:</strong> Facilitar la transacción</div>
@@ -1688,8 +1817,8 @@ const OffersPage = () => {
 
                       <label className={`flex flex-col items-center justify-center gap-3 p-6 border-2 rounded-xl cursor-pointer transition-all h-24 ${
                         editOfferForm.payment_method === 'both'
-                          ? 'border-purple-500 bg-purple-50 text-purple-700'
-                          : 'border-gray-200 bg-white hover:border-purple-300'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 bg-white hover:border-blue-300'
                       }`}>
                         <div className="flex items-center gap-3">
                           <input
@@ -1697,7 +1826,7 @@ const OffersPage = () => {
                             value="both"
                             checked={editOfferForm.payment_method === 'both'}
                             onChange={(e) => setEditOfferForm(prev => ({ ...prev, payment_method: e.target.value }))}
-                            className="text-purple-600 focus:ring-purple-500"
+                            className="text-blue-600 focus:ring-blue-500"
                           />
                           <div className="flex gap-1 flex-shrink-0">
                             <Banknote className="w-5 h-5" />
@@ -1809,7 +1938,7 @@ const OffersPage = () => {
                     <label className="flex items-center gap-2 text-sm font-bold text-secondary-900 font-display">
                       Comisión NexuPay (%)
                       <div className="relative group">
-                        <HelpCircle className="w-5 h-5 text-purple-500 cursor-help" />
+                        <HelpCircle className="w-5 h-5 text-blue-500 cursor-help" />
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 max-w-xs">
                           Comisión que cobra NexuPay por facilitar la transacción. Se sincroniza automáticamente con la comisión de la persona/deudor.
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>

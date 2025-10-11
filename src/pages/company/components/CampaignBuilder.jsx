@@ -335,10 +335,10 @@ Responde en JSON con estructura clara.`
                 <div className="text-sm text-warning-700">Tokens IA</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600">
+                <div className="text-3xl font-bold text-blue-600">
                   {Math.round((aiInsights?.predictedConversionRate || 0.15) * 100)}%
                 </div>
-                <div className="text-sm text-purple-700">Conversión estimada</div>
+                <div className="text-sm text-blue-700">Conversión estimada</div>
               </div>
             </div>
           )}

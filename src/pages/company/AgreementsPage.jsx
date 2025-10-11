@@ -146,24 +146,21 @@ const CompanyAgreementsPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <FileText className="w-8 h-8" />
-            </div>
+      <div className="bg-gradient-to-br from-indigo-600 via-blue-700 to-blue-800 rounded-2xl p-6 text-white shadow-strong">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4 md:gap-5">
             <div>
-              <h1 className="text-xl md:text-3xl font-display font-bold tracking-tight">
+              <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight">
                 Gestión de Acuerdos
               </h1>
-              <p className="text-blue-100 text-lg">
+              <p className="text-blue-100 text-sm md:text-base">
                 Administra los acuerdos activos con tus deudores
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Badge variant="info" size="lg">
+          <div className="flex items-center gap-3">
+            <Badge variant="info" size="md">
               {agreements.length} Acuerdos
             </Badge>
             <Button
@@ -180,77 +177,101 @@ const CompanyAgreementsPage = () => {
       </div>
 
       {/* Date Filter */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/30 shadow-sm w-full lg:min-w-fit">
-        <DateFilter
-          onFilterChange={setDateFilter}
-          className="mb-0"
-        />
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Agreements List */}
       <div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-primary-100 rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-primary-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-primary-100 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-primary-600" />
                 </div>
                 <Badge variant="primary">{agreements.filter(a => a.status === 'active').length}</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Acuerdos Activos</p>
-              <p className="text-2xl font-bold text-secondary-900">
+              <p className="text-xs text-secondary-600 mb-1">Acuerdos Activos</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">
                 {agreements.filter(a => a.status === 'active').length}
               </p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-success-100 rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-success-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-success-100 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-success-600" />
                 </div>
                 <Badge variant="success">
                   {agreements.filter(a => a.status === 'completed').length}
                 </Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Acuerdos Completados</p>
-              <p className="text-2xl font-bold text-secondary-900">
+              <p className="text-xs text-secondary-600 mb-1">Acuerdos Completados</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">
                 {agreements.filter(a => a.status === 'completed').length}
               </p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-warning-100 rounded-lg">
-                  <Clock className="w-6 h-6 text-warning-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-warning-100 rounded-lg">
+                  <Clock className="w-4 h-4 text-warning-600" />
                 </div>
                 <Badge variant="warning">
                   {agreements.filter(a => a.status === 'pending').length}
                 </Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Acuerdos Pendientes</p>
-              <p className="text-2xl font-bold text-secondary-900">
+              <p className="text-xs text-secondary-600 mb-1">Acuerdos Pendientes</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">
                 {agreements.filter(a => a.status === 'pending').length}
               </p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-info-100 rounded-lg">
-                  <DollarSign className="w-6 h-6 text-info-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-info-100 rounded-lg">
+                  <DollarSign className="w-4 h-4 text-info-600" />
                 </div>
                 <Badge variant="info">
                   {formatCurrency(agreements.reduce((sum, a) => sum + (a.amount || 0), 0))}
                 </Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Monto Total</p>
-              <p className="text-2xl font-bold text-secondary-900">
+              <p className="text-xs text-secondary-600 mb-1">Monto Total</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">
                 {formatCurrency(agreements.reduce((sum, a) => sum + (a.amount || 0), 0))}
               </p>
             </div>

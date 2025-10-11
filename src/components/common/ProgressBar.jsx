@@ -31,7 +31,7 @@ const ProgressBar = forwardRef(({
     green: 'bg-green-600',
     red: 'bg-red-600',
     yellow: 'bg-yellow-600',
-    purple: 'bg-purple-600',
+    purple: 'bg-blue-600',
     indigo: 'bg-indigo-600'
   };
 

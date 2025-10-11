@@ -17,23 +17,31 @@ const LoginForm = () => {
   const displayError = oauthErrors.error || loginHook.error;
 
   return (
-    <Card className="shadow-2xl border-0 overflow-hidden">
+    <Card className="bg-gray-800/50 backdrop-blur-xl border border-gray-600/30 shadow-2xl overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white text-center">
-        <h2 className="text-2xl font-bold mb-2">
-          ¡Bienvenido!
-        </h2>
-        <p className="text-blue-100">
-          Ingresa a tu cuenta para continuar
-        </p>
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-10 transition-opacity duration-500"></div>
+        <div className="relative z-10">
+          <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+            ¡Bienvenido!
+          </h2>
+          <p className="text-blue-100 text-lg">
+            Ingresa a tu cuenta para continuar
+          </p>
+        </div>
       </div>
 
       {/* Formulario */}
-      <div className="p-8">
+      <div className="p-8 relative">
+        {/* Corner Accents */}
+        <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-blue-400/30 rounded-tl-xl"></div>
+        <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-purple-400/30 rounded-tr-xl"></div>
+        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-blue-400/30 rounded-bl-xl"></div>
+        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-purple-400/30 rounded-br-xl"></div>
         <form onSubmit={loginHook.handleSubmit} className="space-y-6">
           {/* Campo Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-white mb-2">
               Correo Electrónico
             </label>
             <div className="relative">
@@ -47,14 +55,14 @@ const LoginForm = () => {
                 placeholder="tu@email.com"
                 required
                 disabled={loginHook.isLoading}
-                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full pl-12 pr-4 py-3 border border-gray-600/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
               />
             </div>
           </div>
 
           {/* Campo Contraseña */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-white mb-2">
               Contraseña
             </label>
             <div className="relative">
@@ -68,7 +76,7 @@ const LoginForm = () => {
                 placeholder="••••••••"
                 required
                 disabled={loginHook.isLoading}
-                className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full pl-12 pr-12 py-3 border border-gray-600/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
               />
               <button
                 type="button"
@@ -87,9 +95,9 @@ const LoginForm = () => {
 
           {/* Error */}
           {displayError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{displayError}</p>
+            <div className="p-4 bg-red-900/50 border border-red-500/30 rounded-xl flex items-start gap-3 backdrop-blur-sm">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-200">{displayError}</p>
             </div>
           )}
 
@@ -103,14 +111,14 @@ const LoginForm = () => {
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 disabled={loginHook.isLoading}
               />
-              <span className="ml-2 text-sm text-gray-700">
+              <span className="ml-2 text-sm text-gray-300">
                 Recordarme
               </span>
             </label>
 
             <Link
               to="/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors"
+              className="text-sm text-blue-400 hover:text-blue-300 font-medium hover:underline transition-colors"
             >
               ¿Olvidaste tu contraseña?
             </Link>
@@ -126,7 +134,7 @@ const LoginForm = () => {
               loading={loginHook.loading}
               disabled={loginHook.googleLoading}
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
               rightIcon={<ArrowRight className="w-5 h-5" />}
             >
               {loginHook.loading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
@@ -135,10 +143,10 @@ const LoginForm = () => {
             {/* Separador */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-gray-600/30" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">O</span>
+                <span className="px-4 bg-gray-800/50 text-gray-400 font-medium backdrop-blur-sm">O</span>
               </div>
             </div>
 
@@ -150,7 +158,7 @@ const LoginForm = () => {
               onClick={loginHook.handleGoogleLogin}
               loading={loginHook.googleLoading}
               leftIcon={<Chrome className="w-6 h-6" />}
-              className="border-gray-300 hover:bg-gray-50 py-3 rounded-xl font-medium"
+              className="border-gray-600/30 bg-gray-700/50 text-white hover:bg-gray-700/70 py-3 rounded-xl font-medium backdrop-blur-sm transition-all duration-300"
               disabled={loginHook.loading}
             >
               Continuar con Google
@@ -160,11 +168,11 @@ const LoginForm = () => {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-400">
             ¿No tienes una cuenta?{' '}
             <Link
               to="/registro"
-              className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+              className="font-semibold text-blue-400 hover:text-blue-300 hover:underline transition-colors"
             >
               Regístrate aquí
             </Link>

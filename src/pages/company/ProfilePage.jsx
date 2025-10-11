@@ -678,7 +678,7 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Modern Hero Section - Mobile Optimized */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl mx-4 mt-6 p-4 md:p-8 text-white shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-indigo-600 via-blue-700 to-blue-800 rounded-2xl mx-4 mt-6 p-3 md:p-6 text-white shadow-2xl relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
@@ -687,20 +687,13 @@ const ProfilePage = () => {
           <div className="absolute bottom-0 right-1/3 w-16 h-16 bg-white rounded-full translate-y-8"></div>
         </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-8">
-          <div className="flex items-center gap-4 md:gap-6">
-            <div className="p-3 md:p-4 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/30">
-              {isGodMode ? (
-                <Shield className="w-8 h-8 md:w-10 md:h-10" />
-              ) : (
-                <Building className="w-8 h-8 md:w-10 md:h-10" />
-              )}
-            </div>
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 md:gap-6">
+          <div className="flex items-center gap-3 md:gap-5">
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl md:text-3xl font-display font-bold tracking-tight mb-1 md:mb-2 truncate">
+              <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight mb-1 truncate">
                 {isGodMode ? 'Panel de Administrador' : 'Perfil Corporativo'}
               </h1>
-              <p className="text-indigo-100 text-sm md:text-lg max-w-md line-clamp-2">
+              <p className="text-indigo-100 text-xs md:text-sm max-w-md line-clamp-2">
                 {isGodMode
                   ? 'Gestiona la configuración global del sistema y supervisa todas las operaciones'
                   : 'Administra la información de tu empresa y accede a métricas clave de rendimiento'
@@ -709,13 +702,13 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4 w-full lg:w-auto">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-white/20 flex-1 lg:flex-initial">
+          <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 md:p-3 border border-white/20 flex-1 lg:flex-initial">
               <div className="flex items-center gap-2 md:gap-3">
-                <Activity className="w-5 h-5 md:w-6 md:h-6 text-green-300 flex-shrink-0" />
+                <Activity className="w-4 h-4 md:w-5 md:h-5 text-green-300 flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs md:text-sm text-indigo-200 truncate">Estado del Sistema</p>
-                  <p className="font-semibold text-white text-sm md:text-base">Activo</p>
+                  <p className="text-xs text-indigo-200 truncate">Estado del Sistema</p>
+                  <p className="font-semibold text-white text-xs md:text-sm">Activo</p>
                 </div>
               </div>
             </div>
@@ -797,45 +790,45 @@ const ProfilePage = () => {
 
         {/* Sidebar Informativo - Layout Horizontal - Solo mostrar en secciones que no sean operaciones, integraciones, verificación ni clientes */}
         {currentSection !== 'operations' && currentSection !== 'integrations' && currentSection !== 'compliance' && currentSection !== 'clients' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Account Status Card - Izquierda */}
             <Card className="shadow-lg border-0 bg-gradient-to-br from-slate-50 to-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-500" />
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <CheckCircle className="w-3 h-3 text-green-500" />
                 Estado de la Cuenta
               </h3>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-blue-500" />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3 h-3 text-blue-500" />
                     <div>
-                      <p className="text-sm text-gray-500">Fecha de Registro</p>
-                      <p className="font-medium text-gray-900">
+                      <p className="text-xs text-gray-500">Fecha de Registro</p>
+                      <p className="text-xs font-medium text-gray-900">
                         {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('es-CL') : 'N/A'}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <Award className="w-5 h-5 text-purple-500" />
+                <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-3 h-3 text-blue-500" />
                     <div>
-                      <p className="text-sm text-gray-500">Tipo de Usuario</p>
-                      <p className="font-medium text-gray-900">
+                      <p className="text-xs text-gray-500">Tipo de Usuario</p>
+                      <p className="text-xs font-medium text-gray-900">
                         {isGodMode ? 'Administrador GOD MODE' : 'Empresa'}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <Activity className="w-5 h-5 text-green-500" />
+                <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-3 h-3 text-green-500" />
                     <div>
-                      <p className="text-sm text-gray-500">Estado</p>
-                      <p className="font-medium text-green-600">Activo</p>
+                      <p className="text-xs text-gray-500">Estado</p>
+                      <p className="text-xs font-medium text-green-600">Activo</p>
                     </div>
                   </div>
                 </div>
@@ -844,17 +837,17 @@ const ProfilePage = () => {
 
             {/* Security Card - Derecha */}
             <Card className="shadow-lg border-0 bg-gradient-to-br from-red-50 to-pink-50">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-red-500" />
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Shield className="w-3 h-3 text-red-500" />
                 Seguridad
               </h3>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <Button
                   variant="secondary"
                   onClick={() => setShowPasswordModal(true)}
-                  className="w-full justify-start bg-white/50 hover:bg-white border-0 whitespace-nowrap"
-                  leftIcon={<Key className="w-4 h-4" />}
+                  className="w-full justify-start bg-white/50 hover:bg-white border-0 whitespace-nowrap text-xs py-2"
+                  leftIcon={<Key className="w-3 h-3" />}
                 >
                   Cambiar Contraseña
                 </Button>
@@ -956,7 +949,7 @@ const ProfilePage = () => {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
+          className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
           aria-label="Volver arriba"
         >
           <ChevronUp className="w-6 h-6" />

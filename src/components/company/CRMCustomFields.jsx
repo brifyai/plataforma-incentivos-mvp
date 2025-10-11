@@ -192,7 +192,7 @@ const CRMCustomFields = ({ profile, crmConfig, onUpdate }) => {
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl text-white">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white">
               <Database className="w-6 h-6" />
             </div>
             <div>
@@ -261,7 +261,7 @@ const CRMCustomFields = ({ profile, crmConfig, onUpdate }) => {
                         <p className="text-sm text-gray-700">{field.description}</p>
                       )}
                       {field.transformation && (
-                        <p className="text-xs text-purple-600 mt-1">
+                        <p className="text-xs text-blue-600 mt-1">
                           Transformación: {field.transformation}
                         </p>
                       )}

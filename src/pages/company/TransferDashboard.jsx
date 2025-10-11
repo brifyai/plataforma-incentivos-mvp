@@ -243,7 +243,7 @@ const TransferDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl p-8 text-white shadow-strong animate-fade-in">
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-700 to-blue-800 rounded-2xl p-6 text-white shadow-strong animate-fade-in">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
@@ -251,77 +251,99 @@ const TransferDashboard = () => {
 
         <div className="relative">
           {/* Mobile: Stack vertically, Desktop: Side by side */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-8 mb-4 lg:mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-6 mb-3 lg:mb-4">
             {/* Left side - Title and description */}
-            <div className="flex items-center gap-3 md:gap-6">
-              <div className="p-3 md:p-4 bg-white/20 rounded-xl md:rounded-2xl backdrop-blur-sm">
-                <Banknote className="w-6 h-6 md:w-10 md:h-10" />
-              </div>
+            <div className="flex items-center gap-3 md:gap-5">
               <div className="min-w-0 flex-1">
-                <h1 className="text-xl md:text-3xl font-display font-bold tracking-tight">
+                <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight">
                   Transferencias Automáticas
                 </h1>
-                <p className="text-white text-sm md:text-lg">
+                <p className="text-white text-xs md:text-sm">
                   Gestiona tus transferencias bancarias automáticas
                 </p>
               </div>
             </div>
 
-            {/* Right side - Date Filter */}
-            <div className="bg-white/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/30 shadow-sm w-full lg:min-w-fit">
-              <DateFilter
-                onFilterChange={setDateFilter}
-                className="mb-0"
-              />
-            </div>
           </div>
 
           {/* Quick stats in header */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <DollarSign className="w-6 h-6 text-success-300" />
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-success-300" />
                 <div>
-                  <p className="text-sm text-success-100">Total Transferido</p>
-                  <p className="text-2xl font-bold">{formatCurrency(stats.totalTransferred)}</p>
+                  <p className="text-xs text-success-100">Total Transferido</p>
+                  <p className="text-sm md:text-lg font-bold">{formatCurrency(stats.totalTransferred)}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-success-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-success-300" />
                 <div>
-                  <p className="text-sm text-success-100">Completadas</p>
-                  <p className="text-2xl font-bold">{stats.completedTransfers}</p>
+                  <p className="text-xs text-success-100">Completadas</p>
+                  <p className="text-sm md:text-lg font-bold">{stats.completedTransfers}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <RefreshCw className="w-6 h-6 text-warning-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-warning-300" />
                 <div>
-                  <p className="text-sm text-success-100">Procesando</p>
-                  <p className="text-2xl font-bold">{stats.processingTransfers}</p>
+                  <p className="text-xs text-success-100">Procesando</p>
+                  <p className="text-sm md:text-lg font-bold">{stats.processingTransfers}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-info-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-info-300" />
                 <div>
-                  <p className="text-sm text-success-100">Pendientes</p>
-                  <p className="text-2xl font-bold">{stats.pendingTransfers}</p>
+                  <p className="text-xs text-success-100">Pendientes</p>
+                  <p className="text-sm md:text-lg font-bold">{stats.pendingTransfers}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-6 h-6 text-danger-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-danger-300" />
                 <div>
-                  <p className="text-sm text-success-100">Fallidas</p>
-                  <p className="text-2xl font-bold">{stats.failedTransfers}</p>
+                  <p className="text-xs text-success-100">Fallidas</p>
+                  <p className="text-sm md:text-lg font-bold">{stats.failedTransfers}</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
           </div>
         </div>

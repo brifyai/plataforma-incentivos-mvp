@@ -51,37 +51,37 @@ const VerificationProgress = ({ profile, verification }) => {
   const overallStatus = getOverallStatus();
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 mb-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100 mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-1">
+          <h3 className="text-sm font-bold text-gray-900 mb-1">
             Progreso de Verificación
           </h3>
-          <p className="text-gray-600">
+          <p className="text-xs text-gray-600">
             Completa los 3 pasos para verificar tu empresa
           </p>
         </div>
 
         <div className="text-right">
-          <div className="text-2xl font-bold text-gray-900">
+          <div className="text-lg font-bold text-gray-900">
             {completedSteps}/{totalSteps}
           </div>
-          <div className={`text-sm font-semibold text-${overallStatus.color}-600`}>
+          <div className={`text-xs font-semibold text-${overallStatus.color}-600`}>
             {overallStatus.text}
           </div>
         </div>
       </div>
 
       {/* Barra de progreso */}
-      <div className="mb-6">
+      <div className="mb-4">
         <div className="flex justify-between text-xs text-gray-500 mb-2">
           <span>0%</span>
           <span>{Math.round(progressPercentage)}% completado</span>
           <span>100%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
+        <div className="w-full bg-gray-200 rounded-full h-2">
           <div
-            className={`h-3 rounded-full transition-all duration-500 ${
+            className={`h-2 rounded-full transition-all duration-500 ${
               overallStatus.color === 'green'
                 ? 'bg-green-500'
                 : overallStatus.color === 'blue'
@@ -94,7 +94,7 @@ const VerificationProgress = ({ profile, verification }) => {
       </div>
 
       {/* Pasos */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {steps.map((step, index) => {
           const IconComponent = step.icon;
           const isCompleted = step.completed;
@@ -106,7 +106,7 @@ const VerificationProgress = ({ profile, verification }) => {
           return (
             <div
               key={step.id}
-              className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${
+              className={`relative p-3 rounded-xl border-2 transition-all duration-300 ${
                 isCompleted
                   ? 'bg-green-50 border-green-200'
                   : isCurrent
@@ -119,8 +119,8 @@ const VerificationProgress = ({ profile, verification }) => {
                 <div className="hidden md:block absolute top-1/2 -right-2 w-4 h-0.5 bg-gray-300 transform -translate-y-1/2 z-0" />
               )}
 
-              <div className="flex items-start gap-3 relative z-10">
-                <div className={`p-2 rounded-lg flex-shrink-0 ${
+              <div className="flex items-start gap-2 relative z-10">
+                <div className={`p-1 rounded-lg flex-shrink-0 ${
                   isCompleted
                     ? 'bg-green-100'
                     : isCurrent
@@ -128,16 +128,16 @@ const VerificationProgress = ({ profile, verification }) => {
                     : 'bg-gray-100'
                 }`}>
                   {isCompleted ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckCircle className="w-3 h-3 text-green-600" />
                   ) : (
-                    <IconComponent className={`w-5 h-5 ${
+                    <IconComponent className={`w-3 h-3 ${
                       isCurrent ? 'text-blue-600' : 'text-gray-400'
                     }`} />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h4 className={`font-semibold text-sm mb-1 ${
+                  <h4 className={`font-semibold text-xs mb-1 ${
                     isCompleted
                       ? 'text-green-900'
                       : isCurrent
@@ -157,8 +157,8 @@ const VerificationProgress = ({ profile, verification }) => {
                   </p>
 
                   {isCompleted && (
-                    <div className="mt-2 flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3 text-green-500" />
+                    <div className="mt-1 flex items-center gap-1">
+                      <CheckCircle className="w-2 h-2 text-green-500" />
                       <span className="text-xs font-medium text-green-600">
                         Completado
                       </span>
@@ -166,8 +166,8 @@ const VerificationProgress = ({ profile, verification }) => {
                   )}
 
                   {isCurrent && !isCompleted && (
-                    <div className="mt-2 flex items-center gap-1">
-                      <Circle className="w-3 h-3 text-blue-500 fill-current" />
+                    <div className="mt-1 flex items-center gap-1">
+                      <Circle className="w-2 h-2 text-blue-500 fill-current" />
                       <span className="text-xs font-medium text-blue-600">
                         Pendiente
                       </span>
@@ -182,12 +182,12 @@ const VerificationProgress = ({ profile, verification }) => {
 
       {/* Mensaje motivacional */}
       {completedSteps === totalSteps && (
-        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-green-900">¡Felicitaciones!</p>
-              <p className="text-sm text-green-700">
+              <p className="font-semibold text-green-900 text-xs">¡Felicitaciones!</p>
+              <p className="text-xs text-green-700">
                 Has completado todos los pasos de verificación. Tu empresa está lista para operar.
               </p>
             </div>
@@ -196,12 +196,12 @@ const VerificationProgress = ({ profile, verification }) => {
       )}
 
       {completedSteps === 0 && (
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <div className="flex items-center gap-3">
-            <Circle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+          <div className="flex items-center gap-2">
+            <Circle className="w-3 h-3 text-blue-600 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-blue-900">Comienza tu verificación</p>
-              <p className="text-sm text-blue-700">
+              <p className="font-semibold text-blue-900 text-xs">Comienza tu verificación</p>
+              <p className="text-xs text-blue-700">
                 El primer paso es configurar tu cuenta bancaria para recibir transferencias automáticas.
               </p>
             </div>

@@ -76,24 +76,21 @@ const CompanyAnalyticsPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl p-4 md:p-8 text-white shadow-strong">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6">
-            <div className="p-3 md:p-4 bg-white/20 rounded-2xl backdrop-blur-sm flex-shrink-0">
-              <BarChart3 className="w-6 h-6 md:w-8 md:h-8" />
-            </div>
+      <div className="bg-gradient-to-br from-indigo-600 via-blue-700 to-blue-800 rounded-2xl p-3 md:p-6 text-white shadow-strong">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-5">
             <div className="text-center sm:text-left">
-              <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight">
+              <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight">
                 Análisis y Métricas
               </h1>
-              <p className="text-indigo-100 text-base md:text-lg">
+              <p className="text-indigo-100 text-sm md:text-base">
                 Rendimiento detallado de tu cartera de cobranzas
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Badge variant="info" size="lg">
+          <div className="flex items-center gap-3">
+            <Badge variant="info" size="md">
               {analytics.totalClients} Clientes
             </Badge>
             <Button
@@ -116,78 +113,102 @@ const CompanyAnalyticsPage = () => {
       </div>
 
       {/* Date Filter */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/30 shadow-sm w-full lg:min-w-fit">
-        <DateFilter
-          onFilterChange={setDateFilter}
-          className="mb-0"
-        />
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Content */}
       <div>
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-primary-100 rounded-lg">
-                  <DollarSign className="w-6 h-6 text-primary-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-primary-100 rounded-lg">
+                  <DollarSign className="w-4 h-4 text-primary-600" />
                 </div>
                 <Badge variant="primary">{formatCurrency(analytics.totalRevenue)}</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Ingresos Totales</p>
-              <p className="text-2xl font-bold text-secondary-900">
+              <p className="text-xs text-secondary-600 mb-1">Ingresos Totales</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">
                 {formatCurrency(analytics.totalRevenue)}
               </p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-success-100 rounded-lg">
-                  <Target className="w-6 h-6 text-success-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-success-100 rounded-lg">
+                  <Target className="w-4 h-4 text-success-600" />
                 </div>
                 <Badge variant="success">
                   {formatPercentage(analytics.recoveryRate)}
                 </Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Tasa de Recuperación</p>
-              <p className="text-2xl font-bold text-secondary-900">
+              <p className="text-xs text-secondary-600 mb-1">Tasa de Recuperación</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">
                 {formatPercentage(analytics.recoveryRate)}
               </p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-warning-100 rounded-lg">
-                  <Users className="w-6 h-6 text-warning-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-warning-100 rounded-lg">
+                  <Users className="w-4 h-4 text-warning-600" />
                 </div>
                 <Badge variant="warning">
                   {analytics.totalDebtors}
                 </Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Deudores Activos</p>
-              <p className="text-2xl font-bold text-secondary-900">
+              <p className="text-xs text-secondary-600 mb-1">Deudores Activos</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">
                 {analytics.totalDebtors}
               </p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-info-100 rounded-lg">
-                  <TrendingUp className="w-6 h-6 text-info-600" />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-info-100 rounded-lg">
+                  <TrendingUp className="w-4 h-4 text-info-600" />
                 </div>
                 <Badge variant="info">
                   +{analytics.monthlyGrowth}%
                 </Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1">Crecimiento Mensual</p>
-              <p className="text-2xl font-bold text-secondary-900">
+              <p className="text-xs text-secondary-600 mb-1">Crecimiento Mensual</p>
+              <p className="text-sm md:text-lg font-bold text-secondary-900">
                 +{analytics.monthlyGrowth}%
               </p>
             </div>
@@ -288,8 +309,8 @@ const CompanyAnalyticsPage = () => {
         <Card>
           <div className="p-6">
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Calendar className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Calendar className="w-6 h-6 text-blue-600" />
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-secondary-900">Tiempo Promedio</h3>
