@@ -305,11 +305,9 @@ const AppContent = () => {
         <Route
           path="/personas/simulador"
           element={
-            <ProtectedRoute allowedRoles={['debtor']}>
-              <DashboardLayout>
-                <SimulatorPage />
-              </DashboardLayout>
-            </ProtectedRoute>
+            <DashboardLayout>
+              <SimulatorPage />
+            </DashboardLayout>
           }
         />
 

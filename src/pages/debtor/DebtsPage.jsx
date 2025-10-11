@@ -156,7 +156,7 @@ const DebtsPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-8 text-white shadow-strong animate-fade-in">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
@@ -165,78 +165,68 @@ const DebtsPage = () => {
 
         <div className="relative">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                <FileText className="w-8 h-8" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <FileText className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-3xl font-display font-bold tracking-tight">
+                <h1 className="text-2xl font-display font-bold tracking-tight">
                   Mis Deudas
                 </h1>
-                <p className="text-primary-100 text-lg">
+                <p className="text-primary-100 text-sm">
                   Gestiona y visualiza todas tus deudas activas
                 </p>
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <Button
                 variant="primary"
-                size="lg"
+                size="md"
                 onClick={() => setShowAddDebtModal(true)}
                 className="hover:scale-105 transition-all shadow-glow"
-                leftIcon={<Plus className="w-5 h-5" />}
+                leftIcon={<Plus className="w-4 h-4" />}
               >
                 Registrar Nueva Deuda
-              </Button>
-
-              <Button
-                variant="gradient"
-                size="lg"
-                onClick={() => window.location.href = '/debtor/simulator'}
-                className="hover:scale-105 transition-all shadow-glow"
-                leftIcon={<Calculator className="w-5 h-5" />}
-              >
-                💰 Calcular Ganancias
               </Button>
             </div>
           </div>
 
           {/* Quick stats in header */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-6 h-6 text-danger-300" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-danger-300" />
                 <div>
-                  <p className="text-sm text-primary-100">Activas</p>
-                  <p className="text-2xl font-bold">{debts.filter(d => d.status === 'active').length}</p>
+                  <p className="text-xs text-primary-100">Activas</p>
+                  <p className="text-lg font-bold">{debts.filter(d => d.status === 'active').length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-warning-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-warning-300" />
                 <div>
-                  <p className="text-sm text-primary-100">En Negociación</p>
-                  <p className="text-2xl font-bold">{debts.filter(d => d.status === 'in_negotiation').length}</p>
+                  <p className="text-xs text-primary-100">En Negociación</p>
+                  <p className="text-lg font-bold">{debts.filter(d => d.status === 'in_negotiation').length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-success-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-success-300" />
                 <div>
-                  <p className="text-sm text-primary-100">Pagadas</p>
-                  <p className="text-2xl font-bold">{debts.filter(d => d.status === 'paid').length}</p>
+                  <p className="text-xs text-primary-100">Pagadas</p>
+                  <p className="text-lg font-bold">{debts.filter(d => d.status === 'paid').length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <DollarSign className="w-6 h-6 text-accent-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-accent-300" />
                 <div>
-                  <p className="text-sm text-primary-100">Total</p>
-                  <p className="text-2xl font-bold">{formatCurrency(debts.reduce((sum, debt) => sum + debt.current_amount, 0))}</p>
+                  <p className="text-xs text-primary-100">Total</p>
+                  <p className="text-lg font-bold">{formatCurrency(debts.reduce((sum, debt) => sum + debt.current_amount, 0))}</p>
                 </div>
               </div>
             </div>
@@ -337,62 +327,62 @@ const DebtsPage = () => {
               style={{ animationDelay: `${300 + index * 100}ms` }}
             >
               <div className="flex items-start justify-between">
-                <div className="flex items-start gap-6">
-                  <div className="p-4 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-2xl group-hover:shadow-soft transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-2xl group-hover:shadow-soft transition-all duration-300">
                     {getStatusIcon(debt.status)}
                   </div>
 
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-4">
-                      <h3 className="text-xl font-bold text-secondary-900 font-display">
+                    <div className="flex items-center gap-2 mb-3">
+                      <h3 className="text-sm font-bold text-secondary-900 font-display">
                         Deuda #{debt.debt_reference || debt.id.slice(-8)}
                       </h3>
                       {getStatusBadge(debt.status)}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <div className="flex items-center gap-3 p-3 bg-secondary-50/80 rounded-xl">
-                        <Building className="w-5 h-5 text-secondary-500" />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                      <div className="flex items-center gap-2 p-2 bg-secondary-50/80 rounded-xl">
+                        <Building className="w-4 h-4 text-secondary-500" />
                         <div>
                           <p className="text-xs font-medium text-secondary-500 uppercase tracking-wide">Empresa</p>
-                          <p className="text-sm font-semibold text-secondary-900">
+                          <p className="text-xs font-semibold text-secondary-900">
                             {debt.company?.business_name || 'Empresa'}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 p-3 bg-secondary-50/80 rounded-xl">
-                        <Calendar className="w-5 h-5 text-secondary-500" />
+                      <div className="flex items-center gap-2 p-2 bg-secondary-50/80 rounded-xl">
+                        <Calendar className="w-4 h-4 text-secondary-500" />
                         <div>
                           <p className="text-xs font-medium text-secondary-500 uppercase tracking-wide">Fecha</p>
-                          <p className="text-sm font-semibold text-secondary-900">
+                          <p className="text-xs font-semibold text-secondary-900">
                             {formatDate(debt.origin_date)}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 p-3 bg-secondary-50/80 rounded-xl">
-                        <DollarSign className="w-5 h-5 text-secondary-500" />
+                      <div className="flex items-center gap-2 p-2 bg-secondary-50/80 rounded-xl">
+                        <DollarSign className="w-4 h-4 text-secondary-500" />
                         <div>
                           <p className="text-xs font-medium text-secondary-500 uppercase tracking-wide">Tipo</p>
-                          <p className="text-sm font-semibold text-secondary-900 capitalize">
+                          <p className="text-xs font-semibold text-secondary-900 capitalize">
                             {debt.debt_type}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="p-4 bg-gradient-to-r from-neutral-50 to-neutral-100/50 rounded-2xl border border-neutral-200/50">
-                        <p className="text-sm font-medium text-secondary-500 uppercase tracking-wide mb-2">Monto Original</p>
-                        <p className="text-2xl font-bold text-secondary-900 font-display">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-3 bg-gradient-to-r from-neutral-50 to-neutral-100/50 rounded-2xl border border-neutral-200/50">
+                        <p className="text-xs font-medium text-secondary-500 uppercase tracking-wide mb-1">Monto Original</p>
+                        <p className="text-lg font-bold text-secondary-900 font-display">
                           {formatCurrency(debt.original_amount)}
                         </p>
                       </div>
 
-                      <div className="p-4 bg-gradient-to-r from-secondary-50 to-secondary-100/50 rounded-2xl border border-secondary-200/50">
-                        <p className="text-sm font-medium text-secondary-500 uppercase tracking-wide mb-2">Monto Actual</p>
-                        <p className="text-2xl font-bold text-secondary-900 font-display">
+                      <div className="p-3 bg-gradient-to-r from-secondary-50 to-secondary-100/50 rounded-2xl border border-secondary-200/50">
+                        <p className="text-xs font-medium text-secondary-500 uppercase tracking-wide mb-1">Monto Actual</p>
+                        <p className="text-lg font-bold text-secondary-900 font-display">
                           {formatCurrency(debt.current_amount)}
                         </p>
                       </div>
@@ -400,10 +390,10 @@ const DebtsPage = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 ml-6">
+                <div className="flex flex-col gap-2 ml-4">
                   <Button
                     variant="primary"
-                    size="md"
+                    size="sm"
                     className="shadow-soft hover:shadow-glow hover:scale-105 transition-all"
                   >
                     Ver Detalles
@@ -411,7 +401,7 @@ const DebtsPage = () => {
                   {debt.status === 'active' && (
                     <Button
                       variant="gradient"
-                      size="md"
+                      size="sm"
                       className="shadow-soft hover:shadow-glow hover:scale-105 transition-all"
                     >
                       Negociar
@@ -431,17 +421,17 @@ const DebtsPage = () => {
           className="animate-slide-up bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 border-green-200"
           style={{ animationDelay: '400ms' }}
         >
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-100 rounded-xl">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-100 rounded-xl">
+                  <TrendingUp className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-secondary-900">
+                  <h3 className="text-lg font-bold text-secondary-900">
                     💰 Tus Ganancias Potenciales
                   </h3>
-                  <p className="text-secondary-600">
+                  <p className="text-secondary-600 text-sm">
                     Basado en tus deudas morosas registradas
                   </p>
                 </div>
@@ -449,6 +439,7 @@ const DebtsPage = () => {
 
               <Button
                 variant="gradient"
+                size="sm"
                 onClick={() => window.location.href = '/debtor/simulator'}
                 className="hover:scale-105 transition-all shadow-glow"
               >
@@ -457,7 +448,7 @@ const DebtsPage = () => {
             </div>
 
             {/* Estadísticas rápidas */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
               {(() => {
                 const now = new Date();
                 const overdueDebts = debts.filter(debt => {
@@ -470,32 +461,32 @@ const DebtsPage = () => {
 
                 return (
                   <>
-                    <div className="text-center p-4 bg-white/60 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600 mb-1">
+                    <div className="text-center p-3 bg-white/60 rounded-lg">
+                      <div className="text-lg font-bold text-orange-600 mb-1">
                         {overdueDebts.length}
                       </div>
-                      <div className="text-sm text-secondary-600">Deudas Morosas</div>
+                      <div className="text-xs text-secondary-600">Deudas Morosas</div>
                     </div>
 
-                    <div className="text-center p-4 bg-white/60 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600 mb-1">
+                    <div className="text-center p-3 bg-white/60 rounded-lg">
+                      <div className="text-lg font-bold text-blue-600 mb-1">
                         {formatCurrency(totalOverdueAmount)}
                       </div>
-                      <div className="text-sm text-secondary-600">Monto Moroso</div>
+                      <div className="text-xs text-secondary-600">Monto Moroso</div>
                     </div>
 
-                    <div className="text-center p-4 bg-white/60 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600 mb-1">
+                    <div className="text-center p-3 bg-white/60 rounded-lg">
+                      <div className="text-lg font-bold text-green-600 mb-1">
                         {formatCurrency(potentialCommission)}
                       </div>
-                      <div className="text-sm text-secondary-600">Comisión Potencial</div>
+                      <div className="text-xs text-secondary-600">Comisión Potencial</div>
                     </div>
 
-                    <div className="text-center p-4 bg-white/60 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600 mb-1">
+                    <div className="text-center p-3 bg-white/60 rounded-lg">
+                      <div className="text-lg font-bold text-purple-600 mb-1">
                         $36.000
                       </div>
-                      <div className="text-sm text-secondary-600">Por Cierre</div>
+                      <div className="text-xs text-secondary-600">Por Cierre</div>
                     </div>
                   </>
                 );
@@ -503,14 +494,14 @@ const DebtsPage = () => {
             </div>
 
             {/* Mensaje motivacional */}
-            <div className="bg-gradient-to-r from-green-100 to-blue-100 p-4 rounded-lg border border-green-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-200 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-green-700" />
+            <div className="bg-gradient-to-r from-green-100 to-blue-100 p-3 rounded-lg border border-green-200">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-green-200 rounded-lg">
+                  <TrendingUp className="w-4 h-4 text-green-700" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-green-900">¡Oportunidad de Ingresos Extra!</h4>
-                  <p className="text-sm text-green-800">
+                  <h4 className="font-semibold text-green-900 text-sm">¡Oportunidad de Ingresos Extra!</h4>
+                  <p className="text-xs text-green-800">
                     Registra más deudas morosas para aumentar tus ganancias potenciales. Cada acuerdo exitoso te paga $36.000 de comisión fija.
                   </p>
                 </div>

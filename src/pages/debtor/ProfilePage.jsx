@@ -175,60 +175,119 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-secondary-900">Mi Perfil</h1>
-          <p className="text-secondary-600 mt-1">
-            Gestiona tu información personal
-          </p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+        </div>
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <User className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Mi Perfil
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Gestiona tu información personal
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => setShowPasswordModal(true)}
+                className="hover:scale-105 transition-all shadow-glow"
+                leftIcon={<Key className="w-4 h-4" />}
+              >
+                Cambiar Contraseña
+              </Button>
+            </div>
+          </div>
+
+          {/* Quick stats in header */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-blue-300" />
+                <div>
+                  <p className="text-xs text-primary-100">Fecha de Registro</p>
+                  <p className="text-lg font-bold">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-green-300" />
+                <div>
+                  <p className="text-xs text-primary-100">Tipo de Usuario</p>
+                  <p className="text-lg font-bold">Persona</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-yellow-300" />
+                <div>
+                  <p className="text-xs text-primary-100">Estado</p>
+                  <p className="text-lg font-bold">Verificado</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Profile Card */}
       <Card>
-        <div className="flex items-start gap-6">
-          <div className="p-4 bg-primary-100 rounded-full">
-            <User className="w-12 h-12 text-primary-600" />
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-primary-100 rounded-full">
+            <User className="w-8 h-8 text-primary-600" />
           </div>
 
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-secondary-900">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-secondary-900">
                 Información Personal
               </h2>
+              {isEditing ? (
+                <Button
+                  variant="primary"
+                  onClick={handleSave}
+                  loading={loading}
+                  disabled={loading}
+                  leftIcon={<Save className="w-4 h-4" />}
+                  className="px-3 py-2 text-sm"
+                >
+                  Guardar
+                </Button>
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsEditing(true)}
+                  leftIcon={<Edit className="w-4 h-4" />}
+                  className="px-3 py-2 text-sm"
+                >
+                  Editar
+                </Button>
+              )}
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
-            <div className="flex items-center justify-between mb-4">
-              <Button
-                variant={isEditing ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={isEditing ? handleSave : () => setIsEditing(true)}
-                loading={loading}
-                disabled={loading}
-              >
-                {isEditing ? (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Guardar
-                  </>
-                ) : (
-                  <>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Editar
-                  </>
-                )}
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input
                 label="Nombre Completo"
                 value={formData.full_name}
@@ -266,45 +325,6 @@ const ProfilePage = () => {
         </div>
       </Card>
 
-      {/* Account Info */}
-      <Card>
-        <h3 className="text-lg font-semibold text-secondary-900 mb-4">Información de Cuenta</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 rounded-lg">
-            <Calendar className="w-5 h-5 text-secondary-500" />
-            <div>
-              <p className="text-sm text-secondary-500">Fecha de Registro</p>
-              <p className="font-medium text-secondary-900">
-                {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 rounded-lg">
-            <User className="w-5 h-5 text-secondary-500" />
-            <div>
-              <p className="text-sm text-secondary-500">Tipo de Usuario</p>
-              <p className="font-medium text-secondary-900">Persona</p>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Security */}
-      <Card>
-        <h3 className="text-lg font-semibold text-secondary-900 mb-4">Seguridad</h3>
-        <div className="space-y-4">
-          <Button
-            variant="secondary"
-            onClick={() => setShowPasswordModal(true)}
-            leftIcon={<Key className="w-4 h-4" />}
-          >
-            Cambiar Contraseña
-          </Button>
-
-        </div>
-      </Card>
-
       {/* Password Change Modal */}
       <Modal
         isOpen={showPasswordModal}
@@ -312,22 +332,22 @@ const ProfilePage = () => {
         title="Cambiar Contraseña"
         size="md"
       >
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Key className="w-5 h-5 text-blue-600" />
+        <div className="space-y-4">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl border border-blue-100">
+            <div className="flex items-start gap-2">
+              <div className="p-1.5 bg-blue-100 rounded-lg">
+                <Key className="w-4 h-4 text-blue-600" />
               </div>
               <div>
-                <h4 className="font-semibold text-blue-900 mb-1">Cambiar Contraseña</h4>
-                <p className="text-sm text-blue-700">
+                <h4 className="font-semibold text-blue-900 text-sm mb-1">Cambiar Contraseña</h4>
+                <p className="text-xs text-blue-700">
                   Establece una nueva contraseña segura para proteger tu cuenta.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Input
               label="Contraseña Actual"
               type="password"
@@ -356,14 +376,14 @@ const ProfilePage = () => {
             />
           </div>
 
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl border border-yellow-200">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-3 rounded-xl border border-yellow-200">
+            <div className="flex items-start gap-2">
+              <div className="p-1.5 bg-yellow-100 rounded-lg">
                 <AlertCircle className="w-4 h-4 text-yellow-600" />
               </div>
               <div>
-                <h4 className="font-semibold text-yellow-800 mb-1">Recomendaciones de Seguridad</h4>
-                <ul className="text-sm text-yellow-700 space-y-1">
+                <h4 className="font-semibold text-yellow-800 text-sm mb-1">Recomendaciones de Seguridad</h4>
+                <ul className="text-xs text-yellow-700 space-y-1">
                   <li>• Usa al menos 8 caracteres</li>
                   <li>• Incluye letras mayúsculas y minúsculas</li>
                   <li>• Agrega números y símbolos</li>
@@ -373,11 +393,12 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <Button
               variant="outline"
               onClick={() => setShowPasswordModal(false)}
               className="flex-1"
+              size="md"
             >
               Cancelar
             </Button>
@@ -388,6 +409,7 @@ const ProfilePage = () => {
               leftIcon={<Save className="w-4 h-4" />}
               loading={loading}
               disabled={loading}
+              size="md"
             >
               Actualizar Contraseña
             </Button>

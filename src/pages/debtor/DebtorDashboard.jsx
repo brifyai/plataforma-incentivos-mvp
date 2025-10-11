@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Card, Badge, LoadingSpinner, Button } from '../../components/common';
 import { useDebts, useOffers, useWallet } from '../../hooks';
@@ -34,6 +34,7 @@ const DebtorDashboard = () => {
   const [commissionStats, setCommissionStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadStats();
@@ -249,51 +250,51 @@ const DebtorDashboard = () => {
 
         <div className="relative">
           <div className="flex items-center gap-4 mb-6">
-            <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 shadow-xl">
-              <Wallet className="w-10 h-10" />
+            <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 shadow-xl">
+              <Wallet className="w-8 h-8" />
             </div>
             <div>
-              <h1 className="text-4xl font-display font-bold tracking-tight">
+              <h1 className="text-3xl font-display font-bold tracking-tight">
                 ¡Hola, {user?.user_metadata?.full_name?.split(' ')[0] || profile?.full_name?.split(' ')[0] || 'Usuario'}!
               </h1>
-              <p className="text-blue-100 text-xl mt-2">
+              <p className="text-blue-100 text-lg mt-1">
                 Negocia tus deudas y gana el <span className="font-bold text-yellow-300">50% en comisiones</span>
               </p>
             </div>
           </div>
 
           {/* Enhanced Quick stats in welcome */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-emerald-500/20 rounded-xl">
-                  <TrendingUp className="w-7 h-7 text-emerald-300" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-500/20 rounded-xl">
+                  <TrendingUp className="w-6 h-6 text-emerald-300" />
                 </div>
                 <div>
                   <p className="text-sm text-blue-100 font-medium">Deudas Activas</p>
-                  <p className="text-3xl font-bold">{stats?.totalDebts || 0}</p>
+                  <p className="text-2xl font-bold">{stats?.totalDebts || 0}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-yellow-500/20 rounded-xl">
-                  <DollarSign className="w-7 h-7 text-yellow-300" />
+            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-500/20 rounded-xl">
+                  <DollarSign className="w-6 h-6 text-yellow-300" />
                 </div>
                 <div>
                   <p className="text-sm text-blue-100 font-medium">Saldo Billetera</p>
-                  <p className="text-3xl font-bold">{formatCurrency(balance || 0)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(balance || 0)}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-500/20 rounded-xl">
-                  <CheckCircle className="w-7 h-7 text-green-300" />
+            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-500/20 rounded-xl">
+                  <CheckCircle className="w-6 h-6 text-green-300" />
                 </div>
                 <div>
                   <p className="text-sm text-blue-100 font-medium">Acuerdos</p>
-                  <p className="text-3xl font-bold">{stats?.activeAgreements || 0}</p>
+                  <p className="text-2xl font-bold">{stats?.activeAgreements || 0}</p>
                 </div>
               </div>
             </div>
@@ -315,58 +316,58 @@ const DebtorDashboard = () => {
         </div>
 
         <div className="relative p-8">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-6 mb-6">
-              <div className="p-5 bg-white/25 backdrop-blur-md rounded-3xl shadow-2xl border border-white/40">
-                <Coins className="w-12 h-12 animate-pulse" />
+              <div className="p-4 bg-white/25 backdrop-blur-md rounded-3xl shadow-2xl border border-white/40">
+                <Coins className="w-10 h-10 animate-pulse" />
               </div>
               <div>
-                <h2 className="text-4xl font-display font-bold mb-3">
+                <h2 className="text-3xl font-display font-bold mb-2">
                   💰 Gana Dinero Negociando tus Deudas
                 </h2>
-                <p className="text-amber-100 text-xl">
-                  Recibe el <span className="font-bold text-white text-2xl">50% de comisión</span> por cada acuerdo exitoso
+                <p className="text-amber-100 text-lg">
+                  Recibe el <span className="font-bold text-white text-xl">50% de comisión</span> por cada acuerdo exitoso
                 </p>
               </div>
             </div>
           </div>
 
           {/* Enhanced Commission Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-7 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
-              <div className="flex items-center gap-5 mb-5">
-                <div className="p-4 bg-emerald-500/25 rounded-2xl border border-emerald-400/30">
-                  <PiggyBank className="w-8 h-8 text-emerald-200" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-6 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-emerald-500/25 rounded-2xl border border-emerald-400/30">
+                  <PiggyBank className="w-6 h-6 text-emerald-200" />
                 </div>
                 <div>
                   <p className="text-sm text-amber-100 font-semibold">Comisiones Ganadas</p>
-                  <p className="text-3xl font-bold">{formatCurrency(commissionStats?.earnedCommissions || 0)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(commissionStats?.earnedCommissions || 0)}</p>
                 </div>
               </div>
               <p className="text-sm text-amber-200 font-medium">Este mes</p>
             </div>
 
-            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-7 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
-              <div className="flex items-center gap-5 mb-5">
-                <div className="p-4 bg-blue-500/25 rounded-2xl border border-blue-400/30">
-                  <Target className="w-8 h-8 text-blue-200" />
+            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-6 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-purple-500/25 rounded-2xl border border-purple-400/30">
+                  <Target className="w-6 h-6 text-purple-200" />
                 </div>
                 <div>
                   <p className="text-sm text-amber-100 font-semibold">Próxima Comisión</p>
-                  <p className="text-3xl font-bold">{formatCurrency(commissionStats?.nextCommission || 0)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(commissionStats?.nextCommission || 0)}</p>
                 </div>
               </div>
               <p className="text-sm text-amber-200 font-medium">Al cerrar tu próximo acuerdo</p>
             </div>
 
-            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-7 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
-              <div className="flex items-center gap-5 mb-5">
-                <div className="p-4 bg-purple-500/25 rounded-2xl border border-purple-400/30">
-                  <Calculator className="w-8 h-8 text-purple-200" />
+            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-6 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-blue-500/25 rounded-2xl border border-blue-400/30">
+                  <Calculator className="w-6 h-6 text-blue-200" />
                 </div>
                 <div>
                   <p className="text-sm text-amber-100 font-semibold">Potencial Mensual</p>
-                  <p className="text-3xl font-bold">{formatCurrency(commissionStats?.monthlyPotential || 0)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(commissionStats?.monthlyPotential || 0)}</p>
                 </div>
               </div>
               <p className="text-sm text-amber-200 font-medium">Si pagas todas tus deudas</p>
@@ -375,9 +376,9 @@ const DebtorDashboard = () => {
 
           {/* Enhanced Motivational Message */}
           <div className="text-center">
-            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-8 border border-white/30 mb-8 hover:bg-white/20 transition-all duration-300">
-              <h3 className="text-2xl font-bold mb-4">🎯 ¿Sabías que...?</h3>
-              <p className="text-amber-50 text-xl leading-relaxed">
+            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-6 border border-white/30 mb-6 hover:bg-white/20 transition-all duration-300">
+              <h3 className="text-xl font-bold mb-3">🎯 ¿Sabías que...?</h3>
+              <p className="text-amber-50 text-base leading-relaxed">
                 Cuando una deuda entra en mora, <span className="font-bold text-white">las empresas de cobranza contactan a la persona</span> para negociar acuerdos.
                 Con nuestra plataforma, tú <span className="font-bold text-white">ganas el 50% de comisión por cada acuerdo exitoso</span>.
                 ¡Registra tus deudas y genera ingresos cuando negocien!
@@ -390,21 +391,20 @@ const DebtorDashboard = () => {
                   variant="glass"
                   size="lg"
                   className="shadow-2xl hover:scale-105 transition-all border-2 border-white/40"
-                  leftIcon={<DollarSign className="w-6 h-6" />}
+                  leftIcon={<DollarSign className="w-5 h-5" />}
                 >
                   Realizar Pago
                 </Button>
               </Link>
-              <Link to="/personas/simulador">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="bg-white/20 border-2 border-white/40 text-white hover:bg-white/30 hover:scale-105 transition-all"
-                  leftIcon={<Calculator className="w-6 h-6" />}
-                >
-                  Calcular Ganancias
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="lg"
+                className="bg-white/20 border-2 border-white/40 text-white hover:bg-white/30 hover:scale-105 transition-all"
+                leftIcon={<Calculator className="w-5 h-5" />}
+                onClick={() => navigate('/personas/simulador')}
+              >
+                Calcular Ganancias
+              </Button>
             </div>
           </div>
         </div>
@@ -431,43 +431,43 @@ const DebtorDashboard = () => {
             {activeOffers.slice(0, 3).map((offer, index) => (
               <div
                 key={offer.id}
-                className="bg-white/60 backdrop-blur-sm border border-white/40 rounded-2xl p-5 hover:bg-white/80 hover:shadow-medium transition-all duration-300 cursor-pointer hover:scale-[1.01] animate-fade-in"
+                className="bg-white/60 backdrop-blur-sm border border-white/40 rounded-2xl p-6 hover:bg-white/80 hover:shadow-medium transition-all duration-300 cursor-pointer hover:scale-[1.01] animate-fade-in"
                 style={{ animationDelay: `${600 + index * 100}ms` }}
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-6">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-gradient-to-br from-success-100 to-success-200 rounded-xl">
-                        <DollarSign className="w-5 h-5 text-success-600" />
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="p-3 bg-gradient-to-br from-success-100 to-success-200 rounded-xl">
+                        <DollarSign className="w-6 h-6 text-success-600" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-secondary-900 text-lg">{offer.title}</h4>
+                        <h4 className="font-bold text-secondary-900 text-xl">{offer.title}</h4>
                         <Badge variant="success" size="sm" className="mt-1">Nueva</Badge>
                       </div>
                     </div>
-                    <p className="text-sm text-secondary-600 leading-relaxed">
+                    <p className="text-base text-secondary-600 leading-relaxed">
                       {offer.description || 'Oferta especial disponible'}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-secondary-50/80 rounded-xl p-3">
-                    <p className="text-xs font-medium text-secondary-500 uppercase tracking-wide mb-1">Descuento</p>
-                    <p className="text-lg font-bold text-success-600">
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div className="bg-secondary-50/80 rounded-xl p-4">
+                    <p className="text-sm font-medium text-secondary-500 uppercase tracking-wide mb-2">Descuento</p>
+                    <p className="text-xl font-bold text-success-600">
                       {offer.parameters?.discount_percentage || 0}%
                     </p>
                   </div>
-                  <div className="bg-secondary-50/80 rounded-xl p-3">
-                    <p className="text-xs font-medium text-secondary-500 uppercase tracking-wide mb-1">Válida hasta</p>
-                    <p className="text-sm font-semibold text-secondary-900">
+                  <div className="bg-secondary-50/80 rounded-xl p-4">
+                    <p className="text-sm font-medium text-secondary-500 uppercase tracking-wide mb-2">Válida hasta</p>
+                    <p className="text-base font-semibold text-secondary-900">
                       {formatDate(offer.validity_end)}
                     </p>
                   </div>
                 </div>
 
                 <Link to={`/personas/ofertas/${offer.id}`}>
-                  <Button variant="gradient" size="sm" fullWidth className="shadow-soft hover:shadow-glow">
+                  <Button variant="gradient" size="md" fullWidth className="shadow-soft hover:shadow-glow">
                     Ver Detalles
                   </Button>
                 </Link>
@@ -493,52 +493,52 @@ const DebtorDashboard = () => {
         style={{ animationDelay: '700ms' }}
       >
         {activeDebts.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="p-6 bg-gradient-to-br from-success-100 to-success-200 rounded-3xl inline-block mb-6">
-              <CheckCircle className="w-16 h-16 text-success-600" />
+          <div className="text-center py-8">
+            <div className="p-4 bg-gradient-to-br from-success-100 to-success-200 rounded-3xl inline-block mb-4">
+              <CheckCircle className="w-12 h-12 text-success-600" />
             </div>
-            <h3 className="text-2xl font-display font-bold text-secondary-900 mb-2">
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-2">
               ¡No tienes deudas activas!
             </h3>
-            <p className="text-secondary-600 text-lg">
+            <p className="text-secondary-600 text-sm">
               Felicitaciones, tu historial está limpio
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {activeDebts.slice(0, 5).map((debt, index) => (
               <div
                 key={debt.id}
-                className="bg-gradient-to-r from-white to-secondary-50/50 border border-secondary-200/60 rounded-2xl p-5 hover:shadow-medium hover:border-primary-300/60 transition-all duration-300 cursor-pointer hover:scale-[1.01] animate-fade-in"
+                className="bg-gradient-to-r from-white to-secondary-50/50 border border-secondary-200/60 rounded-2xl p-3 hover:shadow-medium hover:border-primary-300/60 transition-all duration-300 cursor-pointer hover:scale-[1.01] animate-fade-in"
                 style={{ animationDelay: `${800 + index * 100}ms` }}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-2xl shadow-soft">
-                      <CreditCard className="w-6 h-6 text-secondary-600" />
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-2xl shadow-soft">
+                      <CreditCard className="w-4 h-4 text-secondary-600" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-secondary-900 text-lg">
+                      <h4 className="font-bold text-secondary-900 text-sm">
                         {debt.company?.business_name || 'Empresa'}
                       </h4>
-                      <p className="text-sm text-secondary-600">
+                      <p className="text-xs text-secondary-600">
                         Desde {formatDate(debt.origin_date)}
                       </p>
                     </div>
                   </div>
                   <Badge
                     variant={debt.status === 'active' ? 'danger' : 'warning'}
-                    className="font-semibold px-3 py-1"
+                    className="font-semibold px-2 py-1 text-xs"
                   >
                     {debt.status === 'active' ? 'Activa' : 'En negociación'}
                   </Badge>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-secondary-200/50">
-                  <span className="text-sm font-medium text-secondary-600 uppercase tracking-wide">
+                <div className="flex items-center justify-between pt-3 border-t border-secondary-200/50">
+                  <span className="text-xs font-medium text-secondary-600 uppercase tracking-wide">
                     Monto Actual
                   </span>
-                  <span className="text-2xl font-display font-bold text-secondary-900">
+                  <span className="text-lg font-display font-bold text-secondary-900">
                     {formatCurrency(debt.current_amount)}
                   </span>
                 </div>
@@ -561,43 +561,42 @@ const DebtorDashboard = () => {
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full blur-xl animate-float" style={{ animationDelay: '2s' }} />
           </div>
 
-          <div className="relative flex items-center justify-between p-8">
+          <div className="relative flex items-center justify-between p-4">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-                  <Coins className="w-8 h-8 text-white" />
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-2xl">
+                  <Coins className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-display font-bold text-white mb-1">
+                  <h3 className="text-lg font-display font-bold text-white mb-1">
                     💰 ¿Listo para ganar dinero extra?
                   </h3>
-                  <p className="text-white/90 text-lg leading-relaxed">
+                  <p className="text-white/90 text-sm leading-relaxed">
                     Registra tus deudas morosas y recibe <span className="font-bold text-yellow-300">{formatCurrency((stats?.totalDebtAmount || 0) * 0.5)}</span> en comisiones por acuerdos exitosos
                   </p>
                 </div>
               </div>
             </div>
-            <div className="ml-8 flex flex-col sm:flex-row gap-3">
+            <div className="ml-4 flex flex-col sm:flex-row gap-2">
               <Link to="/personas/ofertas">
                 <Button
                   variant="glass"
-                  size="lg"
+                  size="md"
                   className="shadow-glow hover:scale-105 transition-all"
-                  leftIcon={<DollarSign className="w-5 h-5" />}
+                  leftIcon={<DollarSign className="w-4 h-4" />}
                 >
                   Pagar y Ganar
                 </Button>
               </Link>
-              <Link to="/personas/simulador">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all"
-                  leftIcon={<Calculator className="w-5 h-5" />}
-                >
-                  Calcular Ganancias
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="md"
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all"
+                leftIcon={<Calculator className="w-4 h-4" />}
+                onClick={() => navigate('/personas/simulador')}
+              >
+                Calcular Ganancias
+              </Button>
             </div>
           </div>
         </Card>

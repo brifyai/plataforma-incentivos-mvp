@@ -191,64 +191,66 @@ const WalletPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-warning-50 via-warning-100 to-warning-200 rounded-3xl p-8 shadow-strong animate-fade-in border border-warning-200/50">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
         {/* Background pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-warning-200 rounded-full -translate-y-32 translate-x-32" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-warning-300 rounded-full translate-y-24 -translate-x-24" />
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
         </div>
 
         <div className="relative">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-warning-500 rounded-2xl">
-              <Wallet className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight text-secondary-900">
-                Mi Billetera
-              </h1>
-              <p className="text-secondary-600 text-lg">
-                Gestiona tus incentivos y fondos para pagar deudas
-              </p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Wallet className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Mi Billetera
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Gestiona tus incentivos y fondos para pagar deudas
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Quick stats in header */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/60 shadow-soft">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="w-6 h-6 text-success-500" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-success-300" />
                 <div>
-                  <p className="text-sm text-secondary-600 font-medium">Total Créditos</p>
-                  <p className="text-2xl font-bold text-secondary-900">{formatCurrency(stats.totalCredits)}</p>
+                  <p className="text-xs text-primary-100">Total Créditos</p>
+                  <p className="text-lg font-bold">{formatCurrency(stats.totalCredits)}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/60 shadow-soft">
-              <div className="flex items-center gap-3">
-                <TrendingDown className="w-6 h-6 text-danger-500" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <TrendingDown className="w-4 h-4 text-danger-300" />
                 <div>
-                  <p className="text-sm text-secondary-600 font-medium">Total Débitos</p>
-                  <p className="text-2xl font-bold text-secondary-900">{formatCurrency(stats.totalDebits)}</p>
+                  <p className="text-xs text-primary-100">Total Débitos</p>
+                  <p className="text-lg font-bold">{formatCurrency(stats.totalDebits)}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/60 shadow-soft">
-              <div className="flex items-center gap-3">
-                <DollarSign className="w-6 h-6 text-primary-500" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-warning-300" />
                 <div>
-                  <p className="text-sm text-secondary-600 font-medium">Transacciones</p>
-                  <p className="text-2xl font-bold text-secondary-900">{stats.totalTransactions}</p>
+                  <p className="text-xs text-primary-100">Transacciones</p>
+                  <p className="text-lg font-bold">{stats.totalTransactions}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/60 shadow-soft">
-              <div className="flex items-center gap-3">
-                <Download className="w-6 h-6 text-secondary-500" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <Download className="w-4 h-4 text-accent-300" />
                 <div>
-                  <p className="text-sm text-secondary-600 font-medium">Exportar</p>
+                  <p className="text-xs text-primary-100">Exportar</p>
                   <Button
-                    variant="warning"
+                    variant="glass"
                     size="sm"
                     className="mt-2 hover:scale-105 transition-all"
                     onClick={handleExportTransactions}

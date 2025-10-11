@@ -25,6 +25,44 @@ const CompanyAnalyticsPage = () => {
   const { analytics, loading, error, refreshAnalytics } = useCompanyAnalytics();
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
 
+  // Función helper para calcular rangos de fechas
+  const getDateRange = (range) => {
+    const today = new Date();
+    const startDate = new Date();
+    const endDate = new Date();
+
+    switch (range) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'last7days':
+        startDate.setDate(today.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'thisMonth':
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setMonth(today.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return { startDate: '', endDate: '' };
+    }
+
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
+
+  // Función para aplicar rangos predefinidos
+  const applyDateRange = (range) => {
+    const dates = getDateRange(range);
+    setDateFilter(dates);
+  };
+
   const exportAnalytics = () => {
     alert('📊 Exportando análisis...');
     setTimeout(() => {
@@ -114,11 +152,13 @@ const CompanyAnalyticsPage = () => {
 
       {/* Date Filter */}
       <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <Calendar className="w-5 h-5 text-gray-500" />
             <span className="font-medium text-gray-900">Período de análisis</span>
           </div>
+
+          {/* Date Inputs */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
@@ -140,6 +180,35 @@ const CompanyAnalyticsPage = () => {
                 className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+          </div>
+
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('today')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Hoy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('last7days')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Últimos 7 días
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('thisMonth')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Este mes
+            </Button>
           </div>
         </div>
       </div>

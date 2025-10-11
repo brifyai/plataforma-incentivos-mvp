@@ -103,7 +103,7 @@ const PaymentsPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-8 text-white shadow-strong animate-fade-in">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
@@ -111,16 +111,16 @@ const PaymentsPage = () => {
         </div>
 
         <div className="relative">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                <DollarSign className="w-8 h-8" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <DollarSign className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-3xl font-display font-bold tracking-tight">
+                <h1 className="text-2xl font-display font-bold tracking-tight">
                   Historial de Pagos
                 </h1>
-                <p className="text-primary-100 text-lg">
+                <p className="text-primary-100 text-sm">
                   Revisa todos tus pagos realizados
                 </p>
               </div>
@@ -136,40 +136,40 @@ const PaymentsPage = () => {
           </div>
 
           {/* Quick stats in header */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-success-300" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-success-300" />
                 <div>
-                  <p className="text-sm text-primary-100">Completados</p>
-                  <p className="text-2xl font-bold">{payments.filter(p => p.status === 'completed').length}</p>
+                  <p className="text-xs text-primary-100">Completados</p>
+                  <p className="text-lg font-bold">{payments.filter(p => p.status === 'completed').length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-warning-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-warning-300" />
                 <div>
-                  <p className="text-sm text-primary-100">Pendientes</p>
-                  <p className="text-2xl font-bold">{payments.filter(p => p.status === 'pending').length}</p>
+                  <p className="text-xs text-primary-100">Pendientes</p>
+                  <p className="text-lg font-bold">{payments.filter(p => p.status === 'pending').length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-info-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-info-300" />
                 <div>
-                  <p className="text-sm text-primary-100">En Validación</p>
-                  <p className="text-2xl font-bold">{payments.filter(p => p.status === 'pending_validation').length}</p>
+                  <p className="text-xs text-primary-100">En Validación</p>
+                  <p className="text-lg font-bold">{payments.filter(p => p.status === 'pending_validation').length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <DollarSign className="w-6 h-6 text-accent-300" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-accent-300" />
                 <div>
-                  <p className="text-sm text-primary-100">Total Pagado</p>
-                  <p className="text-2xl font-bold">{formatCurrency(payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0))}</p>
+                  <p className="text-xs text-primary-100">Total Pagado</p>
+                  <p className="text-lg font-bold">{formatCurrency(payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0))}</p>
                 </div>
               </div>
             </div>

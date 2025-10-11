@@ -66,7 +66,13 @@ const SimulatorPage = () => {
   return (
     <div className="space-y-6">
         {/* Calculador de comisiones */}
-        <CommissionCalculator />
+        {user ? (
+          <CommissionCalculator />
+        ) : (
+          <div className="text-center p-8">
+            <p>Cargando...</p>
+          </div>
+        )}
 
         {/* Simulaciones guardadas */}
         {!loading && savedSimulations.length > 0 && (

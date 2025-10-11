@@ -27,20 +27,30 @@ const HelpPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center">
-        <div className="p-6 bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl inline-block mb-6">
-          <HelpCircle className="w-16 h-16 text-blue-600" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
         </div>
-        <h1 className="text-4xl font-display font-bold text-secondary-900 mb-4">
-          Centro de Ayuda
-        </h1>
-        <h2 className="text-2xl font-semibold text-secondary-700 mb-2">
-          Sistema de Comisiones por Negociación
-        </h2>
-        <p className="text-lg text-secondary-600 max-w-3xl mx-auto">
-          Descubre cómo ganar dinero extra negociando tus deudas morosas.
-          Resolvemos todas tus dudas sobre nuestro revolucionario sistema.
-        </p>
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <HelpCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Centro de Ayuda
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Sistema de Comisiones por Negociación
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions */}

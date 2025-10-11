@@ -85,19 +85,36 @@ const NotificationsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-secondary-900">Notificaciones</h1>
-          <p className="text-secondary-600 mt-1">
-            Mantente al día con tus actividades
-          </p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={markAllAsRead}>
-            Marcar todas como leídas
-          </Button>
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Bell className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Notificaciones
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Mantente al día con tus actividades
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="glass" onClick={markAllAsRead}>
+                Marcar todas como leídas
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 

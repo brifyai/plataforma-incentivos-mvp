@@ -36,6 +36,44 @@ const CompanyNotificationsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
 
+  // Función helper para calcular rangos de fechas
+  const getDateRange = (range) => {
+    const today = new Date();
+    const startDate = new Date();
+    const endDate = new Date();
+
+    switch (range) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'last7days':
+        startDate.setDate(today.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'thisMonth':
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setMonth(today.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return { startDate: '', endDate: '' };
+    }
+
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
+
+  // Función para aplicar rangos predefinidos
+  const applyDateRange = (range) => {
+    const dates = getDateRange(range);
+    setDateFilter(dates);
+  };
+
   const [newNotification, setNewNotification] = useState({
     title: '',
     message: '',
@@ -198,38 +236,41 @@ const CompanyNotificationsPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-6 text-white shadow-strong">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <div className="flex items-center gap-4 md:gap-5">
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-4 text-white shadow-strong">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+          <div className="flex items-center gap-3 md:gap-4">
             <div>
-              <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight">
+              <h1 className="text-sm md:text-lg font-display font-bold tracking-tight">
                 Centro de Notificaciones
               </h1>
-              <p className="text-blue-100 text-sm md:text-base">
+              <p className="text-blue-100 text-xs md:text-sm">
                 Gestiona alertas y comunicaciones con tus deudores
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button
               variant="primary"
+              size="sm"
               onClick={() => {}}
-              leftIcon={<Bell className="w-4 h-4" />}
+              leftIcon={<Bell className="w-3 h-3" />}
             >
               {notifications.length} Notificaciones
             </Button>
             <Button
               variant="primary"
+              size="sm"
               onClick={() => setShowSettingsModal(true)}
-              leftIcon={<Settings className="w-4 h-4" />}
+              leftIcon={<Settings className="w-3 h-3" />}
             >
               Configuración
             </Button>
             <Button
               variant="primary"
+              size="sm"
               onClick={() => setShowCreateModal(true)}
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus className="w-3 h-3" />}
             >
               Nueva Notificación
             </Button>
@@ -237,46 +278,46 @@ const CompanyNotificationsPage = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-2">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 border border-white/20">
             <div className="flex items-center gap-2">
-              <Send className="w-4 h-4 text-green-300" />
+              <Send className="w-3 h-3 text-green-300" />
               <div>
                 <p className="text-xs text-green-100">Enviadas</p>
-                <p className="text-sm md:text-lg font-bold">
+                <p className="text-sm font-bold">
                   {notifications.filter(n => n.status === 'sent').length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 border border-white/20">
             <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-blue-300" />
+              <CheckCircle className="w-3 h-3 text-blue-300" />
               <div>
                 <p className="text-xs text-blue-100">Leídas</p>
-                <p className="text-sm md:text-lg font-bold">
+                <p className="text-sm font-bold">
                   {notifications.reduce((sum, n) => sum + n.readCount, 0)}
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 border border-white/20">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-yellow-300" />
+              <Clock className="w-3 h-3 text-yellow-300" />
               <div>
                 <p className="text-xs text-yellow-100">Pendientes</p>
-                <p className="text-sm md:text-lg font-bold">
+                <p className="text-sm font-bold">
                   {notifications.filter(n => n.status === 'draft').length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-3 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg md:rounded-xl p-2 border border-white/20">
             <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-blue-300" />
+              <Mail className="w-3 h-3 text-blue-300" />
               <div>
                 <p className="text-xs text-blue-100">Tasa de Apertura</p>
-                <p className="text-sm md:text-lg font-bold">
+                <p className="text-sm font-bold">
                   {notifications.length > 0
                     ? Math.round((notifications.reduce((sum, n) => sum + n.readCount, 0) /
                         notifications.reduce((sum, n) => sum + n.sentCount, 0)) * 100)
@@ -290,11 +331,13 @@ const CompanyNotificationsPage = () => {
 
       {/* Date Filter */}
       <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <Calendar className="w-5 h-5 text-gray-500" />
             <span className="font-medium text-gray-900">Período de análisis</span>
           </div>
+
+          {/* Date Inputs */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
@@ -316,6 +359,35 @@ const CompanyNotificationsPage = () => {
                 className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+          </div>
+
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('today')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Hoy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('last7days')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Últimos 7 días
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('thisMonth')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Este mes
+            </Button>
           </div>
         </div>
       </div>

@@ -31,7 +31,6 @@ import {
 
 const MessagesPage = () => {
   const { conversations, loading } = useMessages();
-  const [showConversationModal, setShowConversationModal] = useState(false);
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showPaymentProofModal, setShowPaymentProofModal] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -54,7 +53,6 @@ const MessagesPage = () => {
   const handleViewConversation = (conversation) => {
     setSelectedConversation(conversation);
     setAttachedFiles([]); // Limpiar archivos previos
-    setShowConversationModal(true);
   };
 
   const handleNewMessage = () => {
@@ -333,32 +331,38 @@ const MessagesPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-primary-100/30 to-accent-50/20">
         {/* Header */}
-        <div className="bg-white/90 backdrop-blur-xl border-b border-primary-200/60 sticky top-0 z-10 shadow-soft">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg">
-                  <MessageSquare className="w-6 h-6 text-white" />
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+          </div>
+
+          <div className="relative">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                  <MessageSquare className="w-5 h-5" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-display font-bold text-secondary-900">
+                  <h1 className="text-2xl font-display font-bold tracking-tight">
                     Centro de Mensajes
                   </h1>
-                  <p className="text-secondary-600 text-sm">
+                  <p className="text-primary-100 text-sm">
                     Comunícate con las empresas acreedoras
                   </p>
                 </div>
               </div>
-  
+
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-2 bg-success-50 rounded-xl border border-success-200/50">
-                  <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-success-700">En línea</span>
+                <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-xl border border-white/20">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-white">En línea</span>
                 </div>
                 <Button
-                  variant="gradient"
+                  variant="glass"
                   size="sm"
-                  className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold border-2 border-primary-400 hover:border-primary-500 hover:scale-105 transition-all shadow-soft hover:shadow-glow"
+                  className="shadow-glow hover:scale-105 transition-all"
                   onClick={handleNewMessage}
                   leftIcon={<Plus className="w-4 h-4" />}
                 >
@@ -636,154 +640,6 @@ const MessagesPage = () => {
           </div>
         </div>
 
-      {/* Modal Ver Conversación */}
-      <Modal
-        isOpen={showConversationModal}
-        onClose={() => setShowConversationModal(false)}
-        title={`Conversación con ${selectedConversation?.company_name}`}
-        size="lg"
-      >
-        {selectedConversation && (
-          <div className="space-y-6">
-            {/* Header del chat */}
-            <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary-50 to-primary-100/50 rounded-2xl border border-primary-200/50">
-              <div className="p-3 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl">
-                <Building className="w-6 h-6 text-primary-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-display font-bold text-secondary-900">{selectedConversation.company_name}</h3>
-                <p className="text-sm text-secondary-600">Conversación activa</p>
-              </div>
-            </div>
-
-            {/* Historial de Mensajes */}
-            <div className="bg-gradient-to-r from-secondary-50 to-secondary-100/50 rounded-2xl p-6 border border-secondary-200/50">
-              <h4 className="font-bold text-secondary-900 mb-4 font-display text-lg">Historial de Mensajes</h4>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {selectedConversation.messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-5 py-3 rounded-2xl shadow-soft ${
-                        message.sender === 'user'
-                          ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
-                          : 'bg-white border border-secondary-200 text-secondary-900'
-                      }`}
-                    >
-                      <p className="text-sm leading-relaxed">{message.content}</p>
-                      <p className={`text-xs mt-2 font-medium ${
-                        message.sender === 'user' ? 'text-primary-100' : 'text-secondary-500'
-                      }`}>
-                        {new Date(message.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Responder Mensaje */}
-            <div className="bg-gradient-to-r from-info-50 to-info-100/50 border-2 border-info-200 rounded-2xl p-6">
-              <h4 className="font-bold text-info-900 mb-4 font-display text-lg">Responder Mensaje</h4>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Escribe tu mensaje aquí..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="text-lg"
-                />
-
-                {/* Adjuntar archivos */}
-                <div className="flex items-center gap-3">
-                  <input
-                    type="file"
-                    ref={conversationFileInputRef}
-                    onChange={(e) => handleFileSelect(e, true)}
-                    className="hidden"
-                    accept="image/*,.pdf,.doc,.docx,.txt,.csv"
-                    multiple={false}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="hover:scale-105 transition-all"
-                    onClick={() => conversationFileInputRef.current?.click()}
-                    leftIcon={<Paperclip className="w-4 h-4" />}
-                  >
-                    Adjuntar Archivo
-                  </Button>
-                  {attachedFiles.length > 0 && (
-                    <span className="text-sm text-secondary-600 font-medium">
-                      {attachedFiles.length} archivo adjunto
-                    </span>
-                  )}
-                </div>
-
-                {/* Vista previa de archivos adjuntos */}
-                {attachedFiles.length > 0 && (
-                  <div className="space-y-3">
-                    {attachedFiles.map((file) => (
-                      <div key={file.id} className="flex items-center justify-between bg-white p-4 rounded-xl border border-secondary-200 shadow-soft">
-                        <div className="flex items-center gap-3">
-                          {getFileIcon(file.type)}
-                          <div>
-                            <p className="text-sm font-bold text-secondary-900">{file.name}</p>
-                            <p className="text-xs text-secondary-500">{formatFileSize(file.size)}</p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(file.id)}
-                          className="text-danger-600 hover:text-danger-800 hover:scale-110 transition-all"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowConversationModal(false);
-                      setAttachedFiles([]);
-                      // Limpiar URLs de archivos
-                      attachedFiles.forEach(file => URL.revokeObjectURL(file.url));
-                    }}
-                    className="flex-1 hover:scale-105 transition-all"
-                  >
-                    Cerrar Conversación
-                  </Button>
-                  <Button
-                    variant="gradient"
-                    onClick={() => {
-                      if (newMessage.trim() || attachedFiles.length > 0) {
-                        const messageData = {
-                          message: newMessage,
-                          files: attachedFiles.length > 0 ? attachedFiles : null
-                        };
-                        Swal.fire('¡Mensaje enviado!', 'Tu mensaje ha sido enviado exitosamente', 'success');
-                        setNewMessage('');
-                        setAttachedFiles([]);
-                      }
-                    }}
-                    disabled={!newMessage.trim() && attachedFiles.length === 0}
-                    className="flex-1 shadow-soft hover:shadow-glow"
-                    leftIcon={<Send className="w-4 h-4" />}
-                  >
-                    Enviar Mensaje
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
 
       {/* Modal Nuevo Mensaje */}
       <Modal

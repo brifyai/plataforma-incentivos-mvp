@@ -53,6 +53,44 @@ const CompanyMessagesPage = () => {
   const [loadingCorporateClients, setLoadingCorporateClients] = useState(false);
   const [campaignFilter, setCampaignFilter] = useState('');
 
+  // Función helper para calcular rangos de fechas
+  const getDateRange = (range) => {
+    const today = new Date();
+    const startDate = new Date();
+    const endDate = new Date();
+
+    switch (range) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'last7days':
+        startDate.setDate(today.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'thisMonth':
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setMonth(today.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return { startDate: '', endDate: '' };
+    }
+
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
+
+  // Función para aplicar rangos predefinidos
+  const applyDateRange = (range) => {
+    const dates = getDateRange(range);
+    setDateFilter(dates);
+  };
+
   // Debtors and filters state
   const [debtors, setDebtors] = useState([]);
   const [loadingDebtors, setLoadingDebtors] = useState(false);
@@ -649,34 +687,36 @@ const CompanyMessagesPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-6 text-white shadow-strong">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4 md:gap-5">
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-4 text-white shadow-strong">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3 md:gap-4">
             <div>
-              <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight">
+              <h1 className="text-sm md:text-lg font-display font-bold tracking-tight">
                 Centro de Mensajes y Campañas
               </h1>
-              <p className="text-blue-100 text-sm md:text-base">
+              <p className="text-blue-100 text-xs md:text-sm">
                 Gestiona comunicaciones masivas y campañas con IA
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Badge variant="info" size="md">
+          <div className="flex items-center gap-2">
+            <Badge variant="info" size="sm">
               {messages.length} Mensajes
             </Badge>
             <Button
               variant="primary"
+              size="sm"
               onClick={() => navigate('/empresa/mensajes/nuevo')}
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus className="w-3 h-3" />}
             >
               Nuevo Mensaje
             </Button>
             <Button
               variant="primary"
+              size="sm"
               onClick={loadMessages}
-              leftIcon={<RefreshCw className="w-4 h-4" />}
+              leftIcon={<RefreshCw className="w-3 h-3" />}
             >
               Actualizar
             </Button>
@@ -687,11 +727,13 @@ const CompanyMessagesPage = () => {
 
       {/* Date Filter */}
       <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <Calendar className="w-5 h-5 text-gray-500" />
             <span className="font-medium text-gray-900">Período de análisis</span>
           </div>
+
+          {/* Date Inputs */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
@@ -714,62 +756,91 @@ const CompanyMessagesPage = () => {
               />
             </div>
           </div>
+
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('today')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Hoy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('last7days')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Últimos 7 días
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('thisMonth')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Este mes
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Content */}
       <div>
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-primary-100 rounded-lg">
-                  <Send className="w-4 h-4 text-primary-600" />
+            <div className="p-2">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-1.5 bg-primary-100 rounded-lg">
+                  <Send className="w-3 h-3 text-primary-600" />
                 </div>
-                <Badge variant="primary">2</Badge>
+                <Badge variant="primary" className="text-xs">2</Badge>
               </div>
               <p className="text-xs text-secondary-600 mb-1">Campañas Enviadas</p>
-              <p className="text-sm md:text-lg font-bold text-secondary-900">2</p>
+              <p className="text-sm font-bold text-secondary-900">2</p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-success-100 rounded-lg">
-                  <CheckCircle className="w-4 h-4 text-success-600" />
+            <div className="p-2">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-1.5 bg-success-100 rounded-lg">
+                  <CheckCircle className="w-3 h-3 text-success-600" />
                 </div>
-                <Badge variant="success">57</Badge>
+                <Badge variant="success" className="text-xs">57</Badge>
               </div>
               <p className="text-xs text-secondary-600 mb-1">Mensajes Vistos</p>
-              <p className="text-sm md:text-lg font-bold text-secondary-900">57</p>
+              <p className="text-sm font-bold text-secondary-900">57</p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-warning-100 rounded-lg">
-                  <MessageSquare className="w-4 h-4 text-warning-600" />
+            <div className="p-2">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-1.5 bg-warning-100 rounded-lg">
+                  <MessageSquare className="w-3 h-3 text-warning-600" />
                 </div>
-                <Badge variant="warning">20</Badge>
+                <Badge variant="warning" className="text-xs">20</Badge>
               </div>
               <p className="text-xs text-secondary-600 mb-1">Respuestas Recibidas</p>
-              <p className="text-sm md:text-lg font-bold text-secondary-900">20</p>
+              <p className="text-sm font-bold text-secondary-900">20</p>
             </div>
           </Card>
 
           <Card padding={false} className="hover:shadow-medium transition-shadow">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-2 bg-info-100 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-info-600" />
+            <div className="p-2">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-1.5 bg-info-100 rounded-lg">
+                  <AlertCircle className="w-3 h-3 text-info-600" />
                 </div>
-                <Badge variant="info">16</Badge>
+                <Badge variant="info" className="text-xs">16</Badge>
               </div>
               <p className="text-xs text-secondary-600 mb-1">Intervenciones IA</p>
-              <p className="text-sm md:text-lg font-bold text-secondary-900">16</p>
+              <p className="text-sm font-bold text-secondary-900">16</p>
             </div>
           </Card>
         </div>
