@@ -500,72 +500,72 @@ const AdminDashboard = () => {
       {/* Key Metrics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-3">
-            <div className="flex items-center justify-center mb-3">
-              <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl group-hover:shadow-glow-blue transition-all duration-300">
-                <Users className="w-5 h-5 text-blue-600" />
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
+                <Users className="w-4 h-4 text-blue-600" />
               </div>
             </div>
-            <h3 className="text-xl font-display font-bold text-secondary-900 mb-1">
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
               {filteredMetrics.overview.totalUsers.toLocaleString()}
             </h3>
-            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Usuarios Registrados</p>
-            <div className="flex items-center justify-center mt-1">
-              <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Usuarios</p>
+            <div className="flex items-center justify-center mt-0.5">
+              <TrendingUp className="w-2.5 h-2.5 text-green-500 mr-0.5" />
               <span className="text-xs text-green-600 font-medium">+{filteredMetrics.recentActivity.newUsers}</span>
             </div>
           </div>
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-3">
-            <div className="flex items-center justify-center mb-3">
-              <div className="p-2 bg-gradient-to-br from-green-100 to-green-200 rounded-xl group-hover:shadow-glow-green transition-all duration-300">
-                <Building className="w-5 h-5 text-green-600" />
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+                <Building className="w-4 h-4 text-green-600" />
               </div>
             </div>
-            <h3 className="text-xl font-display font-bold text-secondary-900 mb-1">
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
               {filteredMetrics.overview.totalCompanies}
             </h3>
-            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Empresas Activas</p>
-            <div className="flex items-center justify-center mt-1">
-              <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Empresas</p>
+            <div className="flex items-center justify-center mt-0.5">
+              <TrendingUp className="w-2.5 h-2.5 text-green-500 mr-0.5" />
               <span className="text-xs text-green-600 font-medium">+{filteredMetrics.recentActivity.newCompanies}</span>
             </div>
           </div>
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-3">
-            <div className="flex items-center justify-center mb-3">
-              <div className="p-2 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl group-hover:shadow-glow-warning transition-all duration-300">
-                <FileText className="w-5 h-5 text-yellow-600" />
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg group-hover:shadow-glow-warning transition-all duration-300">
+                <FileText className="w-4 h-4 text-yellow-600" />
               </div>
             </div>
-            <h3 className="text-xl font-display font-bold text-secondary-900 mb-1">
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
               {filteredMetrics.overview.totalDebts.toLocaleString()}
             </h3>
-            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Deudas Gestionadas</p>
-            <div className="flex items-center justify-center mt-1">
-              <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Deudas</p>
+            <div className="flex items-center justify-center mt-0.5">
+              <TrendingUp className="w-2.5 h-2.5 text-green-500 mr-0.5" />
               <span className="text-xs text-green-600 font-medium">+{filteredMetrics.recentActivity.newDebts}</span>
             </div>
           </div>
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-3">
-            <div className="flex items-center justify-center mb-3">
-              <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl group-hover:shadow-glow-purple transition-all duration-300">
-                <DollarSign className="w-5 h-5 text-purple-600" />
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
+                <DollarSign className="w-4 h-4 text-purple-600" />
               </div>
             </div>
-            <h3 className="text-xl font-display font-bold text-secondary-900 mb-1">
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
               {formatCurrency(filteredMetrics.overview.totalTransferred)}
             </h3>
-            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Total Transferido</p>
-            <div className="flex items-center justify-center mt-1">
-              <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Transferido</p>
+            <div className="flex items-center justify-center mt-0.5">
+              <TrendingUp className="w-2.5 h-2.5 text-green-500 mr-0.5" />
               <span className="text-xs text-green-600 font-medium">{filteredMetrics.goals.goalProgress}%</span>
             </div>
           </div>
