@@ -559,124 +559,26 @@ const PaymentsDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <CreditCard className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
-                Dashboard de Pagos
-              </h1>
-              <p className="text-blue-100 text-lg">
-                Gestión completa del sistema de pagos y transferencias
-              </p>
-            </div>
-          </div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+        </div>
 
-          <div className="flex items-center justify-between w-full">
-            {/* Filters Section - 3 lines */}
-            <div className="flex flex-col gap-3 ml-16">
-              {/* First line: Quick filter buttons */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-blue-300" />
-                  <span className="text-sm font-medium text-blue-100">Filtrar por período:</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => applyQuickFilter('today')}
-                    className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-                      quickFilter === 'today'
-                        ? 'bg-blue-800 border-blue-700'
-                        : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
-                    }`}
-                  >
-                    Hoy
-                  </button>
-                  <button
-                    onClick={() => applyQuickFilter('week')}
-                    className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-                      quickFilter === 'week'
-                        ? 'bg-blue-800 border-blue-700'
-                        : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
-                    }`}
-                  >
-                    Semana
-                  </button>
-                  <button
-                    onClick={() => applyQuickFilter('month')}
-                    className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-                      quickFilter === 'month'
-                        ? 'bg-blue-800 border-blue-700'
-                        : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
-                    }`}
-                  >
-                    Mes
-                  </button>
-                  {(dateFilter.startDate || dateFilter.endDate) && (
-                    <button
-                      onClick={clearFilters}
-                      className="px-3 py-2 text-xs font-semibold text-white bg-blue-600 border border-blue-500 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Limpiar
-                    </button>
-                  )}
-                </div>
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <CreditCard className="w-5 h-5" />
               </div>
-
-              {/* Second line: Corporate Client Filter */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Building className="w-5 h-5 text-blue-300" />
-                  <span className="text-sm font-medium text-blue-100">Filtrar por cliente:</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={filterCorporateClient}
-                    onChange={(e) => setFilterCorporateClient(e.target.value)}
-                    className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white focus:ring-2 focus:ring-white/50 focus:border-white text-sm min-w-[200px]"
-                  >
-                    <option value="all" className="text-gray-900">Todos los Clientes</option>
-                    <option value="none" className="text-gray-900">Sin Cliente Corporativo</option>
-                    {corporateClients.map(client => (
-                      <option key={client.id} value={client.id} className="text-gray-900">
-                        {client.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Third line: Custom date range */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <label htmlFor="startDate" className="text-sm text-blue-200">Desde:</label>
-                  <input
-                    id="startDate"
-                    type="date"
-                    value={dateFilter.startDate}
-                    onChange={(e) => {
-                      setDateFilter(prev => ({ ...prev, startDate: e.target.value }));
-                      setQuickFilter(''); // Clear quick filter when manual date is selected
-                    }}
-                    className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-blue-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="endDate" className="text-sm text-blue-200">Hasta:</label>
-                  <input
-                    id="endDate"
-                    type="date"
-                    value={dateFilter.endDate}
-                    onChange={(e) => {
-                      setDateFilter(prev => ({ ...prev, endDate: e.target.value }));
-                      setQuickFilter(''); // Clear quick filter when manual date is selected
-                    }}
-                    className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-blue-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
-                  />
-                </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Dashboard de Pagos
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Gestión completa del sistema de pagos y transferencias
+                </p>
               </div>
             </div>
 
@@ -692,63 +594,93 @@ const PaymentsDashboard = () => {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mt-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <CreditCard className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Total Pagos</p>
-                <p className="text-2xl font-bold whitespace-nowrap">{paymentStats.totalPayments.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Monto Total</p>
-                <p className="text-2xl font-bold whitespace-nowrap">{formatCurrency(paymentStats.totalAmount)}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Clock className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Pendientes</p>
-                <p className="text-2xl font-bold whitespace-nowrap">{paymentStats.pendingPayments}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Completados</p>
-                <p className="text-2xl font-bold whitespace-nowrap">{paymentStats.completedPayments.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <XCircle className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Fallidos</p>
-                <p className="text-2xl font-bold whitespace-nowrap">{paymentStats.failedPayments}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Promedio</p>
-                <p className="text-2xl font-bold whitespace-nowrap">{formatCurrency(paymentStats.averagePayment)}</p>
-              </div>
-            </div>
-          </div>
         </div>
+
+        {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mt-4">
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
+                <CreditCard className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {paymentStats.totalPayments.toLocaleString()}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Total</p>
+          </div>
+        </Card>
+
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+                <DollarSign className="w-4 h-4 text-green-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {formatCurrency(paymentStats.totalAmount)}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Monto Total</p>
+          </div>
+        </Card>
+
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg group-hover:shadow-glow-warning transition-all duration-300">
+                <Clock className="w-4 h-4 text-yellow-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {paymentStats.pendingPayments}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Pendientes</p>
+          </div>
+        </Card>
+
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {paymentStats.completedPayments.toLocaleString()}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Completados</p>
+          </div>
+        </Card>
+
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-red-100 to-red-200 rounded-lg group-hover:shadow-glow-danger transition-all duration-300">
+                <XCircle className="w-4 h-4 text-red-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {paymentStats.failedPayments}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Fallidos</p>
+          </div>
+        </Card>
+
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
+                <TrendingUp className="w-4 h-4 text-purple-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {formatCurrency(paymentStats.averagePayment)}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Promedio</p>
+          </div>
+        </Card>
       </div>
 
 
