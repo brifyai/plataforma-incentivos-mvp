@@ -368,99 +368,107 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <Shield className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
-                Dashboard Administrativo
-              </h1>
-              <p className="text-blue-100 text-lg">
-                Control total del sistema - Vista general de actividades y métricas
-              </p>
-            </div>
-          </div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+        </div>
 
-          {/* Date Filter */}
-          <div className="flex flex-col gap-4">
-            {/* Quick Filter Buttons */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-300" />
-                <span className="text-sm font-medium text-blue-100">Filtrar por período:</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => applyQuickFilter('today')}
-                  className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-                    quickFilter === 'today'
-                      ? 'bg-blue-800 border-blue-700'
-                      : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
-                  }`}
-                >
-                  Hoy
-                </button>
-                <button
-                  onClick={() => applyQuickFilter('week')}
-                  className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-                    quickFilter === 'week'
-                      ? 'bg-blue-800 border-blue-700'
-                      : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
-                  }`}
-                >
-                  Semana
-                </button>
-                <button
-                  onClick={() => applyQuickFilter('month')}
-                  className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-                    quickFilter === 'month'
-                      ? 'bg-blue-800 border-blue-700'
-                      : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
-                  }`}
-                >
-                  Mes
-                </button>
-                {(dateFilter.startDate || dateFilter.endDate) && (
-                  <button
-                    onClick={clearFilters}
-                    className="px-3 py-2 text-xs font-semibold text-white bg-blue-600 border border-blue-500 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Limpiar
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Custom Date Range */}
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <label htmlFor="startDate" className="text-sm text-blue-200">Desde:</label>
-                <input
-                  id="startDate"
-                  type="date"
-                  value={dateFilter.startDate}
-                  onChange={(e) => {
-                    setDateFilter(prev => ({ ...prev, startDate: e.target.value }));
-                    setQuickFilter(''); // Clear quick filter when manual date is selected
-                  }}
-                  className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-blue-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
-                />
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Shield className="w-5 h-5" />
               </div>
-              <div className="flex items-center gap-2">
-                <label htmlFor="endDate" className="text-sm text-blue-200">Hasta:</label>
-                <input
-                  id="endDate"
-                  type="date"
-                  value={dateFilter.endDate}
-                  onChange={(e) => {
-                    setDateFilter(prev => ({ ...prev, endDate: e.target.value }));
-                    setQuickFilter(''); // Clear quick filter when manual date is selected
-                  }}
-                  className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-blue-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
-                />
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Dashboard Administrativo
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Control total del sistema - Vista general de actividades y métricas
+                </p>
+              </div>
+            </div>
+
+            {/* Date Filter */}
+            <div className="flex flex-col gap-4">
+              {/* Quick Filter Buttons */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary-300" />
+                  <span className="text-sm font-medium text-primary-100">Filtrar por período:</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => applyQuickFilter('today')}
+                    className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
+                      quickFilter === 'today'
+                        ? 'bg-primary-800 border-primary-700'
+                        : 'bg-primary-600 border-primary-500 hover:bg-primary-700'
+                    }`}
+                  >
+                    Hoy
+                  </button>
+                  <button
+                    onClick={() => applyQuickFilter('week')}
+                    className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
+                      quickFilter === 'week'
+                        ? 'bg-primary-800 border-primary-700'
+                        : 'bg-primary-600 border-primary-500 hover:bg-primary-700'
+                    }`}
+                  >
+                    Semana
+                  </button>
+                  <button
+                    onClick={() => applyQuickFilter('month')}
+                    className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
+                      quickFilter === 'month'
+                        ? 'bg-primary-800 border-primary-700'
+                        : 'bg-primary-600 border-primary-500 hover:bg-primary-700'
+                    }`}
+                  >
+                    Mes
+                  </button>
+                  {(dateFilter.startDate || dateFilter.endDate) && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-3 py-2 text-xs font-semibold text-white bg-primary-600 border border-primary-500 rounded-lg hover:bg-primary-700 transition-colors"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Custom Date Range */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="startDate" className="text-sm text-primary-200">Desde:</label>
+                  <input
+                    id="startDate"
+                    type="date"
+                    value={dateFilter.startDate}
+                    onChange={(e) => {
+                      setDateFilter(prev => ({ ...prev, startDate: e.target.value }));
+                      setQuickFilter(''); // Clear quick filter when manual date is selected
+                    }}
+                    className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-primary-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="endDate" className="text-sm text-primary-200">Hasta:</label>
+                  <input
+                    id="endDate"
+                    type="date"
+                    value={dateFilter.endDate}
+                    onChange={(e) => {
+                      setDateFilter(prev => ({ ...prev, endDate: e.target.value }));
+                      setQuickFilter(''); // Clear quick filter when manual date is selected
+                    }}
+                    className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-primary-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -468,67 +476,75 @@ const AdminDashboard = () => {
       </div>
 
       {/* Key Metrics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="text-center">
-          <div className="p-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mx-auto mb-2">
-              <Users className="w-5 h-5 text-blue-600" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl group-hover:shadow-glow-blue transition-all duration-300">
+                <Users className="w-8 h-8 text-blue-600" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-secondary-900">
+            <h3 className="text-3xl font-display font-bold text-secondary-900 mb-2">
               {filteredMetrics.overview.totalUsers.toLocaleString()}
             </h3>
-            <p className="text-secondary-600 text-sm">Usuarios Registrados</p>
-            <div className="flex items-center justify-center mt-1">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-xs text-green-600">+{filteredMetrics.recentActivity.newUsers} esta semana</span>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-sm">Usuarios Registrados</p>
+            <div className="flex items-center justify-center mt-4">
+              <TrendingUp className="w-4 h-4 text-green-500 mr-2" />
+              <span className="text-xs text-green-600 font-medium">+{filteredMetrics.recentActivity.newUsers} esta semana</span>
             </div>
           </div>
         </Card>
 
-        <Card className="text-center">
-          <div className="p-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg mx-auto mb-2">
-              <Building className="w-5 h-5 text-green-600" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="p-4 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl group-hover:shadow-glow-green transition-all duration-300">
+                <Building className="w-8 h-8 text-green-600" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-secondary-900">
+            <h3 className="text-3xl font-display font-bold text-secondary-900 mb-2">
               {filteredMetrics.overview.totalCompanies}
             </h3>
-            <p className="text-secondary-600 text-sm">Empresas Activas</p>
-            <div className="flex items-center justify-center mt-1">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-xs text-green-600">+{filteredMetrics.recentActivity.newCompanies} este mes</span>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-sm">Empresas Activas</p>
+            <div className="flex items-center justify-center mt-4">
+              <TrendingUp className="w-4 h-4 text-green-500 mr-2" />
+              <span className="text-xs text-green-600 font-medium">+{filteredMetrics.recentActivity.newCompanies} este mes</span>
             </div>
           </div>
         </Card>
 
-        <Card className="text-center">
-          <div className="p-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-yellow-100 rounded-lg mx-auto mb-2">
-              <FileText className="w-5 h-5 text-yellow-600" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="p-4 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-2xl group-hover:shadow-glow-warning transition-all duration-300">
+                <FileText className="w-8 h-8 text-yellow-600" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-secondary-900">
+            <h3 className="text-3xl font-display font-bold text-secondary-900 mb-2">
               {filteredMetrics.overview.totalDebts.toLocaleString()}
             </h3>
-            <p className="text-secondary-600 text-sm">Deudas Gestionadas</p>
-            <div className="flex items-center justify-center mt-1">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-xs text-green-600">+{filteredMetrics.recentActivity.newDebts} esta semana</span>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-sm">Deudas Gestionadas</p>
+            <div className="flex items-center justify-center mt-4">
+              <TrendingUp className="w-4 h-4 text-green-500 mr-2" />
+              <span className="text-xs text-green-600 font-medium">+{filteredMetrics.recentActivity.newDebts} esta semana</span>
             </div>
           </div>
         </Card>
 
-        <Card className="text-center">
-          <div className="p-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-lg mx-auto mb-2">
-              <DollarSign className="w-5 h-5 text-purple-600" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-6">
+            <div className="flex items-center justify-center mb-6">
+              <div className="p-4 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl group-hover:shadow-glow-purple transition-all duration-300">
+                <DollarSign className="w-8 h-8 text-purple-600" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-secondary-900">
+            <h3 className="text-3xl font-display font-bold text-secondary-900 mb-2">
               {formatCurrency(filteredMetrics.overview.totalTransferred)}
             </h3>
-            <p className="text-secondary-600 text-sm">Total Transferido</p>
-            <div className="flex items-center justify-center mt-1">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-xs text-green-600">{filteredMetrics.goals.goalProgress}% del objetivo</span>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-sm">Total Transferido</p>
+            <div className="flex items-center justify-center mt-4">
+              <TrendingUp className="w-4 h-4 text-green-500 mr-2" />
+              <span className="text-xs text-green-600 font-medium">{filteredMetrics.goals.goalProgress}% del objetivo</span>
             </div>
           </div>
         </Card>
