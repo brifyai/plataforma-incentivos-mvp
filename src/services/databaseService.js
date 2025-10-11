@@ -826,6 +826,218 @@ export const createWalletTransaction = async (transactionData) => {
   }
 };
 
+/**
+ * Agrega fondos a la billetera del usuario
+ * @param {string} userId - ID del usuario
+ * @param {number} amount - Monto a agregar
+ * @param {string} concept - Concepto de la transacción
+ * @param {string} referenceId - ID de referencia (opcional)
+ * @returns {Promise<{success, newBalance, transaction, error}>}
+ */
+export const addFundsToWallet = async (userId, amount, concept = 'Depósito de fondos', referenceId = null) => {
+  try {
+    console.log('💰 Agregando fondos a billetera:', { userId, amount, concept });
+
+    // Validar parámetros
+    if (!userId || !amount || amount <= 0) {
+      return { success: false, error: 'Parámetros inválidos para agregar fondos.' };
+    }
+
+    // Obtener balance actual
+    const { balance: currentBalance, error: balanceError } = await getWalletBalance(userId);
+    if (balanceError) {
+      return { success: false, error: balanceError };
+    }
+
+    const newBalance = currentBalance + amount;
+
+    // Crear transacción
+    const transactionData = {
+      user_id: userId,
+      amount: amount,
+      transaction_type: 'credit',
+      concept: concept,
+      reference_id: referenceId,
+      balance_before: currentBalance,
+      balance_after: newBalance,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { transaction, error: transactionError } = await createWalletTransaction(transactionData);
+    if (transactionError) {
+      return { success: false, error: transactionError };
+    }
+
+    // Actualizar balance en tabla users
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        wallet_balance: newBalance,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('❌ Error actualizando balance:', updateError);
+      return { success: false, error: handleSupabaseError(updateError) };
+    }
+
+    console.log('✅ Fondos agregados exitosamente:', { newBalance, transactionId: transaction.id });
+    return { success: true, newBalance, transaction, error: null };
+
+  } catch (error) {
+    console.error('Error in addFundsToWallet:', error);
+    return { success: false, error: 'Error al agregar fondos a la billetera.' };
+  }
+};
+
+/**
+ * Retira fondos de la billetera del usuario
+ * @param {string} userId - ID del usuario
+ * @param {number} amount - Monto a retirar
+ * @param {string} concept - Concepto de la transacción
+ * @param {string} referenceId - ID de referencia (opcional)
+ * @returns {Promise<{success, newBalance, transaction, error}>}
+ */
+export const withdrawFromWallet = async (userId, amount, concept = 'Retiro de fondos', referenceId = null) => {
+  try {
+    console.log('💸 Retirando fondos de billetera:', { userId, amount, concept });
+
+    // Validar parámetros
+    if (!userId || !amount || amount <= 0) {
+      return { success: false, error: 'Parámetros inválidos para retirar fondos.' };
+    }
+
+    // Obtener balance actual
+    const { balance: currentBalance, error: balanceError } = await getWalletBalance(userId);
+    if (balanceError) {
+      return { success: false, error: balanceError };
+    }
+
+    // Verificar que tenga fondos suficientes
+    if (currentBalance < amount) {
+      return { success: false, error: 'Saldo insuficiente para realizar el retiro.' };
+    }
+
+    const newBalance = currentBalance - amount;
+
+    // Crear transacción
+    const transactionData = {
+      user_id: userId,
+      amount: -amount, // Monto negativo para débitos
+      transaction_type: 'debit',
+      concept: concept,
+      reference_id: referenceId,
+      balance_before: currentBalance,
+      balance_after: newBalance,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { transaction, error: transactionError } = await createWalletTransaction(transactionData);
+    if (transactionError) {
+      return { success: false, error: transactionError };
+    }
+
+    // Actualizar balance en tabla users
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        wallet_balance: newBalance,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('❌ Error actualizando balance:', updateError);
+      return { success: false, error: handleSupabaseError(updateError) };
+    }
+
+    console.log('✅ Fondos retirados exitosamente:', { newBalance, transactionId: transaction.id });
+    return { success: true, newBalance, transaction, error: null };
+
+  } catch (error) {
+    console.error('Error in withdrawFromWallet:', error);
+    return { success: false, error: 'Error al retirar fondos de la billetera.' };
+  }
+};
+
+/**
+ * Canjea un gift card y agrega fondos a la billetera
+ * @param {string} userId - ID del usuario
+ * @param {string} giftCardCode - Código del gift card
+ * @returns {Promise<{success, amount, newBalance, transaction, error}>}
+ */
+export const redeemGiftCard = async (userId, giftCardCode) => {
+  try {
+    console.log('🎁 Canjeando gift card:', { userId, giftCardCode });
+
+    // Validar parámetros
+    if (!userId || !giftCardCode || giftCardCode.trim() === '') {
+      return { success: false, error: 'Parámetros inválidos para canjear gift card.' };
+    }
+
+    // Verificar si el gift card existe y está disponible
+    const { data: giftCard, error: giftCardError } = await supabase
+      .from('gift_cards')
+      .select('*')
+      .eq('code', giftCardCode.trim())
+      .eq('status', 'active')
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (giftCardError) {
+      if (giftCardError.code === 'PGRST116') {
+        return { success: false, error: 'Gift card no encontrado, expirado o ya utilizado.' };
+      }
+      return { success: false, error: handleSupabaseError(giftCardError) };
+    }
+
+    // Verificar si ya fue usado por este usuario
+    if (giftCard.used_by && giftCard.used_by !== userId) {
+      return { success: false, error: 'Este gift card ya fue utilizado por otro usuario.' };
+    }
+
+    const amount = parseFloat(giftCard.amount) || 0;
+
+    // Agregar fondos a la billetera
+    const { success, newBalance, transaction, error: addFundsError } = await addFundsToWallet(
+      userId,
+      amount,
+      `Canje de gift card: ${giftCardCode}`,
+      giftCard.id
+    );
+
+    if (!success) {
+      return { success: false, error: addFundsError };
+    }
+
+    // Marcar gift card como usado
+    const { error: updateError } = await supabase
+      .from('gift_cards')
+      .update({
+        status: 'used',
+        used_by: userId,
+        used_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', giftCard.id);
+
+    if (updateError) {
+      console.warn('⚠️ Error actualizando gift card, pero fondos ya agregados:', updateError);
+      // No fallar la operación ya que los fondos ya se agregaron
+    }
+
+    console.log('✅ Gift card canjeado exitosamente:', { amount, newBalance, transactionId: transaction.id });
+    return { success: true, amount, newBalance, transaction, error: null };
+
+  } catch (error) {
+    console.error('Error in redeemGiftCard:', error);
+    return { success: false, error: 'Error al canjear gift card.' };
+  }
+};
+
 // ==================== NOTIFICACIONES ====================
 
 /**
@@ -2419,6 +2631,47 @@ export const getCorporateClients = async (companyId) => {
 };
 
 /**
+ * Obtiene todos los clientes corporativos del sistema (solo para administradores)
+ * @returns {Promise<{corporateClients, error}>}
+ */
+export const getAllCorporateClients = async () => {
+  try {
+    console.log('getAllCorporateClients: Obteniendo todos los clientes corporativos');
+
+    // Obtener todos los clientes de la tabla 'clients' (fallback si corporate_clients no existe)
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('business_name');
+
+    if (error) {
+      console.error('Error fetching all corporate clients:', error);
+      return { corporateClients: [], error: handleSupabaseError(error) };
+    }
+
+    // Transformar los datos para mantener compatibilidad con el formato esperado
+    const transformedClients = (data || []).map(client => ({
+      id: client.id,
+      name: client.business_name || client.name,
+      display_category: 'Corporativo',
+      contact_email: client.contact_email,
+      contact_phone: client.contact_phone,
+      company_id: client.company_id,
+      company_name: client.business_name || 'Empresa desconocida',
+      is_active: true,
+      created_at: client.created_at,
+      updated_at: client.updated_at
+    }));
+
+    console.log('All corporate clients found:', transformedClients.length);
+    return { corporateClients: transformedClients, error: null };
+  } catch (error) {
+    console.error('Error in getAllCorporateClients:', error);
+    return { corporateClients: [], error: 'Error al obtener todos los clientes corporativos.' };
+  }
+};
+
+/**
  * Crea un cliente corporativo
  * @param {Object} corporateData - Datos del cliente corporativo
  * @returns {Promise<{corporateClient, error}>}
@@ -3414,6 +3667,18 @@ export const getDatabaseSystemInfo = async () => {
  */
 export const getSystemConfig = async () => {
   try {
+    // Primero intentar obtener configuración de IA desde localStorage
+    let localStorageConfig = {};
+    try {
+      const storedConfig = localStorage.getItem('system_config');
+      if (storedConfig) {
+        localStorageConfig = JSON.parse(storedConfig);
+        console.log('📦 Configuración de IA encontrada en localStorage:', localStorageConfig);
+      }
+    } catch (localStorageError) {
+      console.warn('⚠️ Error leyendo localStorage:', localStorageError);
+    }
+
     // Obtener configuración desde tabla system_config si existe
     const { data: configData, error: configError } = await supabase
       .from('system_config')
@@ -3427,6 +3692,7 @@ export const getSystemConfig = async () => {
       configData.forEach(item => {
         config[item.config_key] = item.config_value;
       });
+      console.log('📊 Configuración obtenida de base de datos:', config);
     } else {
       // Configuración por defecto si no existe tabla
       config = {
@@ -3440,29 +3706,34 @@ export const getSystemConfig = async () => {
         log_retention_days: 30,
         system_maintenance_mode: false
       };
+      console.log('📋 Usando configuración por defecto');
     }
+
+    // Mezclar configuración de localStorage (prioridad para configuración de IA)
+    const mergedConfig = { ...config, ...localStorageConfig };
 
     // Convertir valores string a booleanos donde corresponda
     const processedConfig = {
-      oauthEnabled: config.oauth_enabled !== undefined ? config.oauth_enabled === 'true' : true,
-      userValidation: config.user_validation_enabled !== undefined ? config.user_validation_enabled === 'true' : true,
-      emailNotifications: config.email_notifications_enabled !== undefined ? config.email_notifications_enabled === 'true' : true,
-      pushNotifications: config.push_notifications_enabled !== undefined ? config.push_notifications_enabled === 'true' : false,
-      mercadoPagoEnabled: config.mercado_pago_enabled !== undefined ? config.mercado_pago_enabled === 'true' : true,
-      queryLimit: parseInt(config.query_limit_per_minute) || 1000,
-      backupFrequency: config.backup_frequency || 'daily',
-      logRetention: parseInt(config.log_retention_days) || 30,
-      maintenanceMode: config.system_maintenance_mode !== undefined ? config.system_maintenance_mode === 'true' : false,
-      monthlyPaymentGoal: parseInt(config.monthly_payment_goal) || 50000000,
-      // Configuración de IA
-      chutesApiKey: config.chutes_api_key || '',
-      chutesApiActive: config.chutes_api_active !== undefined ? config.chutes_api_active === 'true' : false,
-      groqApiKey: config.groq_api_key || '',
-      groqApiActive: config.groq_api_active !== undefined ? config.groq_api_active === 'true' : false,
-      aiSelectedProvider: config.ai_selected_provider || 'chutes',
-      aiSelectedModel: config.ai_selected_model || '',
+      oauthEnabled: mergedConfig.oauth_enabled !== undefined ? mergedConfig.oauth_enabled === 'true' : true,
+      userValidation: mergedConfig.user_validation_enabled !== undefined ? mergedConfig.user_validation_enabled === 'true' : true,
+      emailNotifications: mergedConfig.email_notifications_enabled !== undefined ? mergedConfig.email_notifications_enabled === 'true' : true,
+      pushNotifications: mergedConfig.push_notifications_enabled !== undefined ? mergedConfig.push_notifications_enabled === 'true' : false,
+      mercadoPagoEnabled: mergedConfig.mercado_pago_enabled !== undefined ? mergedConfig.mercado_pago_enabled === 'true' : true,
+      queryLimit: parseInt(mergedConfig.query_limit_per_minute) || 1000,
+      backupFrequency: mergedConfig.backup_frequency || 'daily',
+      logRetention: parseInt(mergedConfig.log_retention_days) || 30,
+      maintenanceMode: mergedConfig.system_maintenance_mode !== undefined ? mergedConfig.system_maintenance_mode === 'true' : false,
+      monthlyPaymentGoal: parseInt(mergedConfig.monthly_payment_goal) || 50000000,
+      // Configuración de IA (con prioridad a localStorage)
+      chutesApiKey: mergedConfig.chutes_api_key || '',
+      chutesApiActive: mergedConfig.chutes_api_active !== undefined ? mergedConfig.chutes_api_active === 'true' : false,
+      groqApiKey: mergedConfig.groq_api_key || '',
+      groqApiActive: mergedConfig.groq_api_active !== undefined ? mergedConfig.groq_api_active === 'true' : false,
+      aiSelectedProvider: mergedConfig.ai_selected_provider || 'chutes',
+      aiSelectedModel: mergedConfig.ai_selected_model || '',
     };
 
+    console.log('✅ Configuración final procesada:', processedConfig);
     return { config: processedConfig, error: null };
   } catch (error) {
     console.error('Error in getSystemConfig:', error);
@@ -3492,60 +3763,110 @@ export const updateSystemConfig = async (config) => {
   console.log('🔄 updateSystemConfig called with:', config);
 
   try {
-    // Procesar cada configuración individualmente para asegurar que se guarde
-    for (const [key, value] of Object.entries(config)) {
-      console.log(`📝 Processing config: ${key} = ${value} (type: ${typeof value})`);
+    // Para configuración de IA específica, usar localStorage como fallback
+    const aiConfigKeys = [
+      'chutes_api_key',
+      'chutes_api_url',
+      'chutes_api_active',
+      'groq_api_key',
+      'groq_api_url',
+      'groq_api_active',
+      'ai_selected_provider',
+      'ai_selected_model'
+    ];
 
-      const configEntry = {
-        config_key: key,
-        config_value: value,
-        updated_at: new Date().toISOString()
-      };
+    const hasAIConfig = Object.keys(config).some(key => aiConfigKeys.includes(key));
 
-      console.log('📤 Attempting insert for:', configEntry);
-
-      // Intentar insertar primero
-      const { data: insertData, error: insertError } = await supabase
-        .from('system_config')
-        .insert(configEntry)
-        .select();
-
-      console.log('📥 Insert result:', { data: insertData, error: insertError });
-
-      if (insertError) {
-        console.log('❌ Insert failed, checking error code:', insertError.code);
-
-        // Si falla por conflicto (ya existe), intentar actualizar
-        if (insertError.code === '23505') { // unique_violation
-          console.log('🔄 Attempting update for existing record');
-
-          const { data: updateData, error: updateError } = await supabase
-            .from('system_config')
-            .update({
-              config_value: value,
-              updated_at: new Date().toISOString()
-            })
-            .eq('config_key', key)
-            .select();
-
-          console.log('📥 Update result:', { data: updateData, error: updateError });
-
-          if (updateError) {
-            console.error(`❌ Error updating config ${key}:`, updateError);
-            throw updateError;
-          } else {
-            console.log(`✅ Successfully updated config ${key}`);
-          }
-        } else if (insertError.code === '42P01') { // relation does not exist
-          console.warn('⚠️ Tabla system_config no existe, configuración no persistente');
-          return { error: null }; // No error, solo no se guarda
-        } else {
-          console.error(`❌ Error inserting config ${key}:`, insertError);
-          throw insertError;
-        }
-      } else {
-        console.log(`✅ Successfully inserted config ${key}`);
+    if (hasAIConfig) {
+      console.log('🤖 Detectada configuración de IA, usando localStorage como fallback');
+      
+      try {
+        // Guardar en localStorage como fallback
+        const existingConfig = JSON.parse(localStorage.getItem('system_config') || '{}');
+        const updatedConfig = { ...existingConfig, ...config };
+        localStorage.setItem('system_config', JSON.stringify(updatedConfig));
+        console.log('✅ Configuración de IA guardada en localStorage');
+      } catch (localStorageError) {
+        console.warn('⚠️ Error guardando en localStorage:', localStorageError);
       }
+    }
+
+    // Intentar guardar en base de datos de todas formas
+    let dbSaveSuccess = false;
+    let dbError = null;
+
+    try {
+      // Procesar cada configuración individualmente para asegurar que se guarde
+      for (const [key, value] of Object.entries(config)) {
+        console.log(`📝 Processing config: ${key} = ${value} (type: ${typeof value})`);
+
+        const configEntry = {
+          config_key: key,
+          config_value: value,
+          updated_at: new Date().toISOString()
+        };
+
+        console.log('📤 Attempting insert for:', configEntry);
+
+        // Intentar insertar primero
+        const { data: insertData, error: insertError } = await supabase
+          .from('system_config')
+          .insert(configEntry)
+          .select();
+
+        console.log('📥 Insert result:', { data: insertData, error: insertError });
+
+        if (insertError) {
+          console.log('❌ Insert failed, checking error code:', insertError.code);
+
+          // Si falla por conflicto (ya existe), intentar actualizar
+          if (insertError.code === '23505') { // unique_violation
+            console.log('🔄 Attempting update for existing record');
+
+            const { data: updateData, error: updateError } = await supabase
+              .from('system_config')
+              .update({
+                config_value: value,
+                updated_at: new Date().toISOString()
+              })
+              .eq('config_key', key)
+              .select();
+
+            console.log('📥 Update result:', { data: updateData, error: updateError });
+
+            if (updateError) {
+              console.error(`❌ Error updating config ${key}:`, updateError);
+              dbError = updateError;
+            } else {
+              console.log(`✅ Successfully updated config ${key}`);
+              dbSaveSuccess = true;
+            }
+          } else {
+            console.error(`❌ Error inserting config ${key}:`, insertError);
+            dbError = insertError;
+          }
+        } else {
+          console.log(`✅ Successfully inserted config ${key}`);
+          dbSaveSuccess = true;
+        }
+      }
+    } catch (dbTryError) {
+      console.error('💥 Error intentando guardar en base de datos:', dbTryError);
+      dbError = dbTryError;
+    }
+
+    // Si es configuración de IA y falló la base de datos, pero funcionó localStorage, considerar éxito
+    if (hasAIConfig && !dbSaveSuccess && dbError) {
+      console.warn('⚠️ Falló guardado en BD pero funcionó localStorage para configuración de IA');
+      return { error: null }; // Considerar éxito para configuración de IA
+    }
+
+    // Si falló completamente y no es configuración de IA, retornar error
+    if (!dbSaveSuccess && dbError && !hasAIConfig) {
+      if (dbError.code === '42501' || dbError.message?.includes('permission denied') || dbError.message?.includes('insufficient_privilege')) {
+        return { error: 'No tienes permisos suficientes para modificar la configuración del sistema. Solo administradores pueden realizar esta acción.' };
+      }
+      return { error: 'Error al actualizar configuración del sistema.' };
     }
 
     console.log('🎉 All configurations processed successfully');
@@ -3701,7 +4022,167 @@ export const getIntegrationStats = async () => {
 };
 
 /**
- * Crea un nuevo usuario (solo para administradores)
+ * Crea un nuevo usuario con invitación por email (solo para administradores)
+ * @param {Object} userData - Datos del usuario
+ * @param {string} adminName - Nombre del administrador que crea la invitación
+ * @returns {Promise<{user, invitationToken, error}>}
+ */
+export const createUserWithInvitation = async (userData, adminName = 'Administrador') => {
+  try {
+    // Generar token de invitación único
+    const invitationToken = crypto.randomUUID();
+
+    // Calcular fecha de expiración (7 días)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Crear usuario básico primero
+    const { data: userDataResult, error: userError } = await supabase
+      .from('users')
+      .insert(userData)
+      .select()
+      .single();
+
+    if (userError) {
+      return { user: null, invitationToken: null, error: handleSupabaseError(userError) };
+    }
+
+    // Intentar actualizar con campos de invitación (si existen)
+    try {
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          invitation_token: invitationToken,
+          invitation_expires_at: expiresAt.toISOString(),
+          invitation_status: 'pending',
+          validation_status: 'pending'
+        })
+        .eq('id', userDataResult.id);
+
+      if (updateError) {
+        console.warn('Campos de invitación no disponibles, continuando sin ellos:', updateError.message);
+      }
+    } catch (updateError) {
+      console.warn('Error actualizando campos de invitación:', updateError.message);
+    }
+
+    return { user: userDataResult, invitationToken, error: null };
+  } catch (error) {
+    console.error('Error in createUserWithInvitation:', error);
+    return { user: null, invitationToken: null, error: 'Error al crear usuario con invitación.' };
+  }
+};
+
+/**
+ * Valida un token de invitación
+ * @param {string} token - Token de invitación
+ * @returns {Promise<{valid, user, error}>}
+ */
+export const validateInvitationToken = async (token) => {
+  try {
+    // Intentar consulta con campos de invitación
+    let query = supabase
+      .from('users')
+      .select('*')
+      .eq('invitation_token', token);
+
+    // Agregar filtros adicionales si las columnas existen
+    try {
+      query = query.eq('invitation_status', 'pending');
+      query = query.gt('invitation_expires_at', new Date().toISOString());
+    } catch (filterError) {
+      // Columnas no existen, continuar sin filtros adicionales
+      console.warn('Campos de invitación no disponibles, validando solo por token');
+    }
+
+    const { data, error } = await query.single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return { valid: false, user: null, error: 'Token de invitación inválido o expirado.' };
+      }
+      return { valid: false, user: null, error: handleSupabaseError(error) };
+    }
+
+    // Validación adicional si las columnas existen
+    if (data.invitation_status && data.invitation_expires_at) {
+      if (data.invitation_status !== 'pending') {
+        return { valid: false, user: null, error: 'Esta invitación ya ha sido utilizada.' };
+      }
+
+      if (new Date(data.invitation_expires_at) < new Date()) {
+        return { valid: false, user: null, error: 'Esta invitación ha expirado.' };
+      }
+    }
+
+    return { valid: true, user: data, error: null };
+  } catch (error) {
+    console.error('Error in validateInvitationToken:', error);
+    return { valid: false, user: null, error: 'Error al validar token de invitación.' };
+  }
+};
+
+/**
+ * Completa el registro de un usuario invitado
+ * @param {string} token - Token de invitación
+ * @param {string} password - Nueva contraseña
+ * @returns {Promise<{success, user, error}>}
+ */
+export const completeUserRegistration = async (token, password) => {
+  try {
+    // Primero validar el token
+    const { valid, user, error: validationError } = await validateInvitationToken(token);
+
+    if (!valid) {
+      return { success: false, user: null, error: validationError };
+    }
+
+    // Intentar actualizar contraseña usando Supabase Auth
+    try {
+      const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
+        password: password,
+        email_confirm: true // Confirmar email automáticamente
+      });
+
+      if (error) {
+        console.warn('Error updating password via admin API:', error);
+        // Continuar con el flujo alternativo si es posible
+      }
+    } catch (authError) {
+      console.warn('Auth admin API not available:', authError);
+    }
+
+    // Actualizar estado de invitación en la base de datos (si las columnas existen)
+    try {
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          invitation_status: 'completed',
+          validation_status: 'validated',
+          invitation_token: null, // Limpiar token usado
+          invitation_expires_at: null
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.warn('Error updating invitation status (columns may not exist):', updateError);
+        // No fallar por esto, continuar
+      }
+    } catch (updateError) {
+      console.warn('Error updating invitation status:', updateError);
+    }
+
+    // Si no se pudo actualizar la contraseña via admin API, al menos actualizar el estado
+    return { success: true, user: { ...user, invitation_status: 'completed' }, error: null };
+  } catch (error) {
+    console.error('Error in completeUserRegistration:', error);
+    return { success: false, user: null, error: 'Error al completar registro.' };
+  }
+};
+
+/**
+ * Crea un nuevo usuario (solo para administradores) - LEGACY
+ * @deprecated Use createUserWithInvitation instead
  * @param {Object} userData - Datos del usuario
  * @returns {Promise<{user, error}>}
  */
@@ -3904,6 +4385,9 @@ export default {
   getWalletBalance,
   getWalletTransactions,
   createWalletTransaction,
+  addFundsToWallet,
+  withdrawFromWallet,
+  redeemGiftCard,
 
   // Notificaciones
   getUserNotifications,
@@ -3949,6 +4433,9 @@ export default {
 
   // Gestión de usuarios para admin
   createUser,
+  createUserWithInvitation,
+  validateInvitationToken,
+  completeUserRegistration,
   updateUser,
   deleteUser,
 

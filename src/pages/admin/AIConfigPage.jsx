@@ -9,12 +9,25 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Badge, Button, LoadingSpinner, Input, Select } from '../../components/common';
 import { Brain, Bot, Cpu, CheckCircle, ArrowLeft, TestTube, Settings, Zap } from 'lucide-react';
 import { updateSystemConfig } from '../../services/databaseService';
+import { useAuth } from '../../context/AuthContext';
 import Swal from 'sweetalert2';
 
 const AIConfigPage = () => {
   const navigate = useNavigate();
+  const { isAdmin, profile, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 AIConfigPage - Auth status:', {
+      isAdmin,
+      profileRole: profile?.role,
+      userRole: user?.user_metadata?.role,
+      profile,
+      user
+    });
+  }, [isAdmin, profile, user]);
 
   // Configuración de IA
   const [aiConfig, setAiConfig] = useState({
@@ -32,9 +45,51 @@ const AIConfigPage = () => {
     }
   });
 
+  // Cargar configuración guardada al iniciar
+  useEffect(() => {
+    const loadSavedConfig = async () => {
+      try {
+        const { getSystemConfig } = await import('../../services/databaseService');
+        const { config, error } = await getSystemConfig();
+        
+        if (!error && config) {
+          console.log('🔄 Cargando configuración guardada:', config);
+          
+          setAiConfig(prev => ({
+            selectedProvider: config.aiSelectedProvider || 'chutes',
+            selectedModel: config.aiSelectedModel || 'gpt-4',
+            chutesApi: {
+              apiKey: config.chutesApiKey || '',
+              baseUrl: 'https://chutes.ai',
+              isActive: config.chutesApiActive || false
+            },
+            groqApi: {
+              apiKey: config.groqApiKey || '',
+              baseUrl: 'https://api.groq.com',
+              isActive: config.groqApiActive || false
+            }
+          }));
+          
+          console.log('✅ Configuración cargada exitosamente');
+        } else {
+          console.warn('⚠️ Error cargando configuración:', error);
+        }
+      } catch (error) {
+        console.error('❌ Error en loadSavedConfig:', error);
+      }
+    };
+
+    loadSavedConfig();
+  }, []);
+
   const handleSaveConfig = async (serviceType) => {
     try {
       setSaving(true);
+
+      // Check if user is admin
+      if (!isAdmin) {
+        throw new Error('No tienes permisos para modificar la configuración del sistema. Solo administradores pueden realizar esta acción.');
+      }
 
       // Prepare config data based on service type
       let configToSave = {};
@@ -53,11 +108,16 @@ const AIConfigPage = () => {
         };
       }
 
+      console.log('🔄 Saving AI config:', configToSave);
+
       const result = await updateSystemConfig(configToSave);
 
       if (result.error) {
+        console.error('❌ Error from updateSystemConfig:', result.error);
         throw new Error(result.error);
       }
+
+      console.log('✅ AI config saved successfully');
 
       await Swal.fire({
         icon: 'success',
@@ -67,11 +127,11 @@ const AIConfigPage = () => {
       });
 
     } catch (error) {
-      console.error(`Error saving ${serviceType}:`, error);
+      console.error(`❌ Error saving ${serviceType}:`, error);
       await Swal.fire({
         icon: 'error',
         title: 'Error al guardar',
-        text: error.message || `No se pudo guardar la configuración de ${serviceType}`,
+        text: `No se pudo guardar la configuración de ${serviceType}. ${error.message}`,
         confirmButtonText: 'Aceptar'
       });
     } finally {

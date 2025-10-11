@@ -9,7 +9,7 @@ import { History, Trash2 } from 'lucide-react';
 import CommissionCalculator from '../../components/simulator/PaymentSimulator';
 import { Card } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
-import simulatorService from '../../services/gamification/simulatorService';
+import simulatorService from '../../services/simulator/simulatorService';
 import { formatCurrency } from '../../utils/formatters';
 import Swal from 'sweetalert2';
 

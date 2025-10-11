@@ -489,6 +489,68 @@ export const sendIncentiveEarnedNotification = async (incentiveData) => {
   }
 };
 
+/**
+ * Envía email de invitación para completar registro (desde admin)
+ */
+export const sendAdminInvitationEmail = async (invitationData) => {
+  try {
+    const { fullName, email, invitationToken, adminName, completeUrl } = invitationData;
+
+    // Si no hay token o URL de completado, enviar email informativo básico
+    if (!invitationToken || !completeUrl) {
+      console.log('⚠️ Campos de invitación no disponibles, enviando email informativo básico');
+
+      if (import.meta.env.DEV) {
+        console.log('📧 [SIMULADO] Email informativo enviado a:', email);
+        return { success: true, simulated: true, messageId: 'simulated_' + Date.now() };
+      }
+
+      const basicEmailData = {
+        to: email,
+        subject: `Bienvenido a NexuPay - ${fullName}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">¡Bienvenido a NexuPay!</h2>
+            <p>Hola <strong>${fullName}</strong>,</p>
+            <p>Has sido registrado en la plataforma NexuPay por el administrador <strong>${adminName}</strong>.</p>
+            <p>Tu cuenta ha sido creada exitosamente. Pronto recibirás instrucciones adicionales para acceder al sistema.</p>
+            <br>
+            <p>Si tienes alguna pregunta, no dudes en contactar al soporte.</p>
+            <p>Saludos,<br>El equipo de NexuPay</p>
+          </div>
+        `
+      };
+
+      const result = await sendEmail(basicEmailData);
+
+      if (result.success) {
+        console.log(`✅ Email informativo enviado a ${email}`);
+        return result;
+      } else {
+        console.error('❌ Error enviando email informativo:', result.error);
+        return result;
+      }
+    }
+
+    // Email completo de invitación con token
+    if (import.meta.env.DEV) {
+      console.log('📧 [SIMULADO] Email de invitación enviado a:', email);
+      return { success: true, simulated: true, messageId: 'simulated_' + Date.now() };
+    }
+
+    const html = getEmailTemplate('invitation', 'adminInvitation', invitationData);
+    const result = await sendEmail({
+      to: email,
+      subject: 'Invitación a NexuPay - Completa tu registro',
+      html: html
+    });
+    return result;
+  } catch (error) {
+    console.error('Error sending admin invitation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 export default {
   isEmailConfigured,
   sendEmail,
@@ -500,4 +562,5 @@ export default {
   sendWelcomeEmailAdmin,
   sendPaymentReceivedNotification,
   sendIncentiveEarnedNotification,
+  sendAdminInvitationEmail,
 };

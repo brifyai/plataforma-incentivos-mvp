@@ -36,47 +36,61 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Función para calcular días de atraso
+  // Función para calcular días de atraso (tolerante a datos reales)
   const calculateDaysOverdue = (client) => {
-    // Para datos mock, asumimos que las deudas vencen 30 días después del último pago
-    // En producción, esto vendría de la base de datos (due_date)
-    const lastPaymentDate = new Date(client.lastPayment);
-    const assumedDueDate = new Date(lastPaymentDate);
-    assumedDueDate.setDate(assumedDueDate.getDate() + 30); // 30 días de gracia
+    // Usar último pago si existe, si no, caer a primera fecha de deuda conocida
+    const baseDateStr = client?.lastPayment || client?.firstDebtDate;
+    if (!baseDateStr) return 0;
+
+    const baseDate = new Date(baseDateStr);
+    if (isNaN(baseDate.getTime())) return 0;
+
+    // Asumimos fecha de vencimiento 30 días posterior a la base (fallback)
+    const assumedDueDate = new Date(baseDate);
+    assumedDueDate.setDate(assumedDueDate.getDate() + 30);
 
     const today = new Date();
     const daysOverdue = Math.max(0, Math.floor((today - assumedDueDate) / (1000 * 60 * 60 * 24)));
-
     return daysOverdue;
   };
 
-  // Función para calcular el nivel de riesgo basado en datos del cliente
+  // Función para calcular el nivel de riesgo basado en datos del cliente (robusta a null/0)
   const calculateRiskLevel = (client) => {
     let riskScore = 0;
 
+    const totalDebt = Number(client?.totalDebt) || 0;
+    const paidAmount = Number(client?.paidAmount) || 0;
+    const pendingAmount = client?.pendingAmount != null ? Number(client.pendingAmount) : Math.max(totalDebt - paidAmount, 0);
+
     // Factor 1: Monto pendiente vs total (mayor porcentaje pendiente = mayor riesgo)
-    const pendingPercentage = (client.pendingAmount / client.totalDebt) * 100;
+    const pendingPercentage = totalDebt > 0 ? (pendingAmount / totalDebt) * 100 : 0;
     if (pendingPercentage > 70) riskScore += 3;
     else if (pendingPercentage > 50) riskScore += 2;
     else if (pendingPercentage > 30) riskScore += 1;
 
     // Factor 2: Días desde último pago (más días = mayor riesgo)
-    const lastPaymentDate = new Date(client.lastPayment);
-    const daysSinceLastPayment = (new Date() - lastPaymentDate) / (1000 * 60 * 60 * 24);
+    const lastBase = client?.lastPayment || client?.firstDebtDate;
+    let daysSinceLastPayment = 999;
+    if (lastBase) {
+      const lastDate = new Date(lastBase);
+      if (!isNaN(lastDate.getTime())) {
+        daysSinceLastPayment = (new Date() - lastDate) / (1000 * 60 * 60 * 24);
+      }
+    }
     if (daysSinceLastPayment > 90) riskScore += 3;
     else if (daysSinceLastPayment > 60) riskScore += 2;
     else if (daysSinceLastPayment > 30) riskScore += 1;
 
     // Factor 3: Monto total de deuda (deudas más altas = mayor riesgo)
-    if (client.totalDebt > 5000000) riskScore += 2;
-    else if (client.totalDebt > 2000000) riskScore += 1;
+    if (totalDebt > 5000000) riskScore += 2;
+    else if (totalDebt > 2000000) riskScore += 1;
 
     // Factor 4: Estado del cliente
-    if (client.status === 'overdue') riskScore += 3;
-    else if (client.status === 'inactive') riskScore += 2;
+    if (client?.status === 'overdue') riskScore += 3;
+    else if (client?.status === 'inactive') riskScore += 2;
 
     // Factor 5: Progreso de pago (menos progreso = mayor riesgo)
-    const paymentProgress = (client.paidAmount / client.totalDebt) * 100;
+    const paymentProgress = totalDebt > 0 ? (paidAmount / totalDebt) * 100 : 0;
     if (paymentProgress < 20) riskScore += 2;
     else if (paymentProgress < 50) riskScore += 1;
 
@@ -241,7 +255,8 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
   ];
 
   useEffect(() => {
-    let filtered = clients && clients.length > 0 ? clients : mockClients;
+    // Usar SIEMPRE datos reales recibidos por props; no hacer fallback a mocks
+    let filtered = Array.isArray(clients) ? clients : [];
 
     // Calcular nivel de riesgo y días de atraso para cada cliente si no lo tiene
     filtered = filtered.map(client => ({
@@ -258,9 +273,9 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(client =>
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.rut.includes(searchTerm)
+        (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.rut || '').includes(searchTerm)
       );
     }
 
@@ -414,13 +429,13 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
               <div className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-gray-400" />
                 <span className="text-sm text-gray-600">
-                  ${client.pendingAmount.toLocaleString()} pendiente
+                  ${(client.pendingAmount ?? 0).toLocaleString()} pendiente
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-gray-400" />
                 <span className="text-sm text-gray-600">
-                  Último pago: {new Date(client.lastPayment).toLocaleDateString()}
+                  Último pago: {client.lastPayment ? new Date(client.lastPayment).toLocaleDateString() : '—'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -435,12 +450,12 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
             <div className="mb-4">
               <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
                 <span>Progreso de pago</span>
-                <span>{Math.round((client.paidAmount / client.totalDebt) * 100)}%</span>
+                <span>{client.totalDebt ? Math.round((Number(client.paidAmount || 0) / Number(client.totalDebt)) * 100) : 0}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(client.paidAmount / client.totalDebt) * 100}%` }}
+                  style={{ width: `${client.totalDebt ? (Number(client.paidAmount || 0) / Number(client.totalDebt)) * 100 : 0}%` }}
                 ></div>
               </div>
             </div>
@@ -580,13 +595,13 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           </div>
           <div>
             <div className="text-2xl font-bold text-green-600">
-              ${filteredClients.reduce((sum, c) => sum + c.paidAmount, 0).toLocaleString()}
+              ${filteredClients.reduce((sum, c) => sum + (c.paidAmount || 0), 0).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Total recaudado</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-orange-600">
-              ${filteredClients.reduce((sum, c) => sum + c.pendingAmount, 0).toLocaleString()}
+              ${filteredClients.reduce((sum, c) => sum + (c.pendingAmount || 0), 0).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Pendiente por cobrar</div>
           </div>

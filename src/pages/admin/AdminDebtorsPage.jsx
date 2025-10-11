@@ -12,7 +12,8 @@ import {
   getAllUsers,
   getUserDebts,
   getUserPayments,
-  getWalletBalance
+  getWalletBalance,
+  getAllCorporateClients
 } from '../../services/databaseService';
 import {
   Users,
@@ -25,6 +26,7 @@ import {
   TrendingUp,
   DollarSign,
   Calendar,
+  Building,
 } from 'lucide-react';
 
 const AdminDebtorsPage = () => {
@@ -33,6 +35,8 @@ const AdminDebtorsPage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCorporateClient, setFilterCorporateClient] = useState('all');
+  const [corporateClients, setCorporateClients] = useState([]);
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [quickFilter, setQuickFilter] = useState(''); // 'today', 'week', 'month'
   const [showViewModal, setShowViewModal] = useState(false);
@@ -42,6 +46,7 @@ const AdminDebtorsPage = () => {
 
   useEffect(() => {
     loadDebtors();
+    loadCorporateClients();
   }, []);
 
   const loadDebtors = async () => {
@@ -114,6 +119,19 @@ const AdminDebtorsPage = () => {
       setError('Error al cargar la información de deudores');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCorporateClients = async () => {
+    try {
+      const { corporateClients, error } = await getAllCorporateClients();
+      if (error) {
+        console.error('Error loading corporate clients:', error);
+      } else {
+        setCorporateClients(corporateClients || []);
+      }
+    } catch (error) {
+      console.error('Error in loadCorporateClients:', error);
     }
   };
 
@@ -194,6 +212,10 @@ const AdminDebtorsPage = () => {
                           (filterStatus === 'validated' && debtor.validation_status === 'validated') ||
                           (filterStatus === 'pending' && debtor.validation_status === 'pending');
 
+    const matchesCorporateClient = filterCorporateClient === 'all' ||
+                                 (filterCorporateClient === 'none' && (!debtor.corporate_client_id || debtor.corporate_client_id === null)) ||
+                                 (filterCorporateClient !== 'none' && debtor.corporate_client_id === filterCorporateClient);
+
     // Filtrar por fecha de creación
     const matchesDate = !dateFilter.startDate && !dateFilter.endDate ||
                         (dateFilter.startDate && dateFilter.endDate &&
@@ -204,7 +226,7 @@ const AdminDebtorsPage = () => {
                         (!dateFilter.startDate && dateFilter.endDate &&
                          new Date(debtor.created_at).toISOString().split('T')[0] <= dateFilter.endDate);
 
-    return matchesSearch && matchesFilter && matchesDate;
+    return matchesSearch && matchesFilter && matchesDate && matchesCorporateClient;
   });
 
   const stats = {
@@ -430,6 +452,22 @@ const AdminDebtorsPage = () => {
                 <option value="all">Todos</option>
                 <option value="validated">Validados</option>
                 <option value="pending">Pendientes</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Building className="w-5 h-5 text-secondary-400" />
+              <select
+                value={filterCorporateClient}
+                onChange={(e) => setFilterCorporateClient(e.target.value)}
+                className="px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-w-[200px]"
+              >
+                <option value="all">Todos los Clientes</option>
+                <option value="none">Sin Cliente Corporativo</option>
+                {corporateClients.map(client => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

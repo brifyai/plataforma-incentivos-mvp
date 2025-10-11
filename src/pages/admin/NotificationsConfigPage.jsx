@@ -8,13 +8,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Badge, Button, LoadingSpinner, Input, Select } from '../../components/common';
 import { Bell, Mail, Smartphone, MessageSquare, CheckCircle, ArrowLeft, TestTube, Settings } from 'lucide-react';
-import { updateSystemConfig } from '../../services/databaseService';
+import { getSystemConfig, updateSystemConfig } from '../../services/databaseService';
 import Swal from 'sweetalert2';
 
 const NotificationsConfigPage = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   // Configuración de notificaciones
   const [notificationConfig, setNotificationConfig] = useState({
@@ -46,6 +47,64 @@ const NotificationsConfigPage = () => {
       isActive: false
     }
   });
+
+  useEffect(() => {
+    loadNotificationConfig();
+  }, []);
+
+  const loadNotificationConfig = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const result = await getSystemConfig();
+      if (result.error) {
+        console.error('Config error:', result.error);
+        // Usar configuración por defecto si hay error
+      } else {
+        // Cargar configuración de notificaciones desde la base de datos
+        const config = result.config;
+        
+        setNotificationConfig(prev => ({
+          emailService: {
+            ...prev.emailService,
+            provider: config.email_provider || 'sendgrid',
+            apiKey: config.email_api_key || '',
+            fromEmail: config.email_from_address || 'noreply@plataforma.com',
+            fromName: config.email_from_name || 'Plataforma de Cobranzas',
+            smtpHost: config.email_smtp_host || '',
+            smtpPort: config.email_smtp_port || '587',
+            smtpUser: config.email_smtp_user || '',
+            smtpPassword: config.email_smtp_password || '',
+            isActive: config.email_service_active !== undefined ? config.email_service_active : true
+          },
+          pushService: {
+            ...prev.pushService,
+            provider: config.push_provider || 'firebase',
+            apiKey: config.push_api_key || '',
+            projectId: config.push_project_id || 'plataforma-cobranzas',
+            senderId: config.push_sender_id || '',
+            serverKey: config.push_server_key || '',
+            isActive: config.push_service_active !== undefined ? config.push_service_active : false
+          },
+          smsService: {
+            ...prev.smsService,
+            provider: config.sms_provider || 'twilio',
+            accountSid: config.sms_account_sid || '',
+            authToken: config.sms_auth_token || '',
+            apiKey: config.sms_api_key || '',
+            phoneNumber: config.sms_phone_number || '+56912345678',
+            isActive: config.sms_service_active !== undefined ? config.sms_service_active : false
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading notification config:', error);
+      setError('Error al cargar configuración de notificaciones');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSaveService = async (serviceType) => {
     try {
@@ -131,6 +190,25 @@ const NotificationsConfigPage = () => {
       });
     }
   };
+
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error al cargar configuración</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => loadNotificationConfig()}>
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

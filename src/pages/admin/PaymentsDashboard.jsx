@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select, DateFilter } from '../../components/common';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import Swal from 'sweetalert2';
-import { getPaymentStats, getRecentPayments, getPendingPayments, getAllDebtors, getAllCompanies, createPayment, updatePayment } from '../../services/databaseService';
+import { getPaymentStats, getRecentPayments, getPendingPayments, getAllDebtors, getAllCompanies, createPayment, updatePayment, getAllCorporateClients } from '../../services/databaseService';
 import { calculateCommissions } from '../../services/paymentService';
 import {
   CreditCard,
@@ -61,6 +61,8 @@ const PaymentsDashboard = () => {
   const [loadingCompanies, setLoadingCompanies] = useState(false);
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [quickFilter, setQuickFilter] = useState(''); // 'today', 'week', 'month'
+  const [filterCorporateClient, setFilterCorporateClient] = useState('all');
+  const [corporateClients, setCorporateClients] = useState([]);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -101,7 +103,21 @@ const PaymentsDashboard = () => {
     };
 
     fetchData();
+    loadCorporateClients();
   }, []);
+
+  const loadCorporateClients = async () => {
+    try {
+      const { corporateClients, error } = await getAllCorporateClients();
+      if (error) {
+        console.error('Error loading corporate clients:', error);
+      } else {
+        setCorporateClients(corporateClients || []);
+      }
+    } catch (error) {
+      console.error('Error in loadCorporateClients:', error);
+    }
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -192,10 +208,10 @@ const PaymentsDashboard = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedPayments.length === pendingPayments.length) {
+    if (selectedPayments.length === filteredPendingPayments.length) {
       setSelectedPayments([]);
     } else {
-      setSelectedPayments(pendingPayments.map(p => p.id));
+      setSelectedPayments(filteredPendingPayments.map(p => p.id));
     }
   };
 
@@ -500,7 +516,26 @@ const PaymentsDashboard = () => {
   const clearFilters = () => {
     setDateFilter({ startDate: '', endDate: '' });
     setQuickFilter('');
+    setFilterCorporateClient('all');
   };
+
+  // Filtrar pagos por cliente corporativo
+  const filterPaymentsByCorporateClient = (payments) => {
+    if (filterCorporateClient === 'all') {
+      return payments;
+    }
+    
+    return payments.filter(payment => {
+      if (filterCorporateClient === 'none') {
+        return !payment.corporate_client_id || payment.corporate_client_id === null;
+      }
+      return payment.corporate_client_id === filterCorporateClient;
+    });
+  };
+
+  // Aplicar filtros a los pagos recientes y pendientes
+  const filteredRecentPayments = filterPaymentsByCorporateClient(recentPayments);
+  const filteredPendingPayments = filterPaymentsByCorporateClient(pendingPayments);
 
   if (loading) {
     return <LoadingSpinner fullScreen />;
@@ -541,7 +576,7 @@ const PaymentsDashboard = () => {
           </div>
 
           <div className="flex items-center justify-between w-full">
-            {/* Filters Section - 2 lines */}
+            {/* Filters Section - 3 lines */}
             <div className="flex flex-col gap-3 ml-16">
               {/* First line: Quick filter buttons */}
               <div className="flex items-center gap-4">
@@ -591,7 +626,30 @@ const PaymentsDashboard = () => {
                 </div>
               </div>
 
-              {/* Second line: Custom date range */}
+              {/* Second line: Corporate Client Filter */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Building className="w-5 h-5 text-blue-300" />
+                  <span className="text-sm font-medium text-blue-100">Filtrar por cliente:</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={filterCorporateClient}
+                    onChange={(e) => setFilterCorporateClient(e.target.value)}
+                    className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white focus:ring-2 focus:ring-white/50 focus:border-white text-sm min-w-[200px]"
+                  >
+                    <option value="all" className="text-gray-900">Todos los Clientes</option>
+                    <option value="none" className="text-gray-900">Sin Cliente Corporativo</option>
+                    {corporateClients.map(client => (
+                      <option key={client.id} value={client.id} className="text-gray-900">
+                        {client.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Third line: Custom date range */}
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <label htmlFor="startDate" className="text-sm text-blue-200">Desde:</label>
@@ -697,7 +755,7 @@ const PaymentsDashboard = () => {
       {/* Recent Payments */}
       <Card
         title={showAllPayments ? "Todos los Pagos" : "Pagos Recientes"}
-        subtitle={showAllPayments ? "Historial completo de transacciones" : "Últimas transacciones del sistema"}
+        subtitle={`${filteredRecentPayments.length} transacciones encontradas${filterCorporateClient !== 'all' ? ' (filtrado por cliente)' : ''}`}
         headerAction={
           <Button
             variant="outline"
@@ -710,7 +768,7 @@ const PaymentsDashboard = () => {
         }
       >
         <div className="space-y-4">
-          {recentPayments.map((payment) => {
+          {filteredRecentPayments.map((payment) => {
             // Calculate commission breakdown for display
             const commissionData = calculateCommissions(payment.amount, payment.method === 'mercadopago' ? 'mercadopago' : 'bank_transfer');
 
@@ -779,7 +837,7 @@ const PaymentsDashboard = () => {
       {/* Pending Payments Approval */}
       <Card
         title="Aprobación de Pagos Pendientes"
-        subtitle={`${pendingPayments.length} pago(s) esperando aprobación`}
+        subtitle={`${filteredPendingPayments.length} pago(s) esperando aprobación${filterCorporateClient !== 'all' ? ' (filtrado por cliente)' : ''}`}
         headerAction={
           selectedPayments.length > 0 && (
             <Button
@@ -793,7 +851,7 @@ const PaymentsDashboard = () => {
           )
         }
       >
-        {pendingPayments.length === 0 ? (
+        {filteredPendingPayments.length === 0 ? (
           <div className="text-center py-8">
             <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500" />
             <p className="text-gray-500">No hay pagos pendientes de aprobación</p>
@@ -804,18 +862,18 @@ const PaymentsDashboard = () => {
             <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
               <input
                 type="checkbox"
-                checked={selectedPayments.length === pendingPayments.length}
+                checked={selectedPayments.length === filteredPendingPayments.length}
                 onChange={handleSelectAll}
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
               <span className="font-medium text-gray-900">
-                Seleccionar todos ({pendingPayments.length})
+                Seleccionar todos ({filteredPendingPayments.length})
               </span>
             </div>
 
             {/* Payments List */}
             <div className="space-y-3">
-              {pendingPayments.map((payment) => {
+              {filteredPendingPayments.map((payment) => {
                 // Calculate commission breakdown for display
                 const commissionData = calculateCommissions(payment.amount, payment.payment_method === 'mercadopago' ? 'mercadopago' : 'bank_transfer');
 
@@ -1314,7 +1372,7 @@ const PaymentsDashboard = () => {
                 <span className="font-semibold">{selectedPayments.length}</span>
               </div>
               {(() => {
-                const selectedPaymentsData = pendingPayments.filter(p => selectedPayments.includes(p.id));
+                const selectedPaymentsData = filteredPendingPayments.filter(p => selectedPayments.includes(p.id));
                 const totalGrossAmount = selectedPaymentsData.reduce((sum, p) => sum + p.amount, 0);
                 const totalCommissions = selectedPaymentsData.reduce((sum, p) => {
                   const commissionData = calculateCommissions(p.amount, p.payment_method === 'mercadopago' ? 'mercadopago' : 'bank_transfer');

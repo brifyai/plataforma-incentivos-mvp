@@ -39,7 +39,7 @@ const LoginPage = () => {
       {/* Términos y condiciones */}
       <p className="text-center text-xs text-gray-500 mt-6 px-4">
         Al iniciar sesión, aceptas nuestros{' '}
-        <Link to="/terms-of-service" className="text-blue-600 hover:underline">
+        <Link to="/terminos-servicio" className="text-blue-600 hover:underline">
           Términos de Servicio
         </Link>{' '}
         y{' '}

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { getCompanyDebts, getCompanyPayments, getCorporateClients } from '../../services/databaseService';
 
 const ClientsPage = () => {
   const { profile } = useAuth();
@@ -55,254 +56,133 @@ const ClientsPage = () => {
     if (!profile?.company?.id) return;
 
     try {
-      // Por ahora simulamos los datos de clientes corporativos
-      // En producción, esto debería consultar una tabla real de clientes corporativos
-      const mockCorporateClients = [
-        {
-          id: '1',
-          company_name: 'TechCorp S.A.',
-          contact_name: 'María González',
-          contact_email: 'maria@techcorp.cl',
-          contact_phone: '+56912345678',
-          company_rut: '76.543.210-1',
-          address: 'Av. Providencia 123, Santiago',
-          industry: 'Tecnología',
-          contract_value: 5000000,
-          contract_start_date: '2024-01-15',
-          status: 'active',
-          created_at: '2024-01-10'
-        },
-        {
-          id: '2',
-          company_name: 'RetailMax Ltda.',
-          contact_name: 'Carlos Rodríguez',
-          contact_email: 'carlos@retailmax.cl',
-          contact_phone: '+56987654321',
-          company_rut: '98.765.432-1',
-          address: 'Calle Comercio 456, Concepción',
-          industry: 'Retail',
-          contract_value: 3200000,
-          contract_start_date: '2024-02-01',
-          status: 'active',
-          created_at: '2024-01-25'
-        }
-      ];
+      const { corporateClients, error } = await getCorporateClients(profile.company.id);
+      if (error) {
+        console.error('Error loading corporate clients:', error);
+        setCorporateClients([]);
+        return;
+      }
 
-      setCorporateClients(mockCorporateClients);
+      // Normalizar a estructura usada por el filtro local
+      const normalized = (corporateClients || []).map((c) => ({
+        id: c.id,
+        company_name: c.name || c.business_name || 'Cliente',
+        company_rut: c.rut || c.company_rut || '',
+        industry: c.industry || '',
+        contract_value: c.contract_value || null,
+        status: c.is_active ? 'active' : 'inactive',
+        created_at: c.created_at || null
+      }));
+
+      setCorporateClients(normalized);
     } catch (error) {
       console.error('Error loading corporate clients:', error);
+      setCorporateClients([]);
     }
   };
 
   const loadClients = async () => {
     try {
       setLoading(true);
-      // Aquí iría la lógica para cargar clientes desde la base de datos
-      // Por ahora simulamos datos
 
-      const mockClients = [
-        {
-          id: 1,
-          name: 'María González',
-          email: 'maria.gonzalez@email.com',
-          phone: '+56912345678',
-          rut: '12.345.678-9',
-          totalDebt: 2500000,
-          paidAmount: 1800000,
-          pendingAmount: 700000,
-          lastPayment: '2024-10-05',
-          status: 'active',
-          riskLevel: 'low',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'TechCorp S.A.',
-          corporateClientId: '1'
-        },
-        {
-          id: 2,
-          name: 'Carlos Rodríguez',
-          email: 'carlos.rodriguez@email.com',
-          phone: '+56987654321',
-          rut: '15.234.567-8',
-          totalDebt: 1800000,
-          paidAmount: 1200000,
-          pendingAmount: 600000,
-          lastPayment: '2024-10-03',
-          status: 'active',
-          riskLevel: 'medium',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'RetailMax Ltda.',
-          corporateClientId: '2'
-        },
-        {
-          id: 3,
-          name: 'Ana López',
-          email: 'ana.lopez@email.com',
-          phone: '+56911223344',
-          rut: '18.345.678-1',
-          totalDebt: 3200000,
-          paidAmount: 2800000,
-          pendingAmount: 400000,
-          lastPayment: '2024-10-01',
-          status: 'inactive',
-          riskLevel: 'high',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'TechCorp S.A.',
-          corporateClientId: '1'
-        },
-        {
-          id: 4,
-          name: 'Pedro Martínez',
-          email: 'pedro.martinez@email.com',
-          phone: '+56944332211',
-          rut: '11.456.789-2',
-          totalDebt: 950000,
-          paidAmount: 950000,
-          pendingAmount: 0,
-          lastPayment: '2024-09-28',
-          status: 'completed',
-          riskLevel: 'low',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'RetailMax Ltda.',
-          corporateClientId: '2'
-        },
-        {
-          id: 5,
-          name: 'Sofía Ramírez',
-          email: 'sofia.ramirez@email.com',
-          phone: '+56955667788',
-          rut: '19.876.543-2',
-          totalDebt: 1450000,
-          paidAmount: 800000,
-          pendingAmount: 650000,
-          lastPayment: '2024-09-25',
-          status: 'active',
-          riskLevel: 'medium',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'TechCorp S.A.',
-          corporateClientId: '1'
-        },
-        {
-          id: 6,
-          name: 'Diego Silva',
-          email: 'diego.silva@email.com',
-          phone: '+56966778899',
-          rut: '20.123.456-7',
-          totalDebt: 2800000,
-          paidAmount: 2800000,
-          pendingAmount: 0,
-          lastPayment: '2024-09-20',
-          status: 'completed',
-          riskLevel: 'low',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'RetailMax Ltda.',
-          corporateClientId: '2'
-        },
-        {
-          id: 7,
-          name: 'Valentina Torres',
-          email: 'valentina.torres@email.com',
-          phone: '+56977889900',
-          rut: '21.234.567-8',
-          totalDebt: 2100000,
-          paidAmount: 1500000,
-          pendingAmount: 600000,
-          lastPayment: '2024-09-18',
-          status: 'active',
-          riskLevel: 'low',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'TechCorp S.A.',
-          corporateClientId: '1'
-        },
-        {
-          id: 8,
-          name: 'Felipe Morales',
-          email: 'felipe.morales@email.com',
-          phone: '+56988990011',
-          rut: '22.345.678-9',
-          totalDebt: 3600000,
-          paidAmount: 2400000,
-          pendingAmount: 1200000,
-          lastPayment: '2024-09-15',
-          status: 'active',
-          riskLevel: 'high',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'RetailMax Ltda.',
-          corporateClientId: '2'
-        },
-        {
-          id: 9,
-          name: 'Camila Herrera',
-          email: 'camila.herrera@email.com',
-          phone: '+56999001122',
-          rut: '23.456.789-0',
-          totalDebt: 1750000,
-          paidAmount: 1750000,
-          pendingAmount: 0,
-          lastPayment: '2024-09-12',
-          status: 'completed',
-          riskLevel: 'low',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'TechCorp S.A.',
-          corporateClientId: '1'
-        },
-        {
-          id: 10,
-          name: 'Matías Castro',
-          email: 'matias.castro@email.com',
-          phone: '+56910111213',
-          rut: '24.567.890-1',
-          totalDebt: 3200000,
-          paidAmount: 2000000,
-          pendingAmount: 1200000,
-          lastPayment: '2024-09-10',
-          status: 'active',
-          riskLevel: 'high',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'RetailMax Ltda.',
-          corporateClientId: '2'
-        },
-        {
-          id: 11,
-          name: 'Isabella Vargas',
-          email: 'isabella.vargas@email.com',
-          phone: '+56911121314',
-          rut: '25.678.901-2',
-          totalDebt: 1900000,
-          paidAmount: 1300000,
-          pendingAmount: 600000,
-          lastPayment: '2024-09-08',
-          status: 'active',
-          riskLevel: 'medium',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'TechCorp S.A.',
-          corporateClientId: '1'
-        },
-        {
-          id: 12,
-          name: 'Sebastián Reyes',
-          email: 'sebastian.reyes@email.com',
-          phone: '+56912131415',
-          rut: '26.789.012-3',
-          totalDebt: 2700000,
-          paidAmount: 2700000,
-          pendingAmount: 0,
-          lastPayment: '2024-09-05',
-          status: 'completed',
-          riskLevel: 'low',
-          companyName: profile?.company?.name || 'Mi Empresa de Cobranza',
-          corporateClientName: 'RetailMax Ltda.',
-          corporateClientId: '2'
+      if (!profile?.company?.id) {
+        setClients([]);
+        setStats({
+          totalClients: 0,
+          activeClients: 0,
+          totalDebt: 0,
+          totalPaid: 0,
+          totalPending: 0
+        });
+        return;
+      }
+
+      const companyId = profile.company.id;
+
+      const [debtsRes, paymentsRes] = await Promise.all([
+        getCompanyDebts(companyId),
+        getCompanyPayments(companyId)
+      ]);
+
+      if (debtsRes.error) console.error('Error fetching company debts:', debtsRes.error);
+      if (paymentsRes.error) console.error('Error fetching company payments:', paymentsRes.error);
+
+      const debts = debtsRes.debts || [];
+      const payments = (paymentsRes.payments || []).filter(p => p.status === 'completed');
+
+      // Agrupar pagos por usuario
+      const payByUser = {};
+      for (const p of payments) {
+        const uid = p.user?.id || p.user_id;
+        if (!uid) continue;
+        if (!payByUser[uid]) payByUser[uid] = { total: 0, last: null };
+        const amt = parseFloat(p.amount) || 0;
+        payByUser[uid].total += amt;
+        const dt = new Date(p.transaction_date || p.date || p.created_at || Date.now());
+        if (!payByUser[uid].last || dt > payByUser[uid].last) payByUser[uid].last = dt;
+      }
+
+      // Agregar deudas por usuario
+      const mapByUser = new Map();
+      for (const d of debts) {
+        const uid = d.user?.id || d.user_id;
+        if (!uid) continue;
+        if (!mapByUser.has(uid)) {
+          mapByUser.set(uid, {
+            id: uid,
+            name: d.user?.full_name || 'Usuario',
+            email: d.user?.email || '',
+            phone: d.user?.phone || '',
+            rut: d.user?.rut || '',
+            totalDebt: 0,
+            paidAmount: 0,
+            pendingAmount: 0,
+            lastPayment: null,
+            status: 'active',
+            companyName: profile?.company?.business_name || profile?.company?.name || 'Empresa',
+            corporateClientName: d.client?.business_name || null,
+            corporateClientId: d.client?.id || null,
+            firstDebtDate: d.created_at
+          });
         }
-      ];
+        const item = mapByUser.get(uid);
+        const current = parseFloat(d.current_amount ?? d.amount ?? d.original_amount ?? 0);
+        item.totalDebt += isNaN(current) ? 0 : current;
 
-      setClients(mockClients);
+        // status heurístico a partir de la deuda
+        if (d.status === 'completed') {
+          item.status = 'completed';
+        }
+        // Conservar primer registro de deuda para fallback en cálculos de atraso
+        if (!item.firstDebtDate || new Date(d.created_at) < new Date(item.firstDebtDate)) {
+          item.firstDebtDate = d.created_at;
+        }
+        // Si hay cliente asociado, mantener el último visto como etiqueta
+        if (d.client?.business_name) item.corporateClientName = d.client.business_name;
+        if (d.client?.id) item.corporateClientId = d.client.id;
+      }
 
-      // Calcular estadísticas
-      const totalClients = mockClients.length;
-      const activeClients = mockClients.filter(c => c.status === 'active').length;
-      const totalDebt = mockClients.reduce((sum, c) => sum + c.totalDebt, 0);
-      const totalPaid = mockClients.reduce((sum, c) => sum + c.paidAmount, 0);
-      const totalPending = mockClients.reduce((sum, c) => sum + c.pendingAmount, 0);
+      // Aplicar pagos
+      mapByUser.forEach((item, uid) => {
+        const pay = payByUser[uid];
+        item.paidAmount = pay ? pay.total : 0;
+        item.lastPayment = pay && pay.last ? pay.last.toISOString() : null;
+        item.pendingAmount = Math.max(item.totalDebt - item.paidAmount, 0);
+        if (item.pendingAmount <= 0 && item.totalDebt > 0) {
+          item.status = 'completed';
+        }
+      });
+
+      const clientSummaries = Array.from(mapByUser.values()).sort((a, b) => b.pendingAmount - a.pendingAmount);
+
+      setClients(clientSummaries);
+
+      // Calcular estadísticas reales
+      const totalClients = clientSummaries.length;
+      const activeClients = clientSummaries.filter(c => c.status !== 'completed').length;
+      const totalDebt = clientSummaries.reduce((sum, c) => sum + c.totalDebt, 0);
+      const totalPaid = clientSummaries.reduce((sum, c) => sum + c.paidAmount, 0);
+      const totalPending = clientSummaries.reduce((sum, c) => sum + c.pendingAmount, 0);
 
       setStats({
         totalClients,
@@ -311,9 +191,16 @@ const ClientsPage = () => {
         totalPaid,
         totalPending
       });
-
     } catch (error) {
       console.error('Error loading clients:', error);
+      setClients([]);
+      setStats({
+        totalClients: 0,
+        activeClients: 0,
+        totalDebt: 0,
+        totalPaid: 0,
+        totalPending: 0
+      });
     } finally {
       setLoading(false);
     }

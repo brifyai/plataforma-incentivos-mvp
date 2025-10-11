@@ -405,7 +405,7 @@ const RegisterPersonPage = () => {
               />
               <p className="text-sm text-gray-600">
                 Acepto los{' '}
-                <Link to="/terms-of-service" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
+                <Link to="/terminos-servicio" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
                   Términos de Servicio
                 </Link>{' '}
                 y la{' '}

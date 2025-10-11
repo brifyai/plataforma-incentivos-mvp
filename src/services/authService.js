@@ -101,18 +101,38 @@ const verifyPassword = async (password, hashedPassword) => {
  * @param {Object} user - Datos del usuario
  * @returns {Promise<string>} Token JWT
  */
-const createAccessToken = async (user) => {
+const createAccessToken = async (claims, opts = {}) => {
   const secret = new TextEncoder().encode(JWT_SECRET);
-  return await new SignJWT({
-    userId: user.id,
-    email: user.email,
-    role: user.user_metadata?.role,
-    type: 'access'
-  })
+
+  // Soporta dos estilos de entrada:
+  // - Objeto "usuario" (id, email, user_metadata.role, etc.)
+  // - Objeto "claims" arbitrario (email, type, purpose, etc.)
+  const payload = {
+    ...(typeof claims === 'object' ? claims : {}),
+    userId: claims?.id ?? claims?.userId ?? claims?.sub ?? null,
+    email: claims?.email ?? claims?.user?.email ?? null,
+    role: claims?.user_metadata?.role ?? claims?.role ?? null,
+    type: claims?.type || 'access'
+  };
+
+  // Construir JWT
+  const jwtBuilder = new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime(JWT_EXPIRES_IN)
-    .setIssuedAt()
-    .sign(secret);
+    .setIssuedAt();
+
+  // Soportar expiración custom:
+  // 1) opts.expiresIn (string '1h', segundos, timestamp)
+  // 2) claims.exp (timestamp/segundos legacy)
+  // 3) fallback a JWT_EXPIRES_IN
+  if (opts?.expiresIn) {
+    jwtBuilder.setExpirationTime(opts.expiresIn);
+  } else if (claims?.exp) {
+    jwtBuilder.setExpirationTime(claims.exp);
+  } else {
+    jwtBuilder.setExpirationTime(JWT_EXPIRES_IN);
+  }
+
+  return await jwtBuilder.sign(secret);
 };
 
 /**
@@ -819,26 +839,81 @@ const updatePassword = async (newPassword) => {
  */
 const resetPasswordWithToken = async (token, newPassword) => {
   try {
+    console.log('🔑 Iniciando reset de contraseña con token...');
+
+    // Validar que el token no esté vacío
+    if (!token || token.trim() === '') {
+      console.error('❌ Token vacío o nulo');
+      return { error: 'Token de recuperación requerido.' };
+    }
+
     // Intentar decodificar el token si está URL-encoded
     let tokenToVerify = token;
     try {
       const decodedToken = decodeURIComponent(token);
       if (decodedToken !== token) {
+        console.log('🔄 Token estaba URL-encoded, decodificado');
         tokenToVerify = decodedToken;
       }
     } catch (decodeError) {
-      // Token no estaba URL-encoded o ya estaba decodificado
+      console.warn('⚠️ Token no estaba URL-encoded o ya estaba decodificado:', decodeError.message);
     }
+
+    console.log('🔍 Verificando token JWT...');
 
     // Verificar el token JWT
     const payload = await verifyToken(tokenToVerify);
-    if (!payload || payload.type !== 'password_reset') {
-      console.error('❌ Token inválido para reset de contraseña');
+
+    console.log('📊 Payload del token:', payload ? 'válido' : 'null/inválido');
+
+    if (!payload) {
+      console.error('❌ Token JWT inválido o expirado');
       return { error: 'Token de recuperación inválido o expirado.' };
+    }
+
+    // Asegurar tipo de token correcto con compatibilidad retro
+    if (payload.type !== 'password_reset') {
+      // Compatibilidad: aceptar tokens legados que no tenían type explícito o usaban 'access'
+      const isLegacyReset =
+        (!!payload.email) &&
+        (payload.type === undefined || payload.type === 'access');
+
+      if (!isLegacyReset) {
+        console.error('❌ Tipo de token incorrecto:', payload.type, '(esperado: password_reset)');
+        return { error: 'Tipo de token inválido para recuperación de contraseña.' };
+      }
+
+      console.warn('⚠️ Usando token LEGACY para reset de contraseña (sin type=password_reset)');
+    }
+
+    if (!payload.email) {
+      console.error('❌ Token no contiene email');
+      return { error: 'Token de recuperación incompleto.' };
     }
 
     const { email } = payload;
     console.log('📧 Email extraído del token:', email);
+
+    // Verificar que el usuario existe antes de actualizar
+    console.log('👤 Verificando que el usuario existe...');
+    const { data: userData, error: userCheckError } = await supabase
+      .from('users')
+      .select('id, email, full_name')
+      .eq('email', email)
+      .single();
+
+    if (userCheckError) {
+      console.error('❌ Usuario no encontrado para reset de contraseña:', userCheckError);
+      return { error: 'Usuario no encontrado. El token puede haber expirado.' };
+    }
+
+    console.log('✅ Usuario encontrado:', userData.full_name);
+
+    // Validar la nueva contraseña
+    if (!newPassword || newPassword.length < 8) {
+      console.error('❌ Nueva contraseña demasiado corta');
+      return { error: 'La contraseña debe tener al menos 8 caracteres.' };
+    }
 
     // Hashear la nueva contraseña
     console.log('🔐 Hasheando nueva contraseña...');
@@ -859,7 +934,7 @@ const resetPasswordWithToken = async (token, newPassword) => {
       return { error: handleSupabaseError(updateError) };
     }
 
-    console.log('✅ Contraseña actualizada exitosamente');
+    console.log('✅ Contraseña actualizada exitosamente para:', email);
     return { error: null };
   } catch (error) {
     console.error('Error in resetPasswordWithToken:', error);

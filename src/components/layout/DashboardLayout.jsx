@@ -115,7 +115,6 @@ const DashboardLayout = ({ children }) => {
     { name: 'Mi Billetera', path: '/personas/billetera', icon: Wallet, description: 'Saldo e incentivos' },
     { name: 'Mensajes', path: '/personas/mensajes', icon: MessageSquare, description: 'Comunicación' },
     { name: 'Notificaciones', path: '/personas/notificaciones', icon: Bell, description: 'Centro de notificaciones' },
-    { name: 'Gamificación', path: '/personas/gamificacion', icon: Sparkles, description: 'Logros y recompensas' },
     { name: 'Simulador', path: '/personas/simulador', icon: TrendingUp, description: 'Simular pagos' },
     { name: 'Ayuda', path: '/personas/ayuda', icon: HelpCircle, description: 'Centro de ayuda' },
   ];
@@ -195,21 +194,22 @@ const DashboardLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-neutral-50 to-primary-50/30" role="application" aria-label="Dashboard de la plataforma de incentivos">
-      {/* Subtle animated background elements */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50" role="application" aria-label="Dashboard de la plataforma de incentivos">
+      {/* Enhanced animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-100/3 rounded-full blur-3xl animate-float" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-accent-100/2 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute -bottom-40 right-1/4 w-64 h-64 bg-success-100/3 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-200/20 to-indigo-200/20 rounded-full blur-3xl animate-float" />
+        <div className="absolute top-1/3 -left-32 w-80 h-80 bg-gradient-to-br from-purple-200/15 to-pink-200/15 rounded-full blur-3xl animate-float-delayed" />
+        <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-gradient-to-br from-emerald-200/15 to-teal-200/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-gradient-to-br from-amber-200/10 to-orange-200/10 rounded-full blur-2xl animate-pulse" />
       </div>
 
-      {/* Header */}
+      {/* Enhanced Header */}
       <header
         className={`
           sticky top-0 z-50 transition-all duration-300
           ${isScrolled
-            ? 'bg-white/80 backdrop-blur-xl border-b border-secondary-200/50 shadow-glass'
-            : 'bg-white/60 backdrop-blur-sm border-b border-secondary-100/50'
+            ? 'bg-white/95 backdrop-blur-2xl border-b border-slate-200/60 shadow-xl shadow-slate-200/20'
+            : 'bg-white/90 backdrop-blur-xl border-b border-slate-200/40 shadow-lg shadow-slate-200/10'
           }
         `}
         role="banner"
@@ -221,26 +221,26 @@ const DashboardLayout = ({ children }) => {
             <div className="flex items-center gap-6">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-3 rounded-xl hover:bg-secondary-100/80 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 bg-white/90 shadow-soft"
+                className="lg:hidden p-3 rounded-xl hover:bg-slate-100/80 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-white/95 shadow-md border border-slate-200/50"
                 aria-label={sidebarOpen ? "Cerrar menú" : "Abrir menú"}
                 aria-expanded={sidebarOpen}
               >
-                {sidebarOpen ? <X className="w-6 h-6 text-secondary-700" /> : <Menu className="w-6 h-6 text-secondary-700" />}
+                {sidebarOpen ? <X className="w-6 h-6 text-slate-700" /> : <Menu className="w-6 h-6 text-slate-700" />}
               </button>
 
               <Link
                 to={displayMode === 'debtor' ? '/personas/dashboard' : displayMode === 'company' ? '/empresa/dashboard' : '/admin/dashboard'}
                 className="flex items-center gap-4 group"
               >
-                <div className="relative p-3 bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl shadow-soft group-hover:shadow-glow transition-all duration-300 group-hover:scale-110">
+                <div className="relative p-3 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl shadow-lg group-hover:shadow-xl group-hover:shadow-blue-500/25 transition-all duration-300 group-hover:scale-110 border border-blue-500/20">
                   <Wallet className="w-7 h-7 text-white" aria-hidden="true" />
                   <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" aria-hidden="true" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="font-display font-bold text-xl text-secondary-900 tracking-tight">
+                  <h1 className="font-display font-bold text-xl text-slate-900 tracking-tight">
                     NexuPay
                   </h1>
-                  <p className="text-xs text-secondary-600 font-medium">
+                  <p className="text-xs text-slate-600 font-medium">
                     Gestión Inteligente
                   </p>
                 </div>
@@ -249,13 +249,13 @@ const DashboardLayout = ({ children }) => {
 
             {/* Actions */}
             <div className="flex items-center gap-4">
-              {/* Welcome message */}
+              {/* Enhanced Welcome message */}
               <div className="hidden md:block text-right">
-                <p className="text-sm font-semibold text-secondary-900">
+                <p className="text-sm font-semibold text-slate-900">
                   ¡Hola, {profile?.full_name?.split(' ')[0] || 'Usuario'}!
                 </p>
-                <p className="text-xs text-secondary-600 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
+                <p className="text-xs text-slate-600 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-blue-500" />
                   {isPreviewMode
                     ? `PREVISUALIZANDO: ${displayMode === 'debtor' ? 'Dashboard Deudor' : 'Dashboard Empresa'}`
                     : displayMode === 'admin' ? 'MODO ADMINISTRADOR' : displayMode === 'debtor' ? 'Personas' : displayMode === 'company' ? 'Empresas' : 'Usuario'
@@ -263,26 +263,26 @@ const DashboardLayout = ({ children }) => {
                 </p>
               </div>
 
-              {/* Notificaciones */}
+              {/* Enhanced Notificaciones */}
               <Link
                 to={displayMode === 'debtor' ? '/personas/notificaciones' : displayMode === 'company' ? '/empresa/notificaciones' : '/admin/notificaciones'}
-                className="relative p-3 rounded-xl hover:bg-secondary-100/80 transition-all duration-200 hover:scale-105 group"
+                className="relative p-3 rounded-xl hover:bg-slate-100/80 transition-all duration-200 hover:scale-105 group bg-white/50 border border-slate-200/30"
               >
-                <Bell className="w-6 h-6 text-secondary-600 group-hover:text-primary-600 transition-colors" />
+                <Bell className="w-6 h-6 text-slate-600 group-hover:text-blue-600 transition-colors" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-gradient-to-r from-danger-500 to-danger-600 rounded-full shadow-soft animate-bounce-subtle">
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-gradient-to-r from-red-500 to-rose-600 rounded-full shadow-lg animate-bounce-subtle border-2 border-white">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </Link>
 
-              {/* Cerrar Sesión */}
+              {/* Enhanced Cerrar Sesión */}
               <button
                 onClick={handleLogout}
-                className="p-3 rounded-xl hover:bg-danger-50/80 transition-all duration-200 hover:scale-105 group"
+                className="p-3 rounded-xl hover:bg-red-50/80 transition-all duration-200 hover:scale-105 group bg-white/50 border border-slate-200/30"
                 title="Cerrar Sesión"
               >
-                <LogOut className="w-6 h-6 text-danger-600 group-hover:text-danger-700 transition-colors" />
+                <LogOut className="w-6 h-6 text-slate-600 group-hover:text-red-600 transition-colors" />
               </button>
             </div>
           </div>
@@ -340,18 +340,10 @@ const DashboardLayout = ({ children }) => {
           role="navigation"
           aria-label="Menú de navegación principal"
         >
-          {/* Sidebar background without shadow */}
-          <div className="h-full bg-white/80 backdrop-blur-xl border-r border-secondary-200/50">
+          {/* Enhanced sidebar background */}
+          <div className="h-full bg-white/95 backdrop-blur-2xl border-r border-slate-200/60 shadow-2xl">
             {/* Sidebar content */}
-            <nav className="p-6 space-y-2">
-              <div className="mb-8">
-                <h2 className="text-lg font-display font-bold text-secondary-900 mb-2">
-                  {isPreviewMode
-                    ? `👁️ Vista Previa: ${displayMode === 'debtor' ? 'Dashboard Deudor' : 'Dashboard Empresa'}`
-                    : displayMode === 'admin' ? 'GOD MODE' : displayMode === 'debtor' ? 'Personas' : ''
-                  }
-                </h2>
-              </div>
+            <nav className="p-6 space-y-3 overflow-y-auto h-full">
 
               {menuItems.map((item, index) => {
                 const Icon = item.icon;
@@ -363,39 +355,50 @@ const DashboardLayout = ({ children }) => {
                     to={item.path}
                     onClick={() => isMobile && setSidebarOpen(false)}
                     className={`
-                      group flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300
-                      hover:scale-[1.02] hover:shadow-medium
+                      group flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ease-out
+                      hover:scale-[1.02] hover:shadow-lg hover:-translate-y-0.5
                       ${active
-                        ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-glow'
-                        : 'text-secondary-700 hover:bg-white/60 hover:text-primary-700'
+                        ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white shadow-xl shadow-blue-500/25 border border-blue-400/30'
+                        : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 hover:text-blue-700 hover:border hover:border-blue-200/50'
                       }
                     `}
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <div className={`
-                      p-2 rounded-xl transition-all duration-300
+                      p-3 rounded-xl transition-all duration-300 flex-shrink-0
                       ${active
-                        ? 'bg-white/20 shadow-soft'
-                        : 'bg-secondary-100/80 group-hover:bg-primary-100 group-hover:shadow-soft'
+                        ? 'bg-white/20 shadow-lg shadow-white/10'
+                        : 'bg-slate-100/80 group-hover:bg-blue-100 group-hover:shadow-md group-hover:shadow-blue-200/50'
                       }
                     `}>
-                      <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${active ? 'text-white' : 'text-secondary-600'}`} />
+                      <Icon className={`w-5 h-5 transition-all duration-300 group-hover:scale-110 ${active ? 'text-white' : 'text-slate-600 group-hover:text-blue-600'}`} />
                     </div>
-                    <div className="flex-1">
-                      <span className="font-semibold text-sm">{item.name}</span>
-                      <p className={`text-xs mt-0.5 ${active ? 'text-white/80' : 'text-secondary-500'}`}>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-semibold text-sm truncate">{item.name}</span>
+                      <p className={`text-xs mt-0.5 truncate transition-colors ${active ? 'text-white/80' : 'text-slate-500 group-hover:text-blue-600'}`}>
                         {item.description}
                       </p>
                     </div>
                     {active && (
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse-slow" />
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse shadow-lg shadow-white/50" />
                     )}
                   </Link>
                 );
               })}
 
-              {/* Logout */}
-              <div className="pt-6 mt-6 border-t border-secondary-200/50">
+              {/* Logout section */}
+              <div className="pt-8 mt-8 border-t border-slate-200/60">
+                <div className="px-5 py-3">
+                  <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200/50">
+                    <p className="text-xs font-semibold text-slate-700 mb-2">¿Necesitas ayuda?</p>
+                    <Link
+                      to="/personas/ayuda"
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                    >
+                      Visita nuestro centro de ayuda →
+                    </Link>
+                  </div>
+                </div>
               </div>
             </nav>
           </div>
@@ -443,7 +446,7 @@ const DashboardLayout = ({ children }) => {
 
             <div className="flex flex-wrap justify-center gap-6 text-sm">
               <Link
-                to="/terms-of-service"
+                to="/terminos-servicio"
                 className="text-secondary-600 hover:text-primary-600 transition-colors hover:underline"
               >
                 Términos de Servicio

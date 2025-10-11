@@ -4,10 +4,12 @@
  * Página para gestionar la billetera virtual del deudor
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Button, Modal, Input } from '../../components/common';
 import { useWallet } from '../../hooks';
+import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/formatters';
+import { addFundsToWallet, withdrawFromWallet, redeemGiftCard } from '../../services/databaseService';
 import Swal from 'sweetalert2';
 import {
   Wallet,
@@ -24,12 +26,14 @@ import {
 } from 'lucide-react';
 
 const WalletPage = () => {
-  const { balance, transactions, getStats } = useWallet();
+  const { user } = useAuth();
+  const { balance, transactions, getStats, refreshWallet, refreshTransactions } = useWallet();
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showGiftCardModal, setShowGiftCardModal] = useState(false);
   const [amount, setAmount] = useState('');
   const [giftCardCode, setGiftCardCode] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const stats = getStats();
 
@@ -45,7 +49,7 @@ const WalletPage = () => {
     setShowGiftCardModal(true);
   };
 
-  const confirmAddFunds = () => {
+  const confirmAddFunds = async () => {
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) {
       Swal.fire('Error', 'Por favor ingresa un monto válido', 'error');
@@ -56,13 +60,33 @@ const WalletPage = () => {
       return;
     }
 
-    // Simular procesamiento
-    setShowAddFundsModal(false);
-    setAmount('');
-    Swal.fire('¡Fondos Agregados!', `Fondos por ${formatCurrency(numAmount)} agregados exitosamente`, 'success');
+    setLoading(true);
+    try {
+      const { success, newBalance, error } = await addFundsToWallet(
+        user.id,
+        numAmount,
+        'Depósito manual de fondos'
+      );
+
+      if (success) {
+        setShowAddFundsModal(false);
+        setAmount('');
+        // Actualizar balance y transacciones
+        await refreshWallet();
+        await refreshTransactions();
+        Swal.fire('¡Fondos Agregados!', `Fondos por ${formatCurrency(numAmount)} agregados exitosamente. Nuevo saldo: ${formatCurrency(newBalance)}`, 'success');
+      } else {
+        Swal.fire('Error', error || 'No se pudieron agregar los fondos', 'error');
+      }
+    } catch (error) {
+      console.error('Error adding funds:', error);
+      Swal.fire('Error', 'Ocurrió un error al agregar los fondos', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const confirmWithdrawFunds = () => {
+  const confirmWithdrawFunds = async () => {
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) {
       Swal.fire('Error', 'Por favor ingresa un monto válido', 'error');
@@ -77,22 +101,61 @@ const WalletPage = () => {
       return;
     }
 
-    // Simular procesamiento
-    setShowWithdrawModal(false);
-    setAmount('');
-    Swal.fire('¡Retiro Procesado!', `Retiro de ${formatCurrency(numAmount)} procesado exitosamente`, 'success');
+    setLoading(true);
+    try {
+      const { success, newBalance, error } = await withdrawFromWallet(
+        user.id,
+        numAmount,
+        'Retiro manual de fondos'
+      );
+
+      if (success) {
+        setShowWithdrawModal(false);
+        setAmount('');
+        // Actualizar balance y transacciones
+        await refreshWallet();
+        await refreshTransactions();
+        Swal.fire('¡Retiro Procesado!', `Retiro de ${formatCurrency(numAmount)} procesado exitosamente. Nuevo saldo: ${formatCurrency(newBalance)}`, 'success');
+      } else {
+        Swal.fire('Error', error || 'No se pudieron retirar los fondos', 'error');
+      }
+    } catch (error) {
+      console.error('Error withdrawing funds:', error);
+      Swal.fire('Error', 'Ocurrió un error al retirar los fondos', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const confirmRedeemGiftCard = () => {
+  const confirmRedeemGiftCard = async () => {
     if (!giftCardCode.trim()) {
       Swal.fire('Error', 'Por favor ingresa el código de la gift card', 'error');
       return;
     }
 
-    // Simular canje
-    setShowGiftCardModal(false);
-    setGiftCardCode('');
-    Swal.fire('¡Gift Card Canjeada!', 'Gift card canjeada exitosamente', 'success');
+    setLoading(true);
+    try {
+      const { success, amount: redeemedAmount, newBalance, error } = await redeemGiftCard(
+        user.id,
+        giftCardCode.trim()
+      );
+
+      if (success) {
+        setShowGiftCardModal(false);
+        setGiftCardCode('');
+        // Actualizar balance y transacciones
+        await refreshWallet();
+        await refreshTransactions();
+        Swal.fire('¡Gift Card Canjeada!', `Gift card por ${formatCurrency(redeemedAmount)} canjeada exitosamente. Nuevo saldo: ${formatCurrency(newBalance)}`, 'success');
+      } else {
+        Swal.fire('Error', error || 'No se pudo canjear la gift card', 'error');
+      }
+    } catch (error) {
+      console.error('Error redeeming gift card:', error);
+      Swal.fire('Error', 'Ocurrió un error al canjear la gift card', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleExportTransactions = () => {
@@ -450,8 +513,9 @@ const WalletPage = () => {
               onClick={confirmAddFunds}
               className="flex-1 shadow-soft hover:shadow-glow"
               leftIcon={<Plus className="w-4 h-4" />}
+              disabled={loading}
             >
-              Agregar Fondos
+              {loading ? 'Procesando...' : 'Agregar Fondos'}
             </Button>
           </div>
         </div>
@@ -526,8 +590,9 @@ const WalletPage = () => {
               onClick={confirmWithdrawFunds}
               className="flex-1 shadow-soft hover:shadow-glow"
               leftIcon={<Minus className="w-4 h-4" />}
+              disabled={loading}
             >
-              Retirar Fondos
+              {loading ? 'Procesando...' : 'Retirar Fondos'}
             </Button>
           </div>
         </div>
@@ -594,8 +659,9 @@ const WalletPage = () => {
               onClick={confirmRedeemGiftCard}
               className="flex-1 shadow-soft hover:shadow-glow"
               leftIcon={<Check className="w-4 h-4" />}
+              disabled={loading}
             >
-              Canjear Gift Card
+              {loading ? 'Procesando...' : 'Canjear Gift Card'}
             </Button>
           </div>
         </div>

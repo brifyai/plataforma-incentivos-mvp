@@ -20,7 +20,8 @@ import ConfirmEmailPage from '../pages/auth/ConfirmEmailPage';
 import AuthCallbackPage from '../pages/auth/AuthCallbackPage';
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
-import TermsOfServicePage from '../pages/auth/TermsOfServicePage';
+import CompleteRegistrationPage from '../pages/auth/CompleteRegistrationPage';
+import TerminosServicioPage from '../pages/auth/TerminosServicioPage';
 import PrivacyPolicyPage from '../pages/auth/PrivacyPolicyPage';
 import SecurityPage from '../pages/SecurityPage';
 
@@ -29,7 +30,6 @@ import DashboardLayout from '../components/layout/DashboardLayout';
 
 // Páginas de personas
 import DebtorDashboard from '../pages/debtor/DebtorDashboard';
-import GamificationPage from '../pages/debtor/GamificationPage';
 import SimulatorPage from '../pages/debtor/SimulatorPage';
 
 // Páginas completas para el flujo de personas
@@ -186,11 +186,12 @@ const AppContent = () => {
         <Route path="/registro/empresa" element={<RegisterCompanyPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/complete-registration" element={<CompleteRegistrationPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
         {/* Rutas legales - accesibles sin autenticación */}
-        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+        <Route path="/terminos-servicio" element={<TerminosServicioPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/security" element={<SecurityPage />} />
 
@@ -297,16 +298,6 @@ const AppContent = () => {
             <ProtectedRoute allowedRoles={['debtor']}>
               <DashboardLayout>
                 <ProfilePage />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/personas/gamificacion"
-          element={
-            <ProtectedRoute allowedRoles={['debtor']}>
-              <DashboardLayout>
-                <GamificationPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

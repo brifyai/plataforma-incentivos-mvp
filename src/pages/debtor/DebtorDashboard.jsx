@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Card, Badge, LoadingSpinner, Button } from '../../components/common';
 import { useDebts, useOffers, useWallet } from '../../hooks';
+import { useRealtimePayments, useRealtimeDebts, useRealtimeAgreements, useRealtimeNotifications } from '../../hooks/useRealtime';
 import { getDebtorDashboardStats, getUserCommissionStats } from '../../services/databaseService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import {
@@ -26,16 +27,131 @@ import {
 
 const DebtorDashboard = () => {
   const { user, profile } = useAuth();
-  const { debts, loading: debtsLoading } = useDebts();
-  const { offers, loading: offersLoading } = useOffers();
-  const { balance, loading: walletLoading } = useWallet();
+  const { debts, loading: debtsLoading, refreshDebts } = useDebts();
+  const { offers, loading: offersLoading, refreshOffers } = useOffers();
+  const { balance, loading: walletLoading, refreshWallet } = useWallet();
   const [stats, setStats] = useState(null);
   const [commissionStats, setCommissionStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
   useEffect(() => {
     loadStats();
   }, [user, profile]);
+
+  // Sincronización en tiempo real para pagos
+  useRealtimePayments(
+    (payload) => {
+      console.log('💰 Nuevo pago detectado en dashboard:', payload);
+      // Actualizar estadísticas y balance
+      loadStats();
+      refreshWallet();
+      
+      // Mostrar notificación visual
+      showNotification('¡Nuevo pago registrado!', 'success');
+    },
+    (payload) => {
+      console.log('💰 Pago actualizado en dashboard:', payload);
+      // Actualizar estadísticas y balance
+      loadStats();
+      refreshWallet();
+      
+      // Mostrar notificación visual
+      showNotification('Pago actualizado', 'info');
+    }
+  );
+
+  // Sincronización en tiempo real para deudas
+  useRealtimeDebts(
+    (payload) => {
+      console.log('📄 Nueva deuda detectada en dashboard:', payload);
+      // Actualizar deudas y estadísticas
+      refreshDebts();
+      loadStats();
+      
+      // Mostrar notificación visual
+      showNotification('Nueva deuda registrada', 'warning');
+    },
+    (payload) => {
+      console.log('📄 Deuda actualizada en dashboard:', payload);
+      // Actualizar deudas y estadísticas
+      refreshDebts();
+      loadStats();
+      
+      // Mostrar notificación visual
+      showNotification('Deuda actualizada', 'info');
+    }
+  );
+
+  // Sincronización en tiempo real para acuerdos
+  useRealtimeAgreements(
+    (payload) => {
+      console.log('🤝 Nuevo acuerdo detectado en dashboard:', payload);
+      // Actualizar todo
+      refreshDebts();
+      refreshOffers();
+      loadStats();
+      
+      // Mostrar notificación visual
+      showNotification('¡Nuevo acuerdo creado!', 'success');
+    },
+    (payload) => {
+      console.log('🤝 Acuerdo actualizado en dashboard:', payload);
+      // Actualizar todo
+      refreshDebts();
+      refreshOffers();
+      loadStats();
+      
+      // Mostrar notificación visual
+      showNotification('Acuerdo actualizado', 'info');
+    }
+  );
+
+  // Sincronización en tiempo real para notificaciones
+  useRealtimeNotifications(
+    (payload) => {
+      console.log('🔔 Nueva notificación:', payload);
+      // Mostrar notificación visual
+      const notification = payload.new;
+      showNotification(notification.title || 'Nueva notificación', 'info');
+    }
+  );
+
+  // Función para mostrar notificaciones visuales
+  const showNotification = (message, type = 'info') => {
+    // Crear una notificación temporal en el DOM
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg animate-slide-in-right ${
+      type === 'success' ? 'bg-success-500 text-white' :
+      type === 'warning' ? 'bg-warning-500 text-white' :
+      type === 'error' ? 'bg-danger-500 text-white' :
+      'bg-primary-500 text-white'
+    }`;
+    notification.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="flex-shrink-0">
+          ${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'error' ? '❌' : 'ℹ️'}
+        </div>
+        <div class="flex-1">
+          <p class="font-medium">${message}</p>
+          <p class="text-sm opacity-90">Actualizado hace un momento</p>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Eliminar la notificación después de 5 segundos
+    setTimeout(() => {
+      notification.classList.add('animate-slide-out-right');
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 300);
+    }, 5000);
+    
+    // Actualizar timestamp de última actualización
+    setLastUpdate(new Date());
+  };
 
   const loadStats = async () => {
     if (!user) {
@@ -113,55 +229,71 @@ const DebtorDashboard = () => {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-8 text-white shadow-strong animate-fade-in">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+      {/* Realtime Status Indicator */}
+      <div className="fixed top-4 right-4 z-40 bg-white/90 backdrop-blur-sm rounded-full px-3 py-2 shadow-md border border-green-200 flex items-center gap-2">
+        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+        <span className="text-xs font-medium text-gray-700">Tiempo real</span>
+        <span className="text-xs text-gray-500">
+          {lastUpdate.toLocaleTimeString()}
+        </span>
+      </div>
+
+      {/* Enhanced Welcome Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-8 text-white shadow-2xl animate-fade-in border border-blue-500/20">
+        {/* Enhanced background pattern */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-white/30 to-transparent rounded-full -translate-y-48 translate-x-48 blur-2xl" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-white/20 to-transparent rounded-full translate-y-32 -translate-x-32 blur-2xl" />
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-3xl animate-pulse" />
         </div>
 
         <div className="relative">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <Wallet className="w-8 h-8" />
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 shadow-xl">
+              <Wallet className="w-10 h-10" />
             </div>
             <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
+              <h1 className="text-4xl font-display font-bold tracking-tight">
                 ¡Hola, {user?.user_metadata?.full_name?.split(' ')[0] || profile?.full_name?.split(' ')[0] || 'Usuario'}!
               </h1>
-              <p className="text-primary-100 text-lg">
+              <p className="text-blue-100 text-xl mt-2">
                 Negocia tus deudas y gana el <span className="font-bold text-yellow-300">50% en comisiones</span>
               </p>
             </div>
           </div>
 
-          {/* Quick stats in welcome */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="w-6 h-6 text-success-300" />
+          {/* Enhanced Quick stats in welcome */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-500/20 rounded-xl">
+                  <TrendingUp className="w-7 h-7 text-emerald-300" />
+                </div>
                 <div>
-                  <p className="text-sm text-primary-100">Deudas Activas</p>
-                  <p className="text-2xl font-bold">{stats?.totalDebts || 0}</p>
+                  <p className="text-sm text-blue-100 font-medium">Deudas Activas</p>
+                  <p className="text-3xl font-bold">{stats?.totalDebts || 0}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <DollarSign className="w-6 h-6 text-warning-300" />
+            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-yellow-500/20 rounded-xl">
+                  <DollarSign className="w-7 h-7 text-yellow-300" />
+                </div>
                 <div>
-                  <p className="text-sm text-primary-100">Saldo Billetera</p>
-                  <p className="text-2xl font-bold">{formatCurrency(balance || 0)}</p>
+                  <p className="text-sm text-blue-100 font-medium">Saldo Billetera</p>
+                  <p className="text-3xl font-bold">{formatCurrency(balance || 0)}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-success-300" />
+            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-500/20 rounded-xl">
+                  <CheckCircle className="w-7 h-7 text-green-300" />
+                </div>
                 <div>
-                  <p className="text-sm text-primary-100">Acuerdos</p>
-                  <p className="text-2xl font-bold">{stats?.activeAgreements || 0}</p>
+                  <p className="text-sm text-blue-100 font-medium">Acuerdos</p>
+                  <p className="text-3xl font-bold">{stats?.activeAgreements || 0}</p>
                 </div>
               </div>
             </div>
@@ -169,95 +301,96 @@ const DebtorDashboard = () => {
         </div>
       </div>
 
-      {/* Commission Earnings Section - Most Prominent */}
+      {/* Enhanced Commission Earnings Section */}
       <Card
-        variant="elevated"
-        className="relative overflow-hidden bg-gradient-to-br from-yellow-500 via-yellow-600 to-orange-600 text-white shadow-strong animate-slide-up"
+        variant="gradient"
+        className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-orange-600 to-red-600 text-white shadow-2xl animate-slide-up border border-amber-400/30"
         style={{ animationDelay: '200ms' }}
       >
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12" />
+        {/* Enhanced background pattern */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/40 to-transparent rounded-full -translate-y-32 translate-x-32 blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-white/30 to-transparent rounded-full translate-y-24 -translate-x-24 blur-2xl animate-float" />
+          <div className="absolute top-1/3 left-1/4 w-32 h-32 bg-gradient-to-br from-yellow-300/30 to-orange-300/30 rounded-full blur-xl animate-bounce-subtle" />
         </div>
 
         <div className="relative p-8">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <div className="p-4 bg-white/20 backdrop-blur-sm rounded-3xl shadow-lg">
-                <Coins className="w-10 h-10" />
+          <div className="text-center mb-10">
+            <div className="flex items-center justify-center gap-6 mb-6">
+              <div className="p-5 bg-white/25 backdrop-blur-md rounded-3xl shadow-2xl border border-white/40">
+                <Coins className="w-12 h-12 animate-pulse" />
               </div>
               <div>
-                <h2 className="text-3xl font-display font-bold mb-2">
+                <h2 className="text-4xl font-display font-bold mb-3">
                   💰 Gana Dinero Negociando tus Deudas
                 </h2>
-                <p className="text-yellow-100 text-lg">
-                  Recibe el <span className="font-bold text-white">50% de comisión</span> por cada acuerdo exitoso
+                <p className="text-amber-100 text-xl">
+                  Recibe el <span className="font-bold text-white text-2xl">50% de comisión</span> por cada acuerdo exitoso
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Commission Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 bg-white/20 rounded-xl">
-                  <PiggyBank className="w-6 h-6" />
+          {/* Enhanced Commission Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-7 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
+              <div className="flex items-center gap-5 mb-5">
+                <div className="p-4 bg-emerald-500/25 rounded-2xl border border-emerald-400/30">
+                  <PiggyBank className="w-8 h-8 text-emerald-200" />
                 </div>
                 <div>
-                  <p className="text-sm text-yellow-100">Comisiones Ganadas</p>
-                  <p className="text-2xl font-bold">{formatCurrency(commissionStats?.earnedCommissions || 0)}</p>
+                  <p className="text-sm text-amber-100 font-semibold">Comisiones Ganadas</p>
+                  <p className="text-3xl font-bold">{formatCurrency(commissionStats?.earnedCommissions || 0)}</p>
                 </div>
               </div>
-              <p className="text-xs text-yellow-200">Este mes</p>
+              <p className="text-sm text-amber-200 font-medium">Este mes</p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 bg-white/20 rounded-xl">
-                  <Target className="w-6 h-6" />
+            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-7 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
+              <div className="flex items-center gap-5 mb-5">
+                <div className="p-4 bg-blue-500/25 rounded-2xl border border-blue-400/30">
+                  <Target className="w-8 h-8 text-blue-200" />
                 </div>
                 <div>
-                  <p className="text-sm text-yellow-100">Próxima Comisión</p>
-                  <p className="text-2xl font-bold">{formatCurrency(commissionStats?.nextCommission || 0)}</p>
+                  <p className="text-sm text-amber-100 font-semibold">Próxima Comisión</p>
+                  <p className="text-3xl font-bold">{formatCurrency(commissionStats?.nextCommission || 0)}</p>
                 </div>
               </div>
-              <p className="text-xs text-yellow-200">Al cerrar tu próximo acuerdo</p>
+              <p className="text-sm text-amber-200 font-medium">Al cerrar tu próximo acuerdo</p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 bg-white/20 rounded-xl">
-                  <Calculator className="w-6 h-6" />
+            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-7 border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl">
+              <div className="flex items-center gap-5 mb-5">
+                <div className="p-4 bg-purple-500/25 rounded-2xl border border-purple-400/30">
+                  <Calculator className="w-8 h-8 text-purple-200" />
                 </div>
                 <div>
-                  <p className="text-sm text-yellow-100">Potencial Mensual</p>
-                  <p className="text-2xl font-bold">{formatCurrency(commissionStats?.monthlyPotential || 0)}</p>
+                  <p className="text-sm text-amber-100 font-semibold">Potencial Mensual</p>
+                  <p className="text-3xl font-bold">{formatCurrency(commissionStats?.monthlyPotential || 0)}</p>
                 </div>
               </div>
-              <p className="text-xs text-yellow-200">Si pagas todas tus deudas</p>
+              <p className="text-sm text-amber-200 font-medium">Si pagas todas tus deudas</p>
             </div>
           </div>
 
-          {/* Motivational Message */}
+          {/* Enhanced Motivational Message */}
           <div className="text-center">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 mb-6">
-              <h3 className="text-xl font-bold mb-3">🎯 ¿Sabías que...?</h3>
-              <p className="text-yellow-100 text-lg leading-relaxed">
+            <div className="bg-white/15 backdrop-blur-md rounded-3xl p-8 border border-white/30 mb-8 hover:bg-white/20 transition-all duration-300">
+              <h3 className="text-2xl font-bold mb-4">🎯 ¿Sabías que...?</h3>
+              <p className="text-amber-50 text-xl leading-relaxed">
                 Cuando una deuda entra en mora, <span className="font-bold text-white">las empresas de cobranza contactan a la persona</span> para negociar acuerdos.
                 Con nuestra plataforma, tú <span className="font-bold text-white">ganas el 50% de comisión por cada acuerdo exitoso</span>.
                 ¡Registra tus deudas y genera ingresos cuando negocien!
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link to="/personas/ofertas">
                 <Button
                   variant="glass"
                   size="lg"
-                  className="shadow-glow hover:scale-105 transition-all"
-                  leftIcon={<DollarSign className="w-5 h-5" />}
+                  className="shadow-2xl hover:scale-105 transition-all border-2 border-white/40"
+                  leftIcon={<DollarSign className="w-6 h-6" />}
                 >
                   Realizar Pago
                 </Button>
@@ -266,8 +399,8 @@ const DebtorDashboard = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all"
-                  leftIcon={<Calculator className="w-5 h-5" />}
+                  className="bg-white/20 border-2 border-white/40 text-white hover:bg-white/30 hover:scale-105 transition-all"
+                  leftIcon={<Calculator className="w-6 h-6" />}
                 >
                   Calcular Ganancias
                 </Button>

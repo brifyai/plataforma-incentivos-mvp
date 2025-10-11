@@ -7,8 +7,10 @@
 import { useState, useEffect } from 'react';
 import { Card, Badge, Button, Input, LoadingSpinner, Modal } from '../../components/common';
 import { formatDate } from '../../utils/formatters';
-import { getAllUsers, createUser, updateUser, deleteUser } from '../../services/databaseService';
+import { getAllUsers, createUserWithInvitation, updateUser, deleteUser, getAllCorporateClients } from '../../services/databaseService';
 import { validateUserManually, rejectUser, sendPasswordResetForUser } from '../../services/authService';
+import { sendAdminInvitationEmail } from '../../services/emailService';
+import { useAuth } from '../../context/AuthContext';
 import Swal from 'sweetalert2';
 import {
   Users,
@@ -32,12 +34,15 @@ import {
 } from 'lucide-react';
 
 const AdminUsersPage = () => {
+  const { user: currentUser, profile: currentProfile } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCorporateClient, setFilterCorporateClient] = useState('all');
+  const [corporateClients, setCorporateClients] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -52,6 +57,7 @@ const AdminUsersPage = () => {
 
   useEffect(() => {
     loadUsers();
+    loadCorporateClients();
   }, []);
 
   const loadUsers = async () => {
@@ -73,6 +79,19 @@ const AdminUsersPage = () => {
       setError('Error al cargar la información de usuarios');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCorporateClients = async () => {
+    try {
+      const { corporateClients, error } = await getAllCorporateClients();
+      if (error) {
+        console.error('Error loading corporate clients:', error);
+      } else {
+        setCorporateClients(corporateClients || []);
+      }
+    } catch (error) {
+      console.error('Error in loadCorporateClients:', error);
     }
   };
 
@@ -154,8 +173,11 @@ const AdminUsersPage = () => {
 
     const matchesRole = filterRole === 'all' || user.role === filterRole;
     const matchesStatus = filterStatus === 'all' || user.validation_status === filterStatus;
+    const matchesCorporateClient = filterCorporateClient === 'all' ||
+                                 (filterCorporateClient === 'none' && (!user.corporate_client_id || user.corporate_client_id === null)) ||
+                                 (filterCorporateClient !== 'none' && user.corporate_client_id === filterCorporateClient);
 
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesRole && matchesStatus && matchesCorporateClient;
   });
 
   // Paginación
@@ -179,7 +201,10 @@ const AdminUsersPage = () => {
   const handleCreateUser = async (userData) => {
     setIsSubmitting(true);
     try {
-      const { user, error } = await createUser(userData);
+      // Obtener nombre del administrador actual
+      const adminName = currentProfile?.full_name || currentUser?.user_metadata?.full_name || 'Administrador';
+
+      const { user, invitationToken, error } = await createUserWithInvitation(userData, adminName);
 
       if (error) {
         await Swal.fire({
@@ -190,6 +215,38 @@ const AdminUsersPage = () => {
         });
         return;
       }
+
+      // Enviar email de invitación
+      try {
+        // Usar URL base configurable para el enlace de invitación
+        const baseUrl = process.env.VITE_APP_URL || window.location.origin;
+        const completeUrl = `${baseUrl}/complete-registration?token=${invitationToken}`;
+
+        console.log('📧 Generated invitation URL:', completeUrl);
+
+        const emailResult = await sendAdminInvitationEmail({
+          fullName: userData.full_name,
+          email: userData.email,
+          invitationToken: invitationToken,
+          adminName: adminName,
+          completeUrl: completeUrl
+        });
+
+        if (!emailResult.success) {
+          console.warn('Error sending invitation email:', emailResult.error);
+          // No fallar la creación del usuario por error de email
+        }
+      } catch (emailError) {
+        console.warn('Error sending invitation email:', emailError);
+        // No fallar la creación del usuario por error de email
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Usuario creado exitosamente',
+        text: 'Se ha enviado un email de invitación al usuario para que complete su registro.',
+        confirmButtonText: 'Aceptar'
+      });
 
       setShowCreateModal(false);
       loadUsers(); // Recargar lista
@@ -511,6 +568,22 @@ const AdminUsersPage = () => {
                 <option value="validated">Validados</option>
                 <option value="pending">Pendientes</option>
                 <option value="rejected">Rechazados</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Building className="w-5 h-5 text-secondary-400" />
+              <select
+                value={filterCorporateClient}
+                onChange={(e) => setFilterCorporateClient(e.target.value)}
+                className="px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-w-[200px]"
+              >
+                <option value="all">Todos los Clientes</option>
+                <option value="none">Sin Cliente Corporativo</option>
+                {corporateClients.map(client => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
               </select>
             </div>
             {stats.pending > 0 && (

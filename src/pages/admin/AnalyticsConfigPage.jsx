@@ -8,39 +8,23 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Badge, Button, LoadingSpinner, Input, Select, Modal } from '../../components/common';
 import { BarChart3, Plus, Settings, Eye, Users, RefreshCw, CheckCircle, ArrowLeft, Edit, Trash2, Zap } from 'lucide-react';
+import { getSystemConfig, updateSystemConfig } from '../../services/databaseService';
 import Swal from 'sweetalert2';
 
 const AnalyticsConfigPage = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
   const [showAddAnalyticsModal, setShowAddAnalyticsModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
 
   // Estado de proveedores de analytics
-  const [analyticsProviders, setAnalyticsProviders] = useState([
-    {
-      id: '1',
-      name: 'Google Analytics 4',
-      type: 'google_analytics',
-      trackingId: 'GA-123456789',
-      domain: 'plataforma.com',
-      eventsTracked: 15420,
-      usersTracked: 2840,
-      isActive: true,
-      lastSync: new Date(Date.now() - 3600000) // 1 hora atrás
-    },
-    {
-      id: '2',
-      name: 'Mixpanel Analytics',
-      type: 'mixpanel',
-      trackingId: 'abcd1234efgh5678',
-      domain: 'plataforma.com',
-      eventsTracked: 8750,
-      usersTracked: 1920,
-      isActive: true,
-      lastSync: new Date(Date.now() - 7200000) // 2 horas atrás
-    }
-  ]);
+  const [analyticsProviders, setAnalyticsProviders] = useState([]);
+
+  useEffect(() => {
+    loadAnalyticsConfig();
+  }, []);
 
   // Formulario para agregar/editar analytics
   const [providerForm, setProviderForm] = useState({
@@ -87,6 +71,29 @@ const AnalyticsConfigPage = () => {
     return icons[type] || BarChart3;
   };
 
+  const loadAnalyticsConfig = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const result = await getSystemConfig();
+      if (result.error) {
+        console.error('Config error:', result.error);
+        // Usar datos por defecto si hay error
+        setAnalyticsProviders([]);
+      } else {
+        // Cargar configuración de analytics desde la base de datos
+        const analyticsConfig = result.config.analyticsProviders || [];
+        setAnalyticsProviders(analyticsConfig);
+      }
+    } catch (error) {
+      console.error('Error loading analytics config:', error);
+      setError('Error al cargar configuración de analytics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddAnalytics = () => {
     setSelectedProvider(null);
     setProviderForm({
@@ -128,13 +135,37 @@ const AnalyticsConfigPage = () => {
     });
 
     if (result.isConfirmed) {
-      setAnalyticsProviders(prev => prev.filter(p => p.id !== providerId));
-      await Swal.fire({
-        icon: 'success',
-        title: 'Eliminado',
-        text: 'La herramienta de analytics ha sido eliminada',
-        timer: 2000
-      });
+      try {
+        const updatedProviders = analyticsProviders.filter(p => p.id !== providerId);
+
+        // Guardar en base de datos
+        const configToSave = {
+          analyticsProviders: updatedProviders
+        };
+
+        const saveResult = await updateSystemConfig(configToSave);
+
+        if (saveResult.error) {
+          throw new Error(saveResult.error);
+        }
+
+        setAnalyticsProviders(updatedProviders);
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'Eliminado',
+          text: 'La herramienta de analytics ha sido eliminada',
+          timer: 2000
+        });
+      } catch (error) {
+        console.error('Error deleting analytics:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al eliminar',
+          text: error.message || 'No se pudo eliminar la herramienta de analytics',
+          confirmButtonText: 'Aceptar'
+        });
+      }
     }
   };
 
@@ -144,45 +175,67 @@ const AnalyticsConfigPage = () => {
         await Swal.fire({
           icon: 'error',
           title: 'Campos requeridos',
-          text: 'Por favor completa todos los campos obligatorios'
+          text: 'Por favor completa todos los campos obligatorios',
+          confirmButtonText: 'Aceptar'
         });
         return;
       }
 
+      setSaving(true);
+
+      let updatedProviders;
       if (selectedProvider) {
         // Editar proveedor existente
-        setAnalyticsProviders(prev => prev.map(p =>
+        updatedProviders = analyticsProviders.map(p =>
           p.id === selectedProvider.id
-            ? { ...p, ...providerForm }
+            ? { ...p, ...providerForm, updatedAt: new Date().toISOString() }
             : p
-        ));
+        );
       } else {
         // Agregar nuevo proveedor
         const newProvider = {
           id: Date.now().toString(),
           ...providerForm,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           eventsTracked: 0,
           usersTracked: 0,
           lastSync: null
         };
-        setAnalyticsProviders(prev => [...prev, newProvider]);
+        updatedProviders = [...analyticsProviders, newProvider];
       }
 
+      // Guardar en base de datos
+      const configToSave = {
+        analyticsProviders: updatedProviders
+      };
+
+      const result = await updateSystemConfig(configToSave);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setAnalyticsProviders(updatedProviders);
       setShowAddAnalyticsModal(false);
+
       await Swal.fire({
         icon: 'success',
         title: selectedProvider ? 'Actualizado' : 'Agregado',
         text: `La herramienta de analytics ha sido ${selectedProvider ? 'actualizada' : 'agregada'} exitosamente`,
-        timer: 2000
+        confirmButtonText: 'Aceptar'
       });
 
     } catch (error) {
       console.error('Error saving analytics:', error);
       await Swal.fire({
         icon: 'error',
-        title: 'Error',
-        text: 'No se pudo guardar la configuración'
+        title: 'Error al guardar',
+        text: error.message || 'No se pudo guardar la configuración',
+        confirmButtonText: 'Aceptar'
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -206,6 +259,25 @@ const AnalyticsConfigPage = () => {
       minute: '2-digit'
     });
   };
+
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error al cargar configuración</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => loadAnalyticsConfig()}>
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -484,6 +556,7 @@ const AnalyticsConfigPage = () => {
             <Button
               variant="gradient"
               onClick={handleSaveAnalytics}
+              loading={saving}
               className="flex-1"
               leftIcon={<CheckCircle className="w-4 h-4" />}
             >

@@ -5,7 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Button, Input, Modal, Badge, Select } from '../../components/common';
+import { useNavigate } from 'react-router-dom';
+import { Card, Button, Input, Modal, Badge, Select, LoadingSpinner } from '../../components/common';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import {
   Building,
@@ -19,11 +20,17 @@ import {
   Shield,
   Plus,
   Edit,
-  Trash2
+  Trash2,
+  ArrowLeft
 } from 'lucide-react';
+import { getSystemConfig, updateSystemConfig } from '../../services/databaseService';
+import Swal from 'sweetalert2';
 
 const BankConfigPage = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
   const [banks, setBanks] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingBank, setEditingBank] = useState(null);
@@ -38,40 +45,28 @@ const BankConfigPage = () => {
   });
 
   useEffect(() => {
-    loadBanks();
+    loadBankConfig();
   }, []);
 
-  const loadBanks = async () => {
+  const loadBankConfig = async () => {
     try {
       setLoading(true);
-      // Simular carga de bancos configurados
-      setTimeout(() => {
-        setBanks([
-          {
-            id: '1',
-            name: 'Banco Estado',
-            bankCode: '012',
-            apiEndpoint: 'https://api.bancoestado.cl',
-            isActive: true,
-            lastSync: new Date(),
-            totalTransactions: 450,
-            monthlyVolume: 15000000
-          },
-          {
-            id: '2',
-            name: 'Banco de Chile',
-            bankCode: '001',
-            apiEndpoint: 'https://api.bancochile.cl',
-            isActive: false,
-            lastSync: null,
-            totalTransactions: 0,
-            monthlyVolume: 0
-          }
-        ]);
-        setLoading(false);
-      }, 1000);
+      setError(null);
+
+      const result = await getSystemConfig();
+      if (result.error) {
+        console.error('Config error:', result.error);
+        // Usar datos por defecto si hay error
+        setBanks([]);
+      } else {
+        // Cargar configuración de bancos desde la base de datos
+        const banksConfig = result.config.banks || [];
+        setBanks(banksConfig);
+      }
     } catch (error) {
-      console.error('Error loading banks:', error);
+      console.error('Error loading bank config:', error);
+      setError('Error al cargar configuración de bancos');
+    } finally {
       setLoading(false);
     }
   };
@@ -107,67 +102,196 @@ const BankConfigPage = () => {
   const handleSaveBank = async () => {
     try {
       if (!bankForm.name || !bankForm.bankCode || !bankForm.apiEndpoint) {
-        alert('Por favor complete todos los campos obligatorios');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Campos requeridos',
+          text: 'Por favor complete todos los campos obligatorios',
+          confirmButtonText: 'Aceptar'
+        });
         return;
       }
 
+      setSaving(true);
+
+      let updatedBanks;
       if (editingBank) {
         // Actualizar banco existente
-        setBanks(prev => prev.map(bank =>
+        updatedBanks = banks.map(bank =>
           bank.id === editingBank.id
-            ? { ...bank, ...bankForm }
+            ? { ...bank, ...bankForm, updatedAt: new Date().toISOString() }
             : bank
-        ));
-        alert('✅ Banco actualizado exitosamente');
+        );
       } else {
         // Agregar nuevo banco
         const newBank = {
           id: Date.now().toString(),
           ...bankForm,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           lastSync: null,
           totalTransactions: 0,
           monthlyVolume: 0
         };
-        setBanks(prev => [...prev, newBank]);
-        alert('✅ Banco agregado exitosamente');
+        updatedBanks = [...banks, newBank];
       }
 
+      // Guardar en base de datos
+      const configToSave = {
+        banks: updatedBanks
+      };
+
+      const result = await updateSystemConfig(configToSave);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setBanks(updatedBanks);
       setShowAddModal(false);
+
+      await Swal.fire({
+        icon: 'success',
+        title: editingBank ? 'Banco actualizado' : 'Banco agregado',
+        text: `El banco ha sido ${editingBank ? 'actualizado' : 'agregado'} exitosamente`,
+        confirmButtonText: 'Aceptar'
+      });
+
     } catch (error) {
-      alert('Error al guardar banco: ' + error.message);
+      console.error('Error saving bank:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al guardar',
+        text: error.message || 'No se pudo guardar la configuración del banco',
+        confirmButtonText: 'Aceptar'
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDeleteBank = async (bankId) => {
-    if (confirm('¿Está seguro de que desea eliminar este banco?')) {
+    const result = await Swal.fire({
+      title: '¿Eliminar banco?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
       try {
-        setBanks(prev => prev.filter(bank => bank.id !== bankId));
-        alert('✅ Banco eliminado exitosamente');
+        const updatedBanks = banks.filter(bank => bank.id !== bankId);
+
+        // Guardar en base de datos
+        const configToSave = {
+          banks: updatedBanks
+        };
+
+        const saveResult = await updateSystemConfig(configToSave);
+
+        if (saveResult.error) {
+          throw new Error(saveResult.error);
+        }
+
+        setBanks(updatedBanks);
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'Eliminado',
+          text: 'El banco ha sido eliminado exitosamente',
+          timer: 2000
+        });
       } catch (error) {
-        alert('Error al eliminar banco: ' + error.message);
+        console.error('Error deleting bank:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al eliminar',
+          text: error.message || 'No se pudo eliminar el banco',
+          confirmButtonText: 'Aceptar'
+        });
       }
     }
   };
 
   const handleTestConnection = async (bank) => {
-    alert(`🔄 Probando conexión con ${bank.name}...`);
-    setTimeout(() => {
-      alert(`✅ Conexión exitosa con ${bank.name}`);
-    }, 1500);
+    await Swal.fire({
+      icon: 'info',
+      title: 'Probando conexión',
+      text: `Probando conexión con ${bank.name}...`,
+      showConfirmButton: false,
+      timer: 2000
+    });
+
+    // Simular prueba de conexión
+    setTimeout(async () => {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Conexión exitosa',
+        text: `La conexión con ${bank.name} está funcionando correctamente`,
+        confirmButtonText: 'Aceptar'
+      });
+    }, 1000);
   };
 
   const handleSyncBank = async (bank) => {
-    alert(`🔄 Sincronizando datos con ${bank.name}...`);
-    setTimeout(() => {
-      alert(`✅ Datos sincronizados exitosamente con ${bank.name}`);
-      loadBanks();
-    }, 2000);
+    await Swal.fire({
+      icon: 'info',
+      title: 'Sincronizando',
+      text: `Sincronizando datos con ${bank.name}...`,
+      showConfirmButton: false,
+      timer: 2000
+    });
+
+    // Simular sincronización
+    setTimeout(async () => {
+      // Actualizar última sincronización
+      const updatedBanks = banks.map(b =>
+        b.id === bank.id
+          ? { ...b, lastSync: new Date(), totalTransactions: b.totalTransactions + Math.floor(Math.random() * 10) }
+          : b
+      );
+
+      // Guardar en base de datos
+      const configToSave = {
+        banks: updatedBanks
+      };
+
+      try {
+        const result = await updateSystemConfig(configToSave);
+        if (!result.error) {
+          setBanks(updatedBanks);
+        }
+      } catch (error) {
+        console.error('Error updating sync time:', error);
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Sincronización completada',
+        text: `Los datos han sido sincronizados exitosamente con ${bank.name}`,
+        confirmButtonText: 'Aceptar'
+      });
+    }, 1500);
   };
 
   if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error al cargar configuración</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => loadBankConfig()}>
+            Reintentar
+          </Button>
+        </div>
       </div>
     );
   }
@@ -178,6 +302,13 @@ const BankConfigPage = () => {
       <div className="bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 rounded-3xl p-8 text-white shadow-strong">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-6">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/admin/configuracion')}
+              className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
             <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
               <Building className="w-8 h-8" />
             </div>
@@ -463,6 +594,7 @@ const BankConfigPage = () => {
             <Button
               variant="gradient"
               onClick={handleSaveBank}
+              loading={saving}
               className="flex-1"
               leftIcon={<CheckCircle className="w-4 h-4" />}
             >

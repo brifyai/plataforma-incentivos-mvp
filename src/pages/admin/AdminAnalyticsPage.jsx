@@ -6,8 +6,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, Badge, LoadingSpinner, DateFilter } from '../../components/common';
-import { BarChart3, TrendingUp, Users, DollarSign, Activity, PieChart, Calendar } from 'lucide-react';
-import { getAdminAnalytics } from '../../services/databaseService';
+import { BarChart3, TrendingUp, Users, DollarSign, Activity, PieChart, Calendar, Building } from 'lucide-react';
+import { getAdminAnalytics, getAllCorporateClients } from '../../services/databaseService';
 import { formatCurrency } from '../../utils/formatters';
 
 const AdminAnalyticsPage = () => {
@@ -16,6 +16,8 @@ const AdminAnalyticsPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [quickFilter, setQuickFilter] = useState(''); // 'today', 'week', 'month'
+  const [filterCorporateClient, setFilterCorporateClient] = useState('all');
+  const [corporateClients, setCorporateClients] = useState([]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -39,7 +41,21 @@ const AdminAnalyticsPage = () => {
     };
 
     fetchAnalytics();
+    loadCorporateClients();
   }, []);
+
+  const loadCorporateClients = async () => {
+    try {
+      const { corporateClients, error } = await getAllCorporateClients();
+      if (error) {
+        console.error('Error loading corporate clients:', error);
+      } else {
+        setCorporateClients(corporateClients || []);
+      }
+    } catch (error) {
+      console.error('Error in loadCorporateClients:', error);
+    }
+  };
 
   const getActivityIcon = (iconName) => {
     switch (iconName) {
@@ -116,6 +132,7 @@ const AdminAnalyticsPage = () => {
   const clearFilters = () => {
     setDateFilter({ startDate: '', endDate: '' });
     setQuickFilter('');
+    setFilterCorporateClient('all');
   };
 
   if (loading) {
@@ -190,7 +207,7 @@ const AdminAnalyticsPage = () => {
       >
         Mes
       </button>
-      {(dateFilter.startDate || dateFilter.endDate) && (
+      {(dateFilter.startDate || dateFilter.endDate || filterCorporateClient !== 'all') && (
         <button
           onClick={clearFilters}
           className="px-3 py-2 text-xs font-semibold text-white bg-blue-600 border border-blue-500 rounded-lg hover:bg-blue-700 transition-colors"
@@ -198,6 +215,29 @@ const AdminAnalyticsPage = () => {
           Limpiar
         </button>
       )}
+    </div>
+  </div>
+
+  {/* Corporate Client Filter */}
+  <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
+      <Building className="w-5 h-5 text-blue-300" />
+      <span className="text-sm font-medium text-blue-100">Filtrar por cliente:</span>
+    </div>
+    <div className="flex items-center gap-2">
+      <select
+        value={filterCorporateClient}
+        onChange={(e) => setFilterCorporateClient(e.target.value)}
+        className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white focus:ring-2 focus:ring-white/50 focus:border-white text-sm min-w-[200px]"
+      >
+        <option value="all" className="text-gray-900">Todos los Clientes</option>
+        <option value="none" className="text-gray-900">Sin Cliente Corporativo</option>
+        {corporateClients.map(client => (
+          <option key={client.id} value={client.id} className="text-gray-900">
+            {client.name}
+          </option>
+        ))}
+      </select>
     </div>
   </div>
 

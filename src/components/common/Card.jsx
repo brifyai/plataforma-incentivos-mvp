@@ -19,20 +19,20 @@ const Card = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'relative overflow-hidden transition-all duration-300 ease-out';
+  const baseStyles = 'relative overflow-hidden transition-all duration-300 ease-out backdrop-blur-sm';
 
   const variants = {
-    default: 'bg-white/80 backdrop-blur-sm border border-secondary-200/50 shadow-soft',
-    elevated: 'bg-white shadow-medium border border-secondary-100',
-    glass: 'bg-white/10 backdrop-blur-xl border border-white/20 shadow-glass',
-    gradient: 'bg-gradient-to-br from-primary-50/80 to-accent-50/80 backdrop-blur-sm border border-primary-200/30 shadow-soft',
+    default: 'bg-white/90 backdrop-blur-md border border-slate-200/60 shadow-lg hover:shadow-xl',
+    elevated: 'bg-white/95 backdrop-blur-lg shadow-xl border border-slate-100/80 hover:shadow-2xl',
+    glass: 'bg-white/10 backdrop-blur-2xl border border-white/30 shadow-2xl hover:shadow-3xl',
+    gradient: 'bg-gradient-to-br from-blue-50/90 via-indigo-50/90 to-purple-50/90 backdrop-blur-md border border-blue-200/40 shadow-xl hover:shadow-2xl',
   };
 
   const hoverStyles = hover
-    ? 'hover:shadow-strong hover:scale-[1.02] hover:-translate-y-1 cursor-pointer'
+    ? 'hover:shadow-2xl hover:scale-[1.03] hover:-translate-y-2 cursor-pointer hover:bg-white/95'
     : '';
 
-  const roundedStyles = 'rounded-2xl';
+  const roundedStyles = 'rounded-3xl';
 
   return (
     <div

@@ -21,18 +21,18 @@ const Button = ({
   type = 'button',
   ...props
 }) => {
-  const baseStyles = 'relative inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none overflow-hidden group';
+  const baseStyles = 'relative inline-flex items-center justify-center font-semibold rounded-2xl transition-all duration-300 ease-out focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none overflow-hidden group backdrop-blur-sm';
 
   const variants = {
-    primary: 'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 focus:ring-primary-200/50 shadow-soft hover:shadow-glow hover:scale-105 active:scale-95',
-    secondary: 'bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 hover:from-secondary-200 hover:to-secondary-300 focus:ring-secondary-100 shadow-soft hover:shadow-medium hover:scale-105 active:scale-95',
-    success: 'bg-gradient-to-r from-success-600 to-success-700 text-white hover:from-success-700 hover:to-success-800 focus:ring-success-200/50 shadow-soft hover:shadow-glow-success hover:scale-105 active:scale-95',
-    danger: 'bg-gradient-to-r from-danger-600 to-danger-700 text-white hover:from-danger-700 hover:to-danger-800 focus:ring-danger-200/50 shadow-soft hover:shadow-glow-danger hover:scale-105 active:scale-95',
-    warning: 'bg-gradient-to-r from-warning-600 to-warning-700 text-white hover:from-warning-700 hover:to-warning-800 focus:ring-warning-200/50 shadow-soft hover:shadow-glow-warning hover:scale-105 active:scale-95',
-    outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 hover:border-primary-700 focus:ring-primary-200/50 shadow-soft hover:shadow-medium hover:scale-105 active:scale-95',
-    ghost: 'text-secondary-700 hover:bg-secondary-100/80 hover:text-secondary-900 focus:ring-secondary-100 shadow-soft hover:shadow-medium hover:scale-105 active:scale-95',
-    glass: 'bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 focus:ring-white/30 shadow-glass hover:shadow-strong hover:scale-105 active:scale-95',
-    gradient: 'bg-gradient-to-r from-accent-500 to-primary-600 text-white hover:from-accent-600 hover:to-primary-700 focus:ring-accent-200/50 shadow-soft hover:shadow-glow hover:scale-105 active:scale-95',
+    primary: 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 focus:ring-blue-200/50 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98] border border-blue-500/20',
+    secondary: 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-800 hover:from-slate-200 hover:to-slate-300 focus:ring-slate-100 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] border border-slate-300/50',
+    success: 'bg-gradient-to-r from-emerald-600 via-emerald-700 to-green-700 text-white hover:from-emerald-700 hover:via-emerald-800 hover:to-green-800 focus:ring-emerald-200/50 shadow-lg hover:shadow-xl hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98] border border-emerald-500/20',
+    danger: 'bg-gradient-to-r from-red-600 via-red-700 to-rose-700 text-white hover:from-red-700 hover:via-red-800 hover:to-rose-800 focus:ring-red-200/50 shadow-lg hover:shadow-xl hover:shadow-red-500/25 hover:scale-[1.02] active:scale-[0.98] border border-red-500/20',
+    warning: 'bg-gradient-to-r from-amber-600 via-orange-600 to-yellow-700 text-white hover:from-amber-700 hover:via-orange-700 hover:to-yellow-800 focus:ring-amber-200/50 shadow-lg hover:shadow-xl hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98] border border-amber-500/20',
+    outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700 focus:ring-blue-200/50 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] bg-white/80',
+    ghost: 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 focus:ring-slate-100 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',
+    glass: 'bg-white/10 backdrop-blur-xl border border-white/30 text-white hover:bg-white/20 focus:ring-white/30 shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98]',
+    gradient: 'bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white hover:from-violet-700 hover:via-purple-700 hover:to-indigo-700 focus:ring-purple-200/50 shadow-lg hover:shadow-xl hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98] border border-purple-500/20',
   };
 
   const sizes = {

@@ -392,6 +392,72 @@ export const passwordRecoveryTemplates = {
 };
 
 /**
+ * Plantillas de invitación de usuarios
+ */
+export const userInvitationTemplates = {
+  /**
+   * Invitación para completar registro (desde admin)
+   */
+  adminInvitation: (userData) => {
+    const { fullName, email, invitationToken, completeUrl, adminName } = userData;
+
+    const content = `
+      <h2 style="color: ${BRAND_COLORS.primary}; margin-bottom: 20px;">¡Has sido invitado a NexuPay! 🎉</h2>
+
+      <p style="font-size: 16px; margin-bottom: 20px;">
+        Hola ${fullName}, ${adminName || 'un administrador'} te ha invitado a unirte a la plataforma NexuPay.
+      </p>
+
+      <div class="card">
+        <h3 style="color: ${BRAND_COLORS.primary}; margin-bottom: 15px;">🚀 Completa tu registro:</h3>
+        <p style="margin-bottom: 20px;">
+          Para acceder a tu cuenta, necesitas crear una contraseña segura.
+          Haz clic en el botón de abajo para completar tu registro.
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${completeUrl || `${COMPANY_INFO.website}/complete-registration?token=${invitationToken}`}" class="button">
+            Completar Registro
+          </a>
+        </div>
+
+        <p style="font-size: 14px; color: ${BRAND_COLORS.neutral}; margin-top: 20px;">
+          Si el botón no funciona, copia y pega esta URL en tu navegador:
+          <br>
+          <span style="word-break: break-all; color: ${BRAND_COLORS.primary};">
+            ${completeUrl || `${COMPANY_INFO.website}/complete-registration?token=${invitationToken}`}
+          </span>
+        </p>
+      </div>
+
+      <div class="highlight">
+        <h3 style="color: #92400e; margin-bottom: 10px;">⚠️ Información importante:</h3>
+        <ul style="color: #92400e; margin: 0; padding-left: 20px;">
+          <li>Este enlace expirará en 7 días por seguridad</li>
+          <li>Si no completas el registro, tu cuenta será eliminada automáticamente</li>
+          <li>Asegúrate de crear una contraseña segura y memorable</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3 style="color: ${BRAND_COLORS.primary}; margin-bottom: 15px;">💡 ¿Qué puedes hacer en NexuPay?</h3>
+        <ul style="margin: 0; padding-left: 20px;">
+          <li><strong>Gestionar deudas:</strong> Administra tus obligaciones de forma organizada</li>
+          <li><strong>Pagos seguros:</strong> Realiza transacciones en línea protegidas</li>
+          <li><strong>Incentivos:</strong> Gana recompensas por mantenerte al día</li>
+          <li><strong>Historial completo:</strong> Mantén registro de todos tus movimientos</li>
+        </ul>
+      </div>
+    `;
+
+    return createBaseTemplate(content, {
+      title: 'Invitación a NexuPay - Completa tu registro',
+      preheader: 'Has sido invitado a unirte a NexuPay'
+    });
+  }
+};
+
+/**
  * Plantillas de confirmación de email
  */
 export const emailConfirmationTemplates = {
@@ -606,6 +672,8 @@ export const getEmailTemplate = (type, subtype, userData) => {
       return emailConfirmationTemplates[subtype]?.(userData);
     case 'notification':
       return notificationTemplates[subtype]?.(userData);
+    case 'invitation':
+      return userInvitationTemplates[subtype]?.(userData);
     default:
       return null;
   }

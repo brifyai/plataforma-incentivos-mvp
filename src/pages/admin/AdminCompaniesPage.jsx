@@ -11,7 +11,8 @@ import {
   getAllCompanies,
   getCompanyDebts,
   getCompanyPayments,
-  getCompanyAgreements
+  getCompanyAgreements,
+  getAllCorporateClients
 } from '../../services/databaseService';
 import {
   Building,
@@ -36,11 +37,14 @@ const AdminCompaniesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
+  const [filterCorporateClient, setFilterCorporateClient] = useState('all');
+  const [corporateClients, setCorporateClients] = useState([]);
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [quickFilter, setQuickFilter] = useState(''); // 'today', 'week', 'month'
 
   useEffect(() => {
     loadCompanies();
+    loadCorporateClients();
   }, []);
 
   const loadCompanies = async () => {
@@ -114,6 +118,19 @@ const AdminCompaniesPage = () => {
     }
   };
 
+  const loadCorporateClients = async () => {
+    try {
+      const { corporateClients, error } = await getAllCorporateClients();
+      if (error) {
+        console.error('Error loading corporate clients:', error);
+      } else {
+        setCorporateClients(corporateClients || []);
+      }
+    } catch (error) {
+      console.error('Error in loadCorporateClients:', error);
+    }
+  };
+
   // Función para aplicar filtros rápidos
   const applyQuickFilter = (filterType) => {
     const now = new Date();
@@ -162,6 +179,10 @@ const AdminCompaniesPage = () => {
                        (filterType === 'collection_agency' && (!company.company_type || company.company_type === 'collection_agency')) ||
                        (filterType === 'direct_creditor' && company.company_type === 'direct_creditor');
 
+    const matchesCorporateClient = filterCorporateClient === 'all' ||
+                                 (filterCorporateClient === 'none' && (!company.corporate_client_id || company.corporate_client_id === null)) ||
+                                 (filterCorporateClient !== 'none' && company.corporate_client_id === filterCorporateClient);
+
     // Filtrar por fecha de creación
     const matchesDate = !dateFilter.startDate && !dateFilter.endDate ||
                         (dateFilter.startDate && dateFilter.endDate &&
@@ -172,7 +193,7 @@ const AdminCompaniesPage = () => {
                         (!dateFilter.startDate && dateFilter.endDate &&
                          new Date(company.created_at).toISOString().split('T')[0] <= dateFilter.endDate);
 
-    return matchesSearch && matchesStatus && matchesType && matchesDate;
+    return matchesSearch && matchesStatus && matchesType && matchesDate && matchesCorporateClient;
   });
 
   const stats = {
@@ -413,6 +434,22 @@ const AdminCompaniesPage = () => {
                 <option value="all">Todos</option>
                 <option value="collection_agency">Empresas de Cobranza</option>
                 <option value="direct_creditor">Acreedor Directo</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Building className="w-5 h-5 text-secondary-400" />
+              <select
+                value={filterCorporateClient}
+                onChange={(e) => setFilterCorporateClient(e.target.value)}
+                className="px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-w-[200px]"
+              >
+                <option value="all">Todos los Clientes</option>
+                <option value="none">Sin Cliente Corporativo</option>
+                {corporateClients.map(client => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
