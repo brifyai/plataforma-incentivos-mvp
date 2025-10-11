@@ -340,6 +340,45 @@ const AdminDashboard = () => {
     setQuickFilter(filterType);
   };
 
+  // Función helper para calcular rangos de fechas (igual que en empresas)
+  const getDateRange = (range) => {
+    const today = new Date();
+    const startDate = new Date();
+    const endDate = new Date();
+
+    switch (range) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'last7days':
+        startDate.setDate(today.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'thisMonth':
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setMonth(today.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return { startDate: '', endDate: '' };
+    }
+
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
+
+  // Función para aplicar rangos predefinidos (igual que en empresas)
+  const applyDateRange = (range) => {
+    const dates = getDateRange(range);
+    setDateFilter(dates);
+    setQuickFilter(range);
+  };
+
   // Función para limpiar filtros
   const clearFilters = () => {
     setDateFilter({ startDate: '', endDate: '' });
@@ -391,86 +430,69 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Date Filter */}
-            <div className="flex flex-col gap-4">
-              {/* Quick Filter Buttons */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-primary-300" />
-                  <span className="text-sm font-medium text-primary-100">Filtrar por período:</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => applyQuickFilter('today')}
-                    className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-                      quickFilter === 'today'
-                        ? 'bg-primary-800 border-primary-700'
-                        : 'bg-primary-600 border-primary-500 hover:bg-primary-700'
-                    }`}
-                  >
-                    Hoy
-                  </button>
-                  <button
-                    onClick={() => applyQuickFilter('week')}
-                    className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-                      quickFilter === 'week'
-                        ? 'bg-primary-800 border-primary-700'
-                        : 'bg-primary-600 border-primary-500 hover:bg-primary-700'
-                    }`}
-                  >
-                    Semana
-                  </button>
-                  <button
-                    onClick={() => applyQuickFilter('month')}
-                    className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-                      quickFilter === 'month'
-                        ? 'bg-primary-800 border-primary-700'
-                        : 'bg-primary-600 border-primary-500 hover:bg-primary-700'
-                    }`}
-                  >
-                    Mes
-                  </button>
-                  {(dateFilter.startDate || dateFilter.endDate) && (
-                    <button
-                      onClick={clearFilters}
-                      className="px-3 py-2 text-xs font-semibold text-white bg-primary-600 border border-primary-500 rounded-lg hover:bg-primary-700 transition-colors"
-                    >
-                      Limpiar
-                    </button>
-                  )}
-                </div>
-              </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Custom Date Range */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <label htmlFor="startDate" className="text-sm text-primary-200">Desde:</label>
-                  <input
-                    id="startDate"
-                    type="date"
-                    value={dateFilter.startDate}
-                    onChange={(e) => {
-                      setDateFilter(prev => ({ ...prev, startDate: e.target.value }));
-                      setQuickFilter(''); // Clear quick filter when manual date is selected
-                    }}
-                    className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-primary-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="endDate" className="text-sm text-primary-200">Hasta:</label>
-                  <input
-                    id="endDate"
-                    type="date"
-                    value={dateFilter.endDate}
-                    onChange={(e) => {
-                      setDateFilter(prev => ({ ...prev, endDate: e.target.value }));
-                      setQuickFilter(''); // Clear quick filter when manual date is selected
-                    }}
-                    className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-primary-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
-                  />
-                </div>
-              </div>
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+
+          {/* Date Inputs */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
             </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyQuickFilter('today')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Hoy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('last7days')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Últimos 7 días
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('thisMonth')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Este mes
+            </Button>
           </div>
         </div>
       </div>
