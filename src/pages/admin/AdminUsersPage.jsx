@@ -30,7 +30,8 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Key
+  Key,
+  TrendingUp
 } from 'lucide-react';
 
 const AdminUsersPage = () => {
@@ -52,8 +53,81 @@ const AdminUsersPage = () => {
   const [showResetModal, setShowResetModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dateFilter, setDateFilter] = useState({
+    startDate: '',
+    endDate: ''
+  });
+  const [quickFilter, setQuickFilter] = useState('');
 
   const usersPerPage = 10;
+
+  // Función para aplicar filtros rápidos
+  const applyQuickFilter = (filterType) => {
+    const now = new Date();
+    let startDate = '';
+    let endDate = now.toISOString().split('T')[0]; // Hoy en formato YYYY-MM-DD
+
+    switch (filterType) {
+      case 'today':
+        startDate = endDate; // Desde hoy hasta hoy
+        break;
+      case 'week':
+        const weekAgo = new Date(now);
+        weekAgo.setDate(now.getDate() - 7);
+        startDate = weekAgo.toISOString().split('T')[0];
+        break;
+      case 'month':
+        const monthAgo = new Date(now);
+        monthAgo.setMonth(now.getMonth() - 1);
+        startDate = monthAgo.toISOString().split('T')[0];
+        break;
+      default:
+        startDate = '';
+        endDate = '';
+    }
+
+    setDateFilter({ startDate, endDate });
+    setQuickFilter(filterType);
+  };
+
+  // Función helper para calcular rangos de fechas (igual que en empresas)
+  const getDateRange = (range) => {
+    const today = new Date();
+    const startDate = new Date();
+    const endDate = new Date();
+
+    switch (range) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'last7days':
+        startDate.setDate(today.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'thisMonth':
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setMonth(today.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return { startDate: '', endDate: '' };
+    }
+
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
+
+  // Función para aplicar rangos predefinidos (igual que en empresas)
+  const applyDateRange = (range) => {
+    const dates = getDateRange(range);
+    setDateFilter(dates);
+    setQuickFilter(range);
+  };
 
   useEffect(() => {
     loadUsers();
@@ -445,86 +519,181 @@ const AdminUsersPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <Users className="w-8 h-8" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+        </div>
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Gestión de Usuarios
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Administra todos los usuarios de la plataforma
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
-                Gestión de Usuarios
-              </h1>
-              <p className="text-purple-100 text-lg">
-                Administra todos los usuarios de la plataforma
-              </p>
+
+            <Button
+              variant="gradient"
+              onClick={() => setShowCreateModal(true)}
+              leftIcon={<UserPlus className="w-4 h-4" />}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0"
+            >
+              Crear Usuario
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+
+          {/* Date Inputs */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
             </div>
           </div>
 
-          <Button
-            variant="gradient"
-            onClick={() => setShowCreateModal(true)}
-            leftIcon={<UserPlus className="w-4 h-4" />}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0"
-          >
-            Crear Usuario
-          </Button>
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyQuickFilter('today')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Hoy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('last7days')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Últimos 7 días
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('thisMonth')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Este mes
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-        <Card className="text-center bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all duration-300">
-          <div className="p-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg mx-auto mb-2 shadow-lg">
-              <Users className="w-5 h-5 text-white" />
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
+                <Users className="w-4 h-4 text-blue-600" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-blue-900 mb-1">{stats.total}</h3>
-            <p className="text-blue-700 font-medium text-sm">Total Usuarios</p>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {stats.total}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Total</p>
+            <div className="flex items-center justify-center mt-0.5">
+              <TrendingUp className="w-2.5 h-2.5 text-green-500 mr-0.5" />
+              <span className="text-xs text-green-600 font-medium">+{stats.validated}</span>
+            </div>
           </div>
         </Card>
 
-        <Card className="text-center bg-gradient-to-br from-red-50 to-red-100 border-red-200 hover:shadow-lg transition-all duration-300">
-          <div className="p-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg mx-auto mb-2 shadow-lg">
-              <Shield className="w-5 h-5 text-white" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-red-100 to-red-200 rounded-lg group-hover:shadow-glow-danger transition-all duration-300">
+                <Shield className="w-4 h-4 text-red-600" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-red-900 mb-1">{stats.godMode}</h3>
-            <p className="text-red-700 font-medium text-sm">Administradores</p>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {stats.godMode}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Admins</p>
           </div>
         </Card>
 
-        <Card className="text-center bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all duration-300">
-          <div className="p-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg mx-auto mb-2 shadow-lg">
-              <Building className="w-5 h-5 text-white" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+                <Building className="w-4 h-4 text-green-600" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-green-900 mb-1">{stats.companies}</h3>
-            <p className="text-green-700 font-medium text-sm">Empresas</p>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {stats.companies}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Empresas</p>
           </div>
         </Card>
 
-        <Card className="text-center bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-300">
-          <div className="p-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg mx-auto mb-2 shadow-lg">
-              <Users className="w-5 h-5 text-white" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
+                <Users className="w-4 h-4 text-purple-600" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-purple-900 mb-1">{stats.debtors}</h3>
-            <p className="text-purple-700 font-medium text-sm">Deudores</p>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {stats.debtors}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Deudores</p>
           </div>
         </Card>
 
-        <Card className="text-center bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 hover:shadow-lg transition-all duration-300">
-          <div className="p-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg mx-auto mb-2 shadow-lg">
-              <AlertTriangle className="w-5 h-5 text-white" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-2">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg group-hover:shadow-glow-warning transition-all duration-300">
+                <AlertTriangle className="w-4 h-4 text-yellow-600" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-yellow-900 mb-1">{stats.pending}</h3>
-            <p className="text-yellow-700 font-medium text-sm">Pendientes</p>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {stats.pending}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Pendientes</p>
             {stats.pending > 0 && (
-              <div className="mt-1">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-200 text-yellow-800">
-                  Requieren aprobación
+              <div className="mt-0.5">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-200 text-yellow-800">
+                  Acción requerida
                 </span>
               </div>
             )}
