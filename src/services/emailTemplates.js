@@ -684,6 +684,7 @@ export default {
   passwordRecoveryTemplates,
   emailConfirmationTemplates,
   notificationTemplates,
+  userInvitationTemplates,
   getEmailTemplate,
   COMPANY_INFO,
   BRAND_COLORS

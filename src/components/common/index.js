@@ -21,6 +21,11 @@ export { default as FormField } from './FormField';
 export { default as FormSection } from './FormSection';
 export { default as ActionButtons } from './ActionButtons';
 
+// Componentes de configuración reutilizables
+export { default as ConfigStatsCards } from './ConfigStatsCards';
+export { default as ConfigServiceList } from './ConfigServiceList';
+export { default as ConfigFilters } from './ConfigFilters';
+
 // Skeleton Loaders
 export {
   SkeletonCard,

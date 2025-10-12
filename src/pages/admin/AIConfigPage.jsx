@@ -4,243 +4,212 @@
  * Página dedicada a la configuración de servicios de IA
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Badge, Button, LoadingSpinner, Input, Select } from '../../components/common';
-import { Brain, Bot, Cpu, CheckCircle, ArrowLeft, TestTube, Settings, Zap } from 'lucide-react';
-import { updateSystemConfig } from '../../services/databaseService';
+import { ConfigStatsCards, ConfigServiceList } from '../../components/common';
+import { Brain, Bot, Cpu, CheckCircle, ArrowLeft, TestTube, Settings, Zap, AlertTriangle } from 'lucide-react';
+import { useAIConfig } from '../../hooks/useAIConfig';
 import { useAuth } from '../../context/AuthContext';
 import Swal from 'sweetalert2';
 
 const AIConfigPage = () => {
   const navigate = useNavigate();
   const { isAdmin, profile, user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+
+  // Usar el custom hook para toda la lógica de configuración
+  const {
+    aiConfig,
+    loading,
+    saving,
+    updateConfig,
+    updateChutesApi,
+    updateGroqApi,
+    saveServiceConfig,
+    saveModelSelection,
+    testService,
+    testModel
+  } = useAIConfig();
 
   // Debug logging
-  useEffect(() => {
-    console.log('🔍 AIConfigPage - Auth status:', {
-      isAdmin,
-      profileRole: profile?.role,
-      userRole: user?.user_metadata?.role,
-      profile,
-      user
-    });
-  }, [isAdmin, profile, user]);
-
-  // Configuración de IA
-  const [aiConfig, setAiConfig] = useState({
-    selectedProvider: 'chutes',
-    selectedModel: 'gpt-4',
-    chutesApi: {
-      apiKey: '',
-      baseUrl: 'https://chutes.ai',
-      isActive: false
-    },
-    groqApi: {
-      apiKey: '',
-      baseUrl: 'https://api.groq.com',
-      isActive: false
-    }
+  console.log('🔍 AIConfigPage - Auth status:', {
+    isAdmin,
+    profileRole: profile?.role,
+    userRole: user?.user_metadata?.role,
+    profile,
+    user
   });
 
-  // Cargar configuración guardada al iniciar
-  useEffect(() => {
-    const loadSavedConfig = async () => {
-      try {
-        const { getSystemConfig } = await import('../../services/databaseService');
-        const { config, error } = await getSystemConfig();
-        
-        if (!error && config) {
-          console.log('🔄 Cargando configuración guardada:', config);
-          
-          setAiConfig(prev => ({
-            selectedProvider: config.aiSelectedProvider || 'chutes',
-            selectedModel: config.aiSelectedModel || 'gpt-4',
-            chutesApi: {
-              apiKey: config.chutesApiKey || '',
-              baseUrl: 'https://chutes.ai',
-              isActive: config.chutesApiActive || false
-            },
-            groqApi: {
-              apiKey: config.groqApiKey || '',
-              baseUrl: 'https://api.groq.com',
-              isActive: config.groqApiActive || false
-            }
-          }));
-          
-          console.log('✅ Configuración cargada exitosamente');
-        } else {
-          console.warn('⚠️ Error cargando configuración:', error);
-        }
-      } catch (error) {
-        console.error('❌ Error en loadSavedConfig:', error);
-      }
-    };
-
-    loadSavedConfig();
-  }, []);
-
+  // Handlers que delegan al hook
   const handleSaveConfig = async (serviceType) => {
-    try {
-      setSaving(true);
-
-      // Check if user is admin
-      if (!isAdmin) {
-        throw new Error('No tienes permisos para modificar la configuración del sistema. Solo administradores pueden realizar esta acción.');
-      }
-
-      // Prepare config data based on service type
-      let configToSave = {};
-
-      if (serviceType === 'Chutes AI') {
-        configToSave = {
-          chutes_api_key: aiConfig.chutesApi.apiKey,
-          chutes_api_url: aiConfig.chutesApi.baseUrl,
-          chutes_api_active: aiConfig.chutesApi.isActive
-        };
-      } else if (serviceType === 'Groq AI') {
-        configToSave = {
-          groq_api_key: aiConfig.groqApi.apiKey,
-          groq_api_url: aiConfig.groqApi.baseUrl,
-          groq_api_active: aiConfig.groqApi.isActive
-        };
-      }
-
-      console.log('🔄 Saving AI config:', configToSave);
-
-      const result = await updateSystemConfig(configToSave);
-
-      if (result.error) {
-        console.error('❌ Error from updateSystemConfig:', result.error);
-        throw new Error(result.error);
-      }
-
-      console.log('✅ AI config saved successfully');
-
-      await Swal.fire({
-        icon: 'success',
-        title: 'Configuración guardada',
-        text: `Configuración de ${serviceType} guardada exitosamente`,
-        confirmButtonText: 'Aceptar'
-      });
-
-    } catch (error) {
-      console.error(`❌ Error saving ${serviceType}:`, error);
+    if (!isAdmin) {
       await Swal.fire({
         icon: 'error',
-        title: 'Error al guardar',
-        text: `No se pudo guardar la configuración de ${serviceType}. ${error.message}`,
+        title: 'Permisos insuficientes',
+        text: 'No tienes permisos para modificar la configuración del sistema. Solo administradores pueden realizar esta acción.',
         confirmButtonText: 'Aceptar'
       });
-    } finally {
-      setSaving(false);
+      return;
     }
+    await saveServiceConfig(serviceType);
   };
 
   const handleTestService = async (serviceType) => {
-    try {
-      await Swal.fire({
-        icon: 'info',
-        title: 'Probando servicio',
-        text: `Probando conexión con ${serviceType}...`,
-        showConfirmButton: false,
-        timer: 2000
-      });
-    } catch (error) {
-      console.error(`Error testing ${serviceType}:`, error);
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error en la prueba',
-        text: `No se pudo probar el servicio de ${serviceType}`,
-        confirmButtonText: 'Aceptar'
-      });
-    }
+    await testService(serviceType);
   };
 
   const handleSaveModelSelection = async () => {
-    try {
-      setSaving(true);
-
-      const configToSave = {
-        ai_selected_provider: aiConfig.selectedProvider,
-        ai_selected_model: aiConfig.selectedModel
-      };
-
-      const result = await updateSystemConfig(configToSave);
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      await Swal.fire({
-        icon: 'success',
-        title: 'Configuración guardada',
-        text: 'Selección de modelo guardada exitosamente',
-        confirmButtonText: 'Aceptar'
-      });
-
-    } catch (error) {
-      console.error('Error saving model selection:', error);
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error al guardar',
-        text: error.message || 'No se pudo guardar la selección de modelo',
-        confirmButtonText: 'Aceptar'
-      });
-    } finally {
-      setSaving(false);
-    }
+    await saveModelSelection();
   };
 
   const handleTestModel = async () => {
-    try {
-      await Swal.fire({
-        icon: 'info',
-        title: 'Probando modelo',
-        text: `Probando modelo ${aiConfig.selectedModel}...`,
-        showConfirmButton: false,
-        timer: 2000
-      });
-    } catch (error) {
-      console.error('Error testing model:', error);
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error en la prueba',
-        text: 'No se pudo probar el modelo seleccionado',
-        confirmButtonText: 'Aceptar'
-      });
-    }
+    await testModel();
   };
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/admin/configuracion')}
-              className="p-2 hover:bg-white/20 rounded-xl transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <Brain className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
-                Inteligencia Artificial
-              </h1>
-              <p className="text-purple-100 text-lg">
-                Configuración de servicios de IA y modelos
-              </p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+        </div>
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Brain className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Inteligencia Artificial
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Configuración de servicios de IA y modelos
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Stats Cards */}
+      <ConfigStatsCards
+        stats={[
+          {
+            icon: Bot,
+            iconBg: 'from-purple-100 to-purple-200',
+            iconColor: 'purple',
+            value: aiConfig.chutesApi.isActive ? 'Activo' : 'Inactivo',
+            label: 'Chutes AI',
+            isActive: aiConfig.chutesApi.isActive,
+            statusText: aiConfig.chutesApi.isActive ? 'Configurado' : 'Requiere atención'
+          },
+          {
+            icon: Cpu,
+            iconBg: 'from-green-100 to-green-200',
+            iconColor: 'green',
+            value: aiConfig.groqApi.isActive ? 'Activo' : 'Inactivo',
+            label: 'Groq AI',
+            isActive: aiConfig.groqApi.isActive,
+            statusText: aiConfig.groqApi.isActive ? 'Configurado' : 'Requiere atención'
+          },
+          {
+            icon: Brain,
+            iconBg: 'from-blue-100 to-blue-200',
+            iconColor: 'blue',
+            value: aiConfig.selectedModel || 'Sin seleccionar',
+            label: 'Modelo Activo',
+            extraInfo: aiConfig.selectedProvider === 'chutes' ? 'Chutes AI' : aiConfig.selectedProvider === 'groq' ? 'Groq AI' : 'Sin proveedor'
+          },
+          {
+            icon: Zap,
+            iconBg: 'from-orange-100 to-orange-200',
+            iconColor: 'orange',
+            value: (aiConfig.chutesApi.isActive || aiConfig.groqApi.isActive) ? 'Activos' : 'Inactivos',
+            label: 'Servicios IA',
+            extraInfo: `${[aiConfig.chutesApi.isActive, aiConfig.groqApi.isActive].filter(Boolean).length} de 2`
+          }
+        ]}
+      />
+
+      {/* Filters and Search */}
+      <Card className="mt-6">
+        <div className="p-6">
+          <div className="flex flex-row gap-4 items-center">
+            <div className="flex-1 mt-4">
+              <div className="relative">
+                <Brain className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
+                <Input
+                  placeholder="Buscar servicios de IA..."
+                  value=""
+                  onChange={() => {}}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Bot className="w-5 h-5 text-secondary-400" />
+              <select
+                value="all"
+                onChange={() => {}}
+                className="px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="all">Todos</option>
+                <option value="active">Activos</option>
+                <option value="inactive">Inactivos</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* AI Services List */}
+      <ConfigServiceList
+        title="Servicios de Inteligencia Artificial"
+        services={[
+          {
+            id: 'chutes',
+            name: 'Chutes AI',
+            description: 'Plataforma de IA especializada en modelos avanzados',
+            icon: Bot,
+            iconBg: 'from-purple-500 to-purple-600',
+            color: 'purple',
+            isActive: aiConfig.chutesApi.isActive,
+            statusText: aiConfig.chutesApi.isActive ? 'Configurado' : 'Requiere atención',
+            metrics: [
+              { value: aiConfig.chutesApi.apiKey ? 'Configurada' : 'Pendiente', label: 'API Key' },
+              { value: aiConfig.chutesApi.baseUrl, label: 'URL Base' },
+              { value: aiConfig.chutesApi.isActive ? 'Activo' : 'Inactivo', label: 'Estado' },
+              { value: 'GPT-4, Claude', label: 'Modelos' }
+            ],
+            onConfigure: () => {/* TODO: Open Chutes config modal */},
+            onTest: () => handleTestService('Chutes AI')
+          },
+          {
+            id: 'groq',
+            name: 'Groq AI',
+            description: 'Plataforma de IA de alto rendimiento y velocidad',
+            icon: Cpu,
+            iconBg: 'from-green-500 to-green-600',
+            color: 'green',
+            isActive: aiConfig.groqApi.isActive,
+            statusText: aiConfig.groqApi.isActive ? 'Configurado' : 'Requiere atención',
+            metrics: [
+              { value: aiConfig.groqApi.apiKey ? 'Configurada' : 'Pendiente', label: 'API Key' },
+              { value: aiConfig.groqApi.baseUrl, label: 'URL Base' },
+              { value: aiConfig.groqApi.isActive ? 'Activo' : 'Inactivo', label: 'Estado' },
+              { value: 'Llama, Mixtral', label: 'Modelos' }
+            ],
+            onConfigure: () => {/* TODO: Open Groq config modal */},
+            onTest: () => handleTestService('Groq AI')
+          }
+        ]}
+        onSaveAll={() => {/* TODO: Save all services */}}
+        saving={saving}
+      />
 
       {/* Provider Configuration */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

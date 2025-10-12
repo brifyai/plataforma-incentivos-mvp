@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Badge, Button, LoadingSpinner, Input, Select, ToggleSwitch } from '../../components/common';
-import { Settings, Shield, Database, Mail, Key, CheckCircle, ArrowLeft, RefreshCw, AlertTriangle, Calendar, Eye, Edit } from 'lucide-react';
+import { Settings, Shield, Database, Mail, Key, CheckCircle, ArrowLeft, RefreshCw, AlertTriangle, Eye, Edit } from 'lucide-react';
 import { getSystemConfig, updateSystemConfig } from '../../services/databaseService';
 import { getDefaultConfig } from '../../config/systemConfig';
 import Swal from 'sweetalert2';
@@ -179,61 +179,6 @@ const GeneralConfigPage = () => {
         </div>
       </div>
 
-      {/* Date Filter */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <Calendar className="w-5 h-5 text-gray-500" />
-            <span className="font-medium text-gray-900">Período de análisis</span>
-          </div>
-
-          {/* Date Inputs */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
-              <input
-                id="startDate"
-                type="date"
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
-              <input
-                id="endDate"
-                type="date"
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Quick Date Range Buttons */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs px-3 py-1 h-8"
-            >
-              Hoy
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs px-3 py-1 h-8"
-            >
-              Últimos 7 días
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs px-3 py-1 h-8"
-            >
-              Este mes
-            </Button>
-          </div>
-        </div>
-      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-1.5 mt-2">

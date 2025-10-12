@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Badge, Button, LoadingSpinner, Input, Select } from '../../components/common';
-import { Bell, Mail, Smartphone, MessageSquare, CheckCircle, ArrowLeft, TestTube, Settings } from 'lucide-react';
+import { Bell, Mail, Smartphone, MessageSquare, CheckCircle, ArrowLeft, TestTube, Settings, AlertTriangle } from 'lucide-react';
 import { getSystemConfig, updateSystemConfig } from '../../services/databaseService';
 import Swal from 'sweetalert2';
 
@@ -213,466 +213,424 @@ const NotificationsConfigPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-orange-600 via-orange-700 to-red-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/admin/configuracion')}
-              className="p-2 hover:bg-white/20 rounded-xl transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <Bell className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
-                Notificaciones
-              </h1>
-              <p className="text-orange-100 text-lg">
-                Configuración de emails, push y SMS
-              </p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+        </div>
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Bell className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Notificaciones
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Configuración de emails, push y SMS
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Configuration Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Email Service */}
-        <Card>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Mail className="w-6 h-6 text-blue-600" />
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <Bell className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+
+          {/* Date Inputs */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
             </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-secondary-900">Servicio de Email</h3>
-              <Badge variant={notificationConfig.emailService.isActive ? 'success' : 'danger'} size="sm">
-                {notificationConfig.emailService.isActive ? 'Activo' : 'Inactivo'}
-              </Badge>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
             </div>
           </div>
 
-          <div className="space-y-4">
-            <Select
-              label="Proveedor"
-              value={notificationConfig.emailService.provider}
-              onChange={(value) => setNotificationConfig(prev => ({
-                ...prev,
-                emailService: { ...prev.emailService, provider: value }
-              }))}
-              options={[
-                { value: 'sendgrid', label: 'SendGrid' },
-                { value: 'mailgun', label: 'Mailgun' },
-                { value: 'aws_ses', label: 'Amazon SES' },
-                { value: 'smtp', label: 'SMTP Personalizado' }
-              ]}
-            />
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs px-3 py-1 h-8"
+            >
+              Hoy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs px-3 py-1 h-8"
+            >
+              Últimos 7 días
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs px-3 py-1 h-8"
+            >
+              Este mes
+            </Button>
+          </div>
+        </div>
+      </div>
 
-            {notificationConfig.emailService.provider === 'smtp' ? (
-              <>
-                <Input
-                  label="SMTP Host"
-                  value={notificationConfig.emailService.smtpHost}
-                  onChange={(e) => setNotificationConfig(prev => ({
-                    ...prev,
-                    emailService: { ...prev.emailService, smtpHost: e.target.value }
-                  }))}
-                  placeholder="smtp.gmail.com"
-                />
-                <Input
-                  label="SMTP Port"
-                  value={notificationConfig.emailService.smtpPort}
-                  onChange={(e) => setNotificationConfig(prev => ({
-                    ...prev,
-                    emailService: { ...prev.emailService, smtpPort: e.target.value }
-                  }))}
-                  placeholder="587"
-                />
-                <Input
-                  label="SMTP User"
-                  value={notificationConfig.emailService.smtpUser}
-                  onChange={(e) => setNotificationConfig(prev => ({
-                    ...prev,
-                    emailService: { ...prev.emailService, smtpUser: e.target.value }
-                  }))}
-                  placeholder="usuario@dominio.com"
-                />
-                <Input
-                  label="SMTP Password"
-                  type="password"
-                  value={notificationConfig.emailService.smtpPassword}
-                  onChange={(e) => setNotificationConfig(prev => ({
-                    ...prev,
-                    emailService: { ...prev.emailService, smtpPassword: e.target.value }
-                  }))}
-                  placeholder="Contraseña"
-                />
-              </>
-            ) : (
-              <Input
-                label="API Key"
-                type="password"
-                value={notificationConfig.emailService.apiKey}
-                onChange={(e) => setNotificationConfig(prev => ({
-                  ...prev,
-                  emailService: { ...prev.emailService, apiKey: e.target.value }
-                }))}
-                placeholder="SG.1234567890..."
-              />
-            )}
-
-            <Input
-              label="Email Remitente"
-              value={notificationConfig.emailService.fromEmail}
-              onChange={(e) => setNotificationConfig(prev => ({
-                ...prev,
-                emailService: { ...prev.emailService, fromEmail: e.target.value }
-              }))}
-              placeholder="noreply@plataforma.com"
-            />
-
-            <Input
-              label="Nombre Remitente"
-              value={notificationConfig.emailService.fromName}
-              onChange={(e) => setNotificationConfig(prev => ({
-                ...prev,
-                emailService: { ...prev.emailService, fromName: e.target.value }
-              }))}
-              placeholder="Plataforma de Cobranzas"
-            />
-
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="emailActive"
-                checked={notificationConfig.emailService.isActive}
-                onChange={(e) => setNotificationConfig(prev => ({
-                  ...prev,
-                  emailService: { ...prev.emailService, isActive: e.target.checked }
-                }))}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="emailActive" className="text-sm font-medium text-gray-700">
-                Servicio activo
-              </label>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-1.5 mt-2">
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-1">
+            <div className="flex items-center justify-center mb-1.5">
+              <div className="p-0.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
+                <Mail className="w-4 h-4 text-blue-600" />
+              </div>
             </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button
-                variant="gradient"
-                onClick={() => handleSaveService('Email')}
-                loading={saving}
-                leftIcon={<CheckCircle className="w-4 h-4" />}
-                className="flex-1"
-              >
-                Guardar
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleTestService('Email')}
-                leftIcon={<TestTube className="w-4 h-4" />}
-              >
-                Probar
-              </Button>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {notificationConfig.emailService.isActive ? 'Activo' : 'Inactivo'}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Email</p>
+            <div className="flex items-center justify-center mt-0.5">
+              {notificationConfig.emailService.isActive ? (
+                <CheckCircle className="w-2.5 h-2.5 text-green-500 mr-0.5" />
+              ) : (
+                <AlertTriangle className="w-2.5 h-2.5 text-red-500 mr-0.5" />
+              )}
+              <span className="text-xs text-green-600 font-medium">
+                {notificationConfig.emailService.isActive ? 'Configurado' : 'Requiere atención'}
+              </span>
             </div>
           </div>
         </Card>
 
-        {/* Push Notifications */}
-        <Card>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-green-100 rounded-xl">
-              <Smartphone className="w-6 h-6 text-green-600" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-1">
+            <div className="flex items-center justify-center mb-1.5">
+              <div className="p-0.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+                <Smartphone className="w-4 h-4 text-green-600" />
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-secondary-900">Notificaciones Push</h3>
-              <Badge variant={notificationConfig.pushService.isActive ? 'success' : 'danger'} size="sm">
-                {notificationConfig.pushService.isActive ? 'Activo' : 'Inactivo'}
-              </Badge>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <Select
-              label="Proveedor"
-              value={notificationConfig.pushService.provider}
-              onChange={(value) => setNotificationConfig(prev => ({
-                ...prev,
-                pushService: { ...prev.pushService, provider: value }
-              }))}
-              options={[
-                { value: 'firebase', label: 'Firebase Cloud Messaging' },
-                { value: 'onesignal', label: 'OneSignal' },
-                { value: 'expo', label: 'Expo Push' }
-              ]}
-            />
-
-            <Input
-              label="API Key"
-              type="password"
-              value={notificationConfig.pushService.apiKey}
-              onChange={(e) => setNotificationConfig(prev => ({
-                ...prev,
-                pushService: { ...prev.pushService, apiKey: e.target.value }
-              }))}
-              placeholder="AIzaSy..."
-            />
-
-            <Input
-              label="Project ID"
-              value={notificationConfig.pushService.projectId}
-              onChange={(e) => setNotificationConfig(prev => ({
-                ...prev,
-                pushService: { ...prev.pushService, projectId: e.target.value }
-              }))}
-              placeholder="plataforma-cobranzas"
-            />
-
-            <Input
-              label="Sender ID"
-              value={notificationConfig.pushService.senderId}
-              onChange={(e) => setNotificationConfig(prev => ({
-                ...prev,
-                pushService: { ...prev.pushService, senderId: e.target.value }
-              }))}
-              placeholder="123456789"
-            />
-
-            <Input
-              label="Server Key"
-              type="password"
-              value={notificationConfig.pushService.serverKey}
-              onChange={(e) => setNotificationConfig(prev => ({
-                ...prev,
-                pushService: { ...prev.pushService, serverKey: e.target.value }
-              }))}
-              placeholder="AAAA..."
-            />
-
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="pushActive"
-                checked={notificationConfig.pushService.isActive}
-                onChange={(e) => setNotificationConfig(prev => ({
-                  ...prev,
-                  pushService: { ...prev.pushService, isActive: e.target.checked }
-                }))}
-                className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-              />
-              <label htmlFor="pushActive" className="text-sm font-medium text-gray-700">
-                Servicio activo
-              </label>
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button
-                variant="gradient"
-                onClick={() => handleSaveService('Push')}
-                loading={saving}
-                leftIcon={<CheckCircle className="w-4 h-4" />}
-                className="flex-1"
-              >
-                Guardar
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleTestService('Push')}
-                leftIcon={<TestTube className="w-4 h-4" />}
-              >
-                Probar
-              </Button>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {notificationConfig.pushService.isActive ? 'Activo' : 'Inactivo'}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Push</p>
+            <div className="flex items-center justify-center mt-0.5">
+              {notificationConfig.pushService.isActive ? (
+                <CheckCircle className="w-2.5 h-2.5 text-green-500 mr-0.5" />
+              ) : (
+                <AlertTriangle className="w-2.5 h-2.5 text-red-500 mr-0.5" />
+              )}
+              <span className="text-xs text-green-600 font-medium">
+                {notificationConfig.pushService.isActive ? 'Configurado' : 'Requiere atención'}
+              </span>
             </div>
           </div>
         </Card>
 
-        {/* SMS Service */}
-        <Card>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <MessageSquare className="w-6 h-6 text-purple-600" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-1">
+            <div className="flex items-center justify-center mb-1.5">
+              <div className="p-0.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
+                <MessageSquare className="w-4 h-4 text-purple-600" />
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-secondary-900">Servicio SMS</h3>
-              <Badge variant={notificationConfig.smsService.isActive ? 'success' : 'danger'} size="sm">
-                {notificationConfig.smsService.isActive ? 'Activo' : 'Inactivo'}
-              </Badge>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {notificationConfig.smsService.isActive ? 'Activo' : 'Inactivo'}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">SMS</p>
+            <div className="flex items-center justify-center mt-0.5">
+              {notificationConfig.smsService.isActive ? (
+                <CheckCircle className="w-2.5 h-2.5 text-green-500 mr-0.5" />
+              ) : (
+                <AlertTriangle className="w-2.5 h-2.5 text-red-500 mr-0.5" />
+              )}
+              <span className="text-xs text-purple-600 font-medium">
+                {notificationConfig.smsService.isActive ? 'Configurado' : 'Requiere atención'}
+              </span>
             </div>
           </div>
+        </Card>
 
-          <div className="space-y-4">
-            <Select
-              label="Proveedor"
-              value={notificationConfig.smsService.provider}
-              onChange={(value) => setNotificationConfig(prev => ({
-                ...prev,
-                smsService: { ...prev.smsService, provider: value }
-              }))}
-              options={[
-                { value: 'twilio', label: 'Twilio' },
-                { value: 'aws_sns', label: 'Amazon SNS' },
-                { value: 'messagebird', label: 'MessageBird' }
-              ]}
-            />
-
-            {notificationConfig.smsService.provider === 'twilio' && (
-              <>
-                <Input
-                  label="Account SID"
-                  value={notificationConfig.smsService.accountSid}
-                  onChange={(e) => setNotificationConfig(prev => ({
-                    ...prev,
-                    smsService: { ...prev.smsService, accountSid: e.target.value }
-                  }))}
-                  placeholder="AC1234567890..."
-                />
-
-                <Input
-                  label="Auth Token"
-                  type="password"
-                  value={notificationConfig.smsService.authToken}
-                  onChange={(e) => setNotificationConfig(prev => ({
-                    ...prev,
-                    smsService: { ...prev.smsService, authToken: e.target.value }
-                  }))}
-                  placeholder="sk-1234567890..."
-                />
-              </>
-            )}
-
-            {notificationConfig.smsService.provider !== 'twilio' && (
-              <Input
-                label="API Key"
-                type="password"
-                value={notificationConfig.smsService.apiKey}
-                onChange={(e) => setNotificationConfig(prev => ({
-                  ...prev,
-                  smsService: { ...prev.smsService, apiKey: e.target.value }
-                }))}
-                placeholder="Clave de API"
-              />
-            )}
-
-            <Input
-              label="Número de Teléfono"
-              value={notificationConfig.smsService.phoneNumber}
-              onChange={(e) => setNotificationConfig(prev => ({
-                ...prev,
-                smsService: { ...prev.smsService, phoneNumber: e.target.value }
-              }))}
-              placeholder="+56912345678"
-            />
-
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="smsActive"
-                checked={notificationConfig.smsService.isActive}
-                onChange={(e) => setNotificationConfig(prev => ({
-                  ...prev,
-                  smsService: { ...prev.smsService, isActive: e.target.checked }
-                }))}
-                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-              />
-              <label htmlFor="smsActive" className="text-sm font-medium text-gray-700">
-                Servicio activo
-              </label>
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-1">
+            <div className="flex items-center justify-center mb-1.5">
+              <div className="p-0.5 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg group-hover:shadow-glow-orange transition-all duration-300">
+                <Settings className="w-4 h-4 text-orange-600" />
+              </div>
             </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button
-                variant="gradient"
-                onClick={() => handleSaveService('SMS')}
-                loading={saving}
-                leftIcon={<CheckCircle className="w-4 h-4" />}
-                className="flex-1"
-              >
-                Guardar
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleTestService('SMS')}
-                leftIcon={<TestTube className="w-4 h-4" />}
-              >
-                Probar
-              </Button>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {(notificationConfig.emailService.isActive || notificationConfig.pushService.isActive || notificationConfig.smsService.isActive) ? 'Activos' : 'Inactivos'}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Total Servicios</p>
+            <div className="text-xs text-orange-600 mt-0.5 font-medium">
+              {[notificationConfig.emailService.isActive, notificationConfig.pushService.isActive, notificationConfig.smsService.isActive].filter(Boolean).length} de 3
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Information Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Email Templates Info */}
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <div className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Mail className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-secondary-900">Plantillas de Email</h3>
-                <p className="text-secondary-600">Información sobre plantillas disponibles</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                <span className="font-medium text-secondary-900">Bienvenida</span>
-                <Badge variant="success">Disponible</Badge>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                <span className="font-medium text-secondary-900">Recordatorio de pago</span>
-                <Badge variant="success">Disponible</Badge>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                <span className="font-medium text-secondary-900">Confirmación de pago</span>
-                <Badge variant="success">Disponible</Badge>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                <span className="font-medium text-secondary-900">Propuesta aceptada</span>
-                <Badge variant="warning">En desarrollo</Badge>
-              </div>
+      {/* Configuration List */}
+      <Card>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-secondary-900">
+              Servicios de Notificación ({3})
+            </h2>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="gradient"
+                size="sm"
+                onClick={() => {/* TODO: Save all services */}}
+                loading={saving}
+                leftIcon={<CheckCircle className="w-3 h-3" />}
+              >
+                Guardar Todos
+              </Button>
             </div>
           </div>
-        </Card>
 
-        {/* Notification Types */}
-        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-          <div className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Bell className="w-6 h-6 text-green-600" />
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+              <p className="text-secondary-600">Cargando servicios de notificación...</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Email Service Configuration */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Mail className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">Servicio de Email</h3>
+                        <p className="text-gray-600 text-xs">SendGrid, Mailgun, SMTP personalizado</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Badge variant={notificationConfig.emailService.isActive ? 'success' : 'warning'}>
+                        {notificationConfig.emailService.isActive ? 'Configurado' : 'Requiere atención'}
+                      </Badge>
+
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          leftIcon={<Settings className="w-3 h-3" />}
+                          onClick={() => {/* TODO: Open email config modal */}}
+                          className="hover:bg-blue-50 hover:border-blue-300 px-2 py-1 text-xs"
+                        >
+                          Configurar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          leftIcon={<TestTube className="w-3 h-3" />}
+                          onClick={() => handleTestService('Email')}
+                          className="hover:bg-green-50 hover:border-green-300 px-2 py-1 text-xs"
+                        >
+                          Probar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-gray-200">
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-blue-600">
+                        {notificationConfig.emailService.provider}
+                      </div>
+                      <div className="text-xs text-secondary-600">Proveedor</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-blue-600">
+                        {notificationConfig.emailService.apiKey ? 'Configurada' : 'Pendiente'}
+                      </div>
+                      <div className="text-xs text-secondary-600">API Key</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-blue-600">
+                        {notificationConfig.emailService.fromEmail ? 'Configurado' : 'Pendiente'}
+                      </div>
+                      <div className="text-xs text-secondary-600">Remitente</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-blue-600">
+                        {notificationConfig.emailService.isActive ? 'Activo' : 'Inactivo'}
+                      </div>
+                      <div className="text-xs text-secondary-600">Estado</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-semibold text-secondary-900">Tipos de Notificación</h3>
-                <p className="text-secondary-600">Eventos que generan notificaciones</p>
+
+              {/* Push Service Configuration */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-xl hover:border-green-300 transition-all duration-300 overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Smartphone className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">Notificaciones Push</h3>
+                        <p className="text-gray-600 text-xs">Firebase, OneSignal, Expo Push</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Badge variant={notificationConfig.pushService.isActive ? 'success' : 'warning'}>
+                        {notificationConfig.pushService.isActive ? 'Configurado' : 'Requiere atención'}
+                      </Badge>
+
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          leftIcon={<Settings className="w-3 h-3" />}
+                          onClick={() => {/* TODO: Open push config modal */}}
+                          className="hover:bg-green-50 hover:border-green-300 px-2 py-1 text-xs"
+                        >
+                          Configurar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          leftIcon={<TestTube className="w-3 h-3" />}
+                          onClick={() => handleTestService('Push')}
+                          className="hover:bg-green-50 hover:border-green-300 px-2 py-1 text-xs"
+                        >
+                          Probar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-gray-200">
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-green-600">
+                        {notificationConfig.pushService.provider}
+                      </div>
+                      <div className="text-xs text-secondary-600">Proveedor</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-green-600">
+                        {notificationConfig.pushService.apiKey ? 'Configurada' : 'Pendiente'}
+                      </div>
+                      <div className="text-xs text-secondary-600">API Key</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-green-600">
+                        {notificationConfig.pushService.projectId ? 'Configurado' : 'Pendiente'}
+                      </div>
+                      <div className="text-xs text-secondary-600">Project ID</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-green-600">
+                        {notificationConfig.pushService.isActive ? 'Activo' : 'Inactivo'}
+                      </div>
+                      <div className="text-xs text-secondary-600">Estado</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SMS Service Configuration */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-xl hover:border-purple-300 transition-all duration-300 overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <MessageSquare className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">Servicio SMS</h3>
+                        <p className="text-gray-600 text-xs">Twilio, Amazon SNS, MessageBird</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Badge variant={notificationConfig.smsService.isActive ? 'success' : 'warning'}>
+                        {notificationConfig.smsService.isActive ? 'Configurado' : 'Requiere atención'}
+                      </Badge>
+
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          leftIcon={<Settings className="w-3 h-3" />}
+                          onClick={() => {/* TODO: Open SMS config modal */}}
+                          className="hover:bg-purple-50 hover:border-purple-300 px-2 py-1 text-xs"
+                        >
+                          Configurar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          leftIcon={<TestTube className="w-3 h-3" />}
+                          onClick={() => handleTestService('SMS')}
+                          className="hover:bg-purple-50 hover:border-purple-300 px-2 py-1 text-xs"
+                        >
+                          Probar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-gray-200">
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-purple-600">
+                        {notificationConfig.smsService.provider}
+                      </div>
+                      <div className="text-xs text-secondary-600">Proveedor</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-purple-600">
+                        {notificationConfig.smsService.accountSid || notificationConfig.smsService.apiKey ? 'Configurada' : 'Pendiente'}
+                      </div>
+                      <div className="text-xs text-secondary-600">Credenciales</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-purple-600">
+                        {notificationConfig.smsService.phoneNumber ? 'Configurado' : 'Pendiente'}
+                      </div>
+                      <div className="text-xs text-secondary-600">Número</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-purple-600">
+                        {notificationConfig.smsService.isActive ? 'Activo' : 'Inactivo'}
+                      </div>
+                      <div className="text-xs text-secondary-600">Estado</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          )}
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                <span className="font-medium text-secondary-900">Nuevo usuario registrado</span>
-                <Badge variant="success">Email + Push</Badge>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                <span className="font-medium text-secondary-900">Pago realizado</span>
-                <Badge variant="success">Email + SMS</Badge>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                <span className="font-medium text-secondary-900">Propuesta enviada</span>
-                <Badge variant="success">Email</Badge>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-white/60 rounded-lg">
-                <span className="font-medium text-secondary-900">Acuerdo alcanzado</span>
-                <Badge variant="warning">Email</Badge>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
+        </div>
+      </Card>
     </div>
   );
 };
