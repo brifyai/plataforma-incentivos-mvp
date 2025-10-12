@@ -25,6 +25,7 @@ import {
   PlusCircle,
   Search,
   Calendar,
+  Edit,
 } from 'lucide-react';
 
 const PaymentsDashboard = () => {
@@ -48,6 +49,8 @@ const PaymentsDashboard = () => {
   const [showBulkApprovalModal, setShowBulkApprovalModal] = useState(false);
   const [selectedPayments, setSelectedPayments] = useState([]);
   const [showCreatePaymentModal, setShowCreatePaymentModal] = useState(false);
+  const [showEditPaymentModal, setShowEditPaymentModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [newPaymentData, setNewPaymentData] = useState({
     debtorId: '',
     companyId: '',
@@ -483,6 +486,76 @@ const PaymentsDashboard = () => {
     }
   };
 
+  const handleEditPayment = async (paymentData) => {
+    setIsSubmitting(true);
+    try {
+      const { error } = await updatePayment(paymentData.id, paymentData);
+
+      if (error) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al actualizar pago',
+          text: error,
+          confirmButtonText: 'Aceptar'
+        });
+        return;
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Pago actualizado exitosamente',
+        text: 'Los cambios han sido guardados correctamente',
+        confirmButtonText: 'Aceptar'
+      });
+
+      setShowEditPaymentModal(false);
+      setSelectedPayment(null);
+
+      // Recargar datos
+      const fetchData = async () => {
+        try {
+          const [statsResult, recentResult, pendingResult] = await Promise.all([
+            getPaymentStats(),
+            getRecentPayments(showAllPayments ? 50 : 10),
+            getPendingPayments()
+          ]);
+
+          if (statsResult.error) {
+            setError(statsResult.error);
+          } else {
+            setPaymentStats(statsResult.stats);
+          }
+
+          if (recentResult.error) {
+            console.error('Error fetching recent payments:', recentResult.error);
+          } else {
+            setRecentPayments(recentResult.payments);
+          }
+
+          if (pendingResult.error) {
+            console.error('Error fetching pending payments:', pendingResult.error);
+          } else {
+            setPendingPayments(pendingResult.payments);
+          }
+        } catch (error) {
+          console.error('Error fetching dashboard data:', error);
+        }
+      };
+
+      fetchData();
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al actualizar pago',
+        text: 'Ha ocurrido un error inesperado',
+        confirmButtonText: 'Aceptar'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Función para aplicar filtros rápidos
   const applyQuickFilter = (filterType) => {
     const now = new Date();
@@ -519,6 +592,34 @@ const PaymentsDashboard = () => {
     setFilterCorporateClient('all');
   };
 
+  // Función para filtrar pagos por fecha
+  const filterPaymentsByDate = (payments) => {
+    if (!dateFilter.startDate && !dateFilter.endDate) {
+      return payments;
+    }
+
+    return payments.filter(payment => {
+      const paymentDate = new Date(payment.date || payment.transaction_date || payment.created_at);
+      const startDate = dateFilter.startDate ? new Date(dateFilter.startDate) : null;
+      const endDate = dateFilter.endDate ? new Date(dateFilter.endDate) : null;
+
+      // Ajustar endDate para incluir todo el día
+      if (endDate) {
+        endDate.setHours(23, 59, 59, 999);
+      }
+
+      if (startDate && endDate) {
+        return paymentDate >= startDate && paymentDate <= endDate;
+      } else if (startDate) {
+        return paymentDate >= startDate;
+      } else if (endDate) {
+        return paymentDate <= endDate;
+      }
+
+      return true;
+    });
+  };
+
   // Filtrar pagos por cliente corporativo
   const filterPaymentsByCorporateClient = (payments) => {
     if (filterCorporateClient === 'all') {
@@ -534,8 +635,8 @@ const PaymentsDashboard = () => {
   };
 
   // Aplicar filtros a los pagos recientes y pendientes
-  const filteredRecentPayments = filterPaymentsByCorporateClient(recentPayments);
-  const filteredPendingPayments = filterPaymentsByCorporateClient(pendingPayments);
+  const filteredRecentPayments = filterPaymentsByCorporateClient(filterPaymentsByDate(recentPayments));
+  const filteredPendingPayments = filterPaymentsByCorporateClient(filterPaymentsByDate(pendingPayments));
 
   if (loading) {
     return <LoadingSpinner fullScreen />;
@@ -585,21 +686,83 @@ const PaymentsDashboard = () => {
             {/* Create Payment Button */}
             <Button
               variant="primary"
-              size="lg"
+              size="sm"
               onClick={handleCreatePayment}
-              leftIcon={<PlusCircle className="w-5 h-5" />}
+              leftIcon={<PlusCircle className="w-4 h-4" />}
             >
               Crear Pago
             </Button>
           </div>
         </div>
+      </div>
 
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+
+          {/* Date Inputs */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyQuickFilter('today')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Hoy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyQuickFilter('week')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Últimos 7 días
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyQuickFilter('month')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Este mes
+            </Button>
+          </div>
         </div>
+      </div>
 
-        {/* Stats Cards */}
+{/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mt-4">
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-3">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
                 <CreditCard className="w-4 h-4 text-blue-600" />
@@ -613,7 +776,7 @@ const PaymentsDashboard = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-3">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
                 <DollarSign className="w-4 h-4 text-green-600" />
@@ -627,7 +790,7 @@ const PaymentsDashboard = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-3">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg group-hover:shadow-glow-warning transition-all duration-300">
                 <Clock className="w-4 h-4 text-yellow-600" />
@@ -641,7 +804,7 @@ const PaymentsDashboard = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-3">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
                 <CheckCircle className="w-4 h-4 text-green-600" />
@@ -655,7 +818,7 @@ const PaymentsDashboard = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-3">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-red-100 to-red-200 rounded-lg group-hover:shadow-glow-danger transition-all duration-300">
                 <XCircle className="w-4 h-4 text-red-600" />
@@ -669,7 +832,7 @@ const PaymentsDashboard = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-3">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
                 <TrendingUp className="w-4 h-4 text-purple-600" />
@@ -682,7 +845,6 @@ const PaymentsDashboard = () => {
           </div>
         </Card>
       </div>
-
 
       {/* Recent Payments */}
       <Card
@@ -727,6 +889,18 @@ const PaymentsDashboard = () => {
                   </div>
                   <div className="flex items-center gap-4">
                     {getStatusBadge(payment.status)}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      leftIcon={<Edit className="w-4 h-4" />}
+                      onClick={() => {
+                        setSelectedPayment(payment);
+                        setShowEditPaymentModal(true);
+                      }}
+                      className="hover:bg-blue-50 hover:border-blue-300"
+                    >
+                      Editar
+                    </Button>
                   </div>
                 </div>
 
@@ -841,6 +1015,19 @@ const PaymentsDashboard = () => {
                           <span>{formatDate(payment.submitted_date)}</span>
                         </div>
                       </div>
+ 
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<Edit className="w-4 h-4" />}
+                        onClick={() => {
+                          setSelectedPayment(payment);
+                          setShowEditPaymentModal(true);
+                        }}
+                        className="hover:bg-blue-50 hover:border-blue-300"
+                      >
+                        Editar
+                      </Button>
                     </div>
 
                     {/* Commission Breakdown */}
@@ -1365,6 +1552,155 @@ const PaymentsDashboard = () => {
               Confirmar Aprobación
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Edit Payment Modal */}
+      <Modal
+        isOpen={showEditPaymentModal}
+        onClose={() => {
+          setShowEditPaymentModal(false);
+          setSelectedPayment(null);
+        }}
+        title="Editar Pago"
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="p-4 bg-blue-100 rounded-2xl inline-block mb-4">
+              <Edit className="w-12 h-12 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-bold text-secondary-900 mb-2">
+              Editar Pago
+            </h3>
+            <p className="text-secondary-600">
+              Modifique la información del pago seleccionado
+            </p>
+          </div>
+
+          {selectedPayment && (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const paymentData = {
+                id: selectedPayment.id,
+                amount: parseFloat(formData.get('amount')),
+                status: formData.get('status'),
+                notes: formData.get('notes'),
+                debt_reference: formData.get('debt_reference'),
+              };
+              handleEditPayment(paymentData);
+            }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Monto del Pago *
+                  </label>
+                  <Input
+                    name="amount"
+                    type="number"
+                    required
+                    defaultValue={selectedPayment.amount}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Estado del Pago *
+                  </label>
+                  <select
+                    name="status"
+                    required
+                    defaultValue={selectedPayment.status}
+                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="pending">Pendiente</option>
+                    <option value="completed">Completado</option>
+                    <option value="failed">Fallido</option>
+                    <option value="awaiting_validation">Esperando validación</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Referencia de Deuda
+                  </label>
+                  <Input
+                    name="debt_reference"
+                    defaultValue={selectedPayment.debt_reference}
+                    placeholder="REF-001"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Método de Pago
+                  </label>
+                  <Input
+                    name="payment_method"
+                    defaultValue={selectedPayment.payment_method}
+                    placeholder="mercadopago"
+                    disabled
+                  />
+                  <p className="text-xs text-secondary-500 mt-1">No se puede modificar el método de pago</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Notas/Comentarios
+                </label>
+                <textarea
+                  name="notes"
+                  defaultValue={selectedPayment.notes}
+                  placeholder="Notas adicionales sobre el pago..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                />
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <DollarSign className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-blue-900 mb-1">Información del Pago</h4>
+                    <div className="text-sm text-blue-700 space-y-1">
+                      <p><strong>Deudor:</strong> {selectedPayment.debtor}</p>
+                      <p><strong>Empresa:</strong> {selectedPayment.company}</p>
+                      <p><strong>Fecha de envío:</strong> {formatDate(selectedPayment.submitted_date)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowEditPaymentModal(false);
+                    setSelectedPayment(null);
+                  }}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="gradient"
+                  type="submit"
+                  loading={isSubmitting}
+                  className="flex-1"
+                  leftIcon={<CheckCircle className="w-4 h-4" />}
+                >
+                  Guardar Cambios
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       </Modal>
     </div>

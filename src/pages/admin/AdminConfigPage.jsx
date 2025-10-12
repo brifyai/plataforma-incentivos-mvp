@@ -169,64 +169,72 @@ const AdminConfigPage = () => {
   return (
     <div className="space-y-8">
       {/* Modern Header */}
-      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 rounded-3xl p-4 md:p-8 text-white shadow-strong">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4 md:gap-6">
-            <div className="p-3 md:p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <Settings className="w-6 h-6 md:w-8 md:h-8" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight">
-                Configuración del Sistema
-              </h1>
-              <p className="text-purple-100 text-base md:text-lg">
-                Gestiona todos los aspectos de configuración de la plataforma
-              </p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-8 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+        </div>
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Settings className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Configuración del Sistema
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Gestiona todos los aspectos de configuración de la plataforma
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Quick Status Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mt-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-white/20">
-            <div className="flex items-center gap-2 md:gap-3">
-              <Shield className="w-5 h-5 md:w-6 md:h-6 text-purple-300 flex-shrink-0" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary-300 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs md:text-sm text-purple-100">Seguridad</p>
-                <p className="text-base md:text-lg font-bold flex items-center gap-1 truncate">
-                  {config.oauthEnabled && config.userValidation ? <CheckCircle className="w-3 h-3 md:w-4 md:h-4 text-green-400 flex-shrink-0" /> : <XCircle className="w-3 h-3 md:w-4 md:h-4 text-red-400 flex-shrink-0" />}
+                <p className="text-xs text-primary-100">Seguridad</p>
+                <p className="text-sm font-bold flex items-center gap-1 truncate">
+                  {config.oauthEnabled && config.userValidation ? <CheckCircle className="w-3 h-3 text-green-400 flex-shrink-0" /> : <XCircle className="w-3 h-3 text-red-400 flex-shrink-0" />}
                   <span className="truncate">{config.oauthEnabled && config.userValidation ? 'Activa' : 'Incompleta'}</span>
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-white/20">
-            <div className="flex items-center gap-2 md:gap-3">
-              <Database className="w-5 h-5 md:w-6 md:h-6 text-purple-300 flex-shrink-0" />
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+            <div className="flex items-center gap-2">
+              <Database className="w-4 h-4 text-primary-300 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs md:text-sm text-purple-100">Base de Datos</p>
-                <p className="text-base md:text-lg font-bold truncate">Conectada</p>
+                <p className="text-xs text-primary-100">Base de Datos</p>
+                <p className="text-sm font-bold truncate">Conectada</p>
               </div>
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-white/20">
-            <div className="flex items-center gap-2 md:gap-3">
-                <Mail className="w-5 h-5 md:w-6 md:h-6 text-purple-300 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs md:text-sm text-purple-100">Notificaciones</p>
-                  <p className="text-base md:text-lg font-bold truncate">
-                    {config.emailNotifications && config.pushNotifications ? 'Completas' :
-                     config.emailNotifications || config.pushNotifications ? 'Parciales' : 'Inactivas'}
-                  </p>
-                </div>
-              </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-white/20">
-            <div className="flex items-center gap-2 md:gap-3">
-              <Key className="w-5 h-5 md:w-6 md:h-6 text-purple-300 flex-shrink-0" />
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+            <div className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-primary-300 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm text-purple-100">Integraciones</p>
-                <p className="text-base md:text-lg font-bold truncate">{(config.mercadoPagoEnabled && config.whatsappEnabled) ? 'Completas' : 'Parciales'}</p>
+                <p className="text-xs text-primary-100">Notificaciones</p>
+                <p className="text-sm font-bold truncate">
+                  {config.emailNotifications && config.pushNotifications ? 'Completas' :
+                   config.emailNotifications || config.pushNotifications ? 'Parciales' : 'Inactivas'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+            <div className="flex items-center gap-2">
+              <Key className="w-4 h-4 text-primary-300 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-primary-100">Integraciones</p>
+                <p className="text-sm font-bold truncate">{(config.mercadoPagoEnabled && config.whatsappEnabled) ? 'Completas' : 'Parciales'}</p>
               </div>
             </div>
           </div>
@@ -243,27 +251,27 @@ const AdminConfigPage = () => {
               className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary-200"
               onClick={() => navigate(section.path)}
             >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 bg-gradient-to-r ${section.color} rounded-xl text-white group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-6 h-6" />
+              <div className="p-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`p-2 bg-gradient-to-r ${section.color} rounded-lg text-white group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-5 h-5" />
                   </div>
                   {getStatusBadge(section.status)}
                 </div>
 
-                <h3 className="text-xl font-bold text-secondary-900 mb-2 group-hover:text-primary-700 transition-colors">
+                <h3 className="text-base font-semibold text-secondary-900 mb-2 group-hover:text-primary-700 transition-colors">
                   {section.title}
                 </h3>
 
-                <p className="text-secondary-600 mb-4 leading-relaxed">
+                <p className="text-secondary-600 mb-3 leading-relaxed text-xs">
                   {section.description}
                 </p>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-secondary-500">
+                  <span className="text-xs font-medium text-secondary-500">
                     {section.statusText}
                   </span>
-                  <ArrowRight className="w-5 h-5 text-secondary-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-300" />
+                  <ArrowRight className="w-4 h-4 text-secondary-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-300" />
                 </div>
               </div>
             </Card>
@@ -279,8 +287,8 @@ const AdminConfigPage = () => {
               <CheckCircle className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-secondary-900">Estado del Sistema</h3>
-              <p className="text-secondary-600">Resumen general de la salud del sistema</p>
+              <h3 className="text-lg font-semibold text-secondary-900">Estado del Sistema</h3>
+              <p className="text-secondary-600 text-xs">Resumen general de la salud del sistema</p>
             </div>
           </div>
 

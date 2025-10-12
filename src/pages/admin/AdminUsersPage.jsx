@@ -545,8 +545,8 @@ const AdminUsersPage = () => {
             <Button
               variant="gradient"
               onClick={() => setShowCreateModal(true)}
-              leftIcon={<UserPlus className="w-4 h-4" />}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0"
+              leftIcon={<UserPlus className="w-3 h-3" />}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 px-3 py-2 text-sm"
             >
               Crear Usuario
             </Button>
@@ -618,11 +618,11 @@ const AdminUsersPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-2 mt-3">
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-1.5">
             <div className="flex items-center justify-center mb-2">
-              <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
+              <div className="p-1 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
                 <Users className="w-4 h-4 text-blue-600" />
               </div>
             </div>
@@ -638,9 +638,9 @@ const AdminUsersPage = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-1.5">
             <div className="flex items-center justify-center mb-2">
-              <div className="p-1.5 bg-gradient-to-br from-red-100 to-red-200 rounded-lg group-hover:shadow-glow-danger transition-all duration-300">
+              <div className="p-1 bg-gradient-to-br from-red-100 to-red-200 rounded-lg group-hover:shadow-glow-danger transition-all duration-300">
                 <Shield className="w-4 h-4 text-red-600" />
               </div>
             </div>
@@ -652,9 +652,9 @@ const AdminUsersPage = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-1.5">
             <div className="flex items-center justify-center mb-2">
-              <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+              <div className="p-1 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
                 <Building className="w-4 h-4 text-green-600" />
               </div>
             </div>
@@ -666,9 +666,9 @@ const AdminUsersPage = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-1.5">
             <div className="flex items-center justify-center mb-2">
-              <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
+              <div className="p-1 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
                 <Users className="w-4 h-4 text-purple-600" />
               </div>
             </div>
@@ -680,9 +680,9 @@ const AdminUsersPage = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-1.5">
             <div className="flex items-center justify-center mb-2">
-              <div className="p-1.5 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg group-hover:shadow-glow-warning transition-all duration-300">
+              <div className="p-1 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg group-hover:shadow-glow-warning transition-all duration-300">
                 <AlertTriangle className="w-4 h-4 text-yellow-600" />
               </div>
             </div>
@@ -782,7 +782,8 @@ const AdminUsersPage = () => {
             <Button
               variant="outline"
               onClick={loadUsers}
-              leftIcon={<Users className="w-4 h-4" />}
+              leftIcon={<Users className="w-3 h-3" />}
+              className="px-3 py-2 text-sm"
             >
               Actualizar
             </Button>
@@ -813,24 +814,24 @@ const AdminUsersPage = () => {
                   key={user.id}
                   className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 overflow-hidden"
                 >
-                  <div className="p-6">
+                  <div className="p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                          <span className="text-white font-bold text-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-sm">
                             {user.full_name.charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-1">{user.full_name}</h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <h3 className="text-lg font-bold text-gray-900 mb-1">{user.full_name}</h3>
+                          <div className="flex items-center gap-3 text-xs text-gray-600">
                             <div className="flex items-center gap-1">
-                              <Mail className="w-4 h-4" />
+                              <Mail className="w-3 h-3" />
                               <span>{user.email}</span>
                             </div>
                             {user.phone && (
                               <div className="flex items-center gap-1">
-                                <Phone className="w-4 h-4" />
+                                <Phone className="w-3 h-3" />
                                 <span>{user.phone}</span>
                               </div>
                             )}
@@ -843,55 +844,55 @@ const AdminUsersPage = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4">
-                        <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end gap-1">
                           <Badge
                             variant={getRoleBadgeColor(user.role)}
-                            className="px-3 py-1 flex items-center gap-1"
+                            className="px-2 py-0.5 flex items-center gap-1 text-xs"
                           >
                             {getRoleIcon(user.role)}
                             {getRoleText(user.role)}
                           </Badge>
                           <Badge
                             variant={getStatusBadgeColor(user.validation_status)}
-                            className="px-3 py-1"
+                            className="px-2 py-0.5 text-xs"
                           >
                             {getStatusText(user.validation_status)}
                           </Badge>
                         </div>
 
                         <div className="text-right">
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <Calendar className="w-4 h-4" />
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Calendar className="w-3 h-3" />
                             <span className="font-medium">{formatDate(new Date(user.created_at))}</span>
                           </div>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                           {user.validation_status === 'pending' ? (
                             // Botones para usuarios pendientes
                             <>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                leftIcon={<CheckCircle className="w-4 h-4" />}
+                                size="xs"
+                                leftIcon={<CheckCircle className="w-3 h-3" />}
                                 onClick={() => {
                                   setSelectedUser(user);
                                   setShowApproveModal(true);
                                 }}
-                                className="hover:bg-green-50 hover:border-green-300 text-green-600"
+                                className="hover:bg-green-50 hover:border-green-300 text-green-600 px-2 py-1 text-xs"
                               >
                                 Aprobar
                               </Button>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                leftIcon={<XCircle className="w-4 h-4" />}
+                                size="xs"
+                                leftIcon={<XCircle className="w-3 h-3" />}
                                 onClick={() => {
                                   setSelectedUser(user);
                                   setShowRejectModal(true);
                                 }}
-                                className="hover:bg-red-50 hover:border-red-300 text-red-600"
+                                className="hover:bg-red-50 hover:border-red-300 text-red-600 px-2 py-1 text-xs"
                               >
                                 Rechazar
                               </Button>
@@ -901,38 +902,38 @@ const AdminUsersPage = () => {
                             <>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                leftIcon={<Key className="w-4 h-4" />}
+                                size="xs"
+                                leftIcon={<Key className="w-3 h-3" />}
                                 onClick={() => {
                                   setSelectedUser(user);
                                   setShowResetModal(true);
                                 }}
-                                className="hover:bg-purple-50 hover:border-purple-300 text-purple-600"
+                                className="hover:bg-purple-50 hover:border-purple-300 text-purple-600 px-2 py-1 text-xs"
                                 title="Reiniciar contraseña"
                               >
                                 Reset
                               </Button>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                leftIcon={<Edit className="w-4 h-4" />}
+                                size="xs"
+                                leftIcon={<Edit className="w-3 h-3" />}
                                 onClick={() => {
                                   setSelectedUser(user);
                                   setShowEditModal(true);
                                 }}
-                                className="hover:bg-green-50 hover:border-green-300"
+                                className="hover:bg-green-50 hover:border-green-300 px-2 py-1 text-xs"
                               >
                                 Editar
                               </Button>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                leftIcon={<Trash2 className="w-4 h-4" />}
+                                size="xs"
+                                leftIcon={<Trash2 className="w-3 h-3" />}
                                 onClick={() => {
                                   setSelectedUser(user);
                                   setShowDeleteModal(true);
                                 }}
-                                className="hover:bg-red-50 hover:border-red-300 text-red-600"
+                                className="hover:bg-red-50 hover:border-red-300 text-red-600 px-2 py-1 text-xs"
                               >
                                 Eliminar
                               </Button>

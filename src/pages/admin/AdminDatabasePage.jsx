@@ -105,21 +105,28 @@ const AdminDatabasePage = () => {
   return (
     <div className="space-y-8">
       {/* Modern Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <Database className="w-8 h-8" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+        </div>
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Database className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Gestión de Base de Datos
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Monitoreo y administración completa de PostgreSQL
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
-                Gestión de Base de Datos
-              </h1>
-              <p className="text-blue-100 text-lg">
-                Monitoreo y administración completa de PostgreSQL
-              </p>
-            </div>
-          </div>
           <div className="flex items-center gap-4">
             <Badge variant="secondary" className="px-4 py-2 bg-white/10 border-white/30 text-white">
               <Server className="w-4 h-4 mr-2" />
@@ -136,46 +143,58 @@ const AdminDatabasePage = () => {
             </Button>
           </div>
         </div>
+      </div>
 
-        {/* Quick Stats in Header */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Activity className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Disponibilidad</p>
-                <p className="text-2xl font-bold">{dbStats?.availability || 0}%</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <HardDrive className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Almacenamiento</p>
-                <p className="text-2xl font-bold">{dbStats?.storageUsed || 0}GB</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Zap className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Latencia</p>
-                <p className="text-2xl font-bold">{dbStats?.avgLatency || 0}ms</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-3">
-              <Database className="w-6 h-6 text-blue-300" />
-              <div>
-                <p className="text-sm text-blue-100">Tablas</p>
-                <p className="text-2xl font-bold">{dbStats?.activeTables || 0}</p>
-              </div>
-            </div>
+    {/* Stats Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 border border-blue-200 hover:shadow-md transition-all duration-300 text-center">
+        <div className="flex items-center justify-center mb-2">
+          <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg">
+            <Activity className="w-3 h-3 text-blue-600" />
           </div>
         </div>
+        <h3 className="text-sm font-display font-bold text-blue-900 mb-0.5">
+          {dbStats?.availability || 0}%
+        </h3>
+        <p className="text-blue-700 font-medium uppercase tracking-wide text-xs">Disponibilidad</p>
+      </div>
+
+      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 border border-green-200 hover:shadow-md transition-all duration-300 text-center">
+        <div className="flex items-center justify-center mb-2">
+          <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg">
+            <HardDrive className="w-3 h-3 text-green-600" />
+          </div>
+        </div>
+        <h3 className="text-sm font-display font-bold text-green-900 mb-0.5">
+          {dbStats?.storageUsed || 0}GB
+        </h3>
+        <p className="text-green-700 font-medium uppercase tracking-wide text-xs">Almacenamiento</p>
+      </div>
+
+      <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-3 border border-yellow-200 hover:shadow-md transition-all duration-300 text-center">
+        <div className="flex items-center justify-center mb-2">
+          <div className="p-1.5 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg">
+            <Zap className="w-3 h-3 text-yellow-600" />
+          </div>
+        </div>
+        <h3 className="text-sm font-display font-bold text-yellow-900 mb-0.5">
+          {dbStats?.avgLatency || 0}ms
+        </h3>
+        <p className="text-yellow-700 font-medium uppercase tracking-wide text-xs">Latencia</p>
+      </div>
+
+      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-3 border border-purple-200 hover:shadow-md transition-all duration-300 text-center">
+        <div className="flex items-center justify-center mb-2">
+          <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg">
+            <Database className="w-3 h-3 text-purple-600" />
+          </div>
+        </div>
+        <h3 className="text-sm font-display font-bold text-purple-900 mb-0.5">
+          {dbStats?.activeTables || 0}
+        </h3>
+        <p className="text-purple-700 font-medium uppercase tracking-wide text-xs">Tablas</p>
+      </div>
+    </div>
       </div>
 
       {/* Database Tables Overview */}
@@ -183,8 +202,8 @@ const AdminDatabasePage = () => {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-xl font-semibold text-secondary-900">Tablas de la Base de Datos</h3>
-              <p className="text-secondary-600 mt-1">Estado y estadísticas de todas las tablas del sistema</p>
+              <h3 className="text-lg font-semibold text-secondary-900">Tablas de la Base de Datos</h3>
+              <p className="text-secondary-600 mt-1 text-sm">Estado y estadísticas de todas las tablas del sistema</p>
             </div>
             <div className="flex items-center gap-3">
               <Button
@@ -273,8 +292,8 @@ const AdminDatabasePage = () => {
                 <RefreshCw className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-secondary-900">Acciones de Mantenimiento</h3>
-                <p className="text-secondary-600">Operaciones de mantenimiento de la base de datos</p>
+                <h3 className="text-lg font-semibold text-secondary-900">Acciones de Mantenimiento</h3>
+                <p className="text-secondary-600 text-sm">Operaciones de mantenimiento de la base de datos</p>
               </div>
             </div>
 
@@ -283,8 +302,8 @@ const AdminDatabasePage = () => {
                 <div className="flex items-center gap-3">
                   <Download className="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform" />
                   <div>
-                    <h4 className="font-medium text-secondary-900">Backup Completo</h4>
-                    <p className="text-sm text-secondary-600">Crear copia de seguridad</p>
+                    <h4 className="font-medium text-secondary-900 text-sm">Backup Completo</h4>
+                    <p className="text-xs text-secondary-600">Crear copia de seguridad</p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -296,8 +315,8 @@ const AdminDatabasePage = () => {
                 <div className="flex items-center gap-3">
                   <RefreshCw className="w-5 h-5 text-green-600 group-hover:scale-110 transition-transform" />
                   <div>
-                    <h4 className="font-medium text-secondary-900">Optimizar Tablas</h4>
-                    <p className="text-sm text-secondary-600">Mejorar rendimiento</p>
+                    <h4 className="font-medium text-secondary-900 text-sm">Optimizar Tablas</h4>
+                    <p className="text-xs text-secondary-600">Mejorar rendimiento</p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -309,8 +328,8 @@ const AdminDatabasePage = () => {
                 <div className="flex items-center gap-3">
                   <AlertTriangle className="w-5 h-5 text-yellow-600 group-hover:scale-110 transition-transform" />
                   <div>
-                    <h4 className="font-medium text-secondary-900">Verificar Integridad</h4>
-                    <p className="text-sm text-secondary-600">Comprobar consistencia</p>
+                    <h4 className="font-medium text-secondary-900 text-sm">Verificar Integridad</h4>
+                    <p className="text-xs text-secondary-600">Comprobar consistencia</p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -328,42 +347,42 @@ const AdminDatabasePage = () => {
                 <Server className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-secondary-900">Estado del Sistema</h3>
-                <p className="text-secondary-600">Información del sistema y conexiones</p>
+                <h3 className="text-lg font-semibold text-secondary-900">Estado del Sistema</h3>
+                <p className="text-secondary-600 text-sm">Información del sistema y conexiones</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium text-secondary-900">Última Migración</h4>
+                  <h4 className="font-medium text-secondary-900 text-sm">Última Migración</h4>
                   <Badge variant={systemInfo?.lastMigration?.status === 'success' ? 'success' : 'danger'}>
                     {systemInfo?.lastMigration?.status === 'success' ? 'Exitosa' : 'Fallida'}
                   </Badge>
                 </div>
-                <p className="text-sm text-secondary-600">
+                <p className="text-xs text-secondary-600">
                   {systemInfo?.lastMigration?.name || 'N/A'} - {systemInfo?.lastMigration?.executedAt ? new Date(systemInfo.lastMigration.executedAt).toLocaleDateString('es-ES') : 'N/A'}
                 </p>
               </div>
 
               <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium text-secondary-900">Estado RLS</h4>
+                  <h4 className="font-medium text-secondary-900 text-sm">Estado RLS</h4>
                   <Badge variant={systemInfo?.rlsStatus === 'enabled' ? 'success' : 'danger'}>
                     {systemInfo?.rlsStatus === 'enabled' ? 'Activado' : 'Desactivado'}
                   </Badge>
                 </div>
-                <p className="text-sm text-secondary-600">
+                <p className="text-xs text-secondary-600">
                   Políticas de seguridad {systemInfo?.rlsStatus === 'enabled' ? 'activas' : 'inactivas'}
                 </p>
               </div>
 
               <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium text-secondary-900">Conexiones Activas</h4>
+                  <h4 className="font-medium text-secondary-900 text-sm">Conexiones Activas</h4>
                   <Badge variant="primary" className="font-bold">{systemInfo?.activeConnections || 0}</Badge>
                 </div>
-                <p className="text-sm text-secondary-600">
+                <p className="text-xs text-secondary-600">
                   Usuarios conectados actualmente
                 </p>
               </div>

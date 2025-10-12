@@ -5,9 +5,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, Badge, LoadingSpinner, DateFilter } from '../../components/common';
-import { BarChart3, TrendingUp, Users, DollarSign, Activity, PieChart, Calendar, Building } from 'lucide-react';
-import { getAdminAnalytics, getAllCorporateClients } from '../../services/databaseService';
+import { Card, Badge, LoadingSpinner } from '../../components/common';
+import { BarChart3, TrendingUp, Users, DollarSign, Activity, PieChart, Calendar } from 'lucide-react';
+import { getAdminAnalytics } from '../../services/databaseService';
 import { formatCurrency } from '../../utils/formatters';
 
 const AdminAnalyticsPage = () => {
@@ -16,8 +16,6 @@ const AdminAnalyticsPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [quickFilter, setQuickFilter] = useState(''); // 'today', 'week', 'month'
-  const [filterCorporateClient, setFilterCorporateClient] = useState('all');
-  const [corporateClients, setCorporateClients] = useState([]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -41,21 +39,8 @@ const AdminAnalyticsPage = () => {
     };
 
     fetchAnalytics();
-    loadCorporateClients();
   }, []);
 
-  const loadCorporateClients = async () => {
-    try {
-      const { corporateClients, error } = await getAllCorporateClients();
-      if (error) {
-        console.error('Error loading corporate clients:', error);
-      } else {
-        setCorporateClients(corporateClients || []);
-      }
-    } catch (error) {
-      console.error('Error in loadCorporateClients:', error);
-    }
-  };
 
   const getActivityIcon = (iconName) => {
     switch (iconName) {
@@ -132,8 +117,8 @@ const AdminAnalyticsPage = () => {
   const clearFilters = () => {
     setDateFilter({ startDate: '', endDate: '' });
     setQuickFilter('');
-    setFilterCorporateClient('all');
   };
+
 
   if (loading) {
     return <LoadingSpinner fullScreen />;
@@ -154,190 +139,164 @@ const AdminAnalyticsPage = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <BarChart3 className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
-                Analytics del Sistema
-              </h1>
-              <p className="text-blue-100 text-lg">
-                Métricas y análisis de rendimiento de la plataforma
-              </p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
+        </div>
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Analytics del Sistema
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Métricas y análisis de rendimiento de la plataforma
+                </p>
+              </div>
             </div>
           </div>
-<div className="flex flex-col gap-4">
-  {/* Quick Filter Buttons */}
-  <div className="flex items-center gap-4">
-    <div className="flex items-center gap-2">
-      <Calendar className="w-5 h-5 text-blue-300" />
-      <span className="text-sm font-medium text-blue-100">Filtrar por período:</span>
-    </div>
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => applyQuickFilter('today')}
-        className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-          quickFilter === 'today'
-            ? 'bg-blue-800 border-blue-700'
-            : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
-        }`}
-      >
-        Hoy
-      </button>
-      <button
-        onClick={() => applyQuickFilter('week')}
-        className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-          quickFilter === 'week'
-            ? 'bg-blue-800 border-blue-700'
-            : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
-        }`}
-      >
-        Semana
-      </button>
-      <button
-        onClick={() => applyQuickFilter('month')}
-        className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
-          quickFilter === 'month'
-            ? 'bg-blue-800 border-blue-700'
-            : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
-        }`}
-      >
-        Mes
-      </button>
-      {(dateFilter.startDate || dateFilter.endDate || filterCorporateClient !== 'all') && (
-        <button
-          onClick={clearFilters}
-          className="px-3 py-2 text-xs font-semibold text-white bg-blue-600 border border-blue-500 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Limpiar
-        </button>
-      )}
-    </div>
-  </div>
+        </div>
+      </div>
 
-  {/* Corporate Client Filter */}
-  <div className="flex items-center gap-4">
-    <div className="flex items-center gap-2">
-      <Building className="w-5 h-5 text-blue-300" />
-      <span className="text-sm font-medium text-blue-100">Filtrar por cliente:</span>
-    </div>
-    <div className="flex items-center gap-2">
-      <select
-        value={filterCorporateClient}
-        onChange={(e) => setFilterCorporateClient(e.target.value)}
-        className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white focus:ring-2 focus:ring-white/50 focus:border-white text-sm min-w-[200px]"
-      >
-        <option value="all" className="text-gray-900">Todos los Clientes</option>
-        <option value="none" className="text-gray-900">Sin Cliente Corporativo</option>
-        {corporateClients.map(client => (
-          <option key={client.id} value={client.id} className="text-gray-900">
-            {client.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  </div>
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
 
-  {/* Custom Date Range */}
-  <div className="flex items-center gap-3">
-    <div className="flex items-center gap-2">
-      <label htmlFor="startDate" className="text-sm text-blue-200">Desde:</label>
-      <input
-        id="startDate"
-        type="date"
-        value={dateFilter.startDate}
-        onChange={(e) => {
-          setDateFilter(prev => ({ ...prev, startDate: e.target.value }));
-          setQuickFilter(''); // Clear quick filter when manual date is selected
-        }}
-        className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-blue-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
-      />
-    </div>
-    <div className="flex items-center gap-2">
-      <label htmlFor="endDate" className="text-sm text-blue-200">Hasta:</label>
-      <input
-        id="endDate"
-        type="date"
-        value={dateFilter.endDate}
-        onChange={(e) => {
-          setDateFilter(prev => ({ ...prev, endDate: e.target.value }));
-          setQuickFilter(''); // Clear quick filter when manual date is selected
-        }}
-        className="px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white placeholder-blue-200 focus:ring-2 focus:ring-white/50 focus:border-white text-sm"
-      />
-    </div>
-  </div>
+          {/* Date Inputs */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
 
-</div>
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <button
+              onClick={() => applyQuickFilter('today')}
+              className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
+                quickFilter === 'today'
+                  ? 'bg-blue-800 border-blue-700'
+                  : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
+              }`}
+            >
+              Hoy
+            </button>
+            <button
+              onClick={() => applyQuickFilter('week')}
+              className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
+                quickFilter === 'week'
+                  ? 'bg-blue-800 border-blue-700'
+                  : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
+              }`}
+            >
+              Últimos 7 días
+            </button>
+            <button
+              onClick={() => applyQuickFilter('month')}
+              className={`px-3 py-2 text-xs font-semibold text-white rounded-lg border transition-colors ${
+                quickFilter === 'month'
+                  ? 'bg-blue-800 border-blue-700'
+                  : 'bg-blue-600 border-blue-500 hover:bg-blue-700'
+              }`}
+            >
+              Este mes
+            </button>
+            {(dateFilter.startDate || dateFilter.endDate) && (
+              <button
+                onClick={clearFilters}
+                className="px-3 py-2 text-xs font-semibold text-white bg-blue-600 border border-blue-500 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="text-center">
-          <div className="p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-lg mx-auto mb-4">
-              <Users className="w-6 h-6 text-primary-600" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-3">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
+                <Users className="w-4 h-4 text-blue-600" />
+              </div>
             </div>
-            <h3 className="text-2xl font-bold text-secondary-900">
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
               {analytics?.keyMetrics?.activeUsers?.toLocaleString() || 0}
             </h3>
-            <p className="text-secondary-600">Usuarios Activos</p>
-            <div className="flex items-center justify-center mt-2">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-600">+{analytics?.growth?.userGrowth || 0}% este mes</span>
-            </div>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Usuarios Activos</p>
           </div>
         </Card>
 
-        <Card className="text-center">
-          <div className="p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-lg mx-auto mb-4">
-              <DollarSign className="w-6 h-6 text-success-600" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-3">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+                <DollarSign className="w-4 h-4 text-green-600" />
+              </div>
             </div>
-            <h3 className="text-2xl font-bold text-secondary-900">
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
               {formatCurrency(analytics?.keyMetrics?.totalTransferred || 0)}
             </h3>
-            <p className="text-secondary-600">Total Transferido</p>
-            <div className="flex items-center justify-center mt-2">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-600">+{analytics?.growth?.paymentGrowth || 0}% este mes</span>
-            </div>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Total Transferido</p>
           </div>
         </Card>
 
-        <Card className="text-center">
-          <div className="p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-warning-100 rounded-lg mx-auto mb-4">
-              <Activity className="w-6 h-6 text-warning-600" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-3">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg group-hover:shadow-glow-warning transition-all duration-300">
+                <Activity className="w-4 h-4 text-yellow-600" />
+              </div>
             </div>
-            <h3 className="text-2xl font-bold text-secondary-900">
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
               {analytics?.keyMetrics?.systemUptime || 0}%
             </h3>
-            <p className="text-secondary-600">Uptime del Sistema</p>
-            <div className="flex items-center justify-center mt-2">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-600">Estable</span>
-            </div>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Uptime Sistema</p>
           </div>
         </Card>
 
-        <Card className="text-center">
-          <div className="p-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-info-100 rounded-lg mx-auto mb-4">
-              <PieChart className="w-6 h-6 text-info-600" />
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-3">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
+                <PieChart className="w-4 h-4 text-purple-600" />
+              </div>
             </div>
-            <h3 className="text-2xl font-bold text-secondary-900">
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
               {analytics?.keyMetrics?.activeCompanies || 0}
             </h3>
-            <p className="text-secondary-600">Empresas Activas</p>
-            <div className="flex items-center justify-center mt-2">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-600">+{analytics?.growth?.companyGrowth || 0} este mes</span>
-            </div>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Empresas Activas</p>
           </div>
         </Card>
       </div>
@@ -346,19 +305,19 @@ const AdminAnalyticsPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <div className="p-6">
-            <h3 className="text-xl font-semibold text-secondary-900 mb-4">Distribución por Rol</h3>
+            <h3 className="text-lg font-semibold text-secondary-900 mb-4">Distribución por Rol</h3>
             <div className="space-y-4">
               {analytics?.roleDistribution && Object.entries(analytics.roleDistribution).map(([role, count]) => (
                 <div key={role} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-primary-500 rounded-full"></div>
-                    <span className="text-secondary-700 capitalize">
+                    <span className="text-secondary-700 capitalize text-sm">
                       {role === 'debtor' ? 'Deudores' : role === 'company' ? 'Empresas' : 'Administradores'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-secondary-900 font-semibold">{count}</span>
-                    <span className="text-secondary-500 text-sm">
+                    <span className="text-secondary-900 font-semibold text-sm">{count}</span>
+                    <span className="text-secondary-500 text-xs">
                       ({((count / Object.values(analytics.roleDistribution).reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%)
                     </span>
                   </div>
@@ -370,19 +329,19 @@ const AdminAnalyticsPage = () => {
 
         <Card>
           <div className="p-6">
-            <h3 className="text-xl font-semibold text-secondary-900 mb-4">Métricas de Rendimiento</h3>
+            <h3 className="text-lg font-semibold text-secondary-900 mb-4">Métricas de Rendimiento</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-secondary-700">Tasa de Conversión</span>
-                <span className="text-secondary-900 font-semibold">
+                <span className="text-secondary-700 text-sm">Tasa de Conversión</span>
+                <span className="text-secondary-900 font-semibold text-sm">
                   {analytics?.keyMetrics?.activeUsers > 0
                     ? ((analytics.keyMetrics.activeCompanies / analytics.keyMetrics.activeUsers) * 100).toFixed(1)
                     : 0}%
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-secondary-700">Pagos por Usuario</span>
-                <span className="text-secondary-900 font-semibold">
+                <span className="text-secondary-700 text-sm">Pagos por Usuario</span>
+                <span className="text-secondary-900 font-semibold text-sm">
                   {analytics?.keyMetrics?.activeUsers > 0
                     ? (analytics.keyMetrics.totalTransferred / analytics.keyMetrics.activeUsers).toLocaleString('es-CL', {
                         style: 'currency',
@@ -392,8 +351,8 @@ const AdminAnalyticsPage = () => {
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-secondary-700">Crecimiento Total</span>
-                <span className="text-green-600 font-semibold">
+                <span className="text-secondary-700 text-sm">Crecimiento Total</span>
+                <span className="text-green-600 font-semibold text-sm">
                   +{(((analytics?.growth?.userGrowth || 0) + (analytics?.growth?.paymentGrowth || 0) + (analytics?.growth?.companyGrowth || 0)) / 3).toFixed(1)}%
                 </span>
               </div>
@@ -405,7 +364,7 @@ const AdminAnalyticsPage = () => {
       {/* Recent Activity */}
       <Card>
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-secondary-900 mb-6">Actividad Reciente</h3>
+          <h3 className="text-lg font-semibold text-secondary-900 mb-6">Actividad Reciente</h3>
 
           <div className="space-y-4">
             {analytics?.recentActivity?.length > 0 ? (
@@ -415,10 +374,10 @@ const AdminAnalyticsPage = () => {
                     {getActivityIcon(activity.icon)}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-secondary-900">{activity.title}</p>
-                    <p className="text-sm text-secondary-600">{activity.description}</p>
+                    <p className="font-medium text-secondary-900 text-sm">{activity.title}</p>
+                    <p className="text-xs text-secondary-600">{activity.description}</p>
                   </div>
-                  <span className="text-sm text-secondary-500">
+                  <span className="text-xs text-secondary-500">
                     {formatTimeAgo(activity.timestamp)}
                   </span>
                 </div>
@@ -426,7 +385,7 @@ const AdminAnalyticsPage = () => {
             ) : (
               <div className="text-center py-8">
                 <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">No hay actividad reciente para mostrar</p>
+                <p className="text-gray-500 text-sm">No hay actividad reciente para mostrar</p>
               </div>
             )}
           </div>

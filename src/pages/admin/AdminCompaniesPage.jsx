@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Badge, Button, Input, LoadingSpinner, DateFilter } from '../../components/common';
+import { Card, Badge, Button, Input, LoadingSpinner, DateFilter, Modal } from '../../components/common';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import {
   getAllCompanies,
@@ -41,6 +41,9 @@ const AdminCompaniesPage = () => {
   const [corporateClients, setCorporateClients] = useState([]);
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [quickFilter, setQuickFilter] = useState(''); // 'today', 'week', 'month'
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     loadCompanies();
@@ -128,6 +131,39 @@ const AdminCompaniesPage = () => {
       }
     } catch (error) {
       console.error('Error in loadCorporateClients:', error);
+    }
+  };
+
+  // Función para editar empresa
+  const handleEditCompany = async (companyData) => {
+    setIsSubmitting(true);
+    try {
+      const { updateCompany } = await import('../../services/databaseService');
+      const { error } = await updateCompany(companyData.id, companyData);
+
+      if (error) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al actualizar empresa',
+          text: error,
+          confirmButtonText: 'Aceptar'
+        });
+        return;
+      }
+
+      setShowEditModal(false);
+      setSelectedCompany(null);
+      loadCompanies(); // Recargar lista
+    } catch (error) {
+      console.error('Error updating company:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al actualizar empresa',
+        text: 'Ha ocurrido un error inesperado',
+        confirmButtonText: 'Aceptar'
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -373,7 +409,7 @@ const AdminCompaniesPage = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-0.5">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
                 <Building className="w-4 h-4 text-green-600" />
@@ -391,7 +427,7 @@ const AdminCompaniesPage = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-0.5">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
                 <DollarSign className="w-4 h-4 text-blue-600" />
@@ -408,7 +444,7 @@ const AdminCompaniesPage = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-0.5">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
                 <TrendingUp className="w-4 h-4 text-green-600" />
@@ -425,7 +461,7 @@ const AdminCompaniesPage = () => {
         </Card>
 
         <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
-          <div className="p-2">
+          <div className="p-0.5">
             <div className="flex items-center justify-center mb-2">
               <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
                 <FileText className="w-4 h-4 text-purple-600" />
@@ -444,8 +480,8 @@ const AdminCompaniesPage = () => {
 
       {/* Filters and Search */}
       <Card>
-        <div className="p-6">
-          <div className="flex flex-row gap-4 items-center">
+        <div className="p-1">
+          <div className="flex flex-row gap-4 items-start">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
@@ -510,6 +546,7 @@ const AdminCompaniesPage = () => {
             </h2>
             <Button
               variant="outline"
+              size="sm"
               onClick={loadCompanies}
               leftIcon={<Building className="w-4 h-4" />}
             >
@@ -590,6 +627,11 @@ const AdminCompaniesPage = () => {
                           variant="outline"
                           size="sm"
                           leftIcon={<Edit className="w-4 h-4" />}
+                          onClick={() => {
+                            setSelectedCompany(company);
+                            setShowEditModal(true);
+                          }}
+                          className="hover:bg-green-50 hover:border-green-300"
                         >
                           Editar
                         </Button>
@@ -648,6 +690,164 @@ const AdminCompaniesPage = () => {
           )}
         </div>
       </Card>
+
+      {/* Edit Company Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedCompany(null);
+        }}
+        title="Editar Empresa"
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="p-4 bg-green-100 rounded-2xl inline-block mb-4">
+              <Edit className="w-12 h-12 text-green-600" />
+            </div>
+            <h3 className="text-xl font-bold text-secondary-900 mb-2">
+              Editar Empresa
+            </h3>
+            <p className="text-secondary-600">
+              Modifique la información de la empresa
+            </p>
+          </div>
+
+          {selectedCompany && (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const companyData = {
+                id: selectedCompany.id,
+                company_name: formData.get('company_name'),
+                contact_email: formData.get('contact_email'),
+                contact_phone: formData.get('contact_phone'),
+                rut: formData.get('rut'),
+                validation_status: formData.get('validation_status'),
+                company_type: formData.get('company_type'),
+                corporate_client_id: formData.get('corporate_client_id') || null,
+              };
+              handleEditCompany(companyData);
+            }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Nombre de la Empresa *
+                  </label>
+                  <Input
+                    name="company_name"
+                    required
+                    defaultValue={selectedCompany.company_name}
+                    placeholder="Ingrese el nombre de la empresa"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Email de Contacto *
+                  </label>
+                  <Input
+                    name="contact_email"
+                    type="email"
+                    required
+                    defaultValue={selectedCompany.contact_email}
+                    placeholder="contacto@empresa.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Teléfono de Contacto
+                  </label>
+                  <Input
+                    name="contact_phone"
+                    defaultValue={selectedCompany.contact_phone}
+                    placeholder="+56912345678"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    RUT *
+                  </label>
+                  <Input
+                    name="rut"
+                    required
+                    defaultValue={selectedCompany.rut}
+                    placeholder="12345678-9"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Tipo de Empresa
+                  </label>
+                  <select
+                    name="company_type"
+                    defaultValue={selectedCompany.company_type || ''}
+                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Seleccionar tipo</option>
+                    <option value="collection_agency">Empresa de Cobranza</option>
+                    <option value="direct_creditor">Acreedor Directo</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Estado de Validación *
+                  </label>
+                  <select
+                    name="validation_status"
+                    required
+                    defaultValue={selectedCompany.validation_status}
+                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="pending">Pendiente</option>
+                    <option value="validated">Validada</option>
+                    <option value="rejected">Rechazada</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Cliente Corporativo
+                  </label>
+                  <select
+                    name="corporate_client_id"
+                    defaultValue={selectedCompany.corporate_client_id || ''}
+                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Sin cliente corporativo</option>
+                    {corporateClients.map(client => (
+                      <option key={client.id} value={client.id}>
+                        {client.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setSelectedCompany(null);
+                  }}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="gradient"
+                  type="submit"
+                  loading={isSubmitting}
+                  className="flex-1"
+                  leftIcon={<CheckCircle className="w-4 h-4" />}
+                >
+                  Guardar Cambios
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

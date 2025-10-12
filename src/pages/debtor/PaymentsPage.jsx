@@ -19,12 +19,14 @@ import {
   Download,
   Receipt,
   FileDown,
+  Calendar,
 } from 'lucide-react';
 
 const PaymentsPage = () => {
   const { payments, loading } = usePayments();
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -76,7 +78,7 @@ const PaymentsPage = () => {
     // Simular exportación de datos
     const csvContent = [
       ['ID', 'Monto', 'Estado', 'Método', 'Fecha', 'Empresa', 'Acuerdo'],
-      ...payments.map(payment => [
+      ...filteredPayments.map(payment => [
         payment.id,
         payment.amount,
         payment.status,
@@ -99,6 +101,105 @@ const PaymentsPage = () => {
 
     Swal.fire('¡Éxito!', 'Historial de pagos exportado exitosamente', 'success');
   };
+
+  // Función para calcular rangos de fechas
+  const getDateRange = (range) => {
+    const today = new Date();
+    const startDate = new Date();
+    const endDate = new Date();
+
+    switch (range) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'last7days':
+        startDate.setDate(today.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'thisMonth':
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setMonth(today.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return { startDate: '', endDate: '' };
+    }
+
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
+
+  // Función para aplicar rangos predefinidos
+  const applyDateRange = (range) => {
+    const dates = getDateRange(range);
+    setDateFilter(dates);
+  };
+
+  // Función para filtrar pagos por fecha
+  const filterPaymentsByDate = (payments) => {
+    if (!dateFilter.startDate && !dateFilter.endDate) {
+      return payments;
+    }
+
+    return payments.filter(payment => {
+      const paymentDate = new Date(payment.transaction_date || payment.date || payment.created_at);
+      const startDate = dateFilter.startDate ? new Date(dateFilter.startDate) : null;
+      const endDate = dateFilter.endDate ? new Date(dateFilter.endDate) : null;
+
+      // Ajustar endDate para incluir todo el día
+      if (endDate) {
+        endDate.setHours(23, 59, 59, 999);
+      }
+
+      // Debug: mostrar fechas para verificar
+      console.log('Filtering payment:', {
+        paymentId: payment.id,
+        paymentDate: paymentDate.toISOString(),
+        startDate: startDate?.toISOString(),
+        endDate: endDate?.toISOString(),
+        transaction_date: payment.transaction_date,
+        date: payment.date,
+        created_at: payment.created_at
+      });
+
+      if (startDate && endDate) {
+        const result = paymentDate >= startDate && paymentDate <= endDate;
+        console.log('Date range filter result:', result);
+        return result;
+      } else if (startDate) {
+        const result = paymentDate >= startDate;
+        console.log('Start date filter result:', result);
+        return result;
+      } else if (endDate) {
+        const result = paymentDate <= endDate;
+        console.log('End date filter result:', result);
+        return result;
+      }
+
+      return true;
+    });
+  };
+
+  // Aplicar filtro de fechas a los pagos
+  const filteredPayments = filterPaymentsByDate(payments);
+
+  // Debug: mostrar información del filtro
+  console.log('Payments filter debug:', {
+    totalPayments: payments.length,
+    filteredPayments: filteredPayments.length,
+    dateFilter,
+    hasFilter: !!(dateFilter.startDate || dateFilter.endDate)
+  });
+
+  // useEffect para actualizar cuando cambie el filtro
+  useEffect(() => {
+    // Forzar re-render cuando cambie el filtro
+  }, [dateFilter]);
 
   return (
     <div className="space-y-8">
@@ -142,7 +243,7 @@ const PaymentsPage = () => {
                 <CheckCircle className="w-4 h-4 text-success-300" />
                 <div>
                   <p className="text-xs text-primary-100">Completados</p>
-                  <p className="text-lg font-bold">{payments.filter(p => p.status === 'completed').length}</p>
+                  <p className="text-lg font-bold">{filteredPayments.filter(p => p.status === 'completed').length}</p>
                 </div>
               </div>
             </div>
@@ -151,7 +252,7 @@ const PaymentsPage = () => {
                 <Clock className="w-4 h-4 text-warning-300" />
                 <div>
                   <p className="text-xs text-primary-100">Pendientes</p>
-                  <p className="text-lg font-bold">{payments.filter(p => p.status === 'pending').length}</p>
+                  <p className="text-lg font-bold">{filteredPayments.filter(p => p.status === 'pending').length}</p>
                 </div>
               </div>
             </div>
@@ -160,7 +261,7 @@ const PaymentsPage = () => {
                 <Clock className="w-4 h-4 text-info-300" />
                 <div>
                   <p className="text-xs text-primary-100">En Validación</p>
-                  <p className="text-lg font-bold">{payments.filter(p => p.status === 'pending_validation').length}</p>
+                  <p className="text-lg font-bold">{filteredPayments.filter(p => p.status === 'pending_validation').length}</p>
                 </div>
               </div>
             </div>
@@ -169,7 +270,7 @@ const PaymentsPage = () => {
                 <DollarSign className="w-4 h-4 text-accent-300" />
                 <div>
                   <p className="text-xs text-primary-100">Total Pagado</p>
-                  <p className="text-lg font-bold">{formatCurrency(payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0))}</p>
+                  <p className="text-lg font-bold">{formatCurrency(filteredPayments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0))}</p>
                 </div>
               </div>
             </div>
@@ -177,8 +278,71 @@ const PaymentsPage = () => {
         </div>
       </div>
 
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
+          </div>
+
+          {/* Date Inputs */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({...dateFilter, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({...dateFilter, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('today')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Hoy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('last7days')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Últimos 7 días
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('thisMonth')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Este mes
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Payments List */}
-      {payments.length === 0 ? (
+      {filteredPayments.length === 0 ? (
         <Card
           variant="elevated"
           className="text-center py-16 animate-fade-in"
@@ -202,7 +366,7 @@ const PaymentsPage = () => {
         </Card>
       ) : (
         <div className="space-y-6">
-          {payments.map((payment, index) => (
+          {filteredPayments.map((payment, index) => (
             <Card
               key={payment.id}
               variant="elevated"

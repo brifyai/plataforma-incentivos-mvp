@@ -181,7 +181,6 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
       .from('debts')
       .select(`
         *,
-        client:clients(id, business_name, rut),
         user:users(id, full_name, email, rut)
       `);
 
