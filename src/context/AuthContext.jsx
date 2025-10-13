@@ -55,72 +55,75 @@ export const AuthProvider = ({ children }) => {
 
   /**
       * Verifica si hay un usuario autenticado al cargar
-      */
-   const checkUser = async () => {
-     try {
-       setLoading(true);
-       // Primero verificar sesión de Supabase Auth (para OAuth)
-       const { data: supabaseSession, error: supabaseError } = await supabase.auth.getSession();
-
-       if (!supabaseError && supabaseSession?.session) {
-         // Hay sesión de Supabase, usar esa
-         const { user: supabaseUser } = supabaseSession.session;
-         console.log('🔄 Usando sesión de Supabase Auth');
-
-         // Verificar si existe en nuestra tabla users
-         const { data: userData, error: userError } = await supabase
-           .from('users')
-           .select('*')
-           .eq('email', supabaseUser.email)
-           .single();
-
-         if (userData) {
-           const mockUser = {
-             id: userData.id,
-             email: userData.email,
-             user_metadata: {
-               full_name: userData.full_name,
-               role: userData.role,
-             },
-           };
-
-           setUser(mockUser);
-           setSession(supabaseSession.session);
-           await loadUserProfile(userData.id);
-         } else {
-           // Usuario no existe en tabla, limpiar
-           await supabase.auth.signOut();
+          */
+       const checkUser = async () => {
+         try {
+           setLoading(true);
+           // Primero verificar sesión de Supabase Auth (para OAuth)
+           const { data: supabaseSession, error: supabaseError } = await supabase.auth.getSession();
+   
+           if (!supabaseError && supabaseSession?.session) {
+             // Hay sesión de Supabase, usar esa
+             const { user: supabaseUser } = supabaseSession.session;
+             console.log('🔄 Usando sesión de Supabase Auth');
+   
+             // Verificar si existe en nuestra tabla users
+             const { data: userData, error: userError } = await supabase
+               .from('users')
+               .select('*')
+               .eq('email', supabaseUser.email)
+               .single();
+   
+             if (userData) {
+               const mockUser = {
+                 id: userData.id,
+                 email: userData.email,
+                 user_metadata: {
+                   full_name: userData.full_name,
+                   role: userData.role,
+                 },
+               };
+   
+               setUser(mockUser);
+               setSession(supabaseSession.session);
+               await loadUserProfile(userData.id);
+             } else {
+               // Usuario no existe en tabla, limpiar sesión
+               console.log('⚠️ Usuario OAuth no encontrado en tabla users, limpiando sesión');
+               await supabase.auth.signOut();
+               setUser(null);
+               setProfile(null);
+               setSession(null);
+               setError('Usuario no encontrado. Por favor, regístrate primero.');
+             }
+           } else {
+             // No hay sesión de Supabase, verificar localStorage
+             const { user: currentUser, error } = await getCurrentUser();
+   
+             if (error || !currentUser) {
+               setUser(null);
+               setProfile(null);
+               setSession(null);
+               setLoading(false);
+               setInitializing(false);
+               return;
+             }
+   
+             setUser(currentUser);
+             setSession(null);
+             await loadUserProfile(currentUser.id);
+           }
+         } catch (error) {
+           console.error('Error checking user:', error);
            setUser(null);
            setProfile(null);
            setSession(null);
-         }
-       } else {
-         // No hay sesión de Supabase, verificar localStorage
-         const { user: currentUser, error } = await getCurrentUser();
-
-         if (error || !currentUser) {
-           setUser(null);
-           setProfile(null);
-           setSession(null);
+           setError('Error al verificar autenticación.');
+         } finally {
            setLoading(false);
            setInitializing(false);
-           return;
          }
-
-         setUser(currentUser);
-         setSession(null);
-         await loadUserProfile(currentUser.id);
-       }
-     } catch (error) {
-       console.error('Error checking user:', error);
-       setUser(null);
-       setProfile(null);
-       setSession(null);
-     } finally {
-       setLoading(false);
-       setInitializing(false);
-     }
-   };
+       };
 
   /**
    * Carga el perfil completo del usuario desde la base de datos (100% real)

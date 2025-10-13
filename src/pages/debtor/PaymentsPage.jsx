@@ -4,7 +4,7 @@
  * Página para mostrar el historial de pagos del deudor
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState, Button, Modal } from '../../components/common';
 import { usePayments } from '../../hooks';
 import { formatCurrency, formatDate } from '../../utils/formatters';

@@ -27,8 +27,14 @@ const AuthCallbackPage = () => {
           setCallbackProcessed(true);
         } else {
           console.error('❌ AuthCallbackPage: Error en callback de OAuth:', error);
-          // Redirigir al login con error
-          navigate('/login?error=oauth_callback_failed&details=' + encodeURIComponent(error || 'Error desconocido'));
+          // Mostrar error específico si es "Auth session missing!"
+          if (error && error.includes('Auth session missing!')) {
+            console.error('🔍 Error específico: Sesión de autenticación faltante');
+            navigate('/login?error=auth_session_missing&details=' + encodeURIComponent('La sesión de autenticación no se pudo establecer. Por favor, intenta iniciar sesión nuevamente.'));
+          } else {
+            // Redirigir al login con error genérico
+            navigate('/login?error=oauth_callback_failed&details=' + encodeURIComponent(error || 'Error desconocido'));
+          }
         }
       } catch (error) {
         console.error('❌ AuthCallbackPage: Excepción en handleCallback:', error);

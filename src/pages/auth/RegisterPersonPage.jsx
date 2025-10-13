@@ -266,7 +266,15 @@ const RegisterPersonPage = () => {
     setGoogleLoading(true);
 
     try {
-      const { success, error } = await loginWithGoogle();
+      // Preparar datos de registro para OAuth
+      const registrationData = {
+        fullName: formData.fullName,
+        rut: formData.rut,
+        phone: formData.phone,
+        role: USER_ROLES.DEBTOR,
+      };
+
+      const { success, error } = await loginWithGoogle(registrationData);
 
       if (!success) {
         Swal.fire('Error', error || 'Error al registrarse con Google', 'error');

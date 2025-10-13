@@ -1106,6 +1106,7 @@ const handleAuthCallback = async () => {
     let userFullName = user.user_metadata?.full_name || user.user_metadata?.name || 'Usuario Google';
     let userRut = `OAUTH-${Date.now()}`;
     let userPhone = null;
+    let userExists = false;
 
     try {
       const { data: existingUser, error: userCheckError } = await supabase
@@ -1120,11 +1121,54 @@ const handleAuthCallback = async () => {
         userFullName = existingUser.full_name;
         userRut = existingUser.rut;
         userPhone = existingUser.phone;
+        userExists = true;
       } else {
         console.log('👤 Usuario nuevo en OAuth, usando rol por defecto:', userRole);
       }
     } catch (checkError) {
       console.warn('⚠️ Error verificando usuario existente en OAuth:', checkError.message);
+    }
+
+    // Si el usuario no existe en nuestra tabla, intentar crearlo automáticamente para registro con Google
+    if (!userExists) {
+      console.log('👤 Usuario OAuth no encontrado, creando automáticamente para registro...');
+
+      // Usar datos de registro si están disponibles, sino usar valores por defecto
+      const finalUserRole = registrationData?.role || userRole;
+      const finalUserRut = registrationData?.rut || userRut;
+      const finalUserFullName = registrationData?.fullName || userFullName;
+      const finalUserPhone = registrationData?.phone || userPhone;
+
+      // Crear usuario automáticamente con datos de Google
+      const userData = {
+        id: user.id, // Usar el ID de Supabase Auth
+        email: user.email,
+        rut: finalUserRut,
+        full_name: finalUserFullName,
+        phone: finalUserPhone,
+        role: finalUserRole,
+        validation_status: 'validated', // OAuth ya está validado por Google
+        wallet_balance: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: createError } = await supabase
+        .from('users')
+        .upsert(userData);
+
+      if (createError) {
+        console.error('❌ Error creando usuario OAuth automáticamente:', createError);
+        return { user: null, session: null, error: 'Error al crear usuario. Por favor, intenta de nuevo.' };
+      } else {
+        console.log('✅ Usuario OAuth creado automáticamente');
+        userExists = true; // Ahora existe
+
+        // Limpiar datos de registro pendientes si se usaron
+        if (registrationData) {
+          localStorage.removeItem('pending_oauth_registration');
+        }
+      }
     }
 
     // Crear objeto user con el rol correcto
@@ -1140,33 +1184,13 @@ const handleAuthCallback = async () => {
     // Crear sesión compatible con localStorage
     const mockSession = {
       user: mockUser,
-      access_token: session?.access_token || user?.access_token || 'mock_token_' + Date.now(),
-      refresh_token: session?.refresh_token || user?.refresh_token || 'mock_refresh_' + Date.now(),
+      access_token: session?.access_token || 'mock_token_' + Date.now(),
+      refresh_token: session?.refresh_token || 'mock_refresh_' + Date.now(),
     };
 
     // Guardar en localStorage para mantener compatibilidad con el resto del sistema
     localStorage.setItem('mock_session', JSON.stringify(mockSession));
     console.log('💾 Sesión guardada en localStorage');
-
-    // Verificar si hay datos de registro pendientes en localStorage
-    const pendingRegistration = localStorage.getItem('pending_oauth_registration');
-    let registrationData = null;
-
-    if (pendingRegistration) {
-      try {
-        registrationData = JSON.parse(pendingRegistration);
-        // Verificar que no haya expirado (5 minutos máximo)
-        if (Date.now() - registrationData.timestamp > 5 * 60 * 1000) {
-          console.log('⏰ Datos de registro expirados, limpiando...');
-          localStorage.removeItem('pending_oauth_registration');
-          registrationData = null;
-        }
-      } catch (parseError) {
-        console.error('❌ Error parseando datos de registro pendientes:', parseError);
-        localStorage.removeItem('pending_oauth_registration');
-        registrationData = null;
-      }
-    }
 
     // Intentar crear el usuario en background (sin bloquear el login)
     try {
