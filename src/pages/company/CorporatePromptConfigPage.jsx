@@ -275,9 +275,25 @@ const CorporatePromptConfigPage = () => {
 
       // Reemplazar variables en el prompt
       let processedPrompt = prompt.prompt_template;
-      Object.entries(context).forEach(([key, value]) => {
-        const variableKey = `{${key.replace(/([A-Z])/g, '_$1').toLowerCase()}}`;
-        processedPrompt = processedPrompt.replace(new RegExp(variableKey, 'g'), value);
+      
+      // Mapeo directo de variables del contexto a las variables del prompt
+      const variableMapping = {
+        '{nombre_deudor}': context.debtorName,
+        '{rut_deudor}': context.debtorRut,
+        '{nombre_empresa}': context.corporateName,
+        '{rut_empresa}': context.corporateRut,
+        '{monto_deuda}': context.debtAmount,
+        '{dias_mora}': context.daysOverdue,
+        '{tipo_deuda}': context.debtType,
+        '{fecha_vencimiento}': context.dueDate,
+        '{descuento_maximo}': context.maxDiscount,
+        '{plazo_maximo}': context.maxTerm,
+        '{historial_pagos}': context.paymentHistory,
+        '{nivel_riesgo}': context.riskLevel
+      };
+      
+      Object.entries(variableMapping).forEach(([variable, value]) => {
+        processedPrompt = processedPrompt.replace(new RegExp(variable.replace(/[{}]/g, '\\$&'), 'g'), value);
       });
 
       // Ejecutar el prompt con el servicio de IA
