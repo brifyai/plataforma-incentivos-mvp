@@ -1051,10 +1051,10 @@ const CompanyMessagesPage = () => {
                 <div className="p-1.5 bg-primary-100 rounded-lg">
                   <Send className="w-3 h-3 text-primary-600" />
                 </div>
-                <Badge variant="primary" className="text-xs">2</Badge>
+                <Badge variant="primary" className="text-sm">2</Badge>
               </div>
-              <p className="text-xs text-secondary-600 mb-1">Campañas Enviadas</p>
-              <p className="text-sm font-bold text-secondary-900">2</p>
+              <p className="text-sm text-secondary-600 mb-1 font-medium">Campañas Enviadas</p>
+              <p className="text-lg font-bold text-secondary-900">2</p>
             </div>
           </Card>
 
@@ -1064,10 +1064,10 @@ const CompanyMessagesPage = () => {
                 <div className="p-1.5 bg-success-100 rounded-lg">
                   <CheckCircle className="w-3 h-3 text-success-600" />
                 </div>
-                <Badge variant="success" className="text-xs">57</Badge>
+                <Badge variant="success" className="text-sm">57</Badge>
               </div>
-              <p className="text-xs text-secondary-600 mb-1">Mensajes Vistos</p>
-              <p className="text-sm font-bold text-secondary-900">57</p>
+              <p className="text-sm text-secondary-600 mb-1 font-medium">Mensajes Vistos</p>
+              <p className="text-lg font-bold text-secondary-900">57</p>
             </div>
           </Card>
 
@@ -1077,10 +1077,10 @@ const CompanyMessagesPage = () => {
                 <div className="p-1.5 bg-warning-100 rounded-lg">
                   <MessageSquare className="w-3 h-3 text-warning-600" />
                 </div>
-                <Badge variant="warning" className="text-xs">20</Badge>
+                <Badge variant="warning" className="text-sm">20</Badge>
               </div>
-              <p className="text-xs text-secondary-600 mb-1">Respuestas Recibidas</p>
-              <p className="text-sm font-bold text-secondary-900">20</p>
+              <p className="text-sm text-secondary-600 mb-1 font-medium">Respuestas Recibidas</p>
+              <p className="text-lg font-bold text-secondary-900">20</p>
             </div>
           </Card>
 
@@ -1090,10 +1090,10 @@ const CompanyMessagesPage = () => {
                 <div className="p-1.5 bg-info-100 rounded-lg">
                   <AlertCircle className="w-3 h-3 text-info-600" />
                 </div>
-                <Badge variant="info" className="text-xs">16</Badge>
+                <Badge variant="info" className="text-sm">16</Badge>
               </div>
-              <p className="text-xs text-secondary-600 mb-1">Intervenciones IA</p>
-              <p className="text-sm font-bold text-secondary-900">16</p>
+              <p className="text-sm text-secondary-600 mb-1 font-medium">Intervenciones IA</p>
+              <p className="text-lg font-bold text-secondary-900">16</p>
             </div>
           </Card>
         </div>

@@ -62,42 +62,46 @@ const CorporateClientsSection = ({ profile, onUpdate }) => {
         return;
       }
 
-      // Por ahora, simulamos datos ya que no tenemos la tabla de clientes corporativos
-      // En producción, esto debería consultar una tabla real
-      const mockClients = [
-        {
-          id: '1',
-          company_name: 'TechCorp S.A.',
-          contact_name: 'María González',
-          contact_email: 'maria@techcorp.cl',
-          contact_phone: '+56912345678',
-          company_rut: '76.543.210-1',
-          address: 'Av. Providencia 123, Santiago',
-          industry: 'Tecnología',
-          contract_value: 5000000,
-          contract_start_date: '2024-01-15',
-          status: 'active',
-          created_at: '2024-01-10',
-          notes: 'Cliente premium con alto volumen de cobranzas'
-        },
-        {
-          id: '2',
-          company_name: 'RetailMax Ltda.',
-          contact_name: 'Carlos Rodríguez',
-          contact_email: 'carlos@retailmax.cl',
-          contact_phone: '+56987654321',
-          company_rut: '98.765.432-1',
-          address: 'Calle Comercio 456, Concepción',
-          industry: 'Retail',
-          contract_value: 3200000,
-          contract_start_date: '2024-02-01',
-          status: 'active',
-          created_at: '2024-01-25',
-          notes: 'Cliente regular con buen historial de pagos'
-        }
-      ];
+      // Consultar la tabla real de clientes corporativos
+      const { data, error } = await supabase
+        .from('corporate_clients')
+        .select('*')
+        .eq('company_id', profile.company.id)
+        .eq('is_active', true)
+        .order('name');
 
-      setClients(mockClients);
+      if (error) {
+        console.error('Error loading corporate clients:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error al cargar los clientes corporativos',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#EF4444'
+        });
+        return;
+      }
+
+      // Mapear los datos de la base de datos al formato esperado por el componente
+      const mappedClients = (data || []).map(client => ({
+        id: client.id,
+        company_name: client.name,
+        contact_name: client.contact_name || 'Sin contacto',
+        contact_email: client.contact_email || 'Sin email',
+        contact_phone: client.contact_phone || 'Sin teléfono',
+        company_rut: client.rut || 'Sin RUT',
+        address: client.address || 'Sin dirección',
+        industry: client.industry || 'Sin especificar',
+        contract_value: client.contract_value || 0,
+        contract_start_date: client.contract_start_date || null,
+        status: client.is_active ? 'active' : 'inactive',
+        created_at: client.created_at,
+        notes: client.notes || '',
+        display_category: client.display_category || 'Cliente'
+      }));
+
+      console.log(`📊 Clientes corporativos cargados: ${mappedClients.length}`);
+      setClients(mappedClients);
     } catch (error) {
       console.error('Error loading corporate clients:', error);
       Swal.fire({

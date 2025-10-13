@@ -36,14 +36,6 @@ const QuickActions = ({ profile }) => {
       link: '/empresa/ia/negociacion'
     },
     {
-      title: 'Configurar IA',
-      description: 'Ajustes de IA y límites',
-      icon: Bot,
-      color: 'purple',
-      action: 'ai-config',
-      link: '/empresa/ia/configuracion'
-    },
-    {
       title: 'Importar Deudas',
       description: 'Cargar deudas masivamente',
       icon: Upload,
@@ -66,6 +58,41 @@ const QuickActions = ({ profile }) => {
       color: 'orange',
       action: 'send-message',
       link: '/empresa/mensajes' // Ruta existente
+    }
+  ];
+
+  const additionalActions = [
+    {
+      title: 'Ver IA Dashboard',
+      description: 'Dashboard completo de IA',
+      icon: Brain,
+      color: 'purple',
+      action: 'ai-dashboard',
+      link: '/empresa/ia/dashboard'
+    },
+    {
+      title: 'Exportar Reporte',
+      description: 'Descargar reportes detallados',
+      icon: Download,
+      color: 'blue',
+      action: 'export-report',
+      link: '/empresa/reportes'
+    },
+    {
+      title: 'Programar Pago',
+      description: 'Agendar pagos futuros',
+      icon: Calendar,
+      color: 'green',
+      action: 'schedule-payment',
+      link: '/empresa/pagos'
+    },
+    {
+      title: 'Ver Pagos',
+      description: 'Historial de pagos realizados',
+      icon: CreditCard,
+      color: 'indigo',
+      action: 'view-payments',
+      link: '/empresa/pagos'
     }
   ];
 
@@ -125,49 +152,28 @@ const QuickActions = ({ profile }) => {
 
       {/* Additional Actions Row */}
       <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="flex flex-wrap gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<Brain className="w-4 h-4" />}
-            className="text-sm border-purple-300 text-purple-700 hover:bg-purple-50"
-          >
-            Ver IA Dashboard
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<Bot className="w-4 h-4" />}
-            className="text-sm border-purple-300 text-purple-700 hover:bg-purple-50"
-          >
-            Configurar IA
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<Download className="w-4 h-4" />}
-            className="text-sm"
-          >
-            Exportar Reporte
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<Calendar className="w-4 h-4" />}
-            className="text-sm"
-          >
-            Programar Pago
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<CreditCard className="w-4 h-4" />}
-            className="text-sm"
-          >
-            Ver Pagos
-          </Button>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {additionalActions.map((action, index) => {
+            const Icon = action.icon;
+            return (
+              <Link key={index} to={action.link} className="group">
+                <div className="flex flex-col items-center p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 group-hover:scale-105 h-32">
+                  <div className={`p-3 rounded-lg bg-gray-50 group-hover:bg-gray-100 transition-colors mb-3`}>
+                    <Icon className={`w-6 h-6 ${getIconColor(action.color)}`} />
+                  </div>
+                  <h4 className="text-sm font-medium text-gray-900 text-center mb-1">
+                    {action.title}
+                  </h4>
+                  <p className="text-xs text-gray-500 text-center leading-tight">
+                    {action.description}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
+
     </Card>
   );
 };

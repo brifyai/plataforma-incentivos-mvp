@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, Button, LoadingSpinner, Input, Select, Badge, Modal, ToggleSwitch } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../config/supabase';
@@ -44,11 +45,37 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-const AIDashboardPage = () => {
+const AIDashboardPage = ({ defaultTab = 'providers' }) => {
   const { user, profile } = useAuth();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('providers');
+
+  // Determinar el tab activo basado en la URL
+  const getActiveTabFromUrl = () => {
+    const pathParts = location.pathname.split('/');
+    const lastPart = pathParts[pathParts.length - 1];
+
+    // Mapear URLs en español a IDs internos en inglés
+    const urlToTabMap = {
+      'proveedores': 'providers',
+      'mensajeria': 'messaging',
+      'personalizacion': 'personalization',
+      'conocimiento': 'knowledge',
+      'prompts': 'prompts',
+      'analytics': 'analytics'
+    };
+
+    // Si la última parte está en el mapa, usar el ID correspondiente
+    if (urlToTabMap[lastPart]) {
+      return urlToTabMap[lastPart];
+    }
+
+    // Si no, usar el defaultTab o 'providers'
+    return defaultTab || 'providers';
+  };
+
+  const [activeTab, setActiveTab] = useState(getActiveTabFromUrl());
   
   // Estados para clientes corporativos
   const [corporateClients, setCorporateClients] = useState([]);
@@ -241,6 +268,14 @@ const AIDashboardPage = () => {
     loadCorporateClients();
     loadAIConfiguration();
   }, [profile]);
+
+  // Actualizar el tab activo cuando cambia la URL
+  useEffect(() => {
+    const newActiveTab = getActiveTabFromUrl();
+    if (newActiveTab !== activeTab) {
+      setActiveTab(newActiveTab);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (selectedClient) {
@@ -1031,9 +1066,9 @@ const AIDashboardPage = () => {
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Dashboard de IA</h1>
-                <p className="text-blue-100">
-                  {selectedClient 
+                <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight mb-2">Dashboard de IA</h1>
+                <p className="text-blue-100 text-xs md:text-sm">
+                  {selectedClient
                     ? `Configuración de IA para ${selectedClient.name}`
                     : 'Selecciona un cliente corporativo para comenzar'
                   }
@@ -1062,7 +1097,23 @@ const AIDashboardPage = () => {
                   {tabs.map(tab => (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
+                      onClick={() => {
+                        // Mapear IDs internos a URLs en español
+                        const tabToUrlMap = {
+                          'providers': 'proveedores',
+                          'messaging': 'mensajeria',
+                          'personalization': 'personalizacion',
+                          'knowledge': 'conocimiento',
+                          'prompts': 'prompts',
+                          'analytics': 'analytics'
+                        };
+
+                        // Navegar a URL independiente cuando se hace click en un tab
+                        const spanishUrl = tabToUrlMap[tab.id] || tab.id;
+                        const newUrl = `/empresa/ia/${spanishUrl}`;
+                        window.history.pushState({}, '', newUrl);
+                        setActiveTab(tab.id);
+                      }}
                       className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm ${
                         activeTab === tab.id
                           ? 'border-blue-500 text-blue-600'
@@ -1085,7 +1136,7 @@ const AIDashboardPage = () => {
                       <h3 className="text-xl font-bold mb-4">Proveedores de Inteligencia Artificial</h3>
                       
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {Object.entries(aiConfig.providers).map(([provider, config]) => (
+                        {Object.entries(aiConfig.providers).filter(([provider]) => provider !== 'openai').map(([provider, config]) => (
                           <Card key={provider} className="border-2">
                             <div className="flex items-center justify-between mb-4">
                               <h4 className="font-semibold capitalize">{provider}</h4>

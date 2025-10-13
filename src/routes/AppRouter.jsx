@@ -532,12 +532,73 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
+        {/* Rutas individuales para cada tab del Dashboard IA */}
         <Route
           path="/empresa/ia"
           element={
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
                 <AIDashboardPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/ia/proveedores"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <AIDashboardPage defaultTab="providers" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/ia/mensajeria"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <AIDashboardPage defaultTab="messaging" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/ia/personalizacion"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <AIDashboardPage defaultTab="personalization" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/ia/conocimiento"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <AIDashboardPage defaultTab="knowledge" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/ia/prompts"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <AIDashboardPage defaultTab="prompts" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/ia/analytics"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <AIDashboardPage defaultTab="analytics" />
               </DashboardLayout>
             </ProtectedRoute>
           }
