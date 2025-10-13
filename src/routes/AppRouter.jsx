@@ -93,6 +93,7 @@ import AnalyticsConfigPage from '../pages/admin/AnalyticsConfigPage';
 import NotificationsConfigPage from '../pages/admin/NotificationsConfigPage';
 import GeneralConfigPage from '../pages/admin/GeneralConfigPage';
 import AIConfigPage from '../pages/admin/AIConfigPage';
+import KnowledgeBaseManagementPage from '../pages/admin/KnowledgeBaseManagementPage';
 import MessagingAIConfigPage from '../pages/company/MessagingAIConfigPage';
 import KnowledgeBasePage from '../pages/company/KnowledgeBasePage';
 import CorporatePromptConfigPage from '../pages/company/CorporatePromptConfigPage';
@@ -724,7 +725,17 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/admin/base-conocimiento"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <KnowledgeBaseManagementPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        
         {/* Nota: La funcionalidad de IA de negociación está integrada en /empresa/mensajes */}
 
         {/* Página de prueba GOD MODE */}

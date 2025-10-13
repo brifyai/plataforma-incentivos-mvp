@@ -16,6 +16,7 @@ import { USER_ROLES } from '../config/constants';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import { sendConfirmationEmail as sendEmailConfirmation, sendPasswordResetEmail as sendPasswordReset, sendEmailChangeConfirmation, sendWelcomeEmailDebtor, sendWelcomeEmailCompany, sendWelcomeEmailAdmin } from './emailService';
+import { createKnowledgeBaseForNewCompany } from './knowledgeBaseService';
 
 /**
  * Clase de error personalizada para autenticación
@@ -441,6 +442,28 @@ const signUp = async (userData, currentUserRole = null) => {
         // No eliminar el usuario, solo registrar el error
       } else {
         console.log('✅ Empresa registrada exitosamente');
+        
+        // 4. Crear base de conocimiento automáticamente para la nueva empresa
+        try {
+          console.log('🧠 Creando base de conocimiento para nueva empresa...');
+          const kbResult = await createKnowledgeBaseForNewCompany({
+            userId: userDataResult.id,
+            companyName: companyData.businessName,
+            companyRut: companyData.companyRut,
+            email: email,
+            phone: companyData.phone
+          });
+          
+          if (kbResult.success) {
+            console.log('✅ Base de conocimiento creada automáticamente para la empresa');
+          } else {
+            console.warn('⚠️ No se pudo crear base de conocimiento automáticamente:', kbResult.error);
+            // No fallar el registro por esto, pero registrar el warning
+          }
+        } catch (kbError) {
+          console.warn('⚠️ Error creando base de conocimiento automáticamente:', kbError.message);
+          // No fallar el registro por esto
+        }
       }
     }
 
@@ -1204,6 +1227,26 @@ const handleAuthCallback = async () => {
             }
           } else {
             console.log('✅ Registro de empresa creado exitosamente:', companyData);
+            
+            // Crear base de conocimiento automáticamente para empresa OAuth
+            try {
+              console.log('🧠 Creando base de conocimiento para empresa OAuth...');
+              const kbResult = await createKnowledgeBaseForNewCompany({
+                userId: user.id,
+                companyName: registrationData.businessName,
+                companyRut: registrationData.companyRut,
+                email: user.email,
+                phone: registrationData.phone
+              });
+              
+              if (kbResult.success) {
+                console.log('✅ Base de conocimiento creada automáticamente para empresa OAuth');
+              } else {
+                console.warn('⚠️ No se pudo crear base de conocimiento OAuth automáticamente:', kbResult.error);
+              }
+            } catch (kbError) {
+              console.warn('⚠️ Error creando base de conocimiento OAuth automáticamente:', kbError.message);
+            }
           }
         }
 
