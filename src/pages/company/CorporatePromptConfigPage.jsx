@@ -255,7 +255,7 @@ const CorporatePromptConfigPage = () => {
       setTestResult(null);
 
       // Importar el servicio de IA dinámicamente
-      const { aiServiceManager } = await import('../../services/aiService.js');
+      const { aiService } = await import('../../services/aiService.js');
       
       // Preparar el contexto para la prueba
       const context = {
@@ -281,7 +281,7 @@ const CorporatePromptConfigPage = () => {
       });
 
       // Ejecutar el prompt con el servicio de IA
-      const result = await aiServiceManager.executeTask('negotiation_response', {
+      const result = await aiService.executeTask('negotiation_response', {
         prompt: processedPrompt,
         context: { message: testMessage, ...context },
         corporateClientId: selectedClient.id
