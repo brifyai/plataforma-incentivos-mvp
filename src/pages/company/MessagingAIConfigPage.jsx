@@ -147,8 +147,29 @@ const MessagingAIConfigPage = () => {
     setLoading(true);
     try {
       // Cargar configuración desde la base de datos
-      // Por ahora, usar valores por defecto
-      console.log('Loading configuration for company:', profile.company.id);
+      const { data, error } = await supabase
+        .from('company_ai_config')
+        .select('*')
+        .eq('company_id', profile.company.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+        console.error('Error loading configuration:', error);
+        throw error;
+      }
+
+      if (data) {
+        // Cargar configuración existente
+        setAiConfig(data.ai_providers || aiConfig);
+        setMessagingConfig(data.messaging_config || messagingConfig);
+        setPersonalizationConfig(data.personalization_config || personalizationConfig);
+        setCustomResponses(data.custom_responses || customResponses);
+        setNegotiationLimits(data.negotiation_limits || negotiationLimits);
+        console.log('Configuration loaded successfully:', data);
+      } else {
+        // Usar valores por defecto si no hay configuración guardada
+        console.log('No saved configuration found, using defaults');
+      }
     } catch (error) {
       console.error('Error loading configuration:', error);
       Swal.fire({
@@ -166,13 +187,26 @@ const MessagingAIConfigPage = () => {
     setSaving(true);
     try {
       // Guardar configuración en la base de datos
-      console.log('Saving configuration:', {
-        aiConfig,
-        messagingConfig,
-        personalizationConfig,
-        customResponses,
-        negotiationLimits
-      });
+      const { data, error } = await supabase
+        .from('company_ai_config')
+        .upsert({
+          company_id: profile?.company?.id,
+          ai_providers: aiConfig,
+          messaging_config: messagingConfig,
+          personalization_config: personalizationConfig,
+          custom_responses: customResponses,
+          negotiation_limits: negotiationLimits,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving configuration:', error);
+        throw error;
+      }
+
+      console.log('Configuration saved successfully:', data);
       
       await Swal.fire({
         icon: 'success',
@@ -185,7 +219,7 @@ const MessagingAIConfigPage = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo guardar la configuración',
+        text: 'No se pudo guardar la configuración: ' + error.message,
         confirmButtonText: 'Aceptar'
       });
     } finally {

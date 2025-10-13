@@ -79,7 +79,8 @@ const TASK_MODEL_MAPPING = {
   risk_assessment: 'GROQ.mixtral-8x7b',          // Análisis lógico
   message_generation: 'CHUTES.chutes-dobby',     // Contenido engaging
   campaign_optimization: 'GROQ.llama-3.1-70b', // Estrategia
-  predictive_analytics: 'GROQ.llama-3.1-70b'    // Predicciones complejas
+  predictive_analytics: 'GROQ.llama-3.1-70b',   // Predicciones complejas
+  negotiation_response: 'CHUTES.chutes-dobby'   // Respuestas de negociación
 };
 
 // =====================================================
