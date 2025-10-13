@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { supabase } from '../../config/supabase';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select, DateFilter } from '../../components/common';
 import AIMessageHandler from '../../components/messaging/AIMessageHandler';
 import HumanResponseHandler from '../../components/messaging/HumanResponseHandler';
@@ -625,10 +626,29 @@ const CompanyMessagesPage = () => {
 
     try {
       setLoadingCorporateClients(true);
-      const result = await getCorporateClients(profile.company.id);
+      
+      // Cargar clientes corporativos con soporte para god_mode
+      let corporateClientsData;
+      if (profile?.role === 'god_mode') {
+        console.log('🔑 God Mode: Cargando todos los clientes corporativos para CompanyMessagesPage');
+        const { data: allClients, error } = await supabase
+          .from('corporate_clients')
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
+        
+        if (error) {
+          console.error('Error loading all corporate clients:', error);
+          setCorporateClients([]);
+        } else {
+          corporateClientsData = { corporateClients: allClients };
+        }
+      } else {
+        corporateClientsData = await getCorporateClients(profile.company.id);
+      }
 
-      if (result.error) {
-        console.error('Error loading corporate clients:', result.error);
+      if (corporateClientsData?.error) {
+        console.error('Error loading corporate clients:', corporateClientsData.error);
         // Datos de ejemplo
         setCorporateClients([
           {
@@ -647,7 +667,7 @@ const CompanyMessagesPage = () => {
           }
         ]);
       } else {
-        setCorporateClients(result.corporateClients || []);
+        setCorporateClients(corporateClientsData.corporateClients || []);
       }
     } catch (error) {
       console.error('Error loading corporate clients:', error);
@@ -924,7 +944,7 @@ const CompanyMessagesPage = () => {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3 md:gap-4">
             <div>
-              <h1 className="text-sm md:text-lg font-display font-bold tracking-tight">
+              <h1 className="text-lg md:text-2xl font-display font-bold tracking-tight">
                 Centro de Mensajes y Campañas
               </h1>
               <p className="text-blue-100 text-xs md:text-sm">

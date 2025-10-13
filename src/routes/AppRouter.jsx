@@ -94,9 +94,8 @@ import NotificationsConfigPage from '../pages/admin/NotificationsConfigPage';
 import GeneralConfigPage from '../pages/admin/GeneralConfigPage';
 import AIConfigPage from '../pages/admin/AIConfigPage';
 import KnowledgeBaseManagementPage from '../pages/admin/KnowledgeBaseManagementPage';
-import MessagingAIConfigPage from '../pages/company/MessagingAIConfigPage';
-import KnowledgeBasePage from '../pages/company/KnowledgeBasePage';
-import CorporatePromptConfigPage from '../pages/company/CorporatePromptConfigPage';
+import MatchingManagementPage from '../pages/admin/MatchingManagementPage';
+import AIDashboardPage from '../pages/company/AIDashboardPage';
 
 // Componente de ruta protegida
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -534,31 +533,11 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/empresa/configuracion-ia"
+          path="/empresa/ia"
           element={
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
-                <MessagingAIConfigPage />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/empresa/base-conocimiento"
-          element={
-            <ProtectedRoute allowedRoles={['company']}>
-              <DashboardLayout>
-                <KnowledgeBasePage />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/empresa/configuracion-prompts"
-          element={
-            <ProtectedRoute allowedRoles={['company']}>
-              <DashboardLayout>
-                <CorporatePromptConfigPage />
+                <AIDashboardPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

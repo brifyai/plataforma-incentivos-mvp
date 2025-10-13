@@ -13,6 +13,7 @@ import { validateRutInput, validatePassword, validatePhone, isValidEmail } from 
 import { formatRut } from '../../utils/formatters';
 import { USER_ROLES } from '../../config/constants';
 import Swal from 'sweetalert2';
+import debtorMatchingService from '../../services/debtorMatchingService';
 
 const RegisterPersonPage = () => {
   const navigate = useNavigate();
@@ -145,10 +146,45 @@ const RegisterPersonPage = () => {
         role: USER_ROLES.DEBTOR,
       };
 
-      const { success, error } = await register(userData);
+      const { success, error, user } = await register(userData);
 
       if (success) {
-        Swal.fire('¡Registro exitoso!', 'Por favor, verifica tu email.', 'success');
+        // Realizar matching automático después del registro
+        try {
+          const matchingResult = await debtorMatchingService.autoMatchAfterRegistration({
+            id: user.id,
+            full_name: userData.fullName,
+            email: userData.email,
+            rut: userData.rut,
+            phone: userData.phone
+          });
+
+          if (matchingResult.matchesFound > 0) {
+            console.log(`✅ Matching automático: ${matchingResult.matchesFound} matches encontrados`);
+            
+            // Mostrar mensaje de éxito con información de matches
+            Swal.fire({
+              title: '¡Registro exitoso!',
+              html: `<div style="text-align: left; font-size: 14px; line-height: 1.5;">
+                <p style="margin-bottom: 10px;">Por favor, verifica tu email.</p>
+                <div style="background: #f0f9ff; padding: 10px; border-radius: 5px; border-left: 4px solid #3b82f6; margin-top: 10px;">
+                  <p style="margin: 0; font-weight: bold; color: #1e40af;">🎯 Hemos encontrado ${matchingResult.matchesFound} coincidencia(s) con clientes corporativos</p>
+                  <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Tu perfil será asociado automáticamente para una mejor experiencia.</p>
+                </div>
+              </div>`,
+              icon: 'success',
+              confirmButtonText: 'Entendido',
+              confirmButtonColor: '#3b82f6'
+            });
+          } else {
+            Swal.fire('¡Registro exitoso!', 'Por favor, verifica tu email.', 'success');
+          }
+        } catch (matchingError) {
+          console.error('❌ Error en matching automático:', matchingError);
+          // El matching falla pero el registro fue exitoso
+          Swal.fire('¡Registro exitoso!', 'Por favor, verifica tu email.', 'success');
+        }
+        
         navigate('/login');
       } else {
         Swal.fire('Error', error || 'Error al registrar usuario', 'error');

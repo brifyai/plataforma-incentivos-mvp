@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../config/supabase';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, DateFilter } from '../../components/common';
 import {
   getCompanyCampaigns,
@@ -92,21 +93,39 @@ const CampaignsPage = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [campaignsResult, clientsResult] = await Promise.all([
-        getCompanyCampaigns(profile.company.id),
-        getCorporateClients(profile.company.id)
-      ]);
-
+      
+      // Cargar campañas
+      const campaignsResult = await getCompanyCampaigns(profile.company.id);
       if (campaignsResult.error) {
         console.error('Error loading campaigns:', campaignsResult.error);
       } else {
         setCampaigns(campaignsResult.campaigns);
       }
 
-      if (clientsResult.error) {
-        console.error('Error loading corporate clients:', clientsResult.error);
+      // Cargar clientes corporativos con soporte para god_mode
+      let corporateClientsData;
+      if (profile?.role === 'god_mode') {
+        console.log('🔑 God Mode: Cargando todos los clientes corporativos para CampaignsPage');
+        const { data: allClients, error } = await supabase
+          .from('corporate_clients')
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
+        
+        if (error) {
+          console.error('Error loading all corporate clients:', error);
+          setCorporateClients([]);
+        } else {
+          corporateClientsData = { corporateClients: allClients };
+        }
       } else {
-        setCorporateClients(clientsResult.corporateClients);
+        corporateClientsData = await getCorporateClients(profile.company.id);
+      }
+
+      if (corporateClientsData?.error) {
+        console.error('Error loading corporate clients:', corporateClientsData.error);
+      } else {
+        setCorporateClients(corporateClientsData.corporateClients || []);
       }
     } catch (error) {
       console.error('Error loading data:', error);

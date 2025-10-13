@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-10-13T14:27:41.510Z",
+  "testUser": null,
+  "results": [
+    {
+      "timestamp": "2025-10-13T14:27:37.482Z",
+      "message": "🚀 Iniciando prueba end-to-end del sistema de matching",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:37.483Z",
+      "message": "================================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:37.483Z",
+      "message": "Creando usuario de prueba para matching...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:38.804Z",
+      "message": "Error creando usuario Auth: Email address \"test.matching.1760365657483@example.com\" is invalid",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:40.806Z",
+      "message": "Probando algoritmo de matching directamente...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:41.508Z",
+      "message": "Analizando 6 clientes corporativos",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:41.510Z",
+      "message": "Error probando algoritmo: Cannot find module '/Users/camiloalegria/Desktop/AIntelligence/Cobranzas/plataforma-incentivos-mvp/src/config/supabase' imported from /Users/camiloalegria/Desktop/AIntelligence/Cobranzas/plataforma-incentivos-mvp/src/services/debtorMatchingService.js",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:41.510Z",
+      "message": "No hay usuario de prueba disponible",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:41.510Z",
+      "message": "Verificando resultados en la base de datos...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:41.510Z",
+      "message": "Error verificando base de datos: Cannot read properties of null (reading 'id')",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:41.510Z",
+      "message": "Generando reporte de pruebas...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:41.510Z",
+      "message": "================================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:27:41.510Z",
+      "message": "❌ Prueba falló - revisar errores above",
+      "type": "error"
+    }
+  ],
+  "summary": {
+    "total": 11,
+    "success": 0,
+    "errors": 4,
+    "warnings": 0
+  }
+}

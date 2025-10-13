@@ -1076,38 +1076,72 @@ const handleAuthCallback = async () => {
   try {
     console.log('🔄 Procesando callback de autenticación...');
 
-    // Para OAuth, necesitamos usar el sistema de Supabase Auth completamente
-    const { data, error } = await supabase.auth.getSession();
-    console.log('📊 Resultado getSession:', { data: data ? 'presente' : 'null', session: data?.session ? 'activa' : 'null', error });
+    // Para OAuth, necesitamos usar getUser() para obtener la información del usuario autenticado
+    const { data, error } = await supabase.auth.getUser();
+    console.log('📊 Resultado getUser:', { data: data ? 'presente' : 'null', user: data?.user ? 'encontrado' : 'null', error });
 
     if (error) {
-      console.error('❌ Error obteniendo sesión:', error);
+      console.error('❌ Error obteniendo usuario:', error);
       return { user: null, session: null, error: handleSupabaseError(error) };
     }
 
-    if (!data.session) {
-      console.log('⚠️ No hay sesión activa');
+    if (!data.user) {
+      console.log('⚠️ No hay usuario autenticado');
       return { user: null, session: null, error: 'No se pudo completar la autenticación.' };
     }
 
-    const { user, session } = data.session;
+    const user = data.user;
+    
+    // Obtener la sesión actual para el token
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    const session = sessionData?.session;
+    
+    if (sessionError) {
+      console.warn('⚠️ Error obteniendo sesión (continuando sin token):', sessionError);
+    }
     console.log('👤 Usuario de Supabase:', { id: user?.id, email: user?.email, name: user?.user_metadata?.name });
 
-    // Crear objeto user directamente desde Supabase Auth (sin consultar tabla users)
+    // Primero verificar si el usuario ya existe en nuestra tabla users para obtener su rol real
+    let userRole = 'debtor'; // Por defecto
+    let userFullName = user.user_metadata?.full_name || user.user_metadata?.name || 'Usuario Google';
+    let userRut = `OAUTH-${Date.now()}`;
+    let userPhone = null;
+
+    try {
+      const { data: existingUser, error: userCheckError } = await supabase
+        .from('users')
+        .select('role, full_name, rut, phone')
+        .eq('email', user.email)
+        .single();
+
+      if (!userCheckError && existingUser) {
+        console.log('✅ Usuario existente encontrado en OAuth, usando rol real:', existingUser.role);
+        userRole = existingUser.role;
+        userFullName = existingUser.full_name;
+        userRut = existingUser.rut;
+        userPhone = existingUser.phone;
+      } else {
+        console.log('👤 Usuario nuevo en OAuth, usando rol por defecto:', userRole);
+      }
+    } catch (checkError) {
+      console.warn('⚠️ Error verificando usuario existente en OAuth:', checkError.message);
+    }
+
+    // Crear objeto user con el rol correcto
     const mockUser = {
       id: user.id,
       email: user.email,
       user_metadata: {
-        full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Usuario Google',
-        role: 'debtor', // Por defecto deudor para OAuth
+        full_name: userFullName,
+        role: userRole, // Usar rol real del usuario
       },
     };
 
     // Crear sesión compatible con localStorage
     const mockSession = {
       user: mockUser,
-      access_token: session?.access_token || 'mock_token_' + Date.now(),
-      refresh_token: session?.refresh_token || 'mock_refresh_' + Date.now(),
+      access_token: session?.access_token || user?.access_token || 'mock_token_' + Date.now(),
+      refresh_token: session?.refresh_token || user?.refresh_token || 'mock_refresh_' + Date.now(),
     };
 
     // Guardar en localStorage para mantener compatibilidad con el resto del sistema
@@ -1138,14 +1172,11 @@ const handleAuthCallback = async () => {
     try {
       console.log('🔄 Intentando crear usuario en tabla users en background...');
 
-      // Usar datos de registro si están disponibles, sino usar datos por defecto
-      const userRole = registrationData?.role || 'debtor';
-      const userRut = registrationData?.rut || `OAUTH-${Date.now()}`;
-      const userFullName = registrationData?.fullName ||
-                          user.user_metadata?.full_name ||
-                          user.user_metadata?.name ||
-                          'Usuario Google';
-      const userPhone = registrationData?.phone || null;
+      // Usar los datos que ya obtuvimos antes, o datos de registro si están disponibles
+      const finalUserRole = registrationData?.role || userRole;
+      const finalUserRut = registrationData?.rut || userRut;
+      const finalUserFullName = registrationData?.fullName || userFullName;
+      const finalUserPhone = registrationData?.phone || userPhone;
 
       // Verificar si el email ya existe (para OAuth también)
       const { exists: emailExists, error: emailCheckError } = await checkEmailExists(user.email);
@@ -1160,10 +1191,10 @@ const handleAuthCallback = async () => {
       const userData = {
         id: user.id, // Usar el ID de Supabase Auth
         email: user.email,
-        rut: userRut,
-        full_name: userFullName,
-        phone: userPhone,
-        role: userRole,
+        rut: finalUserRut,
+        full_name: finalUserFullName,
+        phone: finalUserPhone,
+        role: finalUserRole,
         validation_status: 'validated',
         wallet_balance: 0,
         created_at: new Date().toISOString(),
@@ -1177,7 +1208,7 @@ const handleAuthCallback = async () => {
       if (createError) {
         console.warn('⚠️ No se pudo crear usuario en tabla users, pero OAuth funcionó:', createError.message);
       } else {
-        console.log('✅ Usuario creado en tabla users con rol:', userRole);
+        console.log('✅ Usuario creado en tabla users con rol:', finalUserRole);
 
         // Si es empresa, crear también el registro en companies
         if (userRole === USER_ROLES.COMPANY && registrationData) {

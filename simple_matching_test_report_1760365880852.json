@@ -1,0 +1,47 @@
+{
+  "success": false,
+  "algorithmResults": false,
+  "existingMatches": false,
+  "results": [
+    {
+      "timestamp": "2025-10-13T14:31:19.540Z",
+      "message": "🚀 Iniciando prueba simple del sistema de matching",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:31:19.541Z",
+      "message": "==============================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:31:19.541Z",
+      "message": "Probando algoritmo de matching con datos existentes...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:31:20.349Z",
+      "message": "Error obteniendo deudores: column users.is_active does not exist",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-10-13T14:31:20.350Z",
+      "message": "Verificando matches existentes en la base de datos...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:31:20.851Z",
+      "message": "Error obteniendo matches existentes: Could not find the table 'public.debtor_corporate_matches' in the schema cache",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-10-13T14:31:20.851Z",
+      "message": "==============================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:31:20.851Z",
+      "message": "❌ Prueba simple falló - revisar errores arriba",
+      "type": "error"
+    }
+  ]
+}

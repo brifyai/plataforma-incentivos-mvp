@@ -131,9 +131,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Crear Oferta', path: '/empresa/ofertas', icon: CreditCard, description: 'Crear ofertas de pago' },
     { name: 'Acuerdos', path: '/empresa/acuerdos', icon: DollarSign, description: 'Gestión de acuerdos' },
     { name: 'Mensajes con IA', path: '/empresa/mensajes', icon: Brain, description: 'Conversaciones con IA automatizada' },
-    { name: 'Configuración IA', path: '/empresa/configuracion-ia', icon: Settings, description: 'Configurar IA y mensajería' },
-    { name: 'Base de Conocimiento', path: '/empresa/base-conocimiento', icon: Database, description: 'Gestionar conocimiento por cliente' },
-    { name: 'Configuración Prompts', path: '/empresa/configuracion-prompts', icon: Bot, description: 'Personalizar prompts de IA' },
+    { name: 'Dashboard IA', path: '/empresa/ia', icon: Bot, description: 'Configuración unificada de IA' },
     { name: 'Analytics', path: '/empresa/analytics', icon: BarChart3, description: 'Análisis y métricas' },
     { name: 'Notificaciones', path: '/empresa/notificaciones', icon: Bell, description: 'Centro de notificaciones' },
   ];

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../config/supabase';
 import { getCompanyDebts, getCompanyPayments, getCorporateClients } from '../../services/databaseService';
 
 const ClientsPage = () => {
@@ -98,14 +99,39 @@ const ClientsPage = () => {
   }, []);
 
   const loadCorporateClients = async () => {
-    if (!profile?.company?.id) return;
-
     try {
-      const { corporateClients, error } = await getCorporateClients(profile.company.id);
-      if (error) {
-        console.error('Error loading corporate clients:', error);
-        setCorporateClients([]);
-        return;
+      let corporateClients;
+      
+      // Para usuarios con god_mode, mostrar TODOS los clientes corporativos del sistema
+      if (profile?.role === 'god_mode') {
+        console.log('🔑 God Mode: Cargando todos los clientes corporativos para página de clientes');
+        const { data: allClients, error } = await supabase
+          .from('corporate_clients')
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
+        
+        if (error) {
+          console.error('Error loading all corporate clients:', error);
+          setCorporateClients([]);
+          return;
+        }
+        corporateClients = allClients;
+      } else {
+        // Para usuarios normales, usar su company_id
+        if (!profile?.company?.id) {
+          console.warn('No company ID found for normal user');
+          setCorporateClients([]);
+          return;
+        }
+
+        const { corporateClients: companyClients, error } = await getCorporateClients(profile.company.id);
+        if (error) {
+          console.error('Error loading corporate clients:', error);
+          setCorporateClients([]);
+          return;
+        }
+        corporateClients = companyClients;
       }
 
       // Normalizar a estructura usada por el filtro local
@@ -119,6 +145,7 @@ const ClientsPage = () => {
         created_at: c.created_at || null
       }));
 
+      console.log(`📊 Clientes corporativos cargados en ClientsPage: ${normalized.length}`);
       setCorporateClients(normalized);
     } catch (error) {
       console.error('Error loading corporate clients:', error);

@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../config/supabase';
 import { Card, Badge, Button, LoadingSpinner, Input, Select } from '../../components/common';
 import { getCorporateClients, getCompanyDebts, sendMessage, getCompanyOffers } from '../../services/databaseService';
 import {
@@ -273,13 +274,32 @@ const NewMessagePage = () => {
 
     try {
       setLoadingCorporateClients(true);
-      const result = await getCorporateClients(profile.company.id);
+      
+      // Cargar clientes corporativos con soporte para god_mode
+      let corporateClientsData;
+      if (profile?.role === 'god_mode') {
+        console.log('🔑 God Mode: Cargando todos los clientes corporativos para NewMessagePage');
+        const { data: allClients, error } = await supabase
+          .from('corporate_clients')
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
+        
+        if (error) {
+          console.error('Error loading all corporate clients:', error);
+          setCorporateClients(fallbackClients);
+        } else {
+          corporateClientsData = { corporateClients: allClients };
+        }
+      } else {
+        corporateClientsData = await getCorporateClients(profile.company.id);
+      }
 
-      if (result.error || !result.corporateClients || result.corporateClients.length === 0) {
+      if (corporateClientsData?.error || !corporateClientsData?.corporateClients || corporateClientsData.corporateClients.length === 0) {
         console.warn('Usando fallback de clientes corporativos (sin datos o error).');
         setCorporateClients(fallbackClients);
       } else {
-        setCorporateClients(result.corporateClients);
+        setCorporateClients(corporateClientsData.corporateClients);
       }
     } catch (error) {
       console.error('Error loading corporate clients:', error);
