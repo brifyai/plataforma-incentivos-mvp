@@ -20,11 +20,29 @@ import {
   Send,
   Target,
   Calendar,
-  CreditCard
+  CreditCard,
+  Bot,
+  Brain
 } from 'lucide-react';
 
 const QuickActions = ({ profile }) => {
   const quickActions = [
+    {
+      title: 'IA de Negociación',
+      description: 'Dashboard de IA conversacional',
+      icon: Brain,
+      color: 'purple',
+      action: 'ai-negotiation',
+      link: '/empresa/ia/negociacion'
+    },
+    {
+      title: 'Configurar IA',
+      description: 'Ajustes de IA y límites',
+      icon: Bot,
+      color: 'purple',
+      action: 'ai-config',
+      link: '/empresa/ia/configuracion'
+    },
     {
       title: 'Importar Deudas',
       description: 'Cargar deudas masivamente',
@@ -48,22 +66,6 @@ const QuickActions = ({ profile }) => {
       color: 'orange',
       action: 'send-message',
       link: '/empresa/mensajes' // Ruta existente
-    },
-    {
-      title: 'Ver Analytics',
-      description: 'Análisis de rendimiento',
-      icon: BarChart3,
-      color: 'indigo',
-      action: 'view-analytics',
-      link: '/empresa/analytics' // Ruta existente
-    },
-    {
-      title: 'Configuración',
-      description: 'Ajustes de la empresa',
-      icon: Settings,
-      color: 'gray',
-      action: 'settings',
-      link: '/empresa/perfil' // Ruta existente
     }
   ];
 
@@ -71,7 +73,7 @@ const QuickActions = ({ profile }) => {
     const colors = {
       blue: 'bg-blue-600 hover:bg-blue-700',
       green: 'bg-green-600 hover:bg-green-700',
-      purple: 'bg-blue-600 hover:bg-blue-700',
+      purple: 'bg-purple-600 hover:bg-purple-700',
       orange: 'bg-orange-600 hover:bg-orange-700',
       indigo: 'bg-indigo-600 hover:bg-indigo-700',
       gray: 'bg-gray-600 hover:bg-gray-700'
@@ -83,7 +85,7 @@ const QuickActions = ({ profile }) => {
     const colors = {
       blue: 'text-blue-600',
       green: 'text-green-600',
-      purple: 'text-blue-600',
+      purple: 'text-purple-600',
       orange: 'text-orange-600',
       indigo: 'text-indigo-600',
       gray: 'text-gray-600'
@@ -124,6 +126,22 @@ const QuickActions = ({ profile }) => {
       {/* Additional Actions Row */}
       <div className="mt-6 pt-6 border-t border-gray-200">
         <div className="flex flex-wrap gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Brain className="w-4 h-4" />}
+            className="text-sm border-purple-300 text-purple-700 hover:bg-purple-50"
+          >
+            Ver IA Dashboard
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Bot className="w-4 h-4" />}
+            className="text-sm border-purple-300 text-purple-700 hover:bg-purple-50"
+          >
+            Configurar IA
+          </Button>
           <Button
             variant="outline"
             size="sm"

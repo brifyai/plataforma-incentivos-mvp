@@ -97,6 +97,12 @@ const ProfilePage = () => {
     full_name: '',
     representative_rut: '',
     company_type: 'direct_creditor',
+    // Campos bancarios
+    bankName: '',
+    accountType: '',
+    accountNumber: '',
+    accountHolderName: '',
+    accountHolderRut: '',
   });
 
   const handleFormDataChange = (newFormData) => {
@@ -148,6 +154,7 @@ const ProfilePage = () => {
       });
     } else if (profile?.company) {
       // Para empresas normales, cargar datos de la empresa
+      const bankAccountInfo = profile.company.bank_account_info || {};
       setFormData({
         company_name: profile.company.company_name || '',
         contact_email: user?.email || '',
@@ -156,6 +163,12 @@ const ProfilePage = () => {
         full_name: profile?.full_name || '',
         representative_rut: profile?.rut || '',
         company_type: profile.company.company_type || 'direct_creditor',
+        // Cargar datos bancarios si existen
+        bankName: bankAccountInfo.bankName || '',
+        accountType: bankAccountInfo.accountType || '',
+        accountNumber: bankAccountInfo.accountNumber || '',
+        accountHolderName: bankAccountInfo.accountHolderName || '',
+        accountHolderRut: bankAccountInfo.accountHolderRut || '',
       });
     }
   }, [profile, user, isGodMode]);
@@ -359,6 +372,17 @@ const ProfilePage = () => {
           console.warn('company_type column may not exist, skipping...');
         }
 
+        // Agregar información bancaria si hay datos
+        if (formData.bankName || formData.accountNumber || formData.accountHolderName) {
+          companyUpdates.bank_account_info = {
+            bankName: formData.bankName,
+            accountType: formData.accountType,
+            accountNumber: formData.accountNumber,
+            accountHolderName: formData.accountHolderName,
+            accountHolderRut: formData.accountHolderRut,
+          };
+        }
+
         console.log('🔄 Actualizando empresa:', companyUpdates);
         const { error: companyUpdateError } = await updateCompanyProfile(profile.company.id, companyUpdates);
 
@@ -397,6 +421,11 @@ const ProfilePage = () => {
           full_name: formData.full_name,
           representative_rut: formData.representative_rut,
           company_type: formData.company_type,
+          bankName: formData.bankName,
+          accountType: formData.accountType,
+          accountNumber: formData.accountNumber,
+          accountHolderName: formData.accountHolderName,
+          accountHolderRut: formData.accountHolderRut,
         }));
       }
 

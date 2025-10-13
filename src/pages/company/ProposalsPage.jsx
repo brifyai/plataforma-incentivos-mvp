@@ -331,10 +331,10 @@ const ProposalsPage = () => {
           <div className="p-8 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-3xl inline-block mb-8">
             <Users className="w-20 h-20 text-secondary-600" />
           </div>
-          <h3 className="text-3xl font-display font-bold text-secondary-900 mb-4">
+          <h3 className="text-2xl font-display font-bold text-secondary-900 mb-4">
             No hay propuestas aún
           </h3>
-          <p className="text-lg text-secondary-600 mb-6 max-w-md mx-auto">
+          <p className="text-base text-secondary-600 mb-6 max-w-md mx-auto">
             Las propuestas de pago aparecerán aquí cuando los deudores las envíen.
           </p>
         </Card>

@@ -10,6 +10,7 @@ import { Card, Badge, Button, LoadingSpinner } from '../../components/common';
 import { Settings, Shield, Database, Mail, Key, CreditCard, BarChart3, Bell, Brain, ArrowRight, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { getSystemConfig, getIntegrationStats } from '../../services/databaseService';
 import { getDefaultConfig } from '../../config/systemConfig';
+import AIModuleControl from '../../components/admin/AIModuleControl'; // Reactivado
 
 const AdminConfigPage = () => {
   const navigate = useNavigate();
@@ -122,6 +123,16 @@ const AdminConfigPage = () => {
       color: 'from-indigo-500 to-indigo-600',
       status: (config.chutesApiActive || config.groqApiActive) ? 'success' : 'warning',
       statusText: (config.chutesApiActive || config.groqApiActive) ? 'Configurada' : 'Sin configurar'
+    },
+    {
+      id: 'ai-module',
+      title: 'Módulo de IA Conversacional',
+      description: 'Control del módulo de negociación con IA',
+      icon: Brain,
+      path: '/admin/ai-module',
+      color: 'from-purple-500 to-purple-600',
+      status: 'info',
+      statusText: 'Nuevo'
     }
   ];
 
@@ -321,6 +332,9 @@ const AdminConfigPage = () => {
           </div>
         </div>
       </Card>
+
+      {/* AI Module Control Section */}
+      <AIModuleControl />
     </div>
   );
 };

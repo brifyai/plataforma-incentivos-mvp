@@ -1,12 +1,13 @@
 /**
  * Router Principal de la Aplicación
- * 
+ *
  * Maneja todas las rutas y navegación de la plataforma
  */
 
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
 
 // Landing Page
 import LandingPage from '../pages/LandingPage';
@@ -92,6 +93,9 @@ import AnalyticsConfigPage from '../pages/admin/AnalyticsConfigPage';
 import NotificationsConfigPage from '../pages/admin/NotificationsConfigPage';
 import GeneralConfigPage from '../pages/admin/GeneralConfigPage';
 import AIConfigPage from '../pages/admin/AIConfigPage';
+import MessagingAIConfigPage from '../pages/company/MessagingAIConfigPage';
+import KnowledgeBasePage from '../pages/company/KnowledgeBasePage';
+import CorporatePromptConfigPage from '../pages/company/CorporatePromptConfigPage';
 
 // Componente de ruta protegida
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -528,7 +532,37 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/empresa/configuracion-ia"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <MessagingAIConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/base-conocimiento"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <KnowledgeBasePage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/configuracion-prompts"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <CorporatePromptConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        
         {/* Rutas de administrador */}
         <Route
           path="/admin/dashboard"
@@ -690,6 +724,8 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Nota: La funcionalidad de IA de negociación está integrada en /empresa/mensajes */}
 
         {/* Página de prueba GOD MODE */}
         <Route path="/test-god-mode" element={<TestGodMode />} />

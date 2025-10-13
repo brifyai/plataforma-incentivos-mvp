@@ -425,11 +425,11 @@ const TransferDashboard = () => {
             <div className="p-8 bg-gradient-to-br from-success-100 to-success-200 rounded-3xl inline-block mb-8">
               <Banknote className="w-20 h-20 text-success-600" />
             </div>
-            <h3 className="text-3xl font-display font-bold text-secondary-900 mb-4">
-              No hay transferencias aún
+            <h3 className="text-2xl font-display font-bold text-secondary-900 mb-4">
+              No hay transferencias automáticas registradas
             </h3>
-            <p className="text-lg text-secondary-600 mb-6 max-w-md mx-auto">
-              Las transferencias automáticas se crearán cuando tus deudores realicen pagos exitosos.
+            <p className="text-base text-secondary-600 mb-6 max-w-md mx-auto">
+              Las transferencias automáticas se generan automáticamente cuando tus deudores realizan pagos exitosos a través de la plataforma. Una vez completado un pago, el sistema creará una transferencia hacia tu cuenta configurada.
             </p>
           </Card>
         ) : (
