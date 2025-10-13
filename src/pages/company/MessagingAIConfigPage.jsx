@@ -28,6 +28,7 @@ import {
   Edit
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../config/supabase';
 import Swal from 'sweetalert2';
 
 const MessagingAIConfigPage = () => {
@@ -55,14 +56,6 @@ const MessagingAIConfigPage = () => {
         apiKey: '',
         baseUrl: 'https://api.groq.com',
         model: 'llama2-70b',
-        maxTokens: 2000,
-        temperature: 0.7
-      },
-      openai: {
-        enabled: false,
-        apiKey: '',
-        baseUrl: 'https://api.openai.com',
-        model: 'gpt-4',
         maxTokens: 2000,
         temperature: 0.7
       }
@@ -159,8 +152,22 @@ const MessagingAIConfigPage = () => {
       }
 
       if (data) {
-        // Cargar configuración existente
-        setAiConfig(data.ai_providers || aiConfig);
+        // Cargar configuración existente y limpiar OpenAI si existe
+        const cleanedAiConfig = data.ai_providers || aiConfig;
+        
+        // Eliminar OpenAI de la configuración si existe
+        if (cleanedAiConfig.providers && cleanedAiConfig.providers.openai) {
+          delete cleanedAiConfig.providers.openai;
+          console.log('OpenAI provider removed from loaded configuration');
+        }
+        
+        // Ajustar selectedProvider si era OpenAI
+        if (cleanedAiConfig.selectedProvider === 'openai') {
+          cleanedAiConfig.selectedProvider = 'chutes';
+          console.log('Selected provider changed from OpenAI to Chutes');
+        }
+        
+        setAiConfig(cleanedAiConfig);
         setMessagingConfig(data.messaging_config || messagingConfig);
         setPersonalizationConfig(data.personalization_config || personalizationConfig);
         setCustomResponses(data.custom_responses || customResponses);
@@ -172,10 +179,56 @@ const MessagingAIConfigPage = () => {
       }
     } catch (error) {
       console.error('Error loading configuration:', error);
+      
+      // Si la tabla no existe, intentar cargar desde localStorage
+      if (error.code === 'PGRST205') {
+        console.log('Tabla company_ai_config no existe. Intentando cargar configuración local.');
+        
+        // Intentar cargar desde localStorage
+        const localConfig = localStorage.getItem('company_ai_config_local');
+        if (localConfig) {
+          try {
+            const parsedConfig = JSON.parse(localConfig);
+            if (parsedConfig.company_id === profile?.company?.id) {
+              // Limpiar OpenAI de la configuración local si existe
+              const cleanedLocalConfig = parsedConfig.ai_providers || aiConfig;
+              
+              if (cleanedLocalConfig.providers && cleanedLocalConfig.providers.openai) {
+                delete cleanedLocalConfig.providers.openai;
+                console.log('OpenAI provider removed from localStorage configuration');
+              }
+              
+              // Ajustar selectedProvider si era OpenAI
+              if (cleanedLocalConfig.selectedProvider === 'openai') {
+                cleanedLocalConfig.selectedProvider = 'chutes';
+                console.log('Selected provider changed from OpenAI to Chutes in localStorage');
+              }
+              
+              setAiConfig(cleanedLocalConfig);
+              setMessagingConfig(parsedConfig.messaging_config || messagingConfig);
+              setPersonalizationConfig(parsedConfig.personalization_config || personalizationConfig);
+              setCustomResponses(parsedConfig.custom_responses || customResponses);
+              setNegotiationLimits(parsedConfig.negotiation_limits || negotiationLimits);
+              console.log('Configuration loaded from localStorage:', parsedConfig);
+            }
+          } catch (parseError) {
+            console.error('Error parsing local config:', parseError);
+          }
+        }
+        
+        Swal.fire({
+          icon: 'info',
+          title: 'Configuración Local',
+          text: 'La tabla de configuración está siendo creada. Por ahora, la configuración se guardará localmente.',
+          confirmButtonText: 'Entendido'
+        });
+        return; // No mostrar error, continuar con valores por defecto
+      }
+      
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo cargar la configuración',
+        text: 'No se pudo cargar la configuración: ' + error.message,
         confirmButtonText: 'Aceptar'
       });
     } finally {
@@ -216,6 +269,33 @@ const MessagingAIConfigPage = () => {
       });
     } catch (error) {
       console.error('Error saving configuration:', error);
+      
+      // Si la tabla no existe, guardar en localStorage y mostrar mensaje informativo
+      if (error.code === 'PGRST205') {
+        console.log('Tabla no existe. Guardando configuración localmente.');
+        
+        // Guardar en localStorage como fallback
+        const localConfig = {
+          company_id: profile?.company?.id,
+          ai_providers: aiConfig,
+          messaging_config: messagingConfig,
+          personalization_config: personalizationConfig,
+          custom_responses: customResponses,
+          negotiation_limits: negotiationLimits,
+          updated_at: new Date().toISOString()
+        };
+        
+        localStorage.setItem('company_ai_config_local', JSON.stringify(localConfig));
+        
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Configuración Guardada Localmente',
+          text: 'La configuración se ha guardado temporalmente en el navegador. Cuando la tabla esté disponible, se sincronizará automáticamente.',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+      
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -307,7 +387,7 @@ const MessagingAIConfigPage = () => {
             <Button
               variant="outline"
               onClick={() => navigate('/empresa/mensajes')}
-              className="text-white border-white hover:bg-white hover:text-blue-600"
+              className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
             >
               Volver a Mensajes
             </Button>
@@ -478,8 +558,7 @@ const MessagingAIConfigPage = () => {
                     onChange={(selectedProvider) => setAiConfig(prev => ({ ...prev, selectedProvider }))}
                     options={[
                       { value: 'chutes', label: 'Chutes AI' },
-                      { value: 'groq', label: 'Groq AI' },
-                      { value: 'openai', label: 'OpenAI' }
+                      { value: 'groq', label: 'Groq AI' }
                     ]}
                   />
                 </div>

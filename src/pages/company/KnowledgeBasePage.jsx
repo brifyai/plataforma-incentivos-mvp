@@ -80,20 +80,30 @@ const KnowledgeBasePage = () => {
         .from('corporate_clients')
         .select('*')
         .eq('company_id', profile?.company?.id)
-        .order('business_name');
+        .eq('is_active', true)
+        .order('name');
 
       if (error) throw error;
       setCorporateClients(data || []);
       
       if (data && data.length > 0) {
         setSelectedClient(data[0]);
+      } else {
+        // Mostrar mensaje informativo si no hay clientes
+        Swal.fire({
+          icon: 'info',
+          title: 'Sin clientes corporativos',
+          text: 'No hay clientes corporativos configurados. Contacte al administrador para agregar clientes.',
+          confirmButtonText: 'Entendido'
+        });
       }
     } catch (error) {
       console.error('Error loading corporate clients:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudieron cargar los clientes corporativos'
+        text: 'No se pudieron cargar los clientes corporativos. Es posible que las tablas no estén configuradas correctamente.',
+        confirmButtonText: 'Entendido'
       });
     } finally {
       setLoading(false);
@@ -104,44 +114,64 @@ const KnowledgeBasePage = () => {
     try {
       setLoading(true);
 
-      // Cargar documentos de base de conocimiento
-      const { data: documents, error: docsError } = await supabase
-        .from('company_knowledge_base')
-        .select('*')
-        .eq('corporate_client_id', corporateClientId)
-        .eq('is_active', true);
+      // Intentar cargar cada tabla con manejo de errores individual
+      let documents = [];
+      let policies = [];
+      let responses = [];
+      let aiConfig = null;
 
-      if (docsError) throw docsError;
+      try {
+        const { data: docsData, error: docsError } = await supabase
+          .from('company_knowledge_base')
+          .select('*')
+          .eq('corporate_client_id', corporateClientId)
+          .eq('is_active', true);
+        
+        if (!docsError) documents = docsData || [];
+      } catch (e) {
+        console.warn('Tabla company_knowledge_base no disponible:', e.message);
+      }
 
-      // Cargar políticas
-      const { data: policies, error: policiesError } = await supabase
-        .from('corporate_client_policies')
-        .select('*')
-        .eq('corporate_client_id', corporateClientId)
-        .eq('is_active', true);
+      try {
+        const { data: policiesData, error: policiesError } = await supabase
+          .from('corporate_client_policies')
+          .select('*')
+          .eq('corporate_client_id', corporateClientId)
+          .eq('is_active', true);
+        
+        if (!policiesError) policies = policiesData || [];
+      } catch (e) {
+        console.warn('Tabla corporate_client_policies no disponible:', e.message);
+      }
 
-      if (policiesError) throw policiesError;
+      try {
+        const { data: responsesData, error: responsesError } = await supabase
+          .from('corporate_client_responses')
+          .select('*')
+          .eq('corporate_client_id', corporateClientId)
+          .eq('is_active', true);
+        
+        if (!responsesError) responses = responsesData || [];
+      } catch (e) {
+        console.warn('Tabla corporate_client_responses no disponible:', e.message);
+      }
 
-      // Cargar respuestas personalizadas
-      const { data: responses, error: responsesError } = await supabase
-        .from('corporate_client_responses')
-        .select('*')
-        .eq('corporate_client_id', corporateClientId)
-        .eq('is_active', true);
-
-      if (responsesError) throw responsesError;
-
-      // Cargar configuración de IA
-      const { data: aiConfig, error: configError } = await supabase
-        .from('negotiation_ai_config')
-        .select('*')
-        .eq('corporate_client_id', corporateClientId)
-        .single();
+      try {
+        const { data: configData, error: configError } = await supabase
+          .from('negotiation_ai_config')
+          .select('*')
+          .eq('corporate_client_id', corporateClientId)
+          .single();
+        
+        if (!configError) aiConfig = configData;
+      } catch (e) {
+        console.warn('Tabla negotiation_ai_config no disponible:', e.message);
+      }
 
       setKnowledgeBase({
-        documents: documents || [],
-        policies: policies || [],
-        responses: responses || [],
+        documents,
+        policies,
+        responses,
         aiConfig: aiConfig || {
           max_negotiation_discount: 15,
           max_negotiation_term: 12,
@@ -149,12 +179,31 @@ const KnowledgeBasePage = () => {
           working_hours: { start: '09:00', end: '18:00' }
         }
       });
+
+      // Mostrar advertencia si algunas tablas no están disponibles
+      const missingTables = [];
+      if (documents.length === 0) missingTables.push('documentos');
+      if (policies.length === 0) missingTables.push('políticas');
+      if (responses.length === 0) missingTables.push('respuestas');
+      if (!aiConfig) missingTables.push('configuración IA');
+
+      if (missingTables.length > 0 && missingTables.length < 4) {
+        console.warn(`Algunas tablas de knowledge base no están disponibles: ${missingTables.join(', ')}`);
+      }
+
     } catch (error) {
       console.error('Error loading knowledge base:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo cargar la base de conocimiento'
+      // No mostrar error fatal, solo configurar valores por defecto
+      setKnowledgeBase({
+        documents: [],
+        policies: [],
+        responses: [],
+        aiConfig: {
+          max_negotiation_discount: 15,
+          max_negotiation_term: 12,
+          auto_respond: true,
+          working_hours: { start: '09:00', end: '18:00' }
+        }
       });
     } finally {
       setLoading(false);
@@ -385,7 +434,7 @@ const KnowledgeBasePage = () => {
               }}
               options={corporateClients.map(client => ({
                 value: client.id,
-                label: `${client.business_name} (${client.rut})`
+                label: `${client.name} - ${client.display_category}`
               }))}
             />
           </div>
