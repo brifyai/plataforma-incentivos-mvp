@@ -3,12 +3,112 @@
   command = "npm run build"
 
 [build.environment]
-  VITE_SUPABASE_URL = "https://wvluqdldygmgncqqjkow.supabase.co"
-  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2bHVxZGxkeWdtZ25jcXFqa293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzIzMTgsImV4cCI6MjA3NTAwODMxOH0.MAdrj__CjDY8DlLn9Nzsm1spx8MXH1_uWe6OjVGiWM4"
-  NODE_OPTIONS = "--no-warnings"
-  CI = "false"
+  NODE_VERSION = "18"
 
+# Variables de entorno para producción
+[context.production.environment]
+  # Supabase Configuration - Reemplazar con valores reales
+  VITE_SUPABASE_URL = "https://your-project-id.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "your-anon-key-here"
+  
+  # API URLs
+  VITE_API_URL = "https://nexupay.netlify.app"
+  VITE_WEBHOOK_URL = "https://nexupay.netlify.app/api/webhook"
+  
+  # Feature Flags
+  VITE_ENABLE_AI_FEATURES = "true"
+  VITE_ENABLE_REALTIME = "true"
+  VITE_ENABLE_ANALYTICS = "true"
+  
+  # Debug
+  VITE_DEBUG_MODE = "false"
+
+# Variables de entorno para despliegues preview (branches)
+[context.deploy-preview.environment]
+  # Supabase Configuration - Usar base de datos de desarrollo
+  VITE_SUPABASE_URL = "https://your-dev-project-id.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "your-dev-anon-key-here"
+  
+  # API URLs
+  VITE_API_URL = "https://deploy-preview-PR_NUMBER--nexupay.netlify.app"
+  VITE_WEBHOOK_URL = "https://deploy-preview-PR_NUMBER--nexupay.netlify.app/api/webhook"
+  
+  # Feature Flags
+  VITE_ENABLE_AI_FEATURES = "true"
+  VITE_ENABLE_REALTIME = "true"
+  VITE_ENABLE_ANALYTICS = "true"
+  
+  # Debug
+  VITE_DEBUG_MODE = "true"
+
+# Variables de entorno para desarrollo local
+[context.dev.environment]
+  # Supabase Configuration - Desarrollo local
+  VITE_SUPABASE_URL = "http://localhost:54321"
+  VITE_SUPABASE_ANON_KEY = "your-local-anon-key"
+  
+  # API URLs
+  VITE_API_URL = "http://localhost:3002"
+  VITE_WEBHOOK_URL = "http://localhost:3002/api/webhook"
+  
+  # Feature Flags
+  VITE_ENABLE_AI_FEATURES = "true"
+  VITE_ENABLE_REALTIME = "true"
+  VITE_ENABLE_ANALYTICS = "true"
+  
+  # Debug
+  VITE_DEBUG_MODE = "true"
+
+# Headers para seguridad y rendimiento
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Redirects para SPA
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Redirects específicos para API
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Redirects para webhooks
+[[redirects]]
+  from = "/webhook/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Configuración de funciones serverless si se necesitan
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Configuración de plugins
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+[[plugins]]
+  package = "netlify-plugin-submit-sitemap"
+
+  [plugins.inputs]
+    baseUrl = "https://nexupay.netlify.app"
+    exclude = ["/admin/*", "/api/*"]
+
+# Configuración de optimización
+[optimization]
+  skip_processing = false
+  bundle_analyzer = true
