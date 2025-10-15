@@ -1,10 +1,31 @@
-# Robots.txt for NexuPay
-# https://nexupay.cl/robots.txt
+# Robots.txt para NexuPay
+# https://nexupay.netlify.app/
 
 User-agent: *
 Allow: /
 
-# Allow all major search engines
+# Prioridad para páginas importantes
+Allow: /$
+Allow: /login
+Allow: /register
+Allow: /debtor/dashboard
+Allow: /company/dashboard
+Allow: /payment
+
+# Bloquear áreas administrativas y privadas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /webhook/
+Disallow: /*.json$
+Disallow: /src/
+
+# Sitemaps
+Sitemap: https://nexupay.netlify.app/sitemap.xml
+
+# Tiempo de crawl (opcional)
+Crawl-delay: 1
+
+# User agents específicos
 User-agent: Googlebot
 Allow: /
 
@@ -13,38 +34,3 @@ Allow: /
 
 User-agent: Slurp
 Allow: /
-
-User-agent: DuckDuckBot
-Allow: /
-
-User-agent: Baiduspider
-Allow: /
-
-User-agent: YandexBot
-Allow: /
-
-# Social media crawlers
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: LinkedInBot
-Allow: /
-
-User-agent: WhatsApp
-Allow: /
-
-# Disallow admin and private areas
-Disallow: /admin/
-Disallow: /api/
-Disallow: /_next/
-Disallow: /private/
-Disallow: /*.json$
-
-# Sitemap
-Sitemap: https://nexupay.cl/sitemap.xml
-
-# Crawl delay (optional)
-Crawl-delay: 1
