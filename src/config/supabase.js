@@ -11,94 +11,117 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validar que las variables de entorno estén configuradas
-if (!supabaseUrl || !supabaseAnonKey) {
-  // En producción, mostrar advertencia pero no detener la aplicación
-  if (import.meta.env.PROD) {
-    console.warn('⚠️ SERVICE_ROLE_KEY no válida o no configurada. Las operaciones de administrador estarán limitadas.');
-    console.warn('🔧 Solución: Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en Netlify Dashboard');
-    console.warn('📋 Verifica: Site settings > Build & deploy > Environment variables');
-    
-    // Marcar que falta configuración
+// Estado de configuración
+let isConfigured = !!(supabaseUrl && supabaseAnonKey);
+let isMockMode = !isConfigured;
+
+// Crear un cliente mock para cuando no hay configuración
+const createMockSupabase = () => {
+  console.warn('⚠️ Supabase no configurado. Usando cliente mock.');
+  console.warn('🔧 Solución: Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en Netlify Dashboard');
+  console.warn('📋 Verifica: Site settings > Build & deploy > Environment variables');
+  
+  // Marcar que falta configuración
+  if (typeof window !== 'undefined') {
     window.SUPABASE_MISSING_CONFIG = true;
-    
-    // Crear un cliente mock para producción sin variables
-    const mockSupabase = {
-      from: () => ({
-        select: () => ({ data: [], error: { message: 'Supabase no configurado' } }),
-        insert: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
-        update: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
-        delete: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
-        eq: () => ({ select: () => ({ data: [], error: { message: 'Supabase no configurado' } }) }),
-        order: () => ({ data: [], error: { message: 'Supabase no configurado' } }),
-        limit: () => ({ data: [], error: { message: 'Supabase no configurado' } }),
-        single: () => ({ data: null, error: { message: 'Supabase no configurado' } })
-      }),
-      auth: {
-        signIn: () => ({ error: { message: 'Supabase no configurado' } }),
-        signOut: () => ({ error: { message: 'Supabase no configurado' } }),
-        signUp: () => ({ error: { message: 'Supabase no configurado' } }),
-        getUser: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
-        onAuthStateChange: () => {},
-        session: () => ({ data: null, error: { message: 'Supabase no configurado' } })
-      },
-      storage: {
-        from: () => ({
-          upload: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
-          getPublicUrl: () => ({ data: { publicUrl: '' }, error: null })
-        })
-      }
-    };
-    
-    // Exportar el cliente mock y la función de manejo de errores
-    const handleMockError = (error) => {
-      if (!error) return 'Supabase no está configurado. Contacta al administrador.';
-      return error.message || 'Supabase no está configurado. Contacta al administrador.';
-    };
-    
-    // Exportar para diferentes sistemas de módulos
-    if (typeof module !== 'undefined' && module.exports) {
-      module.exports = { supabase: mockSupabase, handleSupabaseError: handleMockError };
-    }
-    
-    // Asignar al objeto global para acceso
-    window.supabase = mockSupabase;
-    window.handleSupabaseError = handleMockError;
-    
-    // Detener la ejecución del módulo actual
-    throw new Error('SUPABASE_MOCK_MODE');
+    window.SUPABASE_MOCK_MODE = true;
   }
   
-  // En desarrollo, lanzar error para que se configuren las variables
-  throw new Error(
-    `❌ Variables de entorno faltantes:\n` +
-    `- VITE_SUPABASE_URL: ${supabaseUrl ? '✅' : '❌ FALTANTE'}\n` +
-    `- VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✅' : '❌ FALTANTE'}\n\n` +
-    `🔧 Crea un archivo .env con estas variables:\n` +
-    `VITE_SUPABASE_URL=tu_url_de_supabase\n` +
-    `VITE_SUPABASE_ANON_KEY=tu_anon_key_de_supabase\n\n` +
-    `📋 Revisa la documentación para obtener las credenciales.`
-  );
+  return {
+    from: () => ({
+      select: () => Promise.resolve({ data: [], error: { message: 'Supabase no configurado' } }),
+      insert: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+      update: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+      delete: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+      eq: () => ({ 
+        select: () => Promise.resolve({ data: [], error: { message: 'Supabase no configurado' } }),
+        insert: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+        update: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+        delete: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } })
+      }),
+      order: () => ({ 
+        select: () => Promise.resolve({ data: [], error: { message: 'Supabase no configurado' } }),
+        eq: () => ({ select: () => Promise.resolve({ data: [], error: { message: 'Supabase no configurado' } }) })
+      }),
+      limit: () => ({ 
+        select: () => Promise.resolve({ data: [], error: { message: 'Supabase no configurado' } })
+      }),
+      single: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+      then: (resolve) => resolve({ data: [], error: { message: 'Supabase no configurado' } })
+    }),
+    auth: {
+      signIn: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+      signOut: () => Promise.resolve({ error: { message: 'Supabase no configurado' } }),
+      signUp: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+      getUser: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      session: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+      currentUser: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } })
+    },
+    storage: {
+      from: () => ({
+        upload: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } }),
+        getPublicUrl: () => ({ data: { publicUrl: '' }, error: null })
+      })
+    },
+    functions: {
+      invoke: () => Promise.resolve({ data: null, error: { message: 'Supabase no configurado' } })
+    },
+    realtime: {
+      subscribe: () => ({ unsubscribe: () => {} })
+    }
+  };
+};
+
+// Validar que las variables de entorno estén configuradas
+if (!isConfigured) {
+  // En desarrollo, mostrar error detallado
+  if (!import.meta.env.PROD) {
+    console.error(
+      `❌ Variables de entorno faltantes:\n` +
+      `- VITE_SUPABASE_URL: ${supabaseUrl ? '✅' : '❌ FALTANTE'}\n` +
+      `- VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✅' : '❌ FALTANTE'}\n\n` +
+      `🔧 Crea un archivo .env con estas variables:\n` +
+      `VITE_SUPABASE_URL=tu_url_de_supabase\n` +
+      `VITE_SUPABASE_ANON_KEY=tu_anon_key_de_supabase\n\n` +
+      `📋 Revisa la documentación para obtener las credenciales.`
+    );
+  } else {
+    // En producción, solo advertir pero continuar con modo mock
+    console.warn('⚠️ Supabase no configurado en producción. La aplicación funcionará en modo limitado.');
+  }
 }
 
-// Crear el cliente de Supabase
-const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage,
-    flowType: 'pkce', // Más seguro para aplicaciones SPA
-    // Configurar site_url para OAuth (opcional, mejora algunos flujos)
-    site_url: window.location.origin,
-  },
-  db: {
-    schema: 'public',
-  },
-  global: {
-    headers: {},
-  },
-});
+// Crear el cliente de Supabase (real o mock)
+let supabaseClient;
+
+if (isConfigured) {
+  try {
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage,
+        flowType: 'pkce', // Más seguro para aplicaciones SPA
+        // Configurar site_url para OAuth (opcional, mejora algunos flujos)
+        site_url: window.location.origin,
+      },
+      db: {
+        schema: 'public',
+      },
+      global: {
+        headers: {},
+      },
+    });
+  } catch (error) {
+    console.error('Error creando cliente de Supabase, usando modo mock:', error);
+    supabaseClient = createMockSupabase();
+    isMockMode = true;
+  }
+} else {
+  supabaseClient = createMockSupabase();
+}
 
 // Función helper para manejar errores de Supabase de manera consistente
 const handleSupabaseError = (error) => {
@@ -107,6 +130,11 @@ const handleSupabaseError = (error) => {
   // Log del error en desarrollo
   if (import.meta.env.DEV) {
     console.error('Supabase Error:', error);
+  }
+
+  // Si estamos en modo mock, retornar mensaje específico
+  if (isMockMode) {
+    return 'La base de datos no está configurada. Algunas funciones pueden no estar disponibles.';
   }
 
   // Retornar mensaje amigable para el usuario
@@ -121,6 +149,17 @@ const handleSupabaseError = (error) => {
   return errorMessages[error.message] || error.message || 'Ha ocurrido un error. Por favor, intenta de nuevo.';
 };
 
+// Función para verificar si Supabase está configurado
+const isSupabaseConfigured = () => isConfigured && !isMockMode;
+
+// Función para verificar si estamos en modo mock
+const isSupabaseMockMode = () => isMockMode;
+
 // Exportar el cliente y las funciones
-export { supabaseClient as supabase, handleSupabaseError };
+export { 
+  supabaseClient as supabase, 
+  handleSupabaseError, 
+  isSupabaseConfigured, 
+  isSupabaseMockMode 
+};
 export default supabaseClient;
