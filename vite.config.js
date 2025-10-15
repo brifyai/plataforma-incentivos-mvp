@@ -32,7 +32,7 @@ export default defineConfig({
           'ui-vendor': ['lucide-react', 'clsx', 'tailwind-merge'],
           
           // Utilidades y herramientas
-          'utils-vendor': ['date-fns', 'lodash-es'],
+          'utils-vendor': ['date-fns'],
           
           // Módulos de AI
           'ai-modules': [
