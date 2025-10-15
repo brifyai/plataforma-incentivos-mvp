@@ -106,7 +106,7 @@
 
   [plugins.inputs]
     baseUrl = "https://nexupay.netlify.app"
-    exclude = ["/admin/*", "/api/*"]
+    sitemapPath = "/sitemap.xml"
 
 # Configuración de optimización
 [optimization]
