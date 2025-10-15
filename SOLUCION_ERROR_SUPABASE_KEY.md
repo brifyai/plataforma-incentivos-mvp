@@ -47,16 +47,22 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2bHVxZGx
 2. **Haz clic en "Trigger deploy"** > **Deploy site**
 3. **Espera a que termine** el deploy
 
-### Paso 4: Verificar CORS en Supabase
+### Paso 4: Verificar URLs en Supabase (CORS/Redirect)
 
-📍 **Guía detallada con capturas de pantalla**: [`GUIA_CONFIGURAR_CORS_SUPABASE.md`](GUIA_CONFIGURAR_CORS_SUPABASE.md)
+📍 **Guía actualizada 2024**: [`GUIA_CONFIGURAR_CORS_SUPABASE.md`](GUIA_CONFIGURAR_CORS_SUPABASE.md)
 
-**Resumen rápido:**
+**⚠️ IMPORTANTE:** En Supabase 2024, la configuración ya no aparece como "CORS"
+
+**Ubicaciones más probables:**
+1. **Settings > Authentication** > Site URL / Redirect URLs
+2. **Settings > General** > Configuration
+3. **Settings > API** > Additional URLs
+
+**Pasos rápidos:**
 1. **Ve a Supabase Dashboard**: https://app.supabase.com
 2. **Selecciona tu proyecto**: `wvluqdldygmgncqqjkow`
-3. **Ve a Settings** (⚙️) > **API** (📡)
-4. **Busca la sección "CORS"** 🌐
-5. **En "Additional URLs"**, agrega tu dominio de Netlify:
+3. **Busca estos términos** con Ctrl+F: `URL`, `redirect`, `origin`
+4. **Agrega tu dominio Netlify** donde encuentres "Additional URLs" o "Redirect URLs":
    ```
    https://tu-app-netlify.app
    ```
@@ -121,8 +127,10 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 **URL de configuración Netlify:**
 Site settings > Build & deploy > Environment
 
-**URL de configuración Supabase:**
-Settings > API > CORS > Additional URLs
+**URLs de configuración Supabase (2024):**
+- Settings > Authentication > Site URL
+- Settings > General > Redirect URLs
+- Settings > API > Additional URLs
 
-**Guía visual completa:**
+**Guía actualizada completa:**
 [`GUIA_CONFIGURAR_CORS_SUPABASE.md`](GUIA_CONFIGURAR_CORS_SUPABASE.md)

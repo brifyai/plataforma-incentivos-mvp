@@ -1,159 +1,180 @@
-# Guía Paso a Paso: Configurar CORS en Supabase
+# Guía Actualizada: Configurar CORS en Supabase (2024)
 
-## 📍 Ubicación Exacta de la Configuración CORS
+## ⚠️ IMPORTANTE: La ubicación de CORS ha cambiado
 
-### Paso 1: Acceder a Supabase Dashboard
+En versiones recientes de Supabase, la configuración CORS ha sido movida. Aquí están todas las posibles ubicaciones:
 
+## 📍 Ubicación Principal (2024)
+
+### Método 1: Authentication Settings
+
+```
+Supabase Dashboard
+├── ⚙️ Settings
+├── 🔐 Authentication
+└── 🌐 URL Configuration (o Site URL)
+```
+
+**Pasos:**
 1. **Ve a**: https://app.supabase.com
-2. **Inicia sesión** con tu cuenta
-3. **Selecciona tu proyecto**: `wvluqdldygmgncqqjkow`
+2. **Selecciona tu proyecto**: `wvluqdldygmgncqqjkow`
+3. **Ve a Settings** (⚙️) > **Authentication** (🔐)
+4. **Busca "Site URL"** o "Additional URLs"
+5. **Agrega tu dominio Netlify**
 
-### Paso 2: Navegar a Configuración de API
-
-**Opción A: Desde el Dashboard Principal**
-```
-Dashboard del Proyecto
-├── ⚙️ Settings (ícono de engranaje en la barra lateral izquierda)
-└── 📡 API (en el menú de Settings)
-```
-
-**Opción B: Ruta Directa**
-1. Haz clic en **Settings** (engranaje ⚙️) en la barra lateral izquierda
-2. En el menú que aparece, haz clic en **API**
-
-### Paso 3: Encontrar la Sección CORS
-
-Dentro de la página de **API**:
+### Método 2: Project Settings > General
 
 ```
-API Configuration
-├── Project URL
-├── API Keys
-├── 🌐 CORS (esta es la sección que necesitas)
-├── JWT Settings
-└── PostgREST
+Supabase Dashboard
+├── ⚙️ Settings
+├── 🏢 General
+└── 🌐 Site URL / Redirect URLs
 ```
 
-### Paso 4: Configurar Additional URLs
+**Pasos:**
+1. **Ve a Settings** > **General**
+2. **Busca la sección "Configuration"**
+3. **Encuentra "Site URL"** o "Redirect URLs"**
+4. **Agrega tu dominio Netlify**
 
-En la sección **CORS** encontrarás:
+## 🔍 Si no encuentras CORS, busca estos términos:
 
+### En la página de API Settings:
+- **Additional URLs**
+- **Redirect URLs** 
+- **Allowed Origins**
+- **Site URL**
+- **Callback URLs**
+
+### En Authentication Settings:
+- **Site URL**
+- **Redirect URLs**
+- **Authorized URLs**
+
+## 🚀 Método Rápido (Buscador Interno)
+
+1. **En tu proyecto Supabase**
+2. **Usa Ctrl+F o Cmd+F** para buscar
+3. **Busca estos términos**:
+   ```
+   URL
+   redirect
+   origin
+   cors
+   additional
+   ```
+
+## 📸 Guía Visual Actualizada
+
+### Paso 1: Entra a tu proyecto
+https://app.supabase.com → Selecciona `wvluqdldygmgncqqjkow`
+
+### Paso 2: Ve a Settings
+Haz clic en **Settings** (engranaje ⚙️) en la barra lateral
+
+### Paso 3: Busca en estas secciones:
+
+#### Opción A: Authentication
 ```
-🌐 CORS
-├── Additional URLs
-│   ├── [Input field para agregar URLs]
-│   └── [Botón "Add" o "+" para agregar]
-└── Current URLs (lista de URLs configuradas)
+Settings
+├── Authentication
+│   ├── Site URL: [tu-dominio-aquí]
+│   └── Redirect URLs: [agregar-dominios]
+```
+
+#### Opción B: API
+```
+Settings
+├── API
+│   ├── Project URL
+│   └── Additional URLs: [buscar aquí]
+```
+
+#### Opción C: General
+```
+Settings
+├── General
+│   └── Configuration
+│       ├── Site URL
+│       └── Redirect URLs
 ```
 
 ## 🔧 Configuración Exacta
 
-### 1. Agregar tu dominio de Netlify
+### Lo que debes agregar:
 
-En el campo **Additional URLs**, agrega:
-
+**Para producción:**
 ```
-https://tu-app-netlify.app
+https://tu-dominio-netlify.app
 ```
 
-**Reemplaza `tu-app-netlify.app` con tu dominio real de Netlify**
+**Para desarrollo (opcional):**
+```
+http://localhost:3002
+http://localhost:3000
+```
 
-### 2. Ejemplos de dominios Netlify
-
+### Formatos correctos:
 ```
 ✅ https://nexupay.netlify.app
 ✅ https://plataforma-incentivos.netlify.app
-✅ https://mi-sitio-prod.netlify.app
-✅ https://test-nexupay.netlify.app
+❌ nexupay.netlify.app (falta https://)
+❌ https://www.nexupay.netlify.app (evitar www)
 ```
 
-### 3. Si no estás seguro de tu dominio:
+## 🆘 Si aún no lo encuentras
 
-1. **Ve a Netlify Dashboard**
-2. **Selecciona tu sitio**
-3. **El dominio aparece en la parte superior** de la página del sitio
-4. **Copia el dominio completo** (incluyendo https://)
-
-## 📸 Referencia Visual
-
-### Ubicación en Supabase:
-
+### Opción 1: URL Directa
+Intenta acceder directamente:
 ```
-Supabase Dashboard
-├── 🏠 Project Overview
-├── 📊 Table Editor
-├── ⚙️ Settings ← HAZ CLIC AQUÍ
-│   ├── 🏢 General
-│   ├── 📡 API ← LUEGO HAZ CLIC AQUÍ
-│   │   ├── Project URL: https://...
-│   │   ├── API Keys
-│   │   ├── 🌐 CORS ← AQUÍ CONFIGURAS
-│   │   │   ├── Additional URLs: [tu-dominio-netlify]
-│   │   │   └── [Botón Add URL]
-│   │   └── ...
-│   └── ...
-└── 🚀 Edge Functions
+https://app.supabase.com/project/wvluqdldygmgncqqjkow/settings/auth
 ```
 
-## ⚠️ Notas Importantes
+### Opción 2: Configuración por código
+Si no encuentras la opción visual, puedes configurarlo por SQL:
 
-### 1. Formato del Dominio
-- ✅ **CORRECTO**: `https://nexupay.netlify.app`
-- ❌ **INCORRECTO**: `nexupay.netlify.app` (falta https://)
-- ❌ **INCORRECTO**: `www.nexupay.netlify.app` (no usar www)
+```sql
+-- Ejecutar en SQL Editor de Supabase
+ALTER TABLE auth.users 
+SET ROW LEVEL SECURITY;
 
-### 2. Múltiples Dominios
-Puedes agregar varios dominios si tienes:
-- Sitio de producción
-- Sitio de staging/pruebas
-- Dominios personalizados
+-- O insertar en configuración
+INSERT INTO auth.config (key, value) 
+VALUES ('additional_redirect_urls', '["https://tu-dominio.netlify.app"]')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+```
 
-### 3. Tiempo de Propagación
-- Los cambios CORS suelen ser **inmediatos**
-- Si no funciona, espera **1-2 minutos** y prueba de nuevo
+### Opción 3: Soporte de Supabase
+Si nada funciona:
+1. **Ve a Help** (ícono de ?) en Supabase
+2. **Busca "CORS configuration"**
+3. **O contacta a soporte de Supabase**
 
-## 🔄 Verificación
+## 📋 Checklist Final
 
-### Para verificar que CORS está configurado correctamente:
+- [ ] Encontré la sección de URLs/Redirect en Supabase
+- [ ] Agregué mi dominio Netlify con https://
+- [ ] Guardé los cambios
+- [ ] Hice deploy nuevo en Netlify
+- [ ] Probé la aplicación sin errores CORS
 
-1. **Abre tu sitio de Netlify**
-2. **Abre DevTools** (F12)
-3. **Ve a Network tab**
-4. **Recarga la página**
-5. **Busca solicitudes a Supabase** (deberían tener ✅ verde)
+## 🎯 Resumen Ejecutivo
 
-### Si aún hay errores CORS:
-- Verifica que el dominio esté escrito exactamente igual
-- Asegúrate de incluir `https://`
-- Limpia la caché del navegador
+**Ubicación más probable (2024):**
+`Settings > Authentication > Site URL / Redirect URLs`
 
-## 🆘 Si no encuentras la sección CORS
+**Si no está ahí:**
+Busca en `Settings > API` o usa el buscador interno con "URL"
 
-### Ruta Alternativa:
-
-1. **En el proyecto de Supabase**
-2. **Haz clic en el nombre del proyecto** (arriba a la izquierda)
-3. **Ve a Project Settings**
-4. **Busca "CORS" en el buscador** de la página
-5. **O usa el acceso directo**: `https://app.supabase.com/project/[tu-proyecto-id]/settings/api`
-
-## 📞 Contacto si tienes problemas
-
-Si no puedes encontrar la configuración CORS:
-
-1. **Revisa que tengas permisos de administrador** en el proyecto Supabase
-2. **Verifica que estés en el proyecto correcto** (`wvluqdldygmgncqqjkow`)
-3. **Intenta recargar la página** de Supabase
-4. **Usa el buscador** interno de Supabase con "CORS"
+**Formato del dominio:**
+`https://tu-dominio-exacto.netlify.app`
 
 ---
 
-## 📋 Resumen Rápido
+## 📞 Referencias Rápidas
 
-1. **Supabase Dashboard** → **Settings** → **API**
-2. **Buscar sección "CORS"**
-3. **Agregar dominio Netlify** en "Additional URLs"
-4. **Guardar cambios**
-5. **Hacer deploy nuevo** en Netlify
+**Tu proyecto:** `wvluqdldygmgncqqjkow`
+**Dashboard:** https://app.supabase.com
+**Settings direct:** https://app.supabase.com/project/wvluqdldygmgncqqjkow/settings
 
-¡Listo! Con esto tu aplicación de Netlify podrá comunicarse correctamente con Supabase sin errores de CORS.
+Si después de esta guía aún no lo encuentras, es posible que Supabase haya movido nuevamente la configuración. En ese caso, recomiendo usar el buscador interno de Supabase con los términos proporcionados.
