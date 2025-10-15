@@ -1956,22 +1956,34 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                                 <Button
                                   variant="outline"
                                   onClick={() => testProvider(provider.provider_name)}
-                                  leftIcon={<TestTube className="w-4 h-4" />}
-                                  className="w-full"
+                                  className="w-full text-[10px] px-1.5 py-1.5 h-auto min-h-[36px]"
                                   disabled={loadingModels[provider.provider_name] || !provider.api_key}
                                 >
-                                  {loadingModels[provider.provider_name] ? 'Cargando Modelos...' : 'Probar Conexión'}
+                                  <div className="flex items-center justify-center gap-0.5">
+                                    {loadingModels[provider.provider_name] ? (
+                                      <RefreshCw className="w-2.5 h-2.5 animate-spin flex-shrink-0" />
+                                    ) : (
+                                      <TestTube className="w-2.5 h-2.5 flex-shrink-0" />
+                                    )}
+                                    <span className="leading-none">Probar Conexión</span>
+                                  </div>
                                 </Button>
                                 
                                 <Button
                                   variant="outline"
                                   onClick={() => forceRefreshModels(provider.provider_name)}
-                                  leftIcon={<RefreshCw className="w-4 h-4" />}
-                                  className="w-full"
+                                  className="w-full text-[10px] px-1.5 py-1.5 h-auto min-h-[36px]"
                                   disabled={loadingModels[provider.provider_name] || !provider.api_key}
                                   title="Forzar recarga de modelos desde API"
                                 >
-                                  {loadingModels[provider.provider_name] ? 'Actualizando...' : 'Forzar Actualización'}
+                                  <div className="flex items-center justify-center gap-0.5">
+                                    {loadingModels[provider.provider_name] ? (
+                                      <RefreshCw className="w-2.5 h-2.5 animate-spin flex-shrink-0" />
+                                    ) : (
+                                      <RefreshCw className="w-2.5 h-2.5 flex-shrink-0" />
+                                    )}
+                                    <span className="leading-none">Forzar Actualización</span>
+                                  </div>
                                 </Button>
                               </div>
                             </div>
