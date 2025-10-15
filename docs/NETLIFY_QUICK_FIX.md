@@ -24,6 +24,7 @@ VITE_SUPABASE_ANON_KEY=[TU-ANON-KEY]
 2. Seleccionar el proyecto
 3. **Authentication** → **Settings**:
    - **Site URL**: Cambiar a `https://nexupay.netlify.app`
+   - **Redirect URLs**: Agregar `https://nexupay.netlify.app` (ya tienes las otras)
 4. **Settings** → **API**:
    - Copiar **Project URL** (ej: `https://abcdefgh.supabase.co`)
    - Copiar **anon/public key** (empieza con `eyJ...`)
