@@ -147,7 +147,40 @@ Si el problema persiste después de aplicar la solución:
 - ⚠️ Esperando aplicación de migración en base de datos
 - 🔄 Listo para testing post-migración
 
+## 🚨 Nuevo Error Detectado
+
+### **Error: Permission denied for table users**
+
+```
+Error: No se pudo guardar la configuración: permission denied for table users
+```
+
+#### **Causa**
+- Las políticas RLS (Row Level Security) no permiten que los usuarios actualicen su propia información en la tabla `users`
+
+#### **Solución**
+1. **Ir al panel de Supabase**
+   - Accede a https://supabase.com/dashboard
+   - Selecciona tu proyecto
+   - Ve a "SQL Editor"
+
+2. **Ejecutar la migración de permisos**
+   ```sql
+   -- Copiar y pegar el contenido del archivo:
+   -- supabase-migrations/020_fix_users_permissions.sql
+   ```
+
+3. **Verificar resultado**
+   - Debe mostrar las políticas RLS creadas
+   - Los usuarios podrán guardar su configuración
+
+#### **Políticas Creadas**
+- `Users can view own profile` - Los usuarios ven su propio perfil
+- `Users can update own profile` - Los usuarios actualizan su propio perfil
+- `Users can insert own profile` - Los usuarios insertan su propio perfil
+- `Companies can view related users` - Las empresas ven usuarios relacionados
+
 ---
 
 **Última actualización**: 2025-10-15
-**Versión**: 1.0
+**Versión**: 1.1
