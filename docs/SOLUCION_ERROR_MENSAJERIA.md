@@ -12,25 +12,34 @@ El error `column "debtor_id" does not exist` indica que las tablas de mensajerí
 
 ## 🔧 Solución
 
-### Opción 1: Aplicar Migración Adaptativa (Recomendado)
+### Opción 1: Aplicar Migración Simplificada (Recomendado)
 
 1. **Ir al panel de Supabase**
    - Accede a https://supabase.com/dashboard
    - Selecciona tu proyecto
    - Ve a la sección "SQL Editor"
 
-2. **Ejecutar la migración adaptativa**
+2. **Ejecutar la migración simplificada**
    ```sql
    -- Copiar y pegar el contenido del archivo:
-   -- supabase-migrations/018_adapt_messaging_tables.sql
+   -- supabase-migrations/019_fix_messaging_tables_simple.sql
    ```
 
 3. **Verificar resultado**
    - La migración agregará las columnas faltantes sin perder datos existentes
    - Creará las tablas si no existen
    - Mantendrá la compatibilidad con datos actuales
+   - Sin errores de sintaxis SQL
 
-### Opción 2: Recrear Tablas (Si no hay datos importantes)
+### Opción 2: Migración Compleja (Si la simplificada falla)
+
+1. **Ejecutar migración completa**
+   ```sql
+   -- Copiar y pegar el contenido del archivo:
+   -- supabase-migrations/018_adapt_messaging_tables.sql
+   ```
+
+### Opción 3: Recrear Tablas (Si no hay datos importantes)
 
 1. **Eliminar tablas existentes**
    ```sql
@@ -47,6 +56,7 @@ El error `column "debtor_id" does not exist` indica que las tablas de mensajerí
 
 ## 📁 Archivos Relevantes
 
+- `supabase-migrations/019_fix_messaging_tables_simple.sql` - Migración simplificada (Recomendado)
 - `supabase-migrations/018_adapt_messaging_tables.sql` - Migración adaptativa
 - `supabase-migrations/017_create_messaging_tables.sql` - Creación desde cero
 - `src/services/messageService.js` - Servicio de mensajería

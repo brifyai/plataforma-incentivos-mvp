@@ -267,22 +267,26 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE message_attachments ENABLE ROW LEVEL SECURITY;
 
 -- 6. Verificación final
-SELECT 
+DO $$
+BEGIN
+    RAISE NOTICE '✅ Adaptación de tablas de mensajería completada';
+END $$;
+
+-- Mostrar estado actual de las tablas
+SELECT
     'conversations' as table_name,
     COUNT(*) as record_count,
     (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'conversations' AND table_schema = 'public') as column_count
 FROM conversations
 UNION ALL
-SELECT 
+SELECT
     'messages' as table_name,
     COUNT(*) as record_count,
     (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'messages' AND table_schema = 'public') as column_count
 FROM messages
 UNION ALL
-SELECT 
+SELECT
     'message_attachments' as table_name,
     COUNT(*) as record_count,
     (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'message_attachments' AND table_schema = 'public') as column_count
 FROM message_attachments;
-
-RAISE NOTICE '✅ Adaptación de tablas de mensajería completada';
