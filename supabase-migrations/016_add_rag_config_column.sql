@@ -3,10 +3,10 @@
 -- Versión: 1.0
 
 -- Agregar columna rag_config a la tabla company_ai_config
-ALTER TABLE company_ai_config 
+ALTER TABLE company_ai_config
 ADD COLUMN IF NOT EXISTS rag_config JSONB DEFAULT '{
     "enabled": false,
-    "model": "text-embedding-ada-002",
+    "model": "chutes",
     "maxTokens": 2000,
     "temperature": 0.7,
     "chunkSize": 1000,
@@ -24,10 +24,10 @@ ADD COLUMN IF NOT EXISTS rag_config JSONB DEFAULT '{
 COMMENT ON COLUMN company_ai_config.rag_config IS 'Configuración para sistema RAG (Retrieval-Augmented Generation) de IA';
 
 -- Actualizar configuraciones existentes con valores por defecto para RAG
-UPDATE company_ai_config 
+UPDATE company_ai_config
 SET rag_config = '{
     "enabled": false,
-    "model": "text-embedding-ada-002",
+    "model": "chutes",
     "maxTokens": 2000,
     "temperature": 0.7,
     "chunkSize": 1000,

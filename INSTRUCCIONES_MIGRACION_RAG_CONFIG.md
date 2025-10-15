@@ -6,7 +6,7 @@ El error `Could not find the 'rag_config' column of 'company_ai_config'` ocurri�
 
 ## Solución Implementada
 
-He creado la migración `016_add_rag_config_column.sql` que agrega la columna faltante a la tabla `company_ai_config`.
+He creado la migración `016_add_rag_config_column.sql` que agrega la columna faltante a la tabla `company_ai_config` con **"chutes" como modelo por defecto**.
 
 ## Pasos para Aplicar la Migración
 
