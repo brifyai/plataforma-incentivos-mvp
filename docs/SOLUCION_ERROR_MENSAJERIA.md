@@ -56,7 +56,9 @@ El error `column "debtor_id" does not exist` indica que las tablas de mensajerí
 
 ## 📁 Archivos Relevantes
 
-- `supabase-migrations/019_fix_messaging_tables_simple.sql` - Migración simplificada (Recomendado)
+- `supabase-migrations/019_fix_messaging_tables_simple.sql` - Migración de mensajería (Recomendado)
+- `supabase-migrations/021_fix_users_permissions_simple.sql` - Permisos de users (Recomendado)
+- `supabase-migrations/020_fix_users_permissions.sql` - Permisos completos (Alternativa)
 - `supabase-migrations/018_adapt_messaging_tables.sql` - Migración adaptativa
 - `supabase-migrations/017_create_messaging_tables.sql` - Creación desde cero
 - `src/services/messageService.js` - Servicio de mensajería
@@ -164,21 +166,24 @@ Error: No se pudo guardar la configuración: permission denied for table users
    - Selecciona tu proyecto
    - Ve a "SQL Editor"
 
-2. **Ejecutar la migración de permisos**
+2. **Ejecutar la migración de permisos simplificada**
    ```sql
    -- Copiar y pegar el contenido del archivo:
-   -- supabase-migrations/020_fix_users_permissions.sql
+   -- supabase-migrations/021_fix_users_permissions_simple.sql
    ```
 
 3. **Verificar resultado**
-   - Debe mostrar las políticas RLS creadas
+   - Debe mostrar: `Permisos básicos de users actualizados correctamente`
    - Los usuarios podrán guardar su configuración
 
 #### **Políticas Creadas**
 - `Users can view own profile` - Los usuarios ven su propio perfil
 - `Users can update own profile` - Los usuarios actualizan su propio perfil
 - `Users can insert own profile` - Los usuarios insertan su propio perfil
-- `Companies can view related users` - Las empresas ven usuarios relacionados
+
+#### **Nota**
+- Usar la versión simplificada (`021_fix_users_permissions_simple.sql`) para evitar conflictos con la estructura existente de la tabla `conversations`
+- La versión completa (`020_fix_users_permissions.sql`) puede fallar si las columnas `debtor_id` no existen en `conversations`
 
 ---
 

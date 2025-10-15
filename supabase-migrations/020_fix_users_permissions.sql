@@ -45,11 +45,13 @@ CREATE POLICY "Companies can view related users" ON users
         )
         OR EXISTS (
             SELECT 1 FROM conversations
-            WHERE conversations.debtor_id = users.id
-            AND EXISTS (
-                SELECT 1 FROM companies
-                WHERE companies.id = conversations.company_id
-                AND companies.user_id = auth.uid()
+            WHERE conversations.debt_id IN (
+                SELECT debts.id FROM debts
+                WHERE debts.user_id = users.id
+                AND debts.company_id IN (
+                    SELECT companies.id FROM companies
+                    WHERE companies.user_id = auth.uid()
+                )
             )
         )
     );
