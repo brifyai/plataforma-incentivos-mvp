@@ -13,25 +13,76 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validar que las variables de entorno estén configuradas
 if (!supabaseUrl || !supabaseAnonKey) {
-  // En producción, mostrar error más específico
+  // En producción, mostrar advertencia pero no detener la aplicación
   if (import.meta.env.PROD) {
-    console.error('❌ Error Crítico: Variables de Supabase no configuradas en producción');
-    console.error('🔧 Solución: Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en Netlify Dashboard');
-    console.error('📋 Verifica: Site settings > Build & deploy > Environment');
+    console.warn('⚠️ SERVICE_ROLE_KEY no válida o no configurada. Las operaciones de administrador estarán limitadas.');
+    console.warn('🔧 Solución: Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en Netlify Dashboard');
+    console.warn('📋 Verifica: Site settings > Build & deploy > Environment variables');
+    
+    // Marcar que falta configuración
+    window.SUPABASE_MISSING_CONFIG = true;
+    
+    // Crear un cliente mock para producción sin variables
+    const mockSupabase = {
+      from: () => ({
+        select: () => ({ data: [], error: { message: 'Supabase no configurado' } }),
+        insert: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
+        update: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
+        delete: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
+        eq: () => ({ select: () => ({ data: [], error: { message: 'Supabase no configurado' } }) }),
+        order: () => ({ data: [], error: { message: 'Supabase no configurado' } }),
+        limit: () => ({ data: [], error: { message: 'Supabase no configurado' } }),
+        single: () => ({ data: null, error: { message: 'Supabase no configurado' } })
+      }),
+      auth: {
+        signIn: () => ({ error: { message: 'Supabase no configurado' } }),
+        signOut: () => ({ error: { message: 'Supabase no configurado' } }),
+        signUp: () => ({ error: { message: 'Supabase no configurado' } }),
+        getUser: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
+        onAuthStateChange: () => {},
+        session: () => ({ data: null, error: { message: 'Supabase no configurado' } })
+      },
+      storage: {
+        from: () => ({
+          upload: () => ({ data: null, error: { message: 'Supabase no configurado' } }),
+          getPublicUrl: () => ({ data: { publicUrl: '' }, error: null })
+        })
+      }
+    };
+    
+    // Exportar el cliente mock y la función de manejo de errores
+    const handleMockError = (error) => {
+      if (!error) return 'Supabase no está configurado. Contacta al administrador.';
+      return error.message || 'Supabase no está configurado. Contacta al administrador.';
+    };
+    
+    // Exportar para diferentes sistemas de módulos
+    if (typeof module !== 'undefined' && module.exports) {
+      module.exports = { supabase: mockSupabase, handleSupabaseError: handleMockError };
+    }
+    
+    // Asignar al objeto global para acceso
+    window.supabase = mockSupabase;
+    window.handleSupabaseError = handleMockError;
+    
+    // Detener la ejecución del módulo actual
+    throw new Error('SUPABASE_MOCK_MODE');
   }
   
+  // En desarrollo, lanzar error para que se configuren las variables
   throw new Error(
     `❌ Variables de entorno faltantes:\n` +
     `- VITE_SUPABASE_URL: ${supabaseUrl ? '✅' : '❌ FALTANTE'}\n` +
     `- VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✅' : '❌ FALTANTE'}\n\n` +
-    `🔧 En producción, configura estas variables en Netlify Dashboard:\n` +
-    `Site settings > Build & deploy > Environment\n\n` +
-    `📋 Revisa SOLUCION_ERROR_SUPABASE_KEY.md para instrucciones detalladas.`
+    `🔧 Crea un archivo .env con estas variables:\n` +
+    `VITE_SUPABASE_URL=tu_url_de_supabase\n` +
+    `VITE_SUPABASE_ANON_KEY=tu_anon_key_de_supabase\n\n` +
+    `📋 Revisa la documentación para obtener las credenciales.`
   );
 }
 
-// Crear y exportar el cliente de Supabase
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Crear el cliente de Supabase
+const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -50,7 +101,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // Función helper para manejar errores de Supabase de manera consistente
-export const handleSupabaseError = (error) => {
+const handleSupabaseError = (error) => {
   if (!error) return null;
 
   // Log del error en desarrollo
@@ -70,4 +121,6 @@ export const handleSupabaseError = (error) => {
   return errorMessages[error.message] || error.message || 'Ha ocurrido un error. Por favor, intenta de nuevo.';
 };
 
-export default supabase;
+// Exportar el cliente y las funciones
+export { supabaseClient as supabase, handleSupabaseError };
+export default supabaseClient;
