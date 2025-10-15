@@ -28,8 +28,8 @@ export class ComponentValidator {
     }
 
     try {
-      // Intentar importar el componente
-      const module = await import(componentPath);
+      // Intentar importar el componente con @vite-ignore para evitar warnings
+      const module = await import(/* @vite-ignore */ componentPath);
       const component = module.default || module;
 
       // Validaciones básicas
@@ -364,7 +364,7 @@ export const SafeRoute = ({ path, component: Component, fallback = null, ...prop
 
         // Si es una string de importación, validarla
         if (typeof Component === 'string') {
-          const module = await import(Component);
+          const module = await import(/* @vite-ignore */ Component);
           const component = module.default || module;
           
           if (component && typeof component === 'function') {
