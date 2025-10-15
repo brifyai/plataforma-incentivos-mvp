@@ -18,16 +18,26 @@ VITE_SUPABASE_URL=https://[TU-PROYECTO].supabase.co
 VITE_SUPABASE_ANON_KEY=[TU-ANON-KEY]
 ```
 
-### 2. Obtener Credenciales de Supabase
+### 2. Configurar Supabase para Producción (CRÍTICO)
 
 1. Ir a [Supabase Dashboard](https://app.supabase.com/)
 2. Seleccionar el proyecto
-3. Ir a **Settings** → **API**
-4. Copiar y pegar:
-   - **Project URL** (ej: `https://abcdefgh.supabase.co`)
-   - **anon/public key** (empieza con `eyJ...`)
+3. **Authentication** → **Settings**:
+   - **Site URL**: Cambiar a `https://nexupay.netlify.app`
+4. **Settings** → **API**:
+   - Copiar **Project URL** (ej: `https://abcdefgh.supabase.co`)
+   - Copiar **anon/public key** (empieza con `eyJ...`)
 
-### 3. Redesplegar
+### 3. Configurar Variables de Entorno en Netlify
+
+1. En Netlify: **Site settings** → **Build & deploy** → **Environment variables**
+2. Agregar:
+   ```
+   VITE_SUPABASE_URL=https://[TU-PROYECTO].supabase.co
+   VITE_SUPABASE_ANON_KEY=[TU-ANON-KEY]
+   ```
+
+### 4. Redesplegar
 
 1. En Netlify, ir a **Deploys**
 2. Hacer clic en **Trigger deploy** → **Deploy site**
