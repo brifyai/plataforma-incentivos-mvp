@@ -19,8 +19,8 @@ const AuthCallbackPage = () => {
       console.log('🚀 AuthCallbackPage: Iniciando handleCallback');
       try {
         console.log('🔄 AuthCallbackPage: Llamando handleOAuthCallback...');
-        const { success, error } = await handleOAuthCallback();
-        console.log('📊 AuthCallbackPage: Resultado handleOAuthCallback:', { success, error });
+        const { success, error, redirectToProfile } = await handleOAuthCallback();
+        console.log('📊 AuthCallbackPage: Resultado handleOAuthCallback:', { success, error, redirectToProfile });
 
         if (success) {
           console.log('✅ AuthCallbackPage: Callback exitoso, marcando como procesado');
@@ -49,18 +49,99 @@ const AuthCallbackPage = () => {
 
   // Redirigir cuando el perfil esté disponible y tenga rol asignado
   useEffect(() => {
+    console.log('🔍 AuthCallbackPage: Verificando estado para redirección:', {
+      callbackProcessed,
+      loading,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      profileRole: profile?.role,
+      userRole: user?.user_metadata?.role
+    });
+
+    // Si el callback fue procesado y tenemos usuario, pero no perfil aún, esperar un poco
+    if (callbackProcessed && !loading && user && !profile) {
+      console.log('⏳ Esperando carga del perfil...');
+      console.log('📋 Metadata del usuario:', user?.user_metadata);
+      
+      // Esperar un momento más para que el perfil se cargue
+      const timeout = setTimeout(() => {
+        if (!profile) {
+          console.warn('⚠️ El perfil no se cargó después de esperar, intentando redirección básica');
+          // Usar el rol del usuario metadata como fallback
+          const userRole = user?.user_metadata?.role;
+          const needsProfileCompletion = user?.user_metadata?.needs_profile_completion;
+          
+          console.log('📋 Usando metadata para redirección:', {
+            userRole,
+            needsProfileCompletion
+          });
+          
+          if (needsProfileCompletion) {
+            console.log('📝 Usuario necesita completar perfil (según metadata)');
+            if (userRole === 'company') {
+              console.log('🏢 Redirigiendo a perfil de empresa (fallback)');
+              navigate('/empresa/perfil');
+            } else if (userRole === 'debtor') {
+              console.log('👤 Redirigiendo a perfil de deudor (fallback)');
+              navigate('/personas/perfil');
+            } else {
+              console.log('👑 Admin con OAuth, redirigiendo a dashboard (fallback)');
+              navigate('/admin/dashboard');
+            }
+          } else {
+            // Si no necesita completar perfil, redirigir al dashboard correspondiente
+            if (userRole === 'company') {
+              console.log('🏢 Redirigiendo a dashboard de empresa (fallback)');
+              navigate('/empresa/dashboard');
+            } else if (userRole === 'god_mode') {
+              console.log('👑 Redirigiendo a dashboard de administrador (fallback)');
+              navigate('/admin/dashboard');
+            } else if (userRole === 'debtor') {
+              console.log('👤 Redirigiendo a dashboard de deudor (fallback)');
+              navigate('/personas/dashboard');
+            } else {
+              console.warn('⚠️ Rol no detectado, redirigiendo al home');
+              navigate('/');
+            }
+          }
+        }
+      }, 3000); // Esperar 3 segundos
+
+      return () => clearTimeout(timeout);
+    }
+
+    // Si tenemos perfil con rol, redirigir según el rol
     if (callbackProcessed && !loading && user && profile && profile.role) {
       console.log('🔄 Redirigiendo usuario OAuth con rol:', profile.role);
+      console.log('📋 Datos del perfil:', {
+        role: profile.role,
+        needs_profile_completion: profile.needs_profile_completion,
+        oauth_signup: profile.oauth_signup,
+        company_id: profile.company_id
+      });
 
-      if (profile.role === 'god_mode') {
+      // Verificar si necesita completar perfil o es una empresa que debe ir al perfil
+      const needsProfileCompletion = profile.needs_profile_completion || false;
+      const isCompany = profile.role === 'company';
+
+      console.log('📋 Verificando condiciones:', {
+        isCompany,
+        needsProfileCompletion,
+        profileRole: profile.role
+      });
+
+      if (isCompany && needsProfileCompletion) {
+        console.log('🏢 Empresa necesita completar perfil, redirigiendo a perfil de empresa');
+        navigate('/empresa/perfil');
+      } else if (isCompany) {
+        console.log('🏢 Redirigiendo a dashboard de empresa');
+        navigate('/empresa/dashboard');
+      } else if (profile.role === 'god_mode') {
         console.log('👑 Redirigiendo a dashboard de administrador');
         navigate('/admin/dashboard');
       } else if (profile.role === 'debtor') {
         console.log('👤 Redirigiendo a dashboard de deudor');
         navigate('/personas/dashboard');
-      } else if (profile.role === 'company') {
-        console.log('🏢 Redirigiendo a dashboard de empresa');
-        navigate('/empresa/dashboard');
       } else {
         console.warn('⚠️ Rol desconocido, redirigiendo al home:', profile.role);
         navigate('/');

@@ -14,7 +14,7 @@ import { setupCompanyBankAccount } from '../../services/authService';
 import { getCompanyVerification, VERIFICATION_STATUS } from '../../services/verificationService';
 import DashboardHero from './components/DashboardHero';
 import DashboardStats from './components/DashboardStats';
-import QuickActions from './components/QuickActions';
+import SystemStatus from './components/SystemStatus';
 import MobileNavigation from './components/MobileNavigation';
 import BankAccountSetup from '../../components/company/BankAccountSetup';
 import { FormField, FormSection, ActionButtons } from '../../components/common';
@@ -165,25 +165,60 @@ const CompanyDashboard = () => {
         </div>
       );
     } else {
-      // Para usuarios normales sin empresa, mostrar error
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center max-w-md">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Perfil de Empresa No Encontrado</h2>
-            <p className="text-gray-600 mb-4">
-              No se pudo cargar el perfil de empresa. Esto puede deberse a que el usuario no tiene un perfil de empresa configurado.
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              Rol actual: {profile?.role}<br/>
-              ID de usuario: {profile?.id}
-            </p>
-            <Button onClick={() => window.location.reload()}>
-              Reintentar
-            </Button>
+      // Para usuarios normales sin empresa, verificar si es un usuario OAuth que necesita completar perfil
+      if (profile?.needs_profile_completion || profile?.oauth_signup) {
+        console.log('User needs to complete company profile, showing completion interface');
+        
+        return (
+          <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+            <div className="text-center max-w-lg p-8">
+              <div className="text-purple-500 text-6xl mb-4">🏢</div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Completa tu Perfil de Empresa</h2>
+              <p className="text-gray-600 mb-6">
+                Bienvenido a NexuPay. Para comenzar a usar tu cuenta empresarial, necesitas completar la información de tu empresa.
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span className="text-sm font-medium text-yellow-800">Importante</span>
+                </div>
+                <p className="text-sm text-yellow-700">
+                  Una vez que completes tu perfil, podrás iniciar el proceso de verificación para acceder a todas las funciones.
+                </p>
+              </div>
+              <Button
+                onClick={() => window.location.href = '/empresa/perfil'}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-3 rounded-lg font-semibold"
+              >
+                Completar Perfil Ahora
+              </Button>
+              <p className="text-sm text-gray-500 mt-4">
+                ¿Necesitas ayuda? Contacta a soporte@nexpay.cl
+              </p>
+            </div>
           </div>
-        </div>
-      );
+        );
+      } else {
+        // Para usuarios normales sin empresa, mostrar error
+        return (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center max-w-md">
+              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Perfil de Empresa No Encontrado</h2>
+              <p className="text-gray-600 mb-4">
+                No se pudo cargar el perfil de empresa. Esto puede deberse a que el usuario no tiene un perfil de empresa configurado.
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Rol actual: {profile?.role}<br/>
+                ID de usuario: {profile?.id}
+              </p>
+              <Button onClick={() => window.location.reload()}>
+                Reintentar
+              </Button>
+            </div>
+          </div>
+        );
+      }
     }
   }
 
@@ -260,7 +295,7 @@ const CompanyDashboard = () => {
             </div>
             <div className="flex items-center gap-4">
               {getVerificationBadge()}
-              <Link to="/company/verification">
+              <Link to="/empresa/verification">
                 <Button variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-100">
                   {verification.status === VERIFICATION_STATUS.PENDING ? 'Comenzar Verificación' : 'Ver Estado'}
                 </Button>
@@ -273,8 +308,8 @@ const CompanyDashboard = () => {
       {/* Statistics Cards */}
       <DashboardStats stats={stats} analytics={analytics} />
 
-      {/* Quick Actions */}
-      <QuickActions />
+      {/* System Status */}
+      <SystemStatus />
 
 
       {/* Mobile Navigation */}

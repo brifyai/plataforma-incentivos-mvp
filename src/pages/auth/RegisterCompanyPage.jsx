@@ -2,13 +2,14 @@
  * Register Company Page - Registro para Empresas
  *
  * Página de registro específica para empresas
+ * Rediseñada con el mismo estilo que el login y diseño compacto
  */
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Button, Input, Card } from '../../components/common';
-import { Mail, Lock, User, Phone, CreditCard, Building, CheckCircle, Chrome } from 'lucide-react';
+import { Button, Card } from '../../components/common';
+import { Mail, Lock, User, Phone, CreditCard, Building, CheckCircle, Chrome, AlertCircle, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { validateRutInput, validatePassword, validatePhone, isValidEmail } from '../../utils/validators';
 import { formatRut } from '../../utils/formatters';
 import { USER_ROLES } from '../../config/constants';
@@ -33,6 +34,8 @@ const RegisterCompanyPage = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Función para normalizar nombre de empresa a dominio base
   const normalizeCompanyNameToDomain = (companyName) => {
@@ -89,7 +92,7 @@ const RegisterCompanyPage = () => {
       const expectedDomainBase = normalizeCompanyNameToDomain(formData.businessName);
 
       if (emailDomainBase !== expectedDomainBase) {
-        newErrors.email = `El dominio del email debe coincidir con el nombre de la empresa. Para "${formData.businessName}" se espera un dominio como "@${expectedDomainBase}.com" o "@${expectedDomainBase}.cl"`;
+        newErrors.email = `El dominio debe coincidir con: @${expectedDomainBase}.com`;
       }
     }
 
@@ -134,7 +137,6 @@ const RegisterCompanyPage = () => {
         newErrors.phone = phoneValidation.error;
       }
     }
-
 
     // Términos y condiciones
     if (!acceptTerms) {
@@ -229,84 +231,26 @@ const RegisterCompanyPage = () => {
       return;
     }
 
-    // Validar campos requeridos para registro con Google
-    const googleRequiredFields = ['fullName', 'rut', 'phone', 'businessName', 'companyRut'];
-    const missingFields = googleRequiredFields.filter(field => !formData[field]);
-
-    if (missingFields.length > 0) {
-      const fieldNames = {
-        fullName: 'nombre del representante',
-        rut: 'RUT del representante',
-        phone: 'teléfono de contacto',
-        businessName: 'nombre de la empresa',
-        companyRut: 'RUT de la empresa'
-      };
-
-      const errorMessages = missingFields.map(field => {
-        return `• ${fieldNames[field] || field}: Este campo es requerido`;
-      }).join('\n');
-
-      Swal.fire({
-        title: 'Campos requeridos para Google',
-        html: `<div style="text-align: left; font-size: 14px; line-height: 1.5;">
-          <p style="margin-bottom: 10px; font-weight: bold;">Para registrarte con Google, completa estos campos:</p>
-          <div style="background: #fef2f2; padding: 10px; border-radius: 5px; border-left: 4px solid #ef4444;">
-            ${errorMessages.replace(/\n/g, '<br>')}
-          </div>
-        </div>`,
-        icon: 'warning',
-        confirmButtonText: 'Entendido',
-        confirmButtonColor: '#7c3aed'
-      });
-      return;
-    }
-
-    // Validar RUTs y teléfono
-    const rutValidation = validateRutInput(formData.rut);
-    const companyRutValidation = validateRutInput(formData.companyRut);
-    const phoneValidation = validatePhone(formData.phone);
-
-    const validationErrors = [];
-    if (!rutValidation.isValid) validationErrors.push(`• RUT del representante: ${rutValidation.error}`);
-    if (!companyRutValidation.isValid) validationErrors.push(`• RUT de la empresa: ${companyRutValidation.error}`);
-    if (!phoneValidation.isValid) validationErrors.push(`• Teléfono: ${phoneValidation.error}`);
-
-    // Validar dominio del email
-    const emailDomainBase = extractDomainBase(formData.email);
-    const expectedDomainBase = normalizeCompanyNameToDomain(formData.businessName);
-    if (emailDomainBase !== expectedDomainBase) {
-      validationErrors.push(`• Email: El dominio debe coincidir con el nombre de la empresa. Para "${formData.businessName}" se espera un dominio como "@${expectedDomainBase}.com"`);
-    }
-
-    if (validationErrors.length > 0) {
-      Swal.fire({
-        title: 'Datos inválidos',
-        html: `<div style="text-align: left; font-size: 14px; line-height: 1.5;">
-          <p style="margin-bottom: 10px; font-weight: bold;">Corrige los siguientes campos:</p>
-          <div style="background: #fef2f2; padding: 10px; border-radius: 5px; border-left: 4px solid #ef4444;">
-            ${validationErrors.join('<br>')}
-          </div>
-        </div>`,
-        icon: 'warning',
-        confirmButtonText: 'Entendido',
-        confirmButtonColor: '#7c3aed'
-      });
-      return;
-    }
-
     setGoogleLoading(true);
 
     try {
-      // Preparar datos de registro para pasar a OAuth
+      // Para registro con Google, los campos son opcionales
+      // El usuario completará los datos después del registro
       const registrationData = {
-        fullName: formData.fullName,
-        rut: formData.rut,
-        phone: formData.phone,
-        businessName: formData.businessName,
-        companyRut: formData.companyRut,
-        companyType: formData.companyType,
-        role: USER_ROLES.COMPANY
+        role: USER_ROLES.COMPANY,
+        // Campos opcionales - si se proporcionan, se usan
+        ...(formData.fullName && { fullName: formData.fullName }),
+        ...(formData.rut && { rut: formData.rut }),
+        ...(formData.phone && { phone: formData.phone }),
+        ...(formData.businessName && { businessName: formData.businessName }),
+        ...(formData.companyRut && { companyRut: formData.companyRut }),
+        ...(formData.companyType && { companyType: formData.companyType }),
+        needsProfileCompletion: true, // Marcar que necesita completar perfil
+        redirectToProfile: true // Indicar que debe redirigir al perfil
       };
+
+      // Guardar datos de registro en localStorage para usarlos después del OAuth
+      localStorage.setItem('pending_oauth_registration', JSON.stringify(registrationData));
 
       const { success, error } = await loginWithGoogle(registrationData);
 
@@ -322,301 +266,469 @@ const RegisterCompanyPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 py-8">
-      <div className="w-full max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-block hover:opacity-80 transition-opacity">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-2xl">N</span>
+    <div className="min-h-screen bg-black overflow-hidden relative">
+      {/* Modern Dark Background - igual que AuthLayout */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black"></div>
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 20% 20%, rgba(147, 51, 234, 0.3) 0%, transparent 50%),
+                            radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
+                            radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.2) 0%, transparent 50%)`
+          }}></div>
+        </div>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl opacity-10 animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full filter blur-3xl opacity-10 animate-pulse animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-500 rounded-full filter blur-3xl opacity-5 animate-pulse animation-delay-4000"></div>
+      </div>
+
+      <div className="flex min-h-screen">
+        {/* Panel Izquierdo - Información */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gray-800/50 backdrop-blur-xl border-r border-gray-600/30 p-12 flex-col justify-center relative overflow-hidden">
+          {/* Floating Elements */}
+          <div className="absolute top-10 right-10 animate-float">
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full opacity-20 blur-lg"></div>
+          </div>
+          <div className="absolute bottom-10 left-10 animate-float animation-delay-2000">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-pink-600 rounded-full opacity-20 blur-lg"></div>
+          </div>
+
+          <div className="relative z-10 text-white max-w-lg">
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xl">N</span>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  NexuPay
+                </h1>
+                <p className="text-gray-400 text-sm">Gestiona tus deudas inteligentemente</p>
               </div>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              NexuPay
-            </h1>
-            <p className="text-gray-600 text-lg">
-              Gestiona tus deudas y recibe beneficios
-            </p>
-          </Link>
+
+            {/* Benefits */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold mb-4">Registro para Empresas</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                  <span className="text-gray-300">Gestiona tu cartera de deudas</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <span className="text-gray-300">Optimiza procesos de cobranza</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
+                  <span className="text-gray-300">Accede a analytics avanzados</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="mt-8 p-6 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-2xl border border-gray-600/30 backdrop-blur-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-2xl font-bold text-purple-400">500+</div>
+                  <div className="text-sm text-gray-400">Empresas Activas</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-blue-400">$10M</div>
+                  <div className="text-sm text-gray-400">Cartera Gestionada</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <Card className="shadow-2xl border-0 overflow-hidden">
-          {/* Header del formulario */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
-            <h2 className="text-2xl font-bold text-center mb-2">
-              Registro para Empresas
-            </h2>
-            <p className="text-center text-purple-100">
-              Crea tu cuenta empresarial y gestiona tu cartera de deudas
-            </p>
+        {/* Panel Derecho - Contenido */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative">
+          {/* Floating Elements */}
+          <div className="absolute top-10 right-10 animate-float">
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full opacity-20 blur-lg"></div>
           </div>
-
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Información del Representante */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-500" />
-                Información del Representante Legal
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Nombre Completo del Representante"
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  leftIcon={<User className="w-5 h-5" />}
-                  placeholder="Nombre del representante legal"
-                  error={errors.fullName}
-                  required
-                  disabled={loading}
-                  className="bg-gray-50 border-gray-200 focus:bg-white"
-                />
-
-                <Input
-                  label="RUT del Representante"
-                  type="text"
-                  name="rut"
-                  value={formData.rut}
-                  onChange={handleChange}
-                  leftIcon={<CreditCard className="w-5 h-5" />}
-                  placeholder="12.345.678-9"
-                  error={errors.rut}
-                  required
-                  disabled={loading}
-                  className="bg-gray-50 border-gray-200 focus:bg-white"
-                />
-              </div>
-
-              <Input
-                label="Correo Electrónico Corporativo"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                leftIcon={<Mail className="w-5 h-5" />}
-                placeholder="contacto@empresa.com"
-                error={errors.email}
-                helperText={formData.businessName ? `El dominio debe coincidir con el nombre de la empresa: @${normalizeCompanyNameToDomain(formData.businessName)}.[com/net/org/etc]` : 'Ingresa el nombre de la empresa primero'}
-                required
-                disabled={loading}
-                className="bg-gray-50 border-gray-200 focus:bg-white"
-              />
-
-              <Input
-                label="Teléfono de Contacto"
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                leftIcon={<Phone className="w-5 h-5" />}
-                placeholder="+56912345678"
-                error={errors.phone}
-                required
-                disabled={loading}
-                className="bg-gray-50 border-gray-200 focus:bg-white"
-              />
-            </div>
-
-            {/* Información de la Empresa */}
-            <div className="space-y-4 border-t border-gray-100 pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Building className="w-5 h-5 text-purple-500" />
-                Información de la Empresa
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Nombre de la Empresa"
-                  type="text"
-                  name="businessName"
-                  value={formData.businessName}
-                  onChange={handleChange}
-                  leftIcon={<Building className="w-5 h-5" />}
-                  placeholder="Empresa S.A."
-                  error={errors.businessName}
-                  required
-                  disabled={loading}
-                  className="bg-gray-50 border-gray-200 focus:bg-white"
-                />
-
-                <Input
-                  label="RUT de la Empresa"
-                  type="text"
-                  name="companyRut"
-                  value={formData.companyRut}
-                  onChange={handleChange}
-                  leftIcon={<CreditCard className="w-5 h-5" />}
-                  placeholder="76.123.456-7"
-                  error={errors.companyRut}
-                  required
-                  disabled={loading}
-                  className="bg-gray-50 border-gray-200 focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Empresa
-                </label>
-                <select
-                  name="companyType"
-                  value={formData.companyType}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50 hover:bg-white transition-colors"
-                  disabled={loading}
-                >
-                  <option value="direct_creditor">🏢 Acreedor Directo</option>
-                  <option value="collection_agency">📊 Empresa de Cobranza</option>
-                </select>
-              </div>
-            </div>
-
-
-            {/* Seguridad */}
-            <div className="space-y-4 border-t border-gray-100 pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Lock className="w-5 h-5 text-green-500" />
-                Seguridad
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Contraseña"
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  leftIcon={<Lock className="w-5 h-5" />}
-                  placeholder="••••••••"
-                  error={errors.password}
-                  helperText="Mínimo 6 caracteres"
-                  required
-                  disabled={loading}
-                  className="bg-gray-50 border-gray-200 focus:bg-white"
-                />
-
-                <Input
-                  label="Confirmar Contraseña"
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  leftIcon={<Lock className="w-5 h-5" />}
-                  placeholder="••••••••"
-                  error={errors.confirmPassword}
-                  required
-                  disabled={loading}
-                  className="bg-gray-50 border-gray-200 focus:bg-white"
-                />
-              </div>
-            </div>
-
-
-            {/* Beneficios */}
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+          <div className="absolute bottom-10 left-10 animate-float animation-delay-2000">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-pink-600 rounded-full opacity-20 blur-lg"></div>
+          </div>
+          
+          <div className="w-full max-w-md relative z-10">
+            {/* Logo móvil */}
+            <div className="lg:hidden text-center mb-8">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-xl">N</span>
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-purple-900 mb-1">
-                    Beneficios para Empresas
-                  </p>
-                  <p className="text-sm text-purple-800">
-                    Accede a una plataforma completa para gestionar tu cartera de deudas y optimizar tus procesos de cobranza.
-                  </p>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                    NexuPay
+                  </h1>
+                  <p className="text-gray-400 text-sm">Gestiona tus deudas inteligentemente</p>
                 </div>
               </div>
             </div>
 
-            {/* Términos y condiciones */}
-            <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-              <input
-                type="checkbox"
-                checked={acceptTerms}
-                onChange={(e) => setAcceptTerms(e.target.checked)}
-                className="mt-1 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <div>
-                <p className="text-sm text-gray-600">
-                  Acepto los{' '}
-                  <Link to="/terminos-servicio" className="text-purple-600 hover:text-purple-700 font-medium hover:underline">
-                    Términos de Servicio
-                  </Link>{' '}
-                  y la{' '}
-                  <Link to="/privacy-policy" className="text-purple-600 hover:text-purple-700 font-medium hover:underline">
-                    Política de Privacidad
+            <Card className="bg-gray-800/50 backdrop-blur-xl border border-gray-600/30 shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-10 transition-opacity duration-500"></div>
+                <div className="relative z-10">
+                  <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white to-purple-100 bg-clip-text text-transparent">
+                    Registro Empresarial
+                  </h2>
+                  <p className="text-purple-100 text-lg">
+                    Crea tu cuenta empresarial
+                  </p>
+                </div>
+              </div>
+
+              {/* Formulario */}
+              <div className="p-6 relative">
+                {/* Corner Accents */}
+                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-purple-400/30 rounded-tl-xl"></div>
+                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-blue-400/30 rounded-tr-xl"></div>
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-purple-400/30 rounded-bl-xl"></div>
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-blue-400/30 rounded-br-xl"></div>
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Fila 1: Representante - Nombre y RUT */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Nombre Representante
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <User className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleChange}
+                          placeholder="Nombre del representante"
+                          required
+                          disabled={loading}
+                          className="w-full pl-10 pr-3 py-2.5 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm text-sm"
+                        />
+                      </div>
+                      {errors.fullName && (
+                        <p className="mt-1 text-xs text-red-400">{errors.fullName}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        RUT Representante
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <CreditCard className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          name="rut"
+                          value={formData.rut}
+                          onChange={handleChange}
+                          placeholder="12.345.678-9"
+                          required
+                          disabled={loading}
+                          className="w-full pl-10 pr-3 py-2.5 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm text-sm"
+                        />
+                      </div>
+                      {errors.rut && (
+                        <p className="mt-1 text-xs text-red-400">{errors.rut}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Fila 2: Empresa - Nombre y RUT */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Nombre Empresa
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Building className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          name="businessName"
+                          value={formData.businessName}
+                          onChange={handleChange}
+                          placeholder="Empresa S.A."
+                          required
+                          disabled={loading}
+                          className="w-full pl-10 pr-3 py-2.5 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm text-sm"
+                        />
+                      </div>
+                      {errors.businessName && (
+                        <p className="mt-1 text-xs text-red-400">{errors.businessName}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        RUT Empresa
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <CreditCard className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          name="companyRut"
+                          value={formData.companyRut}
+                          onChange={handleChange}
+                          placeholder="76.123.456-7"
+                          required
+                          disabled={loading}
+                          className="w-full pl-10 pr-3 py-2.5 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm text-sm"
+                        />
+                      </div>
+                      {errors.companyRut && (
+                        <p className="mt-1 text-xs text-red-400">{errors.companyRut}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Campo Email */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">
+                      Correo Corporativo
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="contacto@empresa.com"
+                        required
+                        disabled={loading}
+                        className="w-full pl-10 pr-3 py-2.5 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm text-sm"
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="mt-1 text-xs text-red-400">{errors.email}</p>
+                    )}
+                  </div>
+
+                  {/* Campo Teléfono */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">
+                      Teléfono Contacto
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Phone className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="+56912345678"
+                        required
+                        disabled={loading}
+                        className="w-full pl-10 pr-3 py-2.5 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm text-sm"
+                      />
+                    </div>
+                    {errors.phone && (
+                      <p className="mt-1 text-xs text-red-400">{errors.phone}</p>
+                    )}
+                  </div>
+
+                  {/* Tipo de Empresa */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">
+                      Tipo de Empresa
+                    </label>
+                    <select
+                      name="companyType"
+                      value={formData.companyType}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2.5 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-700/50 text-white hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm text-sm"
+                      disabled={loading}
+                    >
+                      <option value="direct_creditor">🏢 Acreedor Directo</option>
+                      <option value="collection_agency">📊 Empresa de Cobranza</option>
+                    </select>
+                  </div>
+
+                  {/* Fila 3: Contraseñas */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Contraseña
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Lock className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          placeholder="••••••••"
+                          required
+                          disabled={loading}
+                          className="w-full pl-10 pr-10 py-2.5 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                          disabled={loading}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                          ) : (
+                            <Eye className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.password && (
+                        <p className="mt-1 text-xs text-red-400">{errors.password}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Confirmar Contraseña
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Lock className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          placeholder="••••••••"
+                          required
+                          disabled={loading}
+                          className="w-full pl-10 pr-10 py-2.5 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-700/50 text-white placeholder-gray-400 hover:bg-gray-700/70 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                          disabled={loading}
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                          ) : (
+                            <Eye className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.confirmPassword && (
+                        <p className="mt-1 text-xs text-red-400">{errors.confirmPassword}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Error general */}
+                  {Object.keys(errors).length > 0 && (
+                    <div className="p-3 bg-red-900/50 border border-red-500/30 rounded-lg flex items-start gap-2 backdrop-blur-sm">
+                      <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-200">Por favor completa los campos requeridos correctamente.</p>
+                    </div>
+                  )}
+
+                  {/* Botones */}
+                  <div className="space-y-3">
+                    <Button
+                      type="submit"
+                      variant="gradient"
+                      fullWidth
+                      loading={loading}
+                      disabled={googleLoading}
+                      size="lg"
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-3 rounded-lg font-semibold text-base shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
+                    >
+                      {loading ? 'Creando Cuenta...' : 'Crear Cuenta'}
+                    </Button>
+
+                    {/* Separador */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-600/30" />
+                      </div>
+                      <div className="relative flex justify-center text-xs">
+                        <span className="px-3 bg-gray-800/50 text-gray-400 font-medium backdrop-blur-sm">O</span>
+                      </div>
+                    </div>
+
+                    {/* Botón de Google */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      fullWidth
+                      onClick={handleGoogleRegister}
+                      loading={googleLoading}
+                      leftIcon={<Chrome className="w-5 h-5" />}
+                      className="border-gray-600/30 bg-gray-700/50 text-white hover:bg-gray-700/70 py-2.5 rounded-lg font-medium backdrop-blur-sm transition-all duration-300 text-sm"
+                      disabled={loading}
+                    >
+                      Continuar con Google
+                    </Button>
+                  </div>
+
+                  {/* Términos y condiciones */}
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={acceptTerms}
+                      onChange={(e) => setAcceptTerms(e.target.checked)}
+                      className="mt-0.5 w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    />
+                    <p className="text-xs text-gray-300">
+                      Acepto los{' '}
+                      <Link to="/terminos-servicio" className="text-purple-400 hover:text-purple-300 hover:underline transition-colors">
+                        Términos
+                      </Link>{' '}
+                      y{' '}
+                      <Link to="/privacy-policy" className="text-purple-400 hover:text-purple-300 hover:underline transition-colors">
+                        Privacidad
+                      </Link>
+                    </p>
+                  </div>
+                </form>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-700/30 border-t border-gray-600/30 text-center backdrop-blur-sm">
+                <p className="text-xs text-gray-300">
+                  ¿Eres una persona?{' '}
+                  <Link
+                    to="/registro/persona"
+                    className="font-semibold text-blue-400 hover:text-blue-300 hover:underline transition-colors"
+                  >
+                    Regístrate aquí
                   </Link>
                 </p>
-                {errors.terms && (
-                  <p className="text-sm text-red-600 mt-1">{errors.terms}</p>
-                )}
+                <p className="text-xs text-gray-300 mt-1">
+                  ¿Ya tienes cuenta?{' '}
+                  <Link
+                    to="/login"
+                    className="font-semibold text-purple-400 hover:text-purple-300 hover:underline transition-colors"
+                  >
+                    Inicia sesión
+                  </Link>
+                </p>
               </div>
-            </div>
-
-            {/* Botones */}
-            <div className="space-y-4">
-              {/* Botón de Google */}
-              <Button
-                type="button"
-                variant="outline"
-                fullWidth
-                onClick={handleGoogleRegister}
-                loading={googleLoading}
-                leftIcon={<Chrome className="w-5 h-5" />}
-                className="border-gray-300 hover:bg-gray-50 py-3 rounded-xl"
-                size="lg"
-              >
-                Continuar con Google
-              </Button>
-
-              {/* Separador */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500 font-medium">O</span>
-                </div>
-              </div>
-
-              {/* Botón principal */}
-              <Button
-                type="submit"
-                variant="gradient"
-                fullWidth
-                loading={loading}
-                size="lg"
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {loading ? 'Creando Cuenta...' : 'Crear Cuenta Empresarial'}
-              </Button>
-            </div>
-          </form>
-
-          {/* Footer */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 text-center">
-            <p className="text-sm text-gray-600">
-              ¿Eres una persona?{' '}
-              <Link
-                to="/registro/persona"
-                className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
-              >
-                Regístrate como persona aquí
-              </Link>
-            </p>
-            <p className="text-sm text-gray-600 mt-2">
-              ¿Ya tienes una cuenta?{' '}
-              <Link
-                to="/login"
-                className="font-semibold text-purple-600 hover:text-purple-700 hover:underline transition-colors"
-              >
-                Inicia sesión aquí
-              </Link>
-            </p>
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

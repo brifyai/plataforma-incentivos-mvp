@@ -5,7 +5,6 @@
  */
 
 import { supabase } from '../config/supabase';
-import { getEmailTemplate } from './emailTemplates';
 
 /**
  * Verifica si el servicio de email está configurado
@@ -313,12 +312,17 @@ export const sendEmailChangeConfirmation = async (to, fullName, changeToken, cur
     const encodedToken = encodeURIComponent(changeToken);
 
     // Usar plantilla de confirmación de cambio de email
-    const html = getEmailTemplate('email', 'emailChange', {
-      fullName,
-      newEmail: to,
-      currentEmail,
-      confirmationToken: encodedToken, // Pass encoded token to template
-      confirmUrl: `${window.location.origin}/confirm-email-change?token=${encodedToken}`
+    const html = generateEmailTemplate({
+      title: 'Confirma tu cambio de email - NexuPay',
+      greeting: `Hola ${fullName},`,
+      content: `
+        <p>Has solicitado cambiar tu email de <strong>${currentEmail}</strong> a <strong>${to}</strong>.</p>
+        <p>Para completar este cambio, por favor haz clic en el botón de abajo:</p>
+        <p>Este enlace expirará en 24 horas por tu seguridad.</p>
+        <p>Si no solicitaste este cambio, por favor ignora este email.</p>
+      `,
+      buttonText: 'Confirmar Cambio de Email',
+      buttonUrl: `${window.location.origin}/confirm-email-change?token=${encodedToken}`
     });
 
     const result = await sendEmail({
@@ -342,11 +346,17 @@ export const sendConfirmationEmail = async (email, fullName, confirmationToken, 
     const encodedToken = encodeURIComponent(confirmationToken);
 
     // Usar plantilla de confirmación de cuenta
-    const html = getEmailTemplate('email', 'accountConfirmation', {
-      fullName,
-      email,
-      confirmationToken: encodedToken, // Pass encoded token to template
-      confirmUrl: `${window.location.origin}/auth/confirm-email?token=${encodedToken}`
+    const html = generateEmailTemplate({
+      title: 'Activa tu cuenta - NexuPay',
+      greeting: `¡Bienvenido a NexuPay, ${fullName}!`,
+      content: `
+        <p>Gracias por registrarte en nuestra plataforma.</p>
+        <p>Para activar tu cuenta y comenzar a usar NexuPay, por favor confirma tu email haciendo clic en el botón de abajo:</p>
+        <p>Este enlace expirará en 24 horas por tu seguridad.</p>
+        <p>Si no te registraste en NexuPay, por favor ignora este email.</p>
+      `,
+      buttonText: 'Activar Mi Cuenta',
+      buttonUrl: `${window.location.origin}/auth/confirm-email?token=${encodedToken}`
     });
 
     const result = await sendEmail({
@@ -370,11 +380,17 @@ export const sendPasswordResetEmail = async (to, fullName, resetToken) => {
     const encodedToken = encodeURIComponent(resetToken);
 
     // Usar plantilla de recuperación de contraseña
-    const html = getEmailTemplate('password', 'passwordReset', {
-      fullName,
-      email: to,
-      resetToken: encodedToken, // Pass encoded token to template
-      resetUrl: `${window.location.origin}/reset-password?token=${encodedToken}`
+    const html = generateEmailTemplate({
+      title: 'Recupera tu contraseña - NexuPay',
+      greeting: `Hola ${fullName},`,
+      content: `
+        <p>Has solicitado restablecer tu contraseña.</p>
+        <p>Para continuar con el proceso de recuperación, por favor haz clic en el botón de abajo:</p>
+        <p>Este enlace expirará en 24 horas por tu seguridad.</p>
+        <p>Si no solicitaste restablecer tu contraseña, por favor ignora este email.</p>
+      `,
+      buttonText: 'Restablecer Contraseña',
+      buttonUrl: `${window.location.origin}/reset-password?token=${encodedToken}`
     });
 
     const result = await sendEmail({
@@ -394,7 +410,17 @@ export const sendPasswordResetEmail = async (to, fullName, resetToken) => {
  */
 export const sendWelcomeEmailDebtor = async (userData) => {
   try {
-    const html = getEmailTemplate('welcome', 'debtor', userData);
+    const html = generateEmailTemplate({
+      title: '¡Bienvenido a NexuPay!',
+      greeting: `¡Hola ${userData.fullName}!`,
+      content: `
+        <p>¡Bienvenido a NexuPay! Tu cuenta ha sido creada exitosamente.</p>
+        <p>Ya puedes comenzar a gestionar tus deudas y acceder a todas las funcionalidades de nuestra plataforma.</p>
+        <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+      `,
+      buttonText: 'Ir a Mi Dashboard',
+      buttonUrl: `${window.location.origin}/personas/dashboard`
+    });
     const result = await sendEmail({
       to: userData.email,
       subject: `¡Bienvenido a NexuPay, ${userData.fullName}!`,
@@ -412,7 +438,17 @@ export const sendWelcomeEmailDebtor = async (userData) => {
  */
 export const sendWelcomeEmailCompany = async (userData) => {
   try {
-    const html = getEmailTemplate('welcome', 'company', userData);
+    const html = generateEmailTemplate({
+      title: '¡Bienvenido a NexuPay!',
+      greeting: `¡Hola ${userData.companyName}!`,
+      content: `
+        <p>¡Bienvenido a NexuPay! Tu cuenta empresarial ha sido creada exitosamente.</p>
+        <p>Ya puedes comenzar a gestionar tus deudas y acceder a todas las funcionalidades de nuestra plataforma.</p>
+        <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+      `,
+      buttonText: 'Ir a Mi Dashboard',
+      buttonUrl: `${window.location.origin}/empresa/dashboard`
+    });
     const result = await sendEmail({
       to: userData.email,
       subject: `¡Bienvenido a NexuPay, ${userData.companyName}!`,
@@ -430,7 +466,17 @@ export const sendWelcomeEmailCompany = async (userData) => {
  */
 export const sendWelcomeEmailAdmin = async (userData) => {
   try {
-    const html = getEmailTemplate('welcome', 'admin', userData);
+    const html = generateEmailTemplate({
+      title: 'Acceso Administrativo - NexuPay',
+      greeting: `¡Hola ${userData.fullName}!`,
+      content: `
+        <p>Tu cuenta administrativa ha sido creada exitosamente en NexuPay.</p>
+        <p>Ya tienes acceso a todas las herramientas administrativas de la plataforma.</p>
+        <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+      `,
+      buttonText: 'Ir al Panel Administrativo',
+      buttonUrl: `${window.location.origin}/admin/dashboard`
+    });
     const result = await sendEmail({
       to: userData.email,
       subject: `Acceso Administrativo - NexuPay`,
@@ -453,7 +499,22 @@ export const sendPaymentReceivedNotification = async (paymentData) => {
       return { success: true, simulated: true, messageId: 'simulated_' + Date.now() };
     }
 
-    const html = getEmailTemplate('notification', 'paymentReceived', paymentData);
+    const html = generateEmailTemplate({
+      title: 'Pago Recibido',
+      greeting: `¡Hola!`,
+      content: `
+        <p>Hemos recibido un pago de <strong>$${paymentData.amount.toLocaleString('es-CL')}</strong>.</p>
+        <p>Detalles del pago:</p>
+        <ul>
+          <li>Deudor: ${paymentData.debtorName}</li>
+          <li>Fecha: ${new Date(paymentData.date).toLocaleDateString('es-CL')}</li>
+          <li>Monto: $${paymentData.amount.toLocaleString('es-CL')}</li>
+        </ul>
+        <p>El pago ha sido procesado exitosamente.</p>
+      `,
+      buttonText: 'Ver Detalles',
+      buttonUrl: `${window.location.origin}/empresa/pagos`
+    });
     const result = await sendEmail({
       to: paymentData.companyEmail,
       subject: `Pago Recibido - $${paymentData.amount.toLocaleString('es-CL')}`,
@@ -476,7 +537,17 @@ export const sendIncentiveEarnedNotification = async (incentiveData) => {
       return { success: true, simulated: true, messageId: 'simulated_' + Date.now() };
     }
 
-    const html = getEmailTemplate('notification', 'incentiveEarned', incentiveData);
+    const html = generateEmailTemplate({
+      title: '¡Has ganado incentivos!',
+      greeting: `¡Hola ${incentiveData.debtorName}!`,
+      content: `
+        <p>¡Felicidades! Has ganado <strong>$${incentiveData.amount.toLocaleString('es-CL')}</strong> en incentivos.</p>
+        <p>Este incentivo ha sido añadido a tu billetera y puedes usarlo para futuros pagos.</p>
+        <p>Gracias por tu compromiso con el pago de tus deudas.</p>
+      `,
+      buttonText: 'Ver Mi Billetera',
+      buttonUrl: `${window.location.origin}/personas/billetera`
+    });
     const result = await sendEmail({
       to: incentiveData.debtorEmail,
       subject: `¡Has ganado $${incentiveData.amount.toLocaleString('es-CL')} en incentivos!`,
@@ -538,7 +609,17 @@ export const sendAdminInvitationEmail = async (invitationData) => {
       return { success: true, simulated: true, messageId: 'simulated_' + Date.now() };
     }
 
-    const html = getEmailTemplate('invitation', 'adminInvitation', invitationData);
+    const html = generateEmailTemplate({
+      title: 'Invitación a NexuPay',
+      greeting: `¡Hola ${invitationData.fullName}!`,
+      content: `
+        <p>Has sido invitado a unirte a NexuPay por el administrador <strong>${invitationData.adminName}</strong>.</p>
+        <p>Para completar tu registro y acceder a la plataforma, por favor haz clic en el botón de abajo:</p>
+        <p>Este enlace expirará en 24 horas por tu seguridad.</p>
+      `,
+      buttonText: 'Completar Registro',
+      buttonUrl: invitationData.completeUrl
+    });
     const result = await sendEmail({
       to: email,
       subject: 'Invitación a NexuPay - Completa tu registro',

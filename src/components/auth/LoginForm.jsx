@@ -117,7 +117,7 @@ const LoginForm = () => {
             </label>
 
             <Link
-              to="/forgot-password"
+              to="/recuperar-contrasena"
               className="text-sm text-blue-400 hover:text-blue-300 font-medium hover:underline transition-colors"
             >
               ¿Olvidaste tu contraseña?

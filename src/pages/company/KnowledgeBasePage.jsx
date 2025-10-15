@@ -219,9 +219,10 @@ const KnowledgeBasePage = () => {
         .insert({
           corporate_client_id: selectedClient.id,
           company_id: profile?.company?.id,
-          document_title: documentForm.title,
-          document_content: documentForm.content,
-          document_category: documentForm.category,
+          title: documentForm.title,
+          content: documentForm.content,
+          category: documentForm.category,
+          knowledge_type: 'document',
           is_active: documentForm.is_active
         });
 
@@ -382,9 +383,9 @@ const KnowledgeBasePage = () => {
     }
   };
 
-  const filteredDocuments = knowledgeBase?.documents?.filter(doc => 
-    doc.document_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.document_content.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDocuments = knowledgeBase?.documents?.filter(doc =>
+    doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.content.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const filteredPolicies = knowledgeBase?.policies?.filter(policy => 
@@ -613,13 +614,13 @@ const KnowledgeBasePage = () => {
                 <div key={doc.id} className="border rounded-lg p-4 hover:bg-gray-50">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{doc.document_title}</h4>
+                      <h4 className="font-medium text-gray-900">{doc.title}</h4>
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {doc.document_content}
+                        {doc.content}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="secondary" size="sm">
-                          {doc.document_category}
+                          {doc.category}
                         </Badge>
                         <span className="text-xs text-gray-500">
                           {new Date(doc.created_at).toLocaleDateString('es-CL')}

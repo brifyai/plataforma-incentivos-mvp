@@ -492,9 +492,10 @@ const MessagingAIConfigPage = () => {
                             { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
                             { value: 'claude-3', label: 'Claude 3' }
                           ] : provider === 'groq' ? [
-                            { value: 'llama2-70b', label: 'Llama 2 70B' },
+                            { value: 'llama-3.1-70b', label: 'Llama 3.1 70B' },
+                            { value: 'llama-3.1-8b', label: 'Llama 3.1 8B' },
                             { value: 'mixtral-8x7b', label: 'Mixtral 8x7B' },
-                            { value: 'gemma-7b', label: 'Gemma 7B' }
+                            { value: 'gemma-7b-it', label: 'Gemma 7B IT' }
                           ] : [
                             { value: 'gpt-4', label: 'GPT-4' },
                             { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }

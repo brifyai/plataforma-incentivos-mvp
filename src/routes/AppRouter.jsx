@@ -72,7 +72,6 @@ import CompanyAnalyticsPage from '../pages/company/CompanyAnalyticsPage';
 import CompanyMessagesPage from '../pages/company/CompanyMessagesPage';
 import NewMessagePage from '../pages/company/NewMessagePage';
 import CompanyNotificationsPage from '../pages/company/CompanyNotificationsPage';
-import BulkImportPage from '../pages/company/BulkImportPage';
 import NewDebtorPage from '../pages/company/NewDebtorPage';
 import ClientsPage from '../pages/company/ClientsPage';
 
@@ -188,7 +187,7 @@ const AppContent = () => {
         <Route path="/registro" element={<RegisterPage />} />
         <Route path="/registro/persona" element={<RegisterPersonPage />} />
         <Route path="/registro/empresa" element={<RegisterCompanyPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/complete-registration" element={<CompleteRegistrationPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
@@ -367,16 +366,6 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/empresa/perfil/operaciones"
-          element={
-            <ProtectedRoute allowedRoles={['company']}>
-              <DashboardLayout>
-                <CompanyProfilePage />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/empresa/perfil/integraciones"
           element={
             <ProtectedRoute allowedRoles={['company']}>
@@ -498,16 +487,6 @@ const AppContent = () => {
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
                 <CompanyNotificationsPage />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/empresa/importar"
-          element={
-            <ProtectedRoute allowedRoles={['company']}>
-              <DashboardLayout>
-                <BulkImportPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

@@ -11,6 +11,7 @@ import { formatCurrency } from '../../utils/formatters';
 import { validateRutInput } from '../../utils/validators';
 import { setupCompanyBankAccount } from '../../services/authService';
 import { supabase } from '../../config/supabase';
+import Swal from 'sweetalert2';
 import {
   CreditCard,
   Building,
@@ -178,7 +179,15 @@ const BankAccountSetup = ({ onComplete, onSkip }) => {
         console.log('✅ Cuenta bancaria configurada exitosamente');
 
         // Mostrar mensaje de éxito al usuario
-        alert('✅ ¡Cuenta bancaria configurada exitosamente!\n\nAhora podrás recibir transferencias automáticas cuando los deudores realicen pagos.');
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Cuenta Bancaria Configurada!',
+          html: '✅ ¡Cuenta bancaria configurada exitosamente!<br><br>Ahora podrás recibir transferencias automáticas cuando los deudores realicen pagos.',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#10B981',
+          timer: 4000,
+          timerProgressBar: true
+        });
 
         // Llamar al callback de completado
         if (onComplete) {
@@ -188,13 +197,24 @@ const BankAccountSetup = ({ onComplete, onSkip }) => {
         setShowConfirmModal(false);
       } else {
         console.error('❌ Error configurando cuenta bancaria:', result.error);
-        // Aquí podrías mostrar un mensaje de error al usuario
-        alert('Error al configurar la cuenta bancaria. Por favor, intenta de nuevo.');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error de Configuración',
+          text: 'Error al configurar la cuenta bancaria. Por favor, intenta de nuevo.',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#EF4444'
+        });
       }
 
     } catch (error) {
       console.error('Error configurando cuenta bancaria:', error);
-      alert('Error al configurar la cuenta bancaria. Por favor, intenta de nuevo.');
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error de Conexión',
+        text: 'Error al configurar la cuenta bancaria. Por favor, intenta de nuevo.',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
     } finally {
       setLoading(false);
     }

@@ -10,8 +10,9 @@ import { useAuth } from '../../context/AuthContext';
 import { Card, Badge, LoadingSpinner, Button } from '../../components/common';
 import { useDebts, useOffers, useWallet } from '../../hooks';
 import { useRealtimePayments, useRealtimeDebts, useRealtimeAgreements, useRealtimeNotifications } from '../../hooks/useRealtime';
-import { getDebtorDashboardStats, getUserCommissionStats } from '../../services/databaseService';
+import { getDebtorDashboardStats, getUserCommissionStats, updateUserProfile } from '../../services/databaseService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import CompleteProfileModal from '../../components/auth/CompleteProfileModal';
 import {
   Wallet,
   TrendingUp,
@@ -26,7 +27,7 @@ import {
 } from 'lucide-react';
 
 const DebtorDashboard = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { debts, loading: debtsLoading, refreshDebts } = useDebts();
   const { offers, loading: offersLoading, refreshOffers } = useOffers();
   const { balance, loading: walletLoading, refreshWallet } = useWallet();
@@ -34,10 +35,19 @@ const DebtorDashboard = () => {
   const [commissionStats, setCommissionStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadStats();
+    
+    // Verificar si el usuario necesita completar su perfil
+    if (user && profile && shouldShowCompleteProfileModal()) {
+      // Mostrar el modal después de un breve retraso para que el usuario vea el dashboard primero
+      setTimeout(() => {
+        setShowCompleteProfileModal(true);
+      }, 2000);
+    }
   }, [user, profile]);
 
   // Sincronización en tiempo real para pagos
@@ -218,6 +228,61 @@ const DebtorDashboard = () => {
       console.error('Error loading stats:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para verificar si se debe mostrar el modal de completar perfil
+  const shouldShowCompleteProfileModal = () => {
+    if (!profile) return false;
+    
+    // Verificar si el usuario se registró con Google OAuth
+    const isGoogleUser = profile.oauth_signup ||
+                         user?.app_metadata?.provider === 'google' ||
+                         user?.user_metadata?.provider === 'google' ||
+                         localStorage.getItem('oauth_signup') === 'true';
+    
+    // Verificar si necesita completar perfil (campo en la base de datos o verificación manual)
+    const needsCompletion = profile.needs_profile_completion ||
+                           (!profile.full_name || !profile.rut || !profile.phone);
+    
+    // Mostrar modal si es usuario de Google y necesita completar perfil
+    return isGoogleUser && needsCompletion;
+  };
+
+  // Función para guardar los datos del perfil
+  const handleSaveProfile = async (formData) => {
+    if (!user) return;
+    
+    try {
+      const updates = {
+        full_name: formData.fullName || profile.full_name,
+        rut: formData.rut || profile.rut,
+        phone: formData.phone || profile.phone,
+        needs_profile_completion: false, // Marcar que el perfil ya está completo
+        updated_at: new Date().toISOString(),
+      };
+      
+      const { error } = await updateUserProfile(user.id, updates);
+      
+      if (error) {
+        throw new Error(error);
+      }
+      
+      // Limpiar flag de OAuth signup
+      localStorage.removeItem('oauth_signup');
+      
+      // Recargar el perfil
+      await refreshProfile();
+      
+      // Cerrar el modal
+      setShowCompleteProfileModal(false);
+      
+      // Mostrar notificación de éxito
+      showNotification('Perfil actualizado correctamente', 'success');
+      
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      throw error;
     }
   };
 
@@ -601,6 +666,14 @@ const DebtorDashboard = () => {
           </div>
         </Card>
       )}
+
+      {/* Modal para completar perfil */}
+      <CompleteProfileModal
+        isOpen={showCompleteProfileModal}
+        onClose={() => setShowCompleteProfileModal(false)}
+        profile={profile}
+        onSave={handleSaveProfile}
+      />
     </div>
   );
 };

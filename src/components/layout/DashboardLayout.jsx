@@ -100,6 +100,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Usuarios', path: '/admin/usuarios', icon: Users, description: 'Gestionar todos los usuarios' },
     { name: 'Deudores', path: '/admin/deudores', icon: Users, description: 'Gestionar usuarios deudores' },
     { name: 'Empresas', path: '/admin/empresas', icon: Building, description: 'Gestionar empresas' },
+    { name: 'Verificaciones', path: '/admin/verificaciones', icon: FileText, description: 'Revisar verificaciones de empresas' },
     { name: 'Pagos', path: '/admin/pagos', icon: CreditCard, description: 'Sistema de pagos' },
     { name: 'Analytics', path: '/admin/analytics', icon: BarChart3, description: 'Métricas y análisis' },
     { name: 'Base de Datos', path: '/admin/base-datos', icon: Database, description: 'Gestionar datos' },

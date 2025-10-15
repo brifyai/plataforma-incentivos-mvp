@@ -1044,10 +1044,25 @@ const signInWithGoogle = async () => {
   try {
     console.log('🔍 Iniciando autenticación con Google...');
 
+    // Determinar la URL de redirección correcta según el entorno
+    const getRedirectUrl = () => {
+      // Si estamos en desarrollo local
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        const port = window.location.port || '3002';
+        return `http://${window.location.hostname}:${port}/auth/callback`;
+      }
+      
+      // Si estamos en producción o staging
+      return `${window.location.origin}/auth/callback`;
+    };
+
+    const redirectUrl = getRedirectUrl();
+    console.log('🔗 URL de redirección OAuth:', redirectUrl);
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: redirectUrl,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -1070,11 +1085,23 @@ const signInWithGoogle = async () => {
 
 /**
  * Maneja el callback de OAuth después de la autenticación
- * @returns {Promise<{user, session, error}>}
+ * @returns {Promise<{user, session, error, redirectToProfile}>}
  */
 const handleAuthCallback = async () => {
   try {
     console.log('🔄 Procesando callback de autenticación...');
+
+    // Obtener datos de registro pendientes si existen
+    let registrationData = null;
+    try {
+      const pendingData = localStorage.getItem('pending_oauth_registration');
+      if (pendingData) {
+        registrationData = JSON.parse(pendingData);
+        console.log('📋 Datos de registro pendientes encontrados:', registrationData);
+      }
+    } catch (parseError) {
+      console.warn('⚠️ Error parseando datos de registro pendientes:', parseError.message);
+    }
 
     // Para OAuth, necesitamos usar getUser() para obtener la información del usuario autenticado
     const { data, error } = await supabase.auth.getUser();
@@ -1082,12 +1109,12 @@ const handleAuthCallback = async () => {
 
     if (error) {
       console.error('❌ Error obteniendo usuario:', error);
-      return { user: null, session: null, error: handleSupabaseError(error) };
+      return { user: null, session: null, error: handleSupabaseError(error), redirectToProfile: false };
     }
 
     if (!data.user) {
       console.log('⚠️ No hay usuario autenticado');
-      return { user: null, session: null, error: 'No se pudo completar la autenticación.' };
+      return { user: null, session: null, error: 'No se pudo completar la autenticación.', redirectToProfile: false };
     }
 
     const user = data.user;
@@ -1107,11 +1134,13 @@ const handleAuthCallback = async () => {
     let userRut = `OAUTH-${Date.now()}`;
     let userPhone = null;
     let userExists = false;
+    let needsProfileCompletion = false;
+    let redirectToProfile = false;
 
     try {
       const { data: existingUser, error: userCheckError } = await supabase
         .from('users')
-        .select('role, full_name, rut, phone')
+        .select('role, full_name, rut, phone, needs_profile_completion')
         .eq('email', user.email)
         .single();
 
@@ -1121,6 +1150,7 @@ const handleAuthCallback = async () => {
         userFullName = existingUser.full_name;
         userRut = existingUser.rut;
         userPhone = existingUser.phone;
+        needsProfileCompletion = existingUser.needs_profile_completion || false;
         userExists = true;
       } else {
         console.log('👤 Usuario nuevo en OAuth, usando rol por defecto:', userRole);
@@ -1138,6 +1168,15 @@ const handleAuthCallback = async () => {
       const finalUserRut = registrationData?.rut || userRut;
       const finalUserFullName = registrationData?.fullName || userFullName;
       const finalUserPhone = registrationData?.phone || userPhone;
+      needsProfileCompletion = registrationData?.needsProfileCompletion || false;
+      redirectToProfile = registrationData?.redirectToProfile || false;
+
+      console.log('📋 Datos para crear usuario OAuth:', {
+        role: finalUserRole,
+        needsProfileCompletion,
+        redirectToProfile,
+        hasRegistrationData: !!registrationData
+      });
 
       // Crear usuario automáticamente con datos de Google
       const userData = {
@@ -1149,25 +1188,45 @@ const handleAuthCallback = async () => {
         role: finalUserRole,
         validation_status: 'validated', // OAuth ya está validado por Google
         wallet_balance: 0,
+        oauth_signup: true, // Marcar que se registró via OAuth
+        needs_profile_completion: needsProfileCompletion,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
+      console.log('💾 Creando usuario OAuth en base de datos...');
       const { error: createError } = await supabase
         .from('users')
         .upsert(userData);
 
       if (createError) {
         console.error('❌ Error creando usuario OAuth automáticamente:', createError);
-        return { user: null, session: null, error: 'Error al crear usuario. Por favor, intenta de nuevo.' };
+        return { user: null, session: null, error: 'Error al crear usuario. Por favor, intenta de nuevo.', redirectToProfile: false };
       } else {
-        console.log('✅ Usuario OAuth creado automáticamente');
+        console.log('✅ Usuario OAuth creado automáticamente con perfil_completion:', needsProfileCompletion);
         userExists = true; // Ahora existe
 
         // Limpiar datos de registro pendientes si se usaron
         if (registrationData) {
           localStorage.removeItem('pending_oauth_registration');
         }
+      }
+    } else {
+      // Usuario existente, verificar si necesita completar perfil
+      console.log('👤 Usuario OAuth existente, verificando si necesita completar perfil...');
+      try {
+        const { data: existingUserData, error: existingUserError } = await supabase
+          .from('users')
+          .select('needs_profile_completion')
+          .eq('email', user.email)
+          .single();
+
+        if (!existingUserError && existingUserData) {
+          needsProfileCompletion = existingUserData.needs_profile_completion || false;
+          console.log('📋 Usuario existente needs_profile_completion:', needsProfileCompletion);
+        }
+      } catch (checkError) {
+        console.warn('⚠️ Error verificando needs_profile_completion del usuario existente:', checkError.message);
       }
     }
 
@@ -1201,6 +1260,8 @@ const handleAuthCallback = async () => {
       const finalUserRut = registrationData?.rut || userRut;
       const finalUserFullName = registrationData?.fullName || userFullName;
       const finalUserPhone = registrationData?.phone || userPhone;
+      needsProfileCompletion = registrationData?.needsProfileCompletion || false;
+      redirectToProfile = registrationData?.redirectToProfile || false;
 
       // Verificar si el email ya existe (para OAuth también)
       const { exists: emailExists, error: emailCheckError } = await checkEmailExists(user.email);
@@ -1221,6 +1282,8 @@ const handleAuthCallback = async () => {
         role: finalUserRole,
         validation_status: 'validated',
         wallet_balance: 0,
+        oauth_signup: true, // Marcar que se registró via OAuth
+        needs_profile_completion: needsProfileCompletion,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -1251,10 +1314,11 @@ const handleAuthCallback = async () => {
             .from('companies')
             .insert({
               user_id: user.id,
-              company_name: registrationData.businessName,
-              rut: registrationData.companyRut,
+              company_name: registrationData.businessName || 'Empresa Pendiente',
+              rut: registrationData.companyRut || 'Pendiente',
               contact_email: user.email,
-              contact_phone: registrationData.phone,
+              contact_phone: registrationData.phone || null,
+              company_type: registrationData.companyType || 'direct_creditor',
             })
             .select()
             .single();
@@ -1288,10 +1352,10 @@ const handleAuthCallback = async () => {
               console.log('🧠 Creando base de conocimiento para empresa OAuth...');
               const kbResult = await createKnowledgeBaseForNewCompany({
                 userId: user.id,
-                companyName: registrationData.businessName,
-                companyRut: registrationData.companyRut,
+                companyName: registrationData.businessName || 'Empresa Pendiente',
+                companyRut: registrationData.companyRut || 'Pendiente',
                 email: user.email,
-                phone: registrationData.phone
+                phone: registrationData.phone || null
               });
               
               if (kbResult.success) {
@@ -1315,11 +1379,16 @@ const handleAuthCallback = async () => {
     }
 
     console.log('✅ Autenticación con Google exitosa');
-    return { user: mockUser, session: mockSession, error: null };
+    return {
+      user: mockUser,
+      session: mockSession,
+      error: null,
+      redirectToProfile: redirectToProfile || needsProfileCompletion
+    };
   } catch (error) {
     console.error('❌ Error in handleAuthCallback:', error);
     console.error('Stack trace:', error.stack);
-    return { user: null, session: null, error: 'Error al procesar la autenticación. Por favor, intenta de nuevo.' };
+    return { user: null, session: null, error: 'Error al procesar la autenticación. Por favor, intenta de nuevo.', redirectToProfile: false };
   }
 };
 

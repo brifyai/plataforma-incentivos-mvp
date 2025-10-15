@@ -177,44 +177,68 @@ export const getDebtById = async (debtId) => {
  */
 export const getCompanyDebts = async (companyId, clientId = null) => {
   try {
+    console.log('🔍 getCompanyDebts called with:', { companyId, clientId });
+    
     let query = supabase
       .from('debts')
       .select(`
         *,
-        user:users(id, full_name, email, rut)
+        user:users(id, full_name, email, rut),
+        client:clients(id, business_name, rut)
       `);
 
     if (clientId) {
       // Si hay clientId específico, filtrar por ese cliente
       query = query.eq('client_id', clientId);
     } else {
-      // Si no hay clientId específico, obtener deudas de todos los clientes de la empresa
+      // Si no hay clientId específico, obtener deudas de dos maneras:
+      // 1. Deudas asociadas a clientes de la empresa
+      // 2. Deudas directas de la empresa (sin client_id)
       const { data: clients, error: clientsError } = await supabase
         .from('clients')
         .select('id')
         .eq('company_id', companyId);
 
       if (clientsError) {
-        return { debts: [], error: handleSupabaseError(clientsError) };
+        console.warn('Error getting clients for company:', clientsError);
       }
 
       const clientIds = clients?.map(c => c.id) || [];
-      if (clientIds.length === 0) {
-        return { debts: [], error: null };
+      
+      if (clientIds.length > 0) {
+        // Si hay clientes, obtener deudas de clientes Y deudas directas de la empresa
+        query = query.or(`client_id.in.(${clientIds.join(',')}),company_id.eq.${companyId}`);
+      } else {
+        // Si no hay clientes, obtener solo deudas directas de la empresa
+        query = query.eq('company_id', companyId);
       }
-
-      query = query.in('client_id', clientIds);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
+      console.error('❌ Error in getCompanyDebts query:', error);
       return { debts: [], error: handleSupabaseError(error) };
+    }
+
+    console.log(`📊 Found ${data?.length || 0} debts for company ${companyId}`);
+    
+    // Log detallado de las deudas encontradas para depuración
+    if (data && data.length > 0) {
+      console.log('📋 Debts found:', data.map(d => ({
+        id: d.id,
+        user_id: d.user_id,
+        company_id: d.company_id,
+        client_id: d.client_id,
+        user_name: d.user?.full_name,
+        client_name: d.client?.business_name,
+        amount: d.current_amount || d.original_amount
+      })));
     }
 
     return { debts: data || [], error: null };
   } catch (error) {
-    console.error('Error in getCompanyDebts:', error);
+    console.error('💥 Error in getCompanyDebts:', error);
     return { debts: [], error: 'Error al obtener deudas de la empresa.' };
   }
 };
@@ -2595,36 +2619,75 @@ export const updateUnifiedCampaign = async (campaignId, updates) => {
  */
 export const getCorporateClients = async (companyId) => {
   try {
-    console.log('getCorporateClients called for company:', companyId);
+    console.log('🔍 getCorporateClients called for company:', companyId);
 
-    // Obtener clientes de la tabla 'clients' (todos son corporativos)
-    const { data, error } = await supabase
-      .from('clients')
+    // Intentar primero obtener de la tabla 'corporate_clients' con campos correctos
+    let { data, error } = await supabase
+      .from('corporate_clients')
       .select('*')
       .eq('company_id', companyId)
-      .order('business_name');
+      .eq('is_active', true)
+      .order('name');
 
-    if (error) {
-      console.error('Error fetching corporate clients:', error);
-      return { corporateClients: [], error: handleSupabaseError(error) };
+    // Si no hay datos o hay error, intentar con la tabla 'clients' como fallback
+    if (error || !data || data.length === 0) {
+      console.log('⚠️ No data in corporate_clients table, trying clients table as fallback');
+      
+      const fallbackResult = await supabase
+        .from('clients')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('business_name');
+
+      if (fallbackResult.error) {
+        console.error('❌ Error fetching from clients table:', fallbackResult.error);
+        return { corporateClients: [], error: handleSupabaseError(fallbackResult.error) };
+      }
+
+      data = fallbackResult.data;
+      console.log('📋 Using clients table as fallback, found:', data?.length || 0);
     }
 
     // Transformar los datos para mantener compatibilidad con el formato esperado
-    const transformedClients = (data || []).map(client => ({
-      id: client.id,
-      name: client.business_name || client.name,
-      display_category: 'Corporativo',
-      contact_email: client.contact_email,
-      contact_phone: client.contact_phone,
-      is_active: true,
-      created_at: client.created_at,
-      updated_at: client.updated_at
-    }));
+    const transformedClients = (data || []).map(client => {
+      // Para corporate_clients, los campos están en contact_info (JSONB)
+      // Para clients, los campos están directamente disponibles
+      const contactInfo = client.contact_info || {};
+      
+      return {
+        id: client.id,
+        name: client.name || client.business_name || 'Cliente sin nombre',
+        display_category: client.display_category || 'Corporativo',
+        contact_email: contactInfo.email || client.contact_email,
+        contact_phone: contactInfo.phone || client.contact_phone,
+        company_rut: contactInfo.rut || client.rut || client.company_rut,
+        industry: contactInfo.industry || client.industry || 'General',
+        contract_value: contactInfo.contract_value || client.contract_value || 0,
+        is_active: client.is_active !== false,
+        segment_count: client.segment_count || 0,
+        debtor_count: client.debtor_count || 0,
+        total_debt_amount: client.total_debt_amount || 0,
+        trust_level: client.trust_level || 'verified',
+        created_at: client.created_at,
+        updated_at: client.updated_at,
+        // Mantener todos los campos originales para uso completo
+        ...client
+      };
+    });
 
-    console.log('Corporate clients found:', transformedClients.length);
+    console.log(`✅ Corporate clients found: ${transformedClients.length}`);
+    if (transformedClients.length > 0) {
+      console.log('📋 Client details:', transformedClients.map(c => ({
+        id: c.id,
+        name: c.name,
+        email: c.contact_email,
+        rut: c.company_rut
+      })));
+    }
+    
     return { corporateClients: transformedClients, error: null };
   } catch (error) {
-    console.error('Error in getCorporateClients:', error);
+    console.error('💥 Error in getCorporateClients:', error);
     return { corporateClients: [], error: 'Error al obtener clientes corporativos.' };
   }
 };

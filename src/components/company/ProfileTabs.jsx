@@ -37,13 +37,6 @@ const ProfileTabs = () => {
       shortLabel: 'Info'
     },
     {
-      id: 'operations',
-      path: '/empresa/perfil/operaciones',
-      label: 'Operaciones Diarias',
-      icon: Settings,
-      shortLabel: 'Ops'
-    },
-    {
       id: 'integrations',
       path: '/empresa/perfil/integraciones',
       label: 'Integraciones Externas',

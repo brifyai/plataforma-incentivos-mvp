@@ -572,6 +572,51 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
+      {/* Quick Actions */}
+      <Card>
+        <div className="p-4">
+          <h3 className="text-lg font-semibold text-secondary-900 mb-4">⚡ Acciones Rápidas</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/admin/verificaciones')}
+              className="flex flex-col items-center gap-2 justify-center p-3 h-auto"
+            >
+              <FileText className="w-5 h-5" />
+              <span className="text-xs">Verificaciones</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => navigate('/admin/usuarios')}
+              className="flex flex-col items-center gap-2 justify-center p-3 h-auto"
+            >
+              <Users className="w-5 h-5" />
+              <span className="text-xs">Usuarios</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => navigate('/admin/empresas')}
+              className="flex flex-col items-center gap-2 justify-center p-3 h-auto"
+            >
+              <Building className="w-5 h-5" />
+              <span className="text-xs">Empresas</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => navigate('/admin/pagos')}
+              className="flex flex-col items-center gap-2 justify-center p-3 h-auto"
+            >
+              <DollarSign className="w-5 h-5" />
+              <span className="text-xs">Pagos</span>
+            </Button>
+          </div>
+        </div>
+      </Card>
+
       {/* Goals and System Health - Compact Version */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>

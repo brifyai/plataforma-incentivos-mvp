@@ -446,15 +446,15 @@ const CompanyNotificationsPage = () => {
             </div>
           ) : (
             filteredNotifications.map((notification) => (
-              <div key={notification.id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div key={notification.id} className="p-3 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-lg ${getTypeColor(notification.type)}`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-lg ${getTypeColor(notification.type)}`}>
                       {getTypeIcon(notification.type)}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-sm font-semibold text-gray-900">
                           {notification.title}
                         </h3>
                         {getPriorityBadge(notification.priority)}
@@ -462,21 +462,21 @@ const CompanyNotificationsPage = () => {
                           {notification.status === 'sent' ? 'Enviada' : 'Borrador'}
                         </Badge>
                       </div>
-                      <p className="text-gray-600 mb-3">{notification.message}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <p className="text-xs text-gray-600 mb-2">{notification.message}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
                         <span>{formatDate(notification.createdAt)}</span>
                         <span className="flex items-center gap-1">
-                          <Send className="w-4 h-4" />
+                          <Send className="w-3 h-3" />
                           {notification.sentCount} enviados
                         </span>
                         <span className="flex items-center gap-1">
-                          <CheckCircle className="w-4 h-4" />
+                          <CheckCircle className="w-3 h-3" />
                           {notification.readCount} leídos
                         </span>
                         <div className="flex items-center gap-1">
-                          {notification.channels.includes('email') && <Mail className="w-4 h-4" />}
-                          {notification.channels.includes('push') && <Smartphone className="w-4 h-4" />}
-                          {notification.channels.includes('sms') && <MessageSquare className="w-4 h-4" />}
+                          {notification.channels.includes('email') && <Mail className="w-3 h-3" />}
+                          {notification.channels.includes('push') && <Smartphone className="w-3 h-3" />}
+                          {notification.channels.includes('sms') && <MessageSquare className="w-3 h-3" />}
                         </div>
                       </div>
                     </div>
@@ -487,7 +487,7 @@ const CompanyNotificationsPage = () => {
                     onClick={() => handleDeleteNotification(notification.id)}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3" />
                   </Button>
                 </div>
               </div>

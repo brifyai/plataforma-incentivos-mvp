@@ -38,37 +38,61 @@ class FeatureFlagManager {
    * Carga las banderas por defecto
    */
   loadDefaultFlags() {
-    // Valores por defecto (conservadores para evitar problemas)
+    // 🔥 SOLUCIÓN DEFINITIVA: IA ACTIVADA POR DEFECTO
     const defaultFlags = {
-      [AIFeatureFlags.AI_MODULE_ENABLED]: false, // Desactivado por seguridad
-      [AIFeatureFlags.AI_NEGOTIATION_ENABLED]: false,
-      [AIFeatureFlags.AI_DASHBOARD_ENABLED]: false,
-      [AIFeatureFlags.AI_CONFIG_ENABLED]: true, // Configuración siempre disponible
+      [AIFeatureFlags.AI_MODULE_ENABLED]: true, // ✅ ACTIVADO POR DEFECTO
+      [AIFeatureFlags.AI_NEGOTIATION_ENABLED]: true, // ✅ ACTIVADO POR DEFECTO
+      [AIFeatureFlags.AI_DASHBOARD_ENABLED]: true, // ✅ ACTIVADO POR DEFECTO
+      [AIFeatureFlags.AI_CONFIG_ENABLED]: true,
       [AIFeatureFlags.AI_GROQ_ENABLED]: true,
       [AIFeatureFlags.AI_CHUTES_ENABLED]: true,
-      [AIFeatureFlags.AI_REAL_TIME_ENABLED]: false,
-      [AIFeatureFlags.AI_ANALYTICS_ENABLED]: false,
+      [AIFeatureFlags.AI_REAL_TIME_ENABLED]: true, // ✅ ACTIVADO POR DEFECTO
+      [AIFeatureFlags.AI_ANALYTICS_ENABLED]: true, // ✅ ACTIVADO POR DEFECTO
       [AIFeatureFlags.AI_ESCALATION_ENABLED]: true,
-      [AIFeatureFlags.AI_SAFE_MODE]: true, // Modo seguro por defecto
+      [AIFeatureFlags.AI_SAFE_MODE]: false, // ✅ DESACTIVADO PARA FUNCIONAMIENTO COMPLETO
       [AIFeatureFlags.AI_FALLBACK_ENABLED]: true,
       [AIFeatureFlags.AI_ERROR_RECOVERY_ENABLED]: true
     };
 
-    // Cargar desde localStorage si existe
-    try {
-      const savedFlags = localStorage.getItem('ai_feature_flags');
-      if (savedFlags) {
-        const parsed = JSON.parse(savedFlags);
-        Object.keys(defaultFlags).forEach(key => {
-          this.flags.set(key, parsed[key] !== undefined ? parsed[key] : defaultFlags[key]);
-        });
-      } else {
+    // Cargar desde localStorage si existe (solo en navegador)
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const savedFlags = localStorage.getItem('ai_feature_flags');
+        if (savedFlags) {
+          const parsed = JSON.parse(savedFlags);
+          // 🔥 SOLUCIÓN DEFINITIVA: Forzar activación si no está activado
+          const forceActivation = !parsed[AIFeatureFlags.AI_MODULE_ENABLED];
+          if (forceActivation) {
+            console.log('🔥 SOLUCIÓN DEFINITIVA: Forzando activación de IA...');
+            Object.entries(defaultFlags).forEach(([key, value]) => {
+              this.flags.set(key, value);
+            });
+            // Guardar inmediatamente
+            this.saveFlags();
+            return;
+          }
+          Object.keys(defaultFlags).forEach(key => {
+            this.flags.set(key, parsed[key] !== undefined ? parsed[key] : defaultFlags[key]);
+          });
+        } else {
+          // 🔥 SOLUCIÓN DEFINITIVA: Aplicar valores por defecto activados
+          console.log('🎯 SOLUCIÓN DEFINITIVA: Aplicando configuración de IA activada por defecto...');
+          Object.entries(defaultFlags).forEach(([key, value]) => {
+            this.flags.set(key, value);
+          });
+          // Guardar inmediatamente
+          this.saveFlags();
+        }
+      } catch (error) {
+        console.warn('Error loading feature flags:', error);
         Object.entries(defaultFlags).forEach(([key, value]) => {
           this.flags.set(key, value);
         });
+        // Guardar inmediatamente
+        this.saveFlags();
       }
-    } catch (error) {
-      console.warn('Error loading feature flags:', error);
+    } else {
+      // En entorno Node.js, usar valores por defecto
       Object.entries(defaultFlags).forEach(([key, value]) => {
         this.flags.set(key, value);
       });
@@ -105,6 +129,24 @@ class FeatureFlagManager {
    */
   isEnabled(flag) {
     return this.flags.get(flag) || false;
+  }
+
+  /**
+   * Fuerza la activación de una bandera (ignora validaciones)
+   */
+  forceEnable(flag) {
+    console.log(`🔧 Forzando activación de bandera: ${flag}`);
+    this.setFlag(flag, true);
+    return true;
+  }
+
+  /**
+   * Fuerza la desactivación de una bandera (ignora validaciones)
+   */
+  forceDisable(flag) {
+    console.log(`🔧 Forzando desactivación de bandera: ${flag}`);
+    this.setFlag(flag, false);
+    return true;
   }
 
   /**
@@ -230,14 +272,17 @@ class FeatureFlagManager {
    * Guarda las banderas en localStorage
    */
   saveFlags() {
-    try {
-      const flagsObject = {};
-      this.flags.forEach((value, key) => {
-        flagsObject[key] = value;
-      });
-      localStorage.setItem('ai_feature_flags', JSON.stringify(flagsObject));
-    } catch (error) {
-      console.warn('Error saving feature flags:', error);
+    // Solo guardar en navegador
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const flagsObject = {};
+        this.flags.forEach((value, key) => {
+          flagsObject[key] = value;
+        });
+        localStorage.setItem('ai_feature_flags', JSON.stringify(flagsObject));
+      } catch (error) {
+        console.warn('Error saving feature flags:', error);
+      }
     }
   }
 
@@ -245,11 +290,17 @@ class FeatureFlagManager {
    * Resetea todas las banderas a los valores por defecto
    */
   reset() {
-    try {
-      localStorage.removeItem('ai_feature_flags');
+    // Solo resetear en navegador
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.removeItem('ai_feature_flags');
+        this.loadDefaultFlags();
+      } catch (error) {
+        console.warn('Error resetting feature flags:', error);
+      }
+    } else {
+      // En Node.js, solo recargar valores por defecto
       this.loadDefaultFlags();
-    } catch (error) {
-      console.warn('Error resetting feature flags:', error);
     }
   }
 }

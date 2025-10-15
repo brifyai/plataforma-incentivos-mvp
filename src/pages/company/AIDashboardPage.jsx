@@ -15,15 +15,17 @@ import { useLocation } from 'react-router-dom';
 import { Card, Button, LoadingSpinner, Input, Select, Badge, Modal, ToggleSwitch } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../config/supabase';
-import { 
-  Brain, 
-  MessageSquare, 
-  Settings, 
-  Database, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Save, 
+import { ragService } from '../../services/ragService';
+import { aiProvidersService } from '../../services/aiProvidersService';
+import {
+  Brain,
+  MessageSquare,
+  Settings,
+  Database,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
   X,
   Users,
   Copy,
@@ -41,9 +43,162 @@ import {
   Filter,
   TrendingUp,
   BarChart3,
-  Activity
+  Activity,
+  Upload,
+  Clock,
+  Cpu
 } from 'lucide-react';
 import Swal from 'sweetalert2';
+
+// Componente DocumentCard para mostrar documentos con estado de vectorización
+const DocumentCard = ({ document, onEdit, onDelete, onReprocess, corporateClientId }) => {
+  const [vectorStatus, setVectorStatus] = useState(null);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+
+  useEffect(() => {
+    loadVectorStatus();
+  }, [document.id]);
+
+  const loadVectorStatus = async () => {
+    try {
+      setLoadingStatus(true);
+      const status = await ragService.getDocumentVectorStatus(document.id);
+      setVectorStatus(status);
+    } catch (error) {
+      console.error('Error loading vector status:', error);
+      setVectorStatus({ status: 'error', message: 'No se pudo verificar el estado' });
+    } finally {
+      setLoadingStatus(false);
+    }
+  };
+
+  const getStatusIcon = () => {
+    if (loadingStatus) return <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />;
+    
+    switch (vectorStatus?.status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'processing':
+        return <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />;
+      case 'failed':
+        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      default:
+        return <AlertTriangle className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const getStatusText = () => {
+    if (loadingStatus) return 'Verificando...';
+    
+    switch (vectorStatus?.status) {
+      case 'completed':
+        return `Vectorizado (${vectorStatus.chunksCount} chunks)`;
+      case 'processing':
+        return 'Vectorizando...';
+      case 'failed':
+        return 'Error en vectorización';
+      case 'pending':
+        return 'Pendiente de vectorización';
+      default:
+        return 'Estado desconocido';
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (vectorStatus?.status) {
+      case 'completed':
+        return 'bg-green-50 border-green-200 text-green-700';
+      case 'processing':
+        return 'bg-blue-50 border-blue-200 text-blue-700';
+      case 'failed':
+        return 'bg-red-50 border-red-200 text-red-700';
+      case 'pending':
+        return 'bg-yellow-50 border-yellow-200 text-yellow-700';
+      default:
+        return 'bg-gray-50 border-gray-200 text-gray-700';
+    }
+  };
+
+  return (
+    <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <h4 className="font-medium text-gray-900">{document.title}</h4>
+            <Badge variant="secondary" size="sm">
+              {document.category}
+            </Badge>
+          </div>
+          
+          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+            {document.content}
+          </p>
+          
+          <div className="flex items-center gap-2 mt-2">
+            {/* Estado de vectorización */}
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${getStatusColor()}`}>
+              {getStatusIcon()}
+              <span className="text-xs font-medium">{getStatusText()}</span>
+            </div>
+            
+            <span className="text-xs text-gray-500">
+              {new Date(document.created_at).toLocaleDateString('es-CL')}
+            </span>
+            
+            {!document.is_active && (
+              <Badge variant="warning" size="sm">
+                Inactivo
+              </Badge>
+            )}
+          </div>
+          
+          {/* Información adicional de vectorización */}
+          {vectorStatus && vectorStatus.status === 'completed' && (
+            <div className="mt-2 text-xs text-gray-600">
+              <span>Última actualización: {new Date(vectorStatus.lastUpdated).toLocaleString('es-CL')}</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-1 ml-4">
+          {/* Botón de reprocesamiento si es necesario */}
+          {vectorStatus && (vectorStatus.status === 'failed' || vectorStatus.status === 'pending') && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onReprocess && onReprocess(document)}
+              title="Reprocesar vectorización"
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          )}
+          
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onEdit && onEdit(document)}
+            title="Editar"
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onDelete && onDelete(document)}
+            title="Eliminar"
+            className="text-red-600 hover:text-red-800"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AIDashboardPage = ({ defaultTab = 'providers' }) => {
   const { user, profile } = useAuth();
@@ -81,7 +236,20 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
   const [corporateClients, setCorporateClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   
-  // Estados para configuración de IA
+  // Estados para proveedores de IA desde la base de datos
+  const [providers, setProviders] = useState([]);
+  const [activeProvider, setActiveProvider] = useState(null);
+  const [loadingProviders, setLoadingProviders] = useState(true);
+  
+  // Estados para modelos dinámicos
+  const [dynamicModels, setDynamicModels] = useState({});
+  const [loadingModels, setLoadingModels] = useState({});
+  
+  // Estados para modelos de embedding RAG
+  const [ragEmbeddingModels, setRagEmbeddingModels] = useState({});
+  const [loadingRagModels, setLoadingRagModels] = useState({});
+  
+  // Estados para configuración legacy (mantener para compatibilidad)
   const [aiConfig, setAiConfig] = useState({
     providers: {
       chutes: {
@@ -104,7 +272,17 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     selectedProvider: 'chutes',
     fallbackEnabled: true,
     autoRetry: true,
-    maxRetries: 3
+    maxRetries: 3,
+    rag: {
+      enabled: true,
+      provider: 'groq',
+      apiKey: '',
+      embeddingModel: 'text-embedding-ada-002',
+      chunkSize: 1000,
+      chunkOverlap: 200,
+      similarityThreshold: 0.7,
+      maxResults: 10
+    }
   });
   
   // 🔥 NUEVOS ESTADOS PARA FUNCIONES PERDIDAS
@@ -266,6 +444,7 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
 
   useEffect(() => {
     loadCorporateClients();
+    loadAIProviders();
     loadAIConfiguration();
   }, [profile]);
 
@@ -332,44 +511,163 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     }
   };
 
-  const loadAIConfiguration = async () => {
-    let companyId;
-    
-    // Para usuarios con god_mode, usar la primera empresa disponible
-    if (profile?.role === 'god_mode') {
-      const { data: companies, error: companyError } = await supabase
-        .from('companies')
-        .select('id')
-        .limit(1);
-      
-      if (companyError) {
-        console.error('Error getting company for god_mode:', companyError);
-        return;
-      }
-      companyId = companies?.[0]?.id;
-    } else {
-      companyId = profile?.company?.id;
-    }
-    
-    if (!companyId) return;
-    
+  const loadAIProviders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('company_ai_config')
-        .select('*')
-        .eq('company_id', companyId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading AI configuration:', error);
-        return;
+      setLoadingProviders(true);
+      const providersData = await aiProvidersService.getProviders();
+      setProviders(providersData);
+      
+      // Encontrar el proveedor activo
+      const active = providersData.find(p => p.is_active);
+      setActiveProvider(active);
+      
+      // Cargar modelos para todos los proveedores con API keys
+      for (const provider of providersData) {
+        if (provider.api_key && provider.api_key.length > 10) {
+          try {
+            // Cargar modelos de chat
+            const chatModels = await aiProvidersService.getProviderChatModels(provider.id);
+            setDynamicModels(prev => ({
+              ...prev,
+              [provider.provider_name]: chatModels
+            }));
+            
+            // Cargar modelos de embedding
+            const embeddingModels = await aiProvidersService.getProviderEmbeddingModels(provider.id);
+            setRagEmbeddingModels(prev => ({
+              ...prev,
+              [provider.provider_name]: embeddingModels
+            }));
+          } catch (error) {
+            console.error(`Error loading models for ${provider.provider_name}:`, error);
+          }
+        }
       }
-
-      if (data) {
-        setAiConfig(data.ai_providers || aiConfig);
-      }
+      
     } catch (error) {
-      console.error('Error loading AI configuration:', error);
+      console.error('Error loading AI providers:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron cargar los proveedores de IA',
+        confirmButtonText: 'Aceptar'
+      });
+    } finally {
+      setLoadingProviders(false);
+    }
+  };
+
+  const handleActivateProvider = async (providerId) => {
+    try {
+      const updatedProvider = await aiProvidersService.activateProvider(providerId);
+      setActiveProvider(updatedProvider);
+      
+      // Actualizar la lista de proveedores
+      await loadAIProviders();
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Proveedor activado',
+        text: `${updatedProvider.display_name} ahora es el proveedor activo`,
+        confirmButtonText: 'Aceptar'
+      });
+    } catch (error) {
+      console.error('Error activating provider:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo activar el proveedor: ' + error.message,
+        confirmButtonText: 'Aceptar'
+      });
+    }
+  };
+
+  const handleUpdateAPIKey = async (providerId, apiKey) => {
+    try {
+      await aiProvidersService.updateProviderAPIKey(providerId, apiKey);
+      
+      // Recargar proveedores y modelos
+      await loadAIProviders();
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'API Key actualizada',
+        text: 'La API key se ha actualizado correctamente',
+        confirmButtonText: 'Aceptar'
+      });
+    } catch (error) {
+      console.error('Error updating API key:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo actualizar la API key: ' + error.message,
+        confirmButtonText: 'Aceptar'
+      });
+    }
+  };
+
+  const loadAIConfiguration = async () => {
+    try {
+      // Para el nuevo sistema, la configuración principal viene de aiProvidersService
+      // Solo cargamos la configuración RAG adicional si es necesario
+      console.log('🔄 Cargando configuración de IA...');
+      
+      // La configuración de proveedores ya se carga en loadAIProviders()
+      // Solo necesitamos cargar configuración adicional si existe
+      
+      let companyId;
+      
+      // Para usuarios con god_mode, usar la primera empresa disponible
+      if (profile?.role === 'god_mode') {
+        try {
+          const { data: companies, error: companyError } = await supabase
+            .from('companies')
+            .select('id')
+            .limit(1);
+          
+          if (companyError) {
+            console.warn('Error getting company for god_mode:', companyError);
+            companyId = null;
+          } else {
+            companyId = companies?.[0]?.id;
+          }
+        } catch (error) {
+          console.warn('Could not get company for god_mode:', error);
+          companyId = null;
+        }
+      } else {
+        companyId = profile?.company?.id;
+      }
+      
+      if (companyId) {
+        try {
+          const { data, error } = await supabase
+            .from('company_ai_config')
+            .select('rag_config')
+            .eq('company_id', companyId)
+            .single();
+
+          if (error && error.code !== 'PGRST116') {
+            console.warn('Error loading RAG configuration:', error);
+          } else if (data?.rag_config) {
+            // Actualizar configuración RAG si existe
+            setAiConfig(prev => ({
+              ...prev,
+              rag: {
+                ...prev.rag,
+                ...data.rag_config
+              }
+            }));
+          }
+        } catch (error) {
+          console.warn('Could not load RAG config:', error);
+        }
+      }
+      
+      console.log('✅ Configuración de IA cargada correctamente');
+    } catch (error) {
+      console.error('Error in loadAIConfiguration:', error);
+      // No lanzamos el error para que la aplicación continúe funcionando
     }
   };
 
@@ -451,33 +749,55 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     setSaving(true);
     try {
       let companyId;
-      
+
       // Para usuarios con god_mode, usar la primera empresa disponible
       if (profile?.role === 'god_mode') {
         const { data: companies, error: companyError } = await supabase
           .from('companies')
           .select('id')
           .limit(1);
-        
+
         if (companyError) throw companyError;
         companyId = companies?.[0]?.id;
       } else {
         companyId = profile?.company?.id;
       }
-      
+
       if (!companyId) {
         throw new Error('No company ID found');
       }
 
-      const { error } = await supabase
+      // Intentar actualizar primero, si no existe, insertar
+      const { data: existingConfig, error: selectError } = await supabase
         .from('company_ai_config')
-        .upsert({
-          company_id: companyId,
-          ai_providers: aiConfig,
-          updated_at: new Date().toISOString()
-        });
+        .select('id')
+        .eq('company_id', companyId)
+        .single();
 
-      if (error) throw error;
+      let result;
+      if (existingConfig) {
+        // Actualizar configuración existente
+        result = await supabase
+          .from('company_ai_config')
+          .update({
+            ai_providers: aiConfig,
+            rag_config: aiConfig.rag,
+            updated_at: new Date().toISOString()
+          })
+          .eq('company_id', companyId);
+      } else {
+        // Insertar nueva configuración
+        result = await supabase
+          .from('company_ai_config')
+          .insert({
+            company_id: companyId,
+            ai_providers: aiConfig,
+            rag_config: aiConfig.rag,
+            updated_at: new Date().toISOString()
+          });
+      }
+
+      if (result.error) throw result.error;
 
       Swal.fire({
         icon: 'success',
@@ -498,9 +818,63 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     }
   };
 
-  const testProvider = async (provider) => {
-    const config = aiConfig.providers[provider];
-    if (!config.apiKey) {
+  const forceRefreshModels = async (providerName) => {
+    const providerData = providers.find(p => p.provider_name === providerName);
+    if (!providerData || !providerData.api_key) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Configuración incompleta',
+        text: 'Debes configurar la API Key antes de forzar la actualización',
+        confirmButtonText: 'Aceptar'
+      });
+      return;
+    }
+
+    try {
+      setLoadingModels(prev => ({ ...prev, [providerName]: true }));
+      
+      console.log(`🔄 Forzando actualización de modelos para ${providerName}...`);
+      
+      // Forzar la recarga de modelos usando el parámetro forceRefresh
+      const chatModels = await aiProvidersService.getProviderChatModels(providerData.id, { forceRefresh: true });
+      setDynamicModels(prev => ({ ...prev, [providerName]: chatModels }));
+      
+      // También forzar la recarga de modelos de embedding
+      const embeddingModels = await aiProvidersService.getProviderEmbeddingModels(providerData.id, { forceRefresh: true });
+      setRagEmbeddingModels(prev => ({ ...prev, [providerName]: embeddingModels }));
+
+      // Recargar proveedores para actualizar timestamp
+      await loadAIProviders();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Modelos actualizados',
+        html: `
+          <div class="text-left">
+            <p class="mb-2">✅ Modelos de ${providerData.display_name} actualizados correctamente</p>
+            <p class="mb-1">📊 Modelos de chat: ${chatModels.length}</p>
+            <p class="mb-2">🧠 Modelos embedding: ${embeddingModels.length}</p>
+            <p class="text-sm text-gray-600">Total: ${chatModels.length + embeddingModels.length} modelos recargados desde API</p>
+          </div>
+        `,
+        confirmButtonText: 'Aceptar'
+      });
+    } catch (error) {
+      console.error('Error force refreshing models:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en la actualización',
+        text: `No se pudieron actualizar los modelos de ${providerData.display_name}: ${error.message}`,
+        confirmButtonText: 'Aceptar'
+      });
+    } finally {
+      setLoadingModels(prev => ({ ...prev, [providerName]: false }));
+    }
+  };
+
+  const testProvider = async (providerName) => {
+    const providerData = providers.find(p => p.provider_name === providerName);
+    if (!providerData || !providerData.api_key) {
       Swal.fire({
         icon: 'warning',
         title: 'Configuración incompleta',
@@ -511,21 +885,39 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     }
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setLoadingModels(prev => ({ ...prev, [providerName]: true }));
       
+      // Probar conexión obteniendo modelos de chat
+      const chatModels = await aiProvidersService.getProviderChatModels(providerData.id);
+      setDynamicModels(prev => ({ ...prev, [providerName]: chatModels }));
+      
+      // También obtener modelos de embedding
+      const embeddingModels = await aiProvidersService.getProviderEmbeddingModels(providerData.id);
+      setRagEmbeddingModels(prev => ({ ...prev, [providerName]: embeddingModels }));
+
       Swal.fire({
         icon: 'success',
         title: 'Prueba exitosa',
-        text: `El provider ${provider} está funcionando correctamente`,
+        html: `
+          <div class="text-left">
+            <p class="mb-2">✅ El provider ${providerData.display_name} está funcionando correctamente</p>
+            <p class="mb-1">📊 Modelos de chat: ${chatModels.length}</p>
+            <p class="mb-2">🧠 Modelos embedding: ${embeddingModels.length}</p>
+            <p class="text-sm text-gray-600">Total: ${chatModels.length + embeddingModels.length} modelos disponibles</p>
+          </div>
+        `,
         confirmButtonText: 'Aceptar'
       });
     } catch (error) {
+      console.error('Error testing provider:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error en la prueba',
-        text: `No se pudo conectar con ${provider}: ${error.message}`,
+        text: `No se pudo conectar con ${providerData.display_name}: ${error.message}`,
         confirmButtonText: 'Aceptar'
       });
+    } finally {
+      setLoadingModels(prev => ({ ...prev, [providerName]: false }));
     }
   };
 
@@ -533,19 +925,106 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     try {
       setSaving(true);
 
-      const { error } = await supabase
+      // 1. Guardar documento en la base de conocimiento
+      const { data: documentData, error: insertError } = await supabase
         .from('company_knowledge_base')
         .insert({
           corporate_client_id: selectedClient.id,
           company_id: profile?.company?.id,
-          document_title: documentForm.title,
-          document_content: documentForm.content,
-          document_category: documentForm.category,
+          title: documentForm.title,
+          content: documentForm.content,
+          category: documentForm.category,
+          knowledge_type: 'document',
           is_active: documentForm.is_active
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 2. Iniciar procesamiento RAG (vectorización)
+      try {
+        console.log('🧠 Iniciando procesamiento RAG para documento...');
+        
+        // Mostrar progreso de vectorización
+        Swal.fire({
+          title: 'Procesando documento',
+          html: `
+            <div class="text-center">
+              <div class="mb-4">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+              <p class="text-sm text-gray-600 mb-2">Vectorizando documento para búsqueda semántica...</p>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full animate-pulse" style="width: 60%"></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">Esto puede tomar unos segundos</p>
+            </div>
+          `,
+          allowOutsideClick: false,
+          showConfirmButton: false
         });
 
-      if (error) throw error;
+        // Procesar documento con RAG usando la configuración seleccionada
+        const ragResult = await ragService.processDocument({
+          ...documentData,
+          corporate_client_id: selectedClient.id,
+          company_id: profile?.company?.id
+        }, {
+          provider: aiConfig.rag.provider,
+          apiKey: aiConfig.rag.apiKey,
+          embeddingModel: aiConfig.rag.embeddingModel,
+          chunkSize: aiConfig.rag.chunkSize,
+          chunkOverlap: aiConfig.rag.chunkOverlap,
+          similarityThreshold: aiConfig.rag.similarityThreshold,
+          maxResults: aiConfig.rag.maxResults
+        });
 
+        // Cerrar modal de progreso
+        Swal.close();
+
+        // Mostrar éxito con detalles de RAG
+        Swal.fire({
+          icon: 'success',
+          title: 'Documento agregado y procesado',
+          html: `
+            <div class="text-left">
+              <p class="mb-2">✅ Documento guardado correctamente</p>
+              <p class="mb-2">🧠 Vectorización completada:</p>
+              <ul class="text-sm text-gray-600 ml-4">
+                <li>• ${ragResult.chunksProcessed} chunks procesados</li>
+                <li>• ${ragResult.embeddingsGenerated} embeddings generados</li>
+                <li>• Tiempo: ${(ragResult.processingTime / 1000).toFixed(2)}s</li>
+              </ul>
+              <p class="text-sm text-green-600 mt-2">🔍 El documento ya está disponible para búsqueda semántica</p>
+            </div>
+          `,
+          confirmButtonText: 'Aceptar'
+        });
+
+      } catch (ragError) {
+        console.warn('Error en procesamiento RAG:', ragError);
+        
+        // Cerrar modal de progreso si está abierto
+        Swal.close();
+        
+        // Mostrar advertencia pero continuar
+        Swal.fire({
+          icon: 'warning',
+          title: 'Documento agregado con advertencia',
+          html: `
+            <div class="text-left">
+              <p class="mb-2">✅ El documento se guardó correctamente</p>
+              <p class="mb-2">⚠️ Pero hubo un error en la vectorización:</p>
+              <p class="text-sm text-gray-600">${ragError.message}</p>
+              <p class="text-sm text-blue-600 mt-2">💡 Puedes intentar procesarlo más tarde desde la lista de documentos</p>
+            </div>
+          `,
+          confirmButtonText: 'Entendido'
+        });
+      }
+
+      // 3. Limpiar formulario y recargar datos
       setShowAddDocument(false);
       setDocumentForm({
         title: '',
@@ -556,20 +1035,136 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
 
       await loadKnowledgeBase(selectedClient.id);
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Documento agregado',
-        text: 'El documento se ha agregado a la base de conocimiento'
-      });
     } catch (error) {
       console.error('Error adding document:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo agregar el documento'
+        text: 'No se pudo agregar el documento: ' + error.message
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleReprocessDocument = async (document) => {
+    try {
+      // Mostrar confirmación
+      const result = await Swal.fire({
+        title: '¿Reprocesar documento?',
+        html: `
+          <div class="text-left">
+            <p class="mb-2">Se volverá a vectorizar el documento:</p>
+            <p class="font-medium mb-2">"${document.title}"</p>
+            <p class="text-sm text-gray-600">Esto eliminará los embeddings anteriores y creará nuevos.</p>
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3b82f6',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, reprocesar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!result.isConfirmed) return;
+
+      // Mostrar progreso
+      Swal.fire({
+        title: 'Reprocesando documento',
+        html: `
+          <div class="text-center">
+            <div class="mb-4">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+            <p class="text-sm text-gray-600 mb-2">Eliminando embeddings anteriores...</p>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-blue-600 h-2 rounded-full animate-pulse" style="width: 30%"></div>
+            </div>
+          </div>
+        `,
+        allowOutsideClick: false,
+        showConfirmButton: false
+      });
+
+      // 1. Eliminar embeddings existentes
+      await ragService.deleteDocumentEmbeddings(document.id);
+
+      // Actualizar mensaje de progreso
+      Swal.fire({
+        title: 'Reprocesando documento',
+        html: `
+          <div class="text-center">
+            <div class="mb-4">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+            <p class="text-sm text-gray-600 mb-2">Vectorizando documento...</p>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-blue-600 h-2 rounded-full animate-pulse" style="width: 70%"></div>
+            </div>
+          </div>
+        `,
+        allowOutsideClick: false,
+        showConfirmButton: false
+      });
+
+      // 2. Reprocesar documento usando la configuración RAG seleccionada
+      const ragResult = await ragService.processDocument({
+        ...document,
+        corporate_client_id: selectedClient.id,
+        company_id: profile?.company?.id
+      }, {
+        provider: aiConfig.rag.provider,
+        apiKey: aiConfig.rag.apiKey,
+        embeddingModel: aiConfig.rag.embeddingModel,
+        chunkSize: aiConfig.rag.chunkSize,
+        chunkOverlap: aiConfig.rag.chunkOverlap,
+        similarityThreshold: aiConfig.rag.similarityThreshold,
+        maxResults: aiConfig.rag.maxResults
+      });
+
+      // Cerrar modal de progreso
+      Swal.close();
+
+      // Mostrar éxito
+      Swal.fire({
+        icon: 'success',
+        title: 'Documento reprocesado',
+        html: `
+          <div class="text-left">
+            <p class="mb-2">✅ Documento reprocesado correctamente</p>
+            <p class="mb-2">🧠 Vectorización completada:</p>
+            <ul class="text-sm text-gray-600 ml-4">
+              <li>• ${ragResult.chunksProcessed} chunks procesados</li>
+              <li>• ${ragResult.embeddingsGenerated} embeddings generados</li>
+              <li>• Tiempo: ${(ragResult.processingTime / 1000).toFixed(2)}s</li>
+            </ul>
+            <p class="text-sm text-green-600 mt-2">🔍 El documento ya está disponible para búsqueda semántica</p>
+          </div>
+        `,
+        confirmButtonText: 'Aceptar'
+      });
+
+      // Recargar datos para actualizar el estado
+      await loadKnowledgeBase(selectedClient.id);
+
+    } catch (error) {
+      console.error('Error reprocessing document:', error);
+      
+      // Cerrar modal de progreso si está abierto
+      Swal.close();
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al reprocesar',
+        html: `
+          <div class="text-left">
+            <p class="mb-2">No se pudo reprocesar el documento:</p>
+            <p class="text-sm text-gray-600">${error.message}</p>
+          </div>
+        `,
+        confirmButtonText: 'Aceptar'
+      });
     }
   };
 
@@ -894,9 +1489,9 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     }
   };
 
-  const filteredDocuments = knowledgeBase.documents.filter(doc => 
-    doc.document_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.document_content.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDocuments = knowledgeBase.documents.filter(doc =>
+    doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredPolicies = knowledgeBase.policies.filter(policy => 
@@ -1075,56 +1670,106 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                 </p>
               </div>
               <div className="flex gap-3">
-                {activeTab === 'providers' && (
-                  <Button
-                    variant="primary"
-                    onClick={saveAIConfiguration}
-                    loading={saving}
-                    leftIcon={<Save className="w-4 h-4" />}
-                  >
-                    Guardar Configuración
-                  </Button>
-                )}
+                <Button
+                  variant="primary"
+                  onClick={saveAIConfiguration}
+                  loading={saving}
+                  leftIcon={<Save className="w-4 h-4" />}
+                >
+                  Guardar Configuración
+                </Button>
               </div>
             </div>
           </div>
 
           {selectedClient ? (
             <>
-              {/* Tabs */}
-              <div className="border-b border-gray-200 mb-6">
-                <nav className="flex space-x-8">
-                  {tabs.map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        // Mapear IDs internos a URLs en español
-                        const tabToUrlMap = {
-                          'providers': 'proveedores',
-                          'messaging': 'mensajeria',
-                          'personalization': 'personalizacion',
-                          'knowledge': 'conocimiento',
-                          'prompts': 'prompts',
-                          'analytics': 'analytics'
-                        };
+              {/* Tabs - Diseño Mejorado */}
+              <div className="mb-6">
+                {/* Tarjeta de navegación con diseño moderno */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                    {tabs.map(tab => {
+                      const isActive = activeTab === tab.id;
+                      const tabToUrlMap = {
+                        'providers': 'proveedores',
+                        'messaging': 'mensajeria',
+                        'personalization': 'personalizacion',
+                        'knowledge': 'conocimiento',
+                        'prompts': 'prompts',
+                        'analytics': 'analytics'
+                      };
 
-                        // Navegar a URL independiente cuando se hace click en un tab
-                        const spanishUrl = tabToUrlMap[tab.id] || tab.id;
-                        const newUrl = `/empresa/ia/${spanishUrl}`;
-                        window.history.pushState({}, '', newUrl);
-                        setActiveTab(tab.id);
-                      }}
-                      className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <tab.icon className="w-4 h-4" />
-                      {tab.label}
-                    </button>
-                  ))}
-                </nav>
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            // Navegar a URL independiente cuando se hace click en un tab
+                            const spanishUrl = tabToUrlMap[tab.id] || tab.id;
+                            const newUrl = `/empresa/ia/${spanishUrl}`;
+                            window.history.pushState({}, '', newUrl);
+                            setActiveTab(tab.id);
+                          }}
+                          className={`
+                            relative flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 group
+                            ${isActive
+                              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg transform scale-105'
+                              : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
+                            }
+                          `}
+                        >
+                          {/* Indicador activo */}
+                          {isActive && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
+                          )}
+                          
+                          {/* Icono con efecto */}
+                          <div className={`
+                            mb-2 p-2 rounded-lg transition-all duration-200
+                            ${isActive
+                              ? 'bg-white bg-opacity-20 shadow-inner'
+                              : 'bg-white group-hover:bg-blue-50 group-hover:shadow-sm'
+                            }
+                          `}>
+                            <tab.icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-white' : 'text-blue-600 group-hover:text-blue-700'}`} />
+                          </div>
+                          
+                          {/* Texto */}
+                          <span className="text-xs font-medium text-center leading-tight">
+                            {tab.label}
+                          </span>
+                          
+                          {/* Badge de estado para tabs específicos */}
+                          {tab.id === 'providers' && providers.filter(p => p.is_active).length > 0 && (
+                            <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-sm"></div>
+                          )}
+                          
+                          {tab.id === 'knowledge' && selectedClient && (
+                            <div className="absolute bottom-2 right-2 w-2 h-2 bg-purple-400 rounded-full shadow-sm"></div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                {/* Indicador visual del tab activo */}
+                <div className="mt-4 flex items-center justify-center">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span>
+                      Actualmente en: <strong className="text-gray-900">
+                        {tabs.find(t => t.id === activeTab)?.label || 'Desconocido'}
+                      </strong>
+                    </span>
+                    {selectedClient && (
+                      <>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-blue-600 font-medium">{selectedClient.name}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Tab Content */}
@@ -1132,119 +1777,203 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                 {/* Proveedores IA Tab */}
                 {activeTab === 'providers' && (
                   <div className="space-y-6">
+
                     <Card>
                       <h3 className="text-xl font-bold mb-4">Proveedores de Inteligencia Artificial</h3>
                       
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {Object.entries(aiConfig.providers).filter(([provider]) => provider !== 'openai').map(([provider, config]) => (
-                          <Card key={provider} className="border-2">
+                        {providers.filter(provider => ['groq', 'chutes'].includes(provider.provider_name)).map((provider) => (
+                          <Card key={provider.id} className={`border-2 ${provider.is_active ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
                             <div className="flex items-center justify-between mb-4">
-                              <h4 className="font-semibold capitalize">{provider}</h4>
-                              <ToggleSwitch
-                                checked={config.enabled}
-                                onChange={(enabled) => setAiConfig(prev => ({
-                                  ...prev,
-                                  providers: {
-                                    ...prev.providers,
-                                    [provider]: { ...config, enabled }
-                                  }
-                                }))}
-                              />
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold">{provider.display_name}</h4>
+                                {provider.is_active && (
+                                  <Badge variant="primary" size="sm">Activo</Badge>
+                                )}
+                              </div>
+                              <Button
+                                variant={provider.is_active ? "outline" : "primary"}
+                                size="sm"
+                                onClick={() => handleActivateProvider(provider.id)}
+                                disabled={provider.is_active}
+                                leftIcon={provider.is_active ? <CheckCircle className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                              >
+                                {provider.is_active ? 'Activado' : 'Activar'}
+                              </Button>
                             </div>
                             
                             <div className="space-y-3">
-                              <Input
-                                label="API Key"
-                                type="password"
-                                value={config.apiKey}
-                                onChange={(e) => setAiConfig(prev => ({
-                                  ...prev,
-                                  providers: {
-                                    ...prev.providers,
-                                    [provider]: { ...config, apiKey: e.target.value }
-                                  }
-                                }))}
-                                placeholder={`API Key de ${provider}`}
-                              />
-                              
-                              <Input
-                                label="URL Base"
-                                value={config.baseUrl}
-                                onChange={(e) => setAiConfig(prev => ({
-                                  ...prev,
-                                  providers: {
-                                    ...prev.providers,
-                                    [provider]: { ...config, baseUrl: e.target.value }
-                                  }
-                                }))}
-                                placeholder="https://api.example.com"
-                              />
-                              
-                              <Select
-                                label="Modelo"
-                                value={config.model}
-                                onChange={(model) => setAiConfig(prev => ({
-                                  ...prev,
-                                  providers: {
-                                    ...prev.providers,
-                                    [provider]: { ...config, model }
-                                  }
-                                }))}
-                                options={
-                                  provider === 'chutes' ? [
-                                    { value: 'gpt-4', label: 'GPT-4' },
-                                    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-                                    { value: 'claude-3', label: 'Claude 3' }
-                                  ] : provider === 'groq' ? [
-                                    { value: 'llama2-70b', label: 'Llama 2 70B' },
-                                    { value: 'mixtral-8x7b', label: 'Mixtral 8x7B' },
-                                    { value: 'gemma-7b', label: 'Gemma 7B' }
-                                  ] : [
-                                    { value: 'gpt-4', label: 'GPT-4' },
-                                    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }
-                                  ]
-                                }
-                              />
-                              
-                              <div className="grid grid-cols-2 gap-2">
-                                <Input
-                                  label="Max Tokens"
-                                  type="number"
-                                  value={config.maxTokens}
-                                  onChange={(e) => setAiConfig(prev => ({
-                                    ...prev,
-                                    providers: {
-                                      ...prev.providers,
-                                      [provider]: { ...config, maxTokens: parseInt(e.target.value) }
-                                    }
-                                  }))}
-                                />
-                                
-                                <Input
-                                  label="Temperature"
-                                  type="number"
-                                  step="0.1"
-                                  min="0"
-                                  max="2"
-                                  value={config.temperature}
-                                  onChange={(e) => setAiConfig(prev => ({
-                                    ...prev,
-                                    providers: {
-                                      ...prev.providers,
-                                      [provider]: { ...config, temperature: parseFloat(e.target.value) }
-                                    }
-                                  }))}
-                                />
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  API Key
+                                </label>
+                                <div className="flex gap-2">
+                                  <Input
+                                    type="password"
+                                    value={provider.api_key ? '••••••••••••••••' : ''}
+                                    onChange={(e) => {
+                                      const newApiKey = e.target.value;
+                                      handleUpdateAPIKey(provider.id, newApiKey);
+                                    }}
+                                    placeholder="API Key del proveedor"
+                                    className="flex-1"
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(provider.api_key || '');
+                                      Swal.fire({
+                                        icon: 'success',
+                                        title: 'API Key copiada',
+                                        text: 'La API key ha sido copiada al portapapeles',
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                      });
+                                    }}
+                                    disabled={!provider.api_key}
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </Button>
+                                </div>
                               </div>
                               
-                              <Button
-                                variant="outline"
-                                onClick={() => testProvider(provider)}
-                                leftIcon={<TestTube className="w-4 h-4" />}
-                                className="w-full"
-                              >
-                                Probar Conexión
-                              </Button>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Modelos Disponibles ({dynamicModels[provider.provider_name]?.length || 0})
+                                </label>
+                                
+                                {/* Vista mejorada de modelos disponibles */}
+                                <div className="space-y-2">
+                                  {loadingModels[provider.provider_name] ? (
+                                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                      <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
+                                      <span className="text-sm text-gray-600">Cargando modelos desde API...</span>
+                                    </div>
+                                  ) : (dynamicModels[provider.provider_name] || []).length > 0 ? (
+                                    <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50">
+                                      <div className="p-2 space-y-1">
+                                        {dynamicModels[provider.provider_name]
+                                          .sort((a, b) => a.name.localeCompare(b.name))
+                                          .map((model, index) => (
+                                            <div
+                                              key={model.id || index}
+                                              className="flex items-center justify-between p-2 bg-white rounded border border-gray-100 hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                                            >
+                                              <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                  <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+                                                  <span className="text-sm font-medium text-gray-900 truncate">
+                                                    {model.name}
+                                                  </span>
+                                                </div>
+                                                {model.description && (
+                                                  <p className="text-xs text-gray-500 mt-1 truncate">
+                                                    {model.description}
+                                                  </p>
+                                                )}
+                                                {model.contextWindow && (
+                                                  <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                                      {model.contextWindow.toLocaleString('es-CL')} tokens
+                                                    </span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <div className="flex items-center gap-1 ml-2">
+                                                {model.isRecommended && (
+                                                  <Badge variant="primary" size="xs">
+                                                    Recomendado
+                                                  </Badge>
+                                                )}
+                                                {model.isDefault && (
+                                                  <Badge variant="secondary" size="xs">
+                                                    Por defecto
+                                                  </Badge>
+                                                )}
+                                              </div>
+                                            </div>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                      <div className="flex items-center gap-2">
+                                        <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                                        <span className="text-sm text-yellow-800">
+                                          No hay modelos disponibles
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-yellow-600 mt-1">
+                                        {provider.api_key
+                                          ? 'Verifica tu API key o intenta recargar los modelos'
+                                          : 'Configura una API key para cargar modelos'
+                                        }
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Información adicional */}
+                                  {(dynamicModels[provider.provider_name] || []).length > 0 && (
+                                    <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded border border-blue-100">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Brain className="w-3 h-3 text-blue-600" />
+                                        <span className="font-medium text-blue-700">
+                                          {dynamicModels[provider.provider_name].length} modelos cargados
+                                        </span>
+                                      </div>
+                                      <p className="text-blue-600">
+                                        Ordenados alfabéticamente • Actualizados: {provider.last_models_fetch
+                                          ? new Date(provider.last_models_fetch).toLocaleString('es-CL', {
+                                              hour: '2-digit',
+                                              minute: '2-digit'
+                                            })
+                                          : 'Nunca'
+                                        }
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                                <div>
+                                  <span className="font-medium">Modelos de chat:</span> {(provider.chat_models || []).length}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Modelos embedding:</span> {(provider.embedding_models || []).length}
+                                </div>
+                              </div>
+                              
+                              <div className="text-xs text-gray-500">
+                                Última actualización: {provider.last_models_fetch
+                                  ? new Date(provider.last_models_fetch).toLocaleString('es-CL')
+                                  : 'Nunca'
+                                }
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => testProvider(provider.provider_name)}
+                                  leftIcon={<TestTube className="w-4 h-4" />}
+                                  className="w-full"
+                                  disabled={loadingModels[provider.provider_name] || !provider.api_key}
+                                >
+                                  {loadingModels[provider.provider_name] ? 'Cargando Modelos...' : 'Probar Conexión'}
+                                </Button>
+                                
+                                <Button
+                                  variant="outline"
+                                  onClick={() => forceRefreshModels(provider.provider_name)}
+                                  leftIcon={<RefreshCw className="w-4 h-4" />}
+                                  className="w-full"
+                                  disabled={loadingModels[provider.provider_name] || !provider.api_key}
+                                  title="Forzar recarga de modelos desde API"
+                                >
+                                  {loadingModels[provider.provider_name] ? 'Actualizando...' : 'Forzar Actualización'}
+                                </Button>
+                              </div>
                             </div>
                           </Card>
                         ))}
@@ -1288,6 +2017,183 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                           />
                         </div>
                       </div>
+                    </Card>
+
+                    {/* Configuración RAG */}
+                    <Card>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <Database className="w-5 h-5 text-purple-600" />
+                          <h3 className="text-lg font-semibold text-gray-900">Configuración RAG</h3>
+                        </div>
+                        <ToggleSwitch
+                          checked={aiConfig.rag.enabled}
+                          onChange={(enabled) => setAiConfig(prev => ({
+                            ...prev,
+                            rag: { ...prev.rag, enabled }
+                          }))}
+                          label="Habilitar RAG"
+                        />
+                      </div>
+
+                      {aiConfig.rag.enabled && (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Proveedor de Embeddings
+                              </label>
+                              <Select
+                                value={aiConfig.rag.provider}
+                                onChange={async (provider) => {
+                                  // Obtener el proveedor seleccionado
+                                  const selectedProviderData = providers.find(p => p.provider_name === provider);
+                                  
+                                  setAiConfig(prev => ({
+                                    ...prev,
+                                    rag: {
+                                      ...prev.rag,
+                                      provider,
+                                      apiKey: selectedProviderData?.api_key || ''
+                                    }
+                                  }));
+                                  
+                                  // Cargar modelos de embedding para el nuevo proveedor
+                                  if (selectedProviderData?.api_key && selectedProviderData.api_key.length > 10) {
+                                    try {
+                                      setLoadingRagModels(prev => ({ ...prev, [provider]: true }));
+                                      const embeddingModels = await aiProvidersService.getProviderEmbeddingModels(selectedProviderData.id);
+                                      setRagEmbeddingModels(prev => ({ ...prev, [provider]: embeddingModels }));
+                                    } catch (error) {
+                                      console.error('Error loading embedding models:', error);
+                                    } finally {
+                                      setLoadingRagModels(prev => ({ ...prev, [provider]: false }));
+                                    }
+                                  }
+                                }}
+                                options={providers
+                                  .filter(p => ['groq', 'chutes'].includes(p.provider_name))
+                                  .map(provider => ({
+                                    value: provider.provider_name,
+                                    label: `${provider.display_name} ${provider.is_active ? '(Activo)' : ''}`
+                                  }))}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Modelo de Embeddings
+                              </label>
+                              <Select
+                                value={aiConfig.rag.embeddingModel}
+                                onChange={(embeddingModel) => setAiConfig(prev => ({
+                                  ...prev,
+                                  rag: { ...prev.rag, embeddingModel }
+                                }))}
+                                options={
+                                  loadingRagModels[aiConfig.rag.provider]
+                                    ? [{ value: '', label: 'Cargando modelos...', disabled: true }]
+                                    : ragEmbeddingModels[aiConfig.rag.provider]?.length > 0
+                                      ? ragEmbeddingModels[aiConfig.rag.provider].map(model => ({
+                                          value: model.id,
+                                          label: `${model.name} - ${model.description || ''}`
+                                        }))
+                                      : [{ value: '', label: 'No hay modelos de embedding disponibles', disabled: true }]
+                                }
+                                placeholder="Selecciona un modelo de embedding"
+                              />
+                              {ragEmbeddingModels[aiConfig.rag.provider]?.length > 0 && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {ragEmbeddingModels[aiConfig.rag.provider].length} modelos de embedding disponibles para {aiConfig.rag.provider}
+                                </p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Tamaño de Chunk
+                              </label>
+                              <Input
+                                type="number"
+                                min="100"
+                                max="2000"
+                                value={aiConfig.rag.chunkSize}
+                                onChange={(e) => setAiConfig(prev => ({
+                                  ...prev,
+                                  rag: { ...prev.rag, chunkSize: parseInt(e.target.value) || 1000 }
+                                }))}
+                                helperText="Caracteres por chunk"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Overlap de Chunk
+                              </label>
+                              <Input
+                                type="number"
+                                min="0"
+                                max="500"
+                                value={aiConfig.rag.chunkOverlap}
+                                onChange={(e) => setAiConfig(prev => ({
+                                  ...prev,
+                                  rag: { ...prev.rag, chunkOverlap: parseInt(e.target.value) || 200 }
+                                }))}
+                                helperText="Caracteres de solapamiento entre chunks"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Umbral de Similitud
+                              </label>
+                              <Input
+                                type="number"
+                                min="0.1"
+                                max="1.0"
+                                step="0.1"
+                                value={aiConfig.rag.similarityThreshold}
+                                onChange={(e) => setAiConfig(prev => ({
+                                  ...prev,
+                                  rag: { ...prev.rag, similarityThreshold: parseFloat(e.target.value) || 0.7 }
+                                }))}
+                                helperText="Umbral mínimo para coincidencias (0.1-1.0)"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Resultados Máximos
+                              </label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="50"
+                                value={aiConfig.rag.maxResults}
+                                onChange={(e) => setAiConfig(prev => ({
+                                  ...prev,
+                                  rag: { ...prev.rag, maxResults: parseInt(e.target.value) || 10 }
+                                }))}
+                                helperText="Máximo de resultados por búsqueda"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Brain className="w-4 h-4 text-blue-600" />
+                              <h4 className="font-medium text-blue-900">Información RAG</h4>
+                            </div>
+                            <div className="text-sm text-blue-700 space-y-1">
+                              <p>• <strong>Proveedores:</strong> Usa los mismos proveedores configurados en la sección de Proveedores IA</p>
+                              <p>• <strong>Modelos:</strong> Solo se muestran modelos especializados en embeddings</p>
+                              <p>• <strong>API Keys:</strong> Se utilizan las mismas API keys configuradas para cada proveedor</p>
+                              <p>• <strong>Vectorización:</strong> Los embeddings se usan para vectorizar documentos y búsqueda semántica</p>
+                            </div>
+                          </div>
+
+                        </div>
+                      )}
                     </Card>
                   </div>
                 )}
@@ -1572,8 +2478,8 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                             };
                             setCustomResponses([...customResponses, newResponse]);
                           }}
+                          leftIcon={<Plus className="w-4 h-4" />}
                         >
-                          <Plus className="w-4 h-4" />
                           Agregar Respuesta
                         </Button>
                       </div>
@@ -1894,40 +2800,22 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                           onClick={() => setShowAddDocument(true)}
                           size="sm"
                           variant="primary"
+                          leftIcon={<Plus className="w-4 h-4" />}
                         >
-                          <Plus className="w-4 h-4" />
                           Agregar Documento
                         </Button>
                       </div>
 
                       <div className="space-y-3">
                         {filteredDocuments.map((doc) => (
-                          <div key={doc.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-gray-900">{doc.document_title}</h4>
-                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                  {doc.document_content}
-                                </p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <Badge variant="secondary" size="sm">
-                                    {doc.document_category}
-                                  </Badge>
-                                  <span className="text-xs text-gray-500">
-                                    {new Date(doc.created_at).toLocaleDateString('es-CL')}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 ml-4">
-                                <Button size="sm" variant="ghost">
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
+                          <DocumentCard
+                            key={doc.id}
+                            document={doc}
+                            onEdit={() => console.log('Edit document:', doc.id)}
+                            onDelete={() => console.log('Delete document:', doc.id)}
+                            onReprocess={() => handleReprocessDocument(doc)}
+                            corporateClientId={selectedClient.id}
+                          />
                         ))}
 
                         {filteredDocuments.length === 0 && (
@@ -1952,8 +2840,8 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                           onClick={() => setShowAddPolicy(true)}
                           size="sm"
                           variant="primary"
+                          leftIcon={<Plus className="w-4 h-4" />}
                         >
-                          <Plus className="w-4 h-4" />
                           Agregar Política
                         </Button>
                       </div>
@@ -2013,8 +2901,8 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                           onClick={() => setShowAddResponse(true)}
                           size="sm"
                           variant="primary"
+                          leftIcon={<Plus className="w-4 h-4" />}
                         >
-                          <Plus className="w-4 h-4" />
                           Agregar Respuesta
                         </Button>
                       </div>
@@ -2136,8 +3024,8 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                           onClick={() => setShowAddPrompt(true)}
                           size="sm"
                           variant="primary"
+                          leftIcon={<Plus className="w-4 h-4" />}
                         >
-                          <Plus className="w-4 h-4" />
                           Agregar Prompt
                         </Button>
                       </div>

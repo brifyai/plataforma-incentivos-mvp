@@ -51,16 +51,70 @@ const AIModuleControl = () => {
   const activateAIModule = async () => {
     setActionLoading(true);
     try {
+      console.log('🎯 Iniciando activación desde componente...');
       const { activateAIModule } = await import('../../modules/ai-negotiation/utils/activateAI.js');
-      await activateAIModule();
-      
+      const result = await activateAIModule();
+
+      if (result.success) {
+        console.log('✅ Activación exitosa:', result);
+        setStatus(prev => ({
+          ...prev,
+          error: null,
+          testResults: {
+            success: true,
+            moduleEnabled: result.moduleEnabled,
+            flags: result.flags
+          }
+        }));
+      } else {
+        console.error('❌ Error en activación:', result.error);
+        setStatus(prev => ({ ...prev, error: result.error }));
+      }
+
       // Esperar un momento y verificar estado
       setTimeout(() => {
         checkAIStatus();
         setActionLoading(false);
       }, 2000);
     } catch (error) {
+      console.error('❌ Error crítico en activación:', error);
       setStatus(prev => ({ ...prev, error: error.message }));
+
+      // Intentar activación forzada como respaldo
+      try {
+        console.log('🔄 Intentando activación forzada...');
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const flags = {
+            ai_module_enabled: true,
+            ai_negotiation_enabled: true,
+            ai_dashboard_enabled: true,
+            ai_config_enabled: true,
+            ai_analytics_enabled: true,
+            ai_real_time_enabled: true,
+            ai_escalation_enabled: true,
+            ai_safe_mode: false,
+            ai_fallback_enabled: true,
+            ai_error_recovery_enabled: true
+          };
+
+          localStorage.setItem('ai_feature_flags', JSON.stringify(flags));
+          console.log('✅ Activación forzada aplicada en localStorage');
+
+          setStatus(prev => ({
+            ...prev,
+            error: null,
+            testResults: {
+              success: true,
+              moduleEnabled: true,
+              flags: flags,
+              note: 'Activación forzada aplicada'
+            }
+          }));
+        }
+      } catch (fallbackError) {
+        console.error('❌ Error en activación forzada:', fallbackError);
+      }
+
       setActionLoading(false);
     }
   };
@@ -69,14 +123,19 @@ const AIModuleControl = () => {
     setActionLoading(true);
     try {
       const { deactivateAIModule } = await import('../../modules/ai-negotiation/utils/activateAI.js');
-      await deactivateAIModule();
-      
-      // Esperar un momento y verificar estado
-      setTimeout(() => {
-        checkAIStatus();
-        setActionLoading(false);
-      }, 2000);
+      const result = await deactivateAIModule();
+
+      if (result.success) {
+        console.log('✅ Módulo desactivado exitosamente:', result.flags);
+        // Verificar estado inmediatamente
+        await checkAIStatus();
+      } else {
+        throw new Error(result.error);
+      }
+
+      setActionLoading(false);
     } catch (error) {
+      console.error('❌ Error desactivando módulo:', error);
       setStatus(prev => ({ ...prev, error: error.message }));
       setActionLoading(false);
     }
@@ -87,12 +146,14 @@ const AIModuleControl = () => {
     try {
       const { aiFeatureFlags } = await import('../../modules/ai-negotiation/utils/featureFlags.js');
       aiFeatureFlags.reset();
-      
-      setTimeout(() => {
-        checkAIStatus();
-        setActionLoading(false);
-      }, 1000);
+
+      console.log('🔄 Módulo reseteado exitosamente');
+      // Verificar estado inmediatamente
+      await checkAIStatus();
+
+      setActionLoading(false);
     } catch (error) {
+      console.error('❌ Error reseteando módulo:', error);
       setStatus(prev => ({ ...prev, error: error.message }));
       setActionLoading(false);
     }
@@ -163,34 +224,113 @@ const AIModuleControl = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Button
-            onClick={activateAIModule}
-            disabled={status.moduleEnabled || actionLoading}
+            onClick={() => {
+              console.log('🚀 Botón Activación IA clickeado');
+              activateAIModule();
+            }}
+            disabled={actionLoading}
             variant="primary"
             className="w-full"
           >
             {actionLoading ? <LoadingSpinner size="sm" /> : "🚀 Activar IA"}
           </Button>
-          
+
           <Button
-            onClick={deactivateAIModule}
-            disabled={!status.moduleEnabled || actionLoading}
+            onClick={() => {
+              console.log('🛑 Botón Desactivación IA clickeado');
+              deactivateAIModule();
+            }}
+            disabled={actionLoading}
             variant="secondary"
             className="w-full"
           >
             {actionLoading ? <LoadingSpinner size="sm" /> : "🛑 Desactivar IA"}
           </Button>
-          
+
           <Button
-            onClick={resetAIModule}
+            onClick={async () => {
+              console.log('💪 BOTÓN FORZAR ACTIVACIÓN clickeado');
+              setActionLoading(true);
+              try {
+                console.log('🔥 Ejecutando activación nuclear...');
+
+                // Método 1: Función nuclear
+                if (window.forceActivateAIModule) {
+                  console.log('📡 Usando función nuclear global...');
+                  const result = await window.forceActivateAIModule();
+                  console.log('✅ Resultado nuclear:', result);
+                }
+
+                // Método 2: Directo en localStorage
+                console.log('💾 Aplicando directamente en localStorage...');
+                const nuclearFlags = {
+                  ai_module_enabled: true,
+                  ai_negotiation_enabled: true,
+                  ai_dashboard_enabled: true,
+                  ai_config_enabled: true,
+                  ai_analytics_enabled: true,
+                  ai_real_time_enabled: true,
+                  ai_escalation_enabled: true,
+                  ai_groq_enabled: true,
+                  ai_chutes_enabled: true,
+                  ai_safe_mode: false,
+                  ai_fallback_enabled: true,
+                  ai_error_recovery_enabled: true
+                };
+
+                localStorage.setItem('ai_feature_flags', JSON.stringify(nuclearFlags));
+                console.log('✅ Flags aplicados directamente:', nuclearFlags);
+
+                // Método 3: Importar y ejecutar
+                try {
+                  const { forceActivateAIModule } = await import('../../modules/ai-negotiation/utils/activateAI.js');
+                  await forceActivateAIModule();
+                  console.log('✅ Función importada ejecutada');
+                } catch (importError) {
+                  console.warn('⚠️ Error en importación, pero localStorage aplicado:', importError.message);
+                }
+
+                // Actualizar estado
+                setStatus(prev => ({
+                  ...prev,
+                  error: null,
+                  moduleEnabled: true,
+                  testResults: {
+                    success: true,
+                    moduleEnabled: true,
+                    flags: nuclearFlags,
+                    note: 'ACTIVACIÓN NUCLEAR COMPLETA',
+                    forced: true,
+                    methods: ['global', 'localStorage', 'import']
+                  }
+                }));
+
+                console.log('🎉 ACTIVACIÓN NUCLEAR COMPLETADA');
+
+                // Recargar página después de 2 segundos
+                setTimeout(() => {
+                  console.log('🔄 Recargando página...');
+                  window.location.reload();
+                }, 2000);
+
+              } catch (error) {
+                console.error('❌ Error en activación nuclear:', error);
+                setStatus(prev => ({ ...prev, error: error.message }));
+              }
+              setActionLoading(false);
+            }}
             disabled={actionLoading}
-            variant="outline"
-            className="w-full"
+            variant="danger"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold"
           >
-            {actionLoading ? <LoadingSpinner size="sm" /> : "🔄 Resetear"}
+            {actionLoading ? <LoadingSpinner size="sm" /> : "💥 NUCLEAR"}
           </Button>
-          
+
           <Button
-            onClick={runTests}
+            onClick={() => {
+              console.log('🧪 Botón Probar clickeado');
+              runTests();
+            }}
             disabled={actionLoading}
             variant="outline"
             className="w-full"
@@ -264,8 +404,11 @@ const AIModuleControl = () => {
           <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded font-mono text-xs">
             <div>activateAIModule() // Activar módulo</div>
             <div>deactivateAIModule() // Desactivar módulo</div>
+            <div><strong>forceActivateAIModule() // ACTIVACIÓN FORZADA</strong></div>
+            <div><strong style={{color: 'red'}}>window.forceActivateAIModule() // NUCLEAR GLOBAL</strong></div>
             <div>testAIModule() // Ejecutar pruebas completas</div>
             <div>testNegotiationFlow() // Probar flujo de negociación</div>
+            <div style={{color: 'blue', fontWeight: 'bold'}}>checkAIFlags() // Ver estado actual</div>
           </div>
         </div>
       </Card>

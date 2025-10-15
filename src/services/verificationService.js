@@ -9,6 +9,40 @@
  */
 
 import { supabase } from '../config/supabase';
+import { createClient } from '@supabase/supabase-js';
+import { getVerificationSubmittedTemplate } from './emailTemplates';
+
+// Cliente con service role para operaciones administrativas
+// Solo se inicializa si hay una SERVICE_ROLE_KEY válida
+let supabaseAdmin = null;
+
+const initializeSupabaseAdmin = () => {
+  const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!serviceRoleKey || serviceRoleKey.includes('3k3k3k3k') || serviceRoleKey.length < 100) {
+    console.warn('⚠️ SERVICE_ROLE_KEY no válida o no configurada. Las operaciones de administrador estarán limitadas.');
+    return null;
+  }
+
+  try {
+    return createClient(
+      import.meta.env.VITE_SUPABASE_URL,
+      serviceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+  } catch (error) {
+    console.error('❌ Error inicializando supabaseAdmin:', error);
+    return null;
+  }
+};
+
+// Inicializar cliente admin
+supabaseAdmin = initializeSupabaseAdmin();
 
 /**
  * Tipos de estado de verificación
@@ -45,7 +79,11 @@ export const getCompanyVerification = async (companyId) => {
         company_id,
         status,
         certificado_vigencia_url,
+        certificado_vigencia_filename,
+        certificado_vigencia_uploaded_at,
         informe_equifax_url,
+        informe_equifax_filename,
+        informe_equifax_uploaded_at,
         submitted_at,
         approved_at,
         rejected_at,
@@ -125,6 +163,8 @@ export const getCompanyVerification = async (companyId) => {
  */
 export const upsertCompanyVerification = async (companyId, data) => {
   try {
+    console.log('🔍 upsertCompanyVerification - Datos recibidos:', { companyId, data });
+    
     const { data: verification, error } = await supabase
       .from('company_verifications')
       .upsert({
@@ -134,16 +174,43 @@ export const upsertCompanyVerification = async (companyId, data) => {
       }, {
         onConflict: 'company_id'
       })
-      .select()
+      .select(`
+        id,
+        company_id,
+        status,
+        certificado_vigencia_url,
+        certificado_vigencia_filename,
+        certificado_vigencia_uploaded_at,
+        informe_equifax_url,
+        informe_equifax_filename,
+        informe_equifax_uploaded_at,
+        submitted_at,
+        approved_at,
+        rejected_at,
+        assigned_to,
+        reviewed_by,
+        decision_notes,
+        rejection_reason,
+        correction_requests,
+        correction_deadline,
+        created_at,
+        updated_at
+      `)
       .single();
 
     if (error) {
+      console.error('❌ Error en upsertCompanyVerification:', error);
       return { verification: null, error: error.message };
     }
 
+    console.log('✅ upsertCompanyVerification - Éxito:', verification);
+    console.log('🔍 Verificando campos de filename:', {
+      certificado_vigencia_filename: verification?.certificado_vigencia_filename,
+      informe_equifax_filename: verification?.informe_equifax_filename
+    });
     return { verification, error: null };
   } catch (error) {
-    console.error('Error upserting company verification:', error);
+    console.error('💥 Error general en upsertCompanyVerification:', error);
     return { verification: null, error: 'Error al guardar verificación' };
   }
 };
@@ -157,57 +224,254 @@ export const upsertCompanyVerification = async (companyId, data) => {
  */
 export const uploadVerificationDocument = async (companyId, documentType, file) => {
   try {
-    // Verificar que el bucket existe
-    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-
-    if (bucketError) {
+    console.log('🔍 Verificando bucket verification-documents...');
+    
+    // Verificar que el bucket existe usando acceso directo (más confiable)
+    console.log('🔍 Verificando acceso directo al bucket verification-documents...');
+    
+    let bucketExists = false;
+    
+    try {
+      // Intentar acceso directo al bucket (método más confiable)
+      const { data: testFiles, error: accessError } = await supabase.storage
+        .from('verification-documents')
+        .list('', { limit: 1 });
+      
+      if (accessError) {
+        if (accessError.message.includes('not found') || accessError.message.includes('does not exist')) {
+          console.log('❌ Bucket verification-documents no existe (acceso directo falló)');
+        } else {
+          console.log('⚠️ Error de acceso al bucket (puede existir pero sin permisos):', accessError.message);
+        }
+      } else {
+        console.log('✅ Bucket verification-documents EXISTE y es accesible');
+        console.log('📄 Archivos en el bucket:', testFiles?.length || 0);
+        bucketExists = true;
+      }
+    } catch (error) {
+      console.error('❌ Error verificando acceso directo:', error.message);
+    }
+    
+    // Si el acceso directo falla, intentar con el método de lista como fallback
+    if (!bucketExists) {
+      console.log('🔄 Intentando método de lista como fallback...');
+      try {
+        const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+        
+        if (!bucketError && buckets) {
+          const verificationBucket = buckets.find(b => b.name === 'verification-documents');
+          if (verificationBucket) {
+            console.log('✅ Bucket verification-documents encontrado en lista');
+            bucketExists = true;
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Método de lista también falló:', error.message);
+      }
+    }
+    
+    if (!bucketExists) {
+      console.log('❌ Bucket verification-documents no encontrado por ningún método');
       return {
         url: null,
-        error: 'Error de configuración: No se puede acceder al almacenamiento. Contacte al administrador.'
+        error: `Error de configuración: Bucket "verification-documents" no encontrado.
+        
+        Solución:
+        1. Ve a: https://supabase.com/dashboard/project/wvluqdldygmgncqqjkow/storage
+        2. Crea el bucket "verification-documents" como público
+        3. Espera 1-2 minutos y vuelve a intentar
+        
+        Si el bucket ya existe, recarga la página y limpia la caché del navegador.`
       };
     }
 
-    const verificationBucket = buckets.find(b => b.name === 'verification-documents');
-
-    if (!verificationBucket) {
-      return {
-        url: null,
-        error: 'Error de configuración: Bucket de documentos no encontrado. El administrador debe crear el bucket "verification-documents" en Supabase Storage.'
-      };
-    }
+    // El bucket existe y es accesible, continuar con la subida del archivo
+    console.log('✅ Bucket verification-documents confirmado, procediendo con la subida...');
 
     // Generar nombre único para el archivo
     const fileExt = file.name.split('.').pop();
     const fileName = `${companyId}/${documentType}_${Date.now()}.${fileExt}`;
 
-    // Subir archivo a Supabase Storage
-    const { data, error } = await supabase.storage
-      .from('verification-documents')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    console.log('📤 Iniciando subida del archivo...');
+    console.log('📋 Detalles de la subida:', {
+      bucket: 'verification-documents',
+      path: fileName,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      lastModified: new Date(file.lastModified).toISOString()
+    });
 
-    if (error) {
-      console.error('Storage upload error:', error);
+    let uploadData;
+    let uploadError;
+
+    try {
+      const result = await supabase.storage
+        .from('verification-documents')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      uploadData = result.data;
+      uploadError = result.error;
+    } catch (catchError) {
+      console.error('❌ Excepción durante la subida:', catchError);
       return {
         url: null,
-        error: `Error al subir archivo: ${error.message}`
+        error: `Error crítico al subir el archivo: ${catchError.message}. 
+                Detalles: ${catchError.stack || 'No hay stack trace disponible'}`
       };
     }
 
-    // Obtener URL pública
-    const { data: { publicUrl } } = supabase.storage
-      .from('verification-documents')
-      .getPublicUrl(fileName);
+    if (uploadError) {
+      console.error('❌ Error en la subida:', uploadError);
+      console.error('Detalles completos del error:', {
+        message: uploadError.message,
+        status: uploadError.status,
+        statusCode: uploadError.statusCode,
+        error: uploadError.error
+      });
 
+      // Mensajes de error específicos según el tipo
+      let errorMessage = `Error al subir el archivo: ${uploadError.message}`;
+      
+      if (uploadError.message.includes('Bucket not found')) {
+        errorMessage = 'Error: El bucket verification-documents no existe. Contacte al administrador.';
+      } else if (uploadError.message.includes('duplicate')) {
+        errorMessage = 'Error: Ya existe un archivo con el mismo nombre. Intente con otro nombre o elimine el archivo anterior.';
+      } else if (uploadError.message.includes('size')) {
+        errorMessage = 'Error: El archivo es demasiado grande. El tamaño máximo permitido es 5MB.';
+      } else if (uploadError.message.includes('mime') || uploadError.message.includes('type')) {
+        errorMessage = 'Error: Tipo de archivo no permitido. Solo se aceptan PDF, JPEG y PNG.';
+      } else if (uploadError.message.includes('permission') || uploadError.message.includes('unauthorized')) {
+        errorMessage = 'Error: No tiene permisos para subir archivos. Contacte al administrador.';
+      } else if (uploadError.message.includes('policy')) {
+        errorMessage = 'Error: Políticas de acceso (RLS) no configuradas correctamente. Contacte al administrador.';
+      } else if (uploadError.status >= 500) {
+        errorMessage = 'Error del servidor. Intente nuevamente en unos minutos.';
+      }
+
+      return {
+        url: null,
+        error: `${errorMessage}. Verifique su conexión e intente nuevamente.`
+      };
+    }
+
+    console.log('✅ Archivo subido exitosamente:', uploadData);
+
+    // Obtener URL pública
+    console.log('🔗 Obteniendo URL pública...');
+    let publicUrl;
+    
+    try {
+      const { data } = supabase.storage
+        .from('verification-documents')
+        .getPublicUrl(fileName);
+      
+      publicUrl = data?.publicUrl;
+      console.log('✅ URL pública generada (método 1):', publicUrl);
+    } catch (urlError) {
+      console.error('❌ Error generando URL pública (método 1):', urlError);
+    }
+
+    // Si el primer método falló, intentar con el método alternativo
+    if (!publicUrl) {
+      try {
+        const { data } = supabase.storage
+          .from('verification-documents')
+          .getPublicUrl(fileName);
+        
+        publicUrl = data.publicUrl;
+        console.log('✅ URL pública generada (método 2):', publicUrl);
+      } catch (urlError2) {
+        console.error('❌ Error generando URL pública (método 2):', urlError2);
+      }
+    }
+
+    // Si ambos métodos fallan, generar URL manualmente
+    if (!publicUrl) {
+      const manualUrl = `https://wvluqdldygmgncqqjkow.supabase.co/storage/v1/object/public/verification-documents/${fileName}`;
+      console.log('🔄 Usando URL manual:', manualUrl);
+      publicUrl = manualUrl;
+    }
+
+    console.log('🔗 URL final a retornar:', publicUrl);
     return { url: publicUrl, fileName, error: null };
   } catch (error) {
-    console.error('Error uploading verification document:', error);
+    console.error('💥 Error general en uploadVerificationDocument:', error);
     return {
       url: null,
       error: 'Error al subir documento. Verifique su conexión e intente nuevamente.'
     };
+  }
+};
+
+/**
+ * Envía email de notificación al administrador
+ * @param {Object} companyData - Datos de la empresa
+ * @param {Object} verificationData - Datos de verificación
+ * @param {Object} representativeData - Datos del representante
+ * @returns {Promise<{success, error}>}
+ */
+const sendVerificationNotificationEmail = async (companyData, verificationData, representativeData) => {
+  try {
+    console.log('📧 Enviando email de notificación a soporte@aintelligence.cl');
+    
+    // Obtener plantilla de email
+    const emailTemplate = getVerificationSubmittedTemplate(companyData, verificationData, representativeData);
+    
+    // En desarrollo, simular el envío de email
+    if (import.meta.env.DEV) {
+      console.log('📧 MODO DESARROLLO: Simulando envío de email');
+      console.log('📧 Para:', 'soporte@aintelligence.cl');
+      console.log('📧 Subject:', emailTemplate.subject);
+      console.log('📧 HTML length:', emailTemplate.html.length);
+      
+      // Guardar el email en una tabla de logs para desarrollo (opcional)
+      try {
+        await supabase
+          .from('email_logs')
+          .insert({
+            to_email: 'soporte@aintelligence.cl',
+            subject: emailTemplate.subject,
+            html_content: emailTemplate.html,
+            email_type: 'verification_submitted',
+            company_id: companyData.id,
+            verification_id: verificationData.id,
+            sent_at: new Date().toISOString(),
+            simulated: true
+          });
+      } catch (logError) {
+        console.warn('⚠️ No se pudo guardar log de email (tabla email_logs puede no existir):', logError.message);
+      }
+      
+      return { success: true, simulated: true };
+    }
+    
+    // En producción, enviar email real usando el servicio de email
+    const emailData = {
+      to: 'soporte@aintelligence.cl',
+      subject: emailTemplate.subject,
+      html: emailTemplate.html
+    };
+    
+    // Usar el servicio de email existente
+    const { error } = await supabase.functions.invoke('send-email', {
+      body: emailData
+    });
+    
+    if (error) {
+      console.error('❌ Error enviando email:', error);
+      return { success: false, error: error.message };
+    }
+    
+    console.log('✅ Email enviado exitosamente a soporte@aintelligence.cl');
+    return { success: true, simulated: false };
+    
+  } catch (error) {
+    console.error('💥 Error general enviando email:', error);
+    return { success: false, error: 'Error al enviar notificación por email' };
   }
 };
 
@@ -218,16 +482,27 @@ export const uploadVerificationDocument = async (companyId, documentType, file) 
  */
 export const submitVerificationForReview = async (companyId) => {
   try {
+    console.log('🔍 submitVerificationForReview - Iniciando para companyId:', companyId);
+    
     // Verificar que tenga todos los documentos requeridos
     const { verification, error: getError } = await getCompanyVerification(companyId);
 
     if (getError) {
+      console.error('❌ Error obteniendo verificación:', getError);
       return { success: false, error: getError };
     }
 
     if (!verification) {
+      console.error('❌ No se encontró verificación para la empresa:', companyId);
       return { success: false, error: 'No se encontró verificación para esta empresa' };
     }
+
+    console.log('📋 Verificación encontrada:', {
+      id: verification.id,
+      status: verification.status,
+      hasCertificado: !!verification.certificado_vigencia_url,
+      hasInforme: !!verification.informe_equifax_url
+    });
 
     // Verificar documentos
     const hasCertificadoVigencia = verification.certificado_vigencia_url;
@@ -238,22 +513,76 @@ export const submitVerificationForReview = async (companyId) => {
     }
 
     // Actualizar estado a submitted
-    const { error: updateError } = await supabase
+    console.log('📤 Actualizando estado a submitted...');
+    const { data, error: updateError } = await supabase
       .from('company_verifications')
       .update({
         status: VERIFICATION_STATUS.SUBMITTED,
         submitted_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
-      .eq('company_id', companyId);
+      .eq('company_id', companyId)
+      .select()
+      .single();
 
     if (updateError) {
+      console.error('❌ Error actualizando verificación:', updateError);
       return { success: false, error: updateError.message };
     }
 
-    return { success: true, error: null };
+    console.log('✅ Verificación actualizada exitosamente:', data);
+    
+    // Obtener datos completos de la empresa y representante para el email
+    let companyData = null;
+    let representativeData = null;
+    
+    try {
+      // Obtener datos de la empresa
+      const { data: companyInfo } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', companyId)
+        .single();
+      
+      if (companyInfo) {
+        companyData = companyInfo;
+        
+        // Obtener datos del representante (usuario)
+        const { data: userInfo } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', companyInfo.user_id)
+          .single();
+        
+        if (userInfo) {
+          representativeData = userInfo;
+        }
+      }
+    } catch (dataError) {
+      console.warn('⚠️ Error obteniendo datos para email (notificación se enviará sin datos completos):', dataError.message);
+    }
+    
+    // Enviar email de notificación al administrador
+    console.log('📧 Enviando notificación por email...');
+    const emailResult = await sendVerificationNotificationEmail(
+      companyData || { id: companyId, company_name: 'Empresa Desconocida' },
+      data,
+      representativeData || { email: 'No especificado' }
+    );
+    
+    if (emailResult.success) {
+      console.log('✅ Notificación por email enviada exitosamente');
+      if (emailResult.simulated) {
+        console.log('📧 Email simulado (modo desarrollo)');
+      }
+    } else {
+      console.warn('⚠️ No se pudo enviar email de notificación:', emailResult.error);
+      // No fallar toda la operación si el email no se envía
+    }
+    
+    return { success: true, error: null, emailSent: emailResult.success };
   } catch (error) {
-    console.error('Error submitting verification:', error);
+    console.error('💥 Error general en submitVerificationForReview:', error);
     return { success: false, error: 'Error al enviar verificación' };
   }
 };

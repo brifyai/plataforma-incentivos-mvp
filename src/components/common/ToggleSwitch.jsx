@@ -8,15 +8,19 @@ import React from 'react';
 
 const ToggleSwitch = ({
   enabled,
+  checked, // Aceptar checked como alternativa a enabled
   onChange,
   label,
   description,
   disabled = false,
   size = 'md'
 }) => {
+  // Usar checked si está presente, si no usar enabled
+  const isActive = checked !== undefined ? checked : enabled;
+  
   const handleToggle = () => {
     if (!disabled && onChange) {
-      onChange(!enabled);
+      onChange(!isActive);
     }
   };
 
@@ -65,18 +69,18 @@ const ToggleSwitch = ({
         id={`toggle-${label?.replace(/\s+/g, '-').toLowerCase()}`}
         className={`
           relative inline-flex ${classes.switch} flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
-          ${enabled ? 'bg-primary-600' : 'bg-secondary-200'}
+          ${isActive ? 'bg-primary-600' : 'bg-secondary-200'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
         role="switch"
-        aria-checked={enabled}
+        aria-checked={isActive}
         onClick={handleToggle}
         disabled={disabled}
       >
         <span
           className={`
             pointer-events-none inline-block ${classes.circle} rounded-full bg-white shadow transform ring-0 transition duration-200 ease-in-out
-            ${enabled ? classes.translate : 'translate-x-0.5'}
+            ${isActive ? classes.translate : 'translate-x-0.5'}
           `}
         />
       </button>

@@ -1,333 +1,165 @@
-/**
- * Bulk Import Page
- *
- * Página para importar deudas masivamente desde archivos CSV/Excel
- */
-
-import React, { useState } from 'react';
-import { Card, Button, Input, ProgressBar } from '../../components/common';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { bulkImportDebts } from '../../services/bulkImportService';
-import Swal from 'sweetalert2';
-import {
-  Upload,
-  FileText,
-  CheckCircle,
-  AlertCircle,
-  Download,
-  X
-} from 'lucide-react';
+import { getCompanyVerification } from '../../services/verificationService';
+import BulkImportDebts from '../../components/company/BulkImportDebts';
 
 const BulkImportPage = () => {
-  const { user } = useAuth();
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [results, setResults] = useState(null);
-  const [errors, setErrors] = useState([]);
+  const { user, profile } = useAuth();
+  const [verification, setVerification] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleFileSelect = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      // Validar tipo de archivo
-      const allowedTypes = [
-        'text/csv',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      ];
-
-      if (!allowedTypes.includes(selectedFile.type)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Tipo de archivo no válido',
-          text: 'Por favor, selecciona un archivo CSV o Excel (.xlsx, .xls)',
-          confirmButtonText: 'Aceptar',
-          confirmButtonColor: '#EF4444'
-        });
+  useEffect(() => {
+    const loadVerification = async () => {
+      console.log('🔍 BulkImportPage - useEffect iniciado');
+      console.log('🔍 BulkImportPage - Profile:', profile);
+      console.log('🔍 BulkImportPage - Profile.company_id:', profile?.company_id);
+      
+      if (!profile?.company_id) {
+        console.log('❌ BulkImportPage - No hay company_id, saliendo');
+        setLoading(false);
         return;
       }
 
-      // Validar tamaño (máximo 10MB)
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Archivo demasiado grande',
-          text: 'El archivo no puede superar los 10MB',
-          confirmButtonText: 'Aceptar',
-          confirmButtonColor: '#EF4444'
-        });
-        return;
+      try {
+        console.log('🔍 BulkImportPage - Cargando verificación para company:', profile.company_id);
+        const { verification, error } = await getCompanyVerification(profile.company_id);
+        
+        console.log('🔍 BulkImportPage - Respuesta de getCompanyVerification:', { verification, error });
+        
+        if (error) {
+          console.error('❌ BulkImportPage - Error cargando verificación:', error);
+        } else {
+          console.log('✅ BulkImportPage - Verificación cargada:', verification);
+          console.log('✅ BulkImportPage - Verification.status:', verification?.status);
+          setVerification(verification);
+        }
+      } catch (error) {
+        console.error('💥 BulkImportPage - Error general:', error);
+      } finally {
+        console.log('🔍 BulkImportPage - Finalizando loading');
+        setLoading(false);
       }
+    };
 
-      setFile(selectedFile);
-      setResults(null);
-      setErrors([]);
+    loadVerification();
+  }, [profile]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  console.log('🔍 BulkImportPage - Renderizando con verification:', verification);
+  console.log('🔍 BulkImportPage - Puede operar:', verification?.status);
+
+  // BLOQUEO DIRECTO: Solo permitir acceso si está aprobado explícitamente
+  const isApproved = verification?.status === 'approved';
+  console.log('🚫 BulkImportPage - isApproved:', isApproved);
+
+  // Si no está aprobado, mostrar bloqueo
+  if (!isApproved) {
+    console.log('🚫 BulkImportPage - BLOQUEANDO ACCESO - Estado:', verification?.status);
+    
+    // Determinar el mensaje específico según el estado
+    let statusMessage = '';
+    let statusColor = 'red';
+    
+    if (!verification) {
+      statusMessage = 'Su empresa no ha iniciado el proceso de verificación. Debe subir los documentos requeridos.';
+      statusColor = 'orange';
+    } else if (verification.status === 'pending') {
+      statusMessage = 'Su empresa ha iniciado el proceso de verificación pero debe completar todos los documentos.';
+      statusColor = 'yellow';
+    } else if (verification.status === 'submitted') {
+      statusMessage = 'Su verificación ha sido enviada y está siendo revisada por el administrador.';
+      statusColor = 'blue';
+    } else if (verification.status === 'under_review') {
+      statusMessage = 'Su verificación está siendo revisada actualmente por el administrador.';
+      statusColor = 'blue';
+    } else if (verification.status === 'rejected') {
+      statusMessage = 'Su verificación fue rechazada. Contacte al administrador para más información.';
+      statusColor = 'red';
+    } else if (verification.status === 'needs_corrections') {
+      statusMessage = 'Su verificación necesita correcciones. Por favor revise los comentarios del administrador.';
+      statusColor = 'orange';
+    } else {
+      statusMessage = 'Su empresa debe estar verificada y aprobada para usar esta función.';
+      statusColor = 'red';
     }
-  };
 
-  const handleUpload = async () => {
-    if (!file) return;
+    const bgColor = statusColor === 'red' ? 'bg-red-50' :
+                   statusColor === 'orange' ? 'bg-orange-50' :
+                   statusColor === 'yellow' ? 'bg-yellow-50' :
+                   statusColor === 'blue' ? 'bg-blue-50' : 'bg-gray-50';
+    
+    const borderColor = statusColor === 'red' ? 'border-red-200' :
+                       statusColor === 'orange' ? 'border-orange-200' :
+                       statusColor === 'yellow' ? 'border-yellow-200' :
+                       statusColor === 'blue' ? 'border-blue-200' : 'border-gray-200';
+    
+    const textColor = statusColor === 'red' ? 'text-red-800' :
+                      statusColor === 'orange' ? 'text-orange-800' :
+                      statusColor === 'yellow' ? 'text-yellow-800' :
+                      statusColor === 'blue' ? 'text-blue-800' : 'text-gray-800';
 
-    try {
-      setUploading(true);
-      setProgress(0);
-      setResults(null);
-      setErrors([]);
-
-      // Simular progreso
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
-
-      const result = await bulkImportDebts(file, user.id, (progressUpdate) => {
-        setProgress(progressUpdate);
-      });
-
-      clearInterval(progressInterval);
-      setProgress(100);
-
-      setResults(result);
-
-      if (result.errors && result.errors.length > 0) {
-        setErrors(result.errors);
-      }
-
-      // Mostrar resultado
-      await Swal.fire({
-        icon: result.success ? 'success' : 'warning',
-        title: result.success ? '¡Importación completada!' : 'Importación con advertencias',
-        text: `Se procesaron ${result.totalProcessed} registros. ${result.successfulImports} exitosos, ${result.errors?.length || 0} errores.`,
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: result.success ? '#3B82F6' : '#F59E0B'
-      });
-
-    } catch (error) {
-      console.error('Error importing debts:', error);
-      setProgress(0);
-
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error en la importación',
-        text: error.message || 'Ocurrió un error al procesar el archivo',
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#EF4444'
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const downloadTemplate = () => {
-    // Crear un archivo CSV de ejemplo
-    const csvContent = `rut,nombre,monto_original,descripcion,fecha_vencimiento
-12345678-9,Juan Pérez,500000,Deuda por servicios,2024-12-31
-98765432-1,María González,750000,Préstamo personal,2024-11-15
-11223344-5,Carlos Rodríguez,300000,Factura pendiente,2024-10-20`;
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'plantilla_importacion_deudas.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const clearFile = () => {
-    setFile(null);
-    setResults(null);
-    setErrors([]);
-    setProgress(0);
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Importar Deudas</h1>
-          <p className="text-gray-600 mt-1">
-            Carga masiva de deudas desde archivos CSV o Excel
+    return (
+      <div className={`${bgColor} ${borderColor} rounded-lg p-8 text-center m-8`}>
+        <div className={`${textColor} mb-4`}>
+          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 className={`text-xl font-bold ${textColor} mb-4`}>
+          🚫 Importación Masiva Bloqueada
+        </h3>
+        <p className={`${textColor} mb-4`}>
+          {statusMessage}
+        </p>
+        <div className={`bg-${statusColor}-100 p-4 rounded border ${statusColor}-300 mb-4`}>
+          <p className={`text-sm ${textColor}`}>
+            <strong>Estado actual:</strong> {verification?.status || 'No iniciado'}<br/>
+            <strong>Requisito:</strong> Estado debe ser 'approved'<br/>
+            <strong>Acción:</strong> Complete el proceso de verificación
           </p>
         </div>
+        <button
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          onClick={() => window.location.href = '/empresa/verification'}
+        >
+          {verification ? 'Ver Estado de Verificación' : 'Iniciar Verificación'}
+        </button>
       </div>
+    );
+  }
 
-      {/* Template Download */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Plantilla de Importación</h3>
-              <p className="text-sm text-gray-600">
-                Descarga la plantilla CSV con el formato correcto
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            onClick={downloadTemplate}
-            leftIcon={<Download className="w-4 h-4" />}
-          >
-            Descargar Plantilla
-          </Button>
+  console.log('✅ BulkImportPage - PERMITIENDO ACCESO - Estado aprobado');
+  
+  return (
+    <div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Importación Masiva de Deudas</h1>
+          <p className="mt-2 text-gray-600">
+            Importe múltiples deudas desde un archivo CSV o Excel
+          </p>
         </div>
-      </Card>
 
-      {/* File Upload */}
-      <Card>
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Seleccionar Archivo</h3>
-            <p className="text-gray-600 text-sm mb-4">
-              Selecciona un archivo CSV o Excel con las deudas a importar.
-              Asegúrate de seguir el formato de la plantilla.
-            </p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="text-green-800 font-medium">
+              Empresa verificada y aprobada - Puede usar la importación masiva
+            </span>
           </div>
-
-          {/* File Input */}
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            {file ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-3">
-                  <FileText className="w-8 h-8 text-blue-600" />
-                  <div className="text-left">
-                    <p className="font-medium text-gray-900">{file.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFile}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <Upload className="w-12 h-12 text-gray-400 mx-auto" />
-                <div>
-                  <p className="text-gray-900 font-medium">Arrastra y suelta tu archivo aquí</p>
-                  <p className="text-gray-500 text-sm">o</p>
-                  <label className="inline-block">
-                    <span className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium">
-                      selecciona un archivo
-                    </span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".csv,.xlsx,.xls"
-                      onChange={handleFileSelect}
-                    />
-                  </label>
-                </div>
-                <p className="text-xs text-gray-500">
-                  CSV, Excel (.xlsx, .xls) - Máximo 10MB
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Upload Button */}
-          {file && (
-            <div className="flex justify-center">
-              <Button
-                onClick={handleUpload}
-                loading={uploading}
-                disabled={uploading}
-                leftIcon={<Upload className="w-4 h-4" />}
-                className="px-8"
-              >
-                {uploading ? 'Importando...' : 'Importar Deudas'}
-              </Button>
-            </div>
-          )}
-
-          {/* Progress */}
-          {uploading && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Progreso de importación</span>
-                <span>{progress}%</span>
-              </div>
-              <ProgressBar progress={progress} />
-            </div>
-          )}
         </div>
-      </Card>
 
-      {/* Results */}
-      {results && (
-        <Card>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Resultados de la Importación</h3>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{results.successfulImports || 0}</div>
-                <div className="text-sm text-green-700">Importados</div>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">{results.errors?.length || 0}</div>
-                <div className="text-sm text-red-700">Errores</div>
-              </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{results.totalProcessed || 0}</div>
-                <div className="text-sm text-blue-700">Procesados</div>
-              </div>
-              <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-600">{results.duplicates || 0}</div>
-                <div className="text-sm text-yellow-700">Duplicados</div>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Errors */}
-      {errors.length > 0 && (
-        <Card>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Errores Encontrados</h3>
-            </div>
-
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {errors.map((error, index) => (
-                <div key={index} className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-red-900">
-                        Fila {error.row || index + 1}
-                      </p>
-                      <p className="text-sm text-red-700">{error.message}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      )}
+        <BulkImportDebts />
+      </div>
     </div>
   );
 };

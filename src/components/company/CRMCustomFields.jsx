@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, Button, Input, Select, Modal, Badge } from '../common';
+import Swal from 'sweetalert2';
 import {
   Settings,
   Plus,
@@ -103,24 +104,55 @@ const CRMCustomFields = ({ profile, crmConfig, onUpdate }) => {
   };
 
   const handleDeleteField = async (fieldId) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este mapeo de campo?')) {
+    const result = await Swal.fire({
+      title: '¿Eliminar Campo?',
+      text: '¿Estás seguro de que deseas eliminar este mapeo de campo?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
       return;
     }
 
     try {
       // Aquí iría la lógica para eliminar el campo de la base de datos
       setCustomFields(prev => prev.filter(f => f.id !== fieldId));
-      alert('Campo personalizado eliminado exitosamente');
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Eliminado!',
+        text: 'Campo personalizado eliminado exitosamente',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#10B981',
+        timer: 2000,
+        timerProgressBar: true
+      });
     } catch (error) {
       console.error('Error deleting custom field:', error);
-      alert('Error al eliminar el campo personalizado');
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al eliminar el campo personalizado',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
     }
   };
 
   const handleSaveField = async () => {
     try {
       if (!editingField.platformField || !editingField.crmField) {
-        alert('Debes seleccionar un campo de plataforma y especificar el campo del CRM');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Campos Requeridos',
+          text: 'Debes seleccionar un campo de plataforma y especificar el campo del CRM',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#EF4444'
+        });
         return;
       }
 
@@ -144,11 +176,25 @@ const CRMCustomFields = ({ profile, crmConfig, onUpdate }) => {
 
       setShowAddModal(false);
       setEditingField(null);
-      alert('Campo personalizado guardado exitosamente');
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Guardado!',
+        text: 'Campo personalizado guardado exitosamente',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#10B981',
+        timer: 2000,
+        timerProgressBar: true
+      });
 
     } catch (error) {
       console.error('Error saving custom field:', error);
-      alert('Error al guardar el campo personalizado');
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al guardar el campo personalizado',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
     }
   };
 
@@ -171,14 +217,14 @@ const CRMCustomFields = ({ profile, crmConfig, onUpdate }) => {
     return (
       <div className="mb-8">
         <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-          <div className="text-center py-12">
-            <div className="p-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl inline-block mb-6">
-              <Database className="w-16 h-16 text-gray-600" />
+          <div className="text-center py-8">
+            <div className="p-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl inline-block mb-4">
+              <Database className="w-8 h-8 text-gray-600" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
               Campos Personalizados
             </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            <p className="text-sm text-gray-600 mb-4 max-w-md mx-auto">
               Configura primero tu integración CRM para gestionar campos personalizados.
             </p>
           </div>

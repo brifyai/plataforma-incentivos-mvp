@@ -352,13 +352,6 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           <Button
             variant="outline"
             size="sm"
-            leftIcon={<Upload className="w-4 h-4" />}
-          >
-            Importar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             leftIcon={<Download className="w-4 h-4" />}
           >
             Exportar

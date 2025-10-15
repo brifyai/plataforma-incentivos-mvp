@@ -340,53 +340,53 @@ const CompanyAnalyticsPage = () => {
       </div>
 
       {/* Additional Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <div className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Eye className="w-6 h-6 text-blue-600" />
+          <div className="p-3">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Eye className="w-4 h-4 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-secondary-900">Pago Promedio</h3>
-                <p className="text-secondary-600">Monto promedio por transacción</p>
+                <h3 className="text-sm font-semibold text-secondary-900">Pago Promedio</h3>
+                <p className="text-xs text-secondary-600">Monto promedio por transacción</p>
               </div>
             </div>
-            <p className="text-3xl font-bold text-secondary-900">
+            <p className="text-lg font-bold text-secondary-900">
               {formatCurrency(analytics.averagePayment)}
             </p>
           </div>
         </Card>
 
         <Card>
-          <div className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+          <div className="p-3">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <TrendingUp className="w-4 h-4 text-green-600" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-secondary-900">Eficiencia</h3>
-                <p className="text-secondary-600">Pagos procesados vs. tiempo</p>
+                <h3 className="text-sm font-semibold text-secondary-900">Eficiencia</h3>
+                <p className="text-xs text-secondary-600">Pagos procesados vs. tiempo</p>
               </div>
             </div>
-            <p className="text-3xl font-bold text-secondary-900">
+            <p className="text-lg font-bold text-secondary-900">
               {analytics.efficiencyRate ? formatPercentage(analytics.efficiencyRate) : '0%'}
             </p>
           </div>
         </Card>
 
         <Card>
-          <div className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Calendar className="w-6 h-6 text-blue-600" />
+          <div className="p-3">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Calendar className="w-4 h-4 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-secondary-900">Tiempo Promedio</h3>
-                <p className="text-secondary-600">Días para completar acuerdos</p>
+                <h3 className="text-sm font-semibold text-secondary-900">Tiempo Promedio</h3>
+                <p className="text-xs text-secondary-600">Días para completar acuerdos</p>
               </div>
             </div>
-            <p className="text-3xl font-bold text-secondary-900">
+            <p className="text-lg font-bold text-secondary-900">
               {analytics.avgProcessingTime ? `${analytics.avgProcessingTime} días` : '0 días'}
             </p>
           </div>

@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Button, Input, Select, Modal, Badge } from '../common';
 import { useCRM } from '../../hooks/integrations';
+import Swal from 'sweetalert2';
 import {
   Settings,
   Link,
@@ -174,7 +175,13 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
       setLoading(true);
 
       if (!profile?.company?.id) {
-        alert('Error: No se pudo identificar la empresa');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error: No se pudo identificar la empresa',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#EF4444'
+        });
         return;
       }
 
@@ -185,7 +192,13 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
       );
 
       if (missingFields.length > 0) {
-        alert(`Faltan campos requeridos: ${missingFields.map(f => f.label).join(', ')}`);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Campos Requeridos',
+          text: `Faltan campos requeridos: ${missingFields.map(f => f.label).join(', ')}`,
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#EF4444'
+        });
         return;
       }
 
@@ -197,7 +210,13 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
       });
 
       if (!result.success) {
-        alert('Error al guardar configuración: ' + result.error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al Guardar',
+          text: 'Error al guardar configuración: ' + result.error,
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#EF4444'
+        });
         return;
       }
 
@@ -210,7 +229,15 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
       }));
 
       setIsEditing(false);
-      alert('✅ Configuración CRM guardada exitosamente');
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Configuración Guardada!',
+        text: '✅ Configuración CRM guardada exitosamente',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#10B981',
+        timer: 3000,
+        timerProgressBar: true
+      });
 
       // Notificar al componente padre para refrescar datos
       if (onUpdate) {
@@ -219,7 +246,13 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
 
     } catch (error) {
       console.error('Error saving CRM config:', error);
-      alert('Error al guardar configuración: ' + error.message);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error de Conexión',
+        text: 'Error al guardar configuración: ' + error.message,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
     } finally {
       setLoading(false);
     }
@@ -259,7 +292,18 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
   };
 
   const handleDisconnect = async () => {
-    if (!confirm('¿Estás seguro de que deseas desconectar el CRM? Se perderá la configuración actual.')) {
+    const result = await Swal.fire({
+      title: '¿Desconectar CRM?',
+      text: '¿Estás seguro de que deseas desconectar el CRM? Se perderá la configuración actual.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Sí, desconectar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
       return;
     }
 
@@ -267,14 +311,26 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
       setLoading(true);
 
       if (!profile?.company?.id) {
-        alert('Error: No se pudo identificar la empresa');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error: No se pudo identificar la empresa',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#EF4444'
+        });
         return;
       }
 
       const result = await disconnectCompanyCRM(profile.company.id);
 
       if (!result.success) {
-        alert('Error al desconectar CRM: ' + result.error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al Desconectar',
+          text: 'Error al desconectar CRM: ' + result.error,
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#EF4444'
+        });
         return;
       }
 
@@ -287,7 +343,15 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
         lastSync: null
       });
 
-      alert('CRM desconectado exitosamente');
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Desconectado!',
+        text: 'CRM desconectado exitosamente',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#10B981',
+        timer: 2000,
+        timerProgressBar: true
+      });
 
       // Notificar al componente padre para refrescar datos
       if (onUpdate) {
@@ -296,7 +360,13 @@ const CRMConfiguration = ({ profile, onUpdate }) => {
 
     } catch (error) {
       console.error('Error disconnecting CRM:', error);
-      alert('Error al desconectar CRM: ' + error.message);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error de Conexión',
+        text: 'Error al desconectar CRM: ' + error.message,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
     } finally {
       setLoading(false);
     }

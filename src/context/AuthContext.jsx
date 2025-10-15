@@ -269,8 +269,8 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       console.log('📝 Estados iniciales - loading:', true, 'initializing:', true);
 
-      const { user: authUser, session: authSession, error } = await handleAuthCallback();
-      console.log('🔑 Resultado handleAuthCallback:', { user: !!authUser, session: !!authSession, error });
+      const { user: authUser, session: authSession, error, redirectToProfile } = await handleAuthCallback();
+      console.log('🔑 Resultado handleAuthCallback:', { user: !!authUser, session: !!authSession, error, redirectToProfile });
 
       if (error) {
         console.error('❌ Error en handleAuthCallback:', error);
@@ -300,10 +300,16 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ Configurando usuario y sesión...');
       setUser(authUser);
       setSession(authSession);
+      
+      // Esperar a que el perfil se cargue completamente
+      console.log('⏳ Esperando carga completa del perfil...');
       await loadUserProfile(authUser.id);
-
+      
+      // Pequeña espera adicional para asegurar que el estado se actualice
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       console.log('🎉 handleOAuthCallback completado exitosamente');
-      return { success: true, user: authUser };
+      return { success: true, user: authUser, redirectToProfile };
     } catch (error) {
       console.error('💥 Error en handleOAuthCallback:', error);
       const errorMessage = 'Error al procesar la autenticación. Por favor, intenta de nuevo.';

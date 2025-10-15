@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, Badge, Select } from '../../components/common';
 import ClientManagement from './components/ClientManagement';
+import AdvancedImportSystem from '../../components/company/AdvancedImportSystem';
 import {
   Users,
   Search,
@@ -20,12 +21,17 @@ import {
   Building,
   Calendar,
   Activity,
-  TrendingDown
+  TrendingDown,
+  AlertTriangle,
+  Lock,
+  FileText,
+  Shield
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../config/supabase';
 import { getCompanyDebts, getCompanyPayments, getCorporateClients } from '../../services/databaseService';
+import { getCompanyVerification, VERIFICATION_STATUS } from '../../services/verificationService';
 
 const ClientsPage = () => {
   const { profile } = useAuth();
@@ -44,6 +50,11 @@ const ClientsPage = () => {
     totalPaid: 0,
     totalPending: 0
   });
+  
+  // Estados para verificación y bloqueo
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [verificationLoading, setVerificationLoading] = useState(true);
+  const [showImportSection, setShowImportSection] = useState(false);
 
   // Función para formatear números grandes de manera compacta
   const formatCompactNumber = (num) => {
@@ -96,7 +107,70 @@ const ClientsPage = () => {
   useEffect(() => {
     loadCorporateClients();
     loadClients();
+    loadVerificationStatus();
   }, []);
+
+  // Cargar estado de verificación
+  const loadVerificationStatus = async () => {
+    if (!profile?.company?.id) {
+      setVerificationLoading(false);
+      return;
+    }
+
+    try {
+      console.log('🔍 Cargando estado de verificación para ClientsPage...');
+      const { verification, error } = await getCompanyVerification(profile.company.id);
+      
+      if (error) {
+        console.error('❌ Error cargando verificación:', error);
+        setVerificationStatus(null);
+      } else {
+        console.log('✅ Estado de verificación cargado:', verification?.status);
+        setVerificationStatus(verification);
+      }
+    } catch (error) {
+      console.error('💥 Error en loadVerificationStatus:', error);
+      setVerificationStatus(null);
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  // Función para determinar si la página está bloqueada
+  const isPageBlocked = () => {
+    if (!profile?.company?.id) return false;
+    
+    // Si no hay estado de verificación, la empresa no ha iniciado el proceso
+    if (!verificationStatus) {
+      return {
+        blocked: true,
+        title: 'Verificación Requerida',
+        message: 'Debes completar el proceso de verificación de tu empresa antes de poder gestionar clientes.',
+        action: 'Iniciar Verificación',
+        actionLink: '/empresa/verificacion'
+      };
+    }
+
+    // Si está pendiente de documentos
+    if (verificationStatus.status === VERIFICATION_STATUS.PENDING) {
+      return {
+        blocked: true,
+        title: 'Documentos Requeridos',
+        message: 'Debes subir los documentos de verificación de tu empresa antes de poder gestionar clientes.',
+        action: 'Subir Documentos',
+        actionLink: '/empresa/verificacion'
+      };
+    }
+
+    // Si está en revisión o ya fue aprobada, no está bloqueada
+    return { blocked: false };
+  };
+
+  // Función para manejar completado de importación
+  const handleImportComplete = () => {
+    console.log('✅ Importación completada, recargando clientes...');
+    loadClients();
+  };
 
   const loadCorporateClients = async () => {
     try {
@@ -278,6 +352,9 @@ const ClientsPage = () => {
     }
   };
 
+  // Verificar si la página está bloqueada
+  const blockStatus = isPageBlocked();
+  
   return (
     <div className="space-y-6 pb-20 md:pb-8">
       {/* Hero Section - Modern Dashboard Style */}
@@ -358,6 +435,74 @@ const ClientsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Verification Blocking Message */}
+      {!verificationLoading && blockStatus?.blocked && (
+        <Card className="border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0">
+              <div className="p-3 bg-amber-100 rounded-full">
+                <Lock className="w-6 h-6 text-amber-600" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-amber-900 mb-1">
+                {blockStatus.title}
+              </h3>
+              <p className="text-amber-700 mb-3">
+                {blockStatus.message}
+              </p>
+              <Link to={blockStatus.actionLink}>
+                <Button
+                  variant="gradient"
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-white"
+                  leftIcon={<Shield className="w-4 h-4" />}
+                >
+                  {blockStatus.action}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Import Section - Solo visible si no está bloqueado */}
+      {!verificationLoading && !blockStatus?.blocked && (
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-xl">
+                <Upload className="w-4 h-4 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-green-900">
+                  Sistema Avanzado de Importación
+                </h3>
+                <p className="text-xs text-green-700">
+                  Importa y normaliza deudores con asistencia de IA
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowImportSection(!showImportSection)}
+              className="text-green-600 border-green-300 hover:bg-green-100"
+              leftIcon={showImportSection ? <AlertTriangle className="w-3 h-3" /> : <Upload className="w-3 h-3" />}
+            >
+              {showImportSection ? 'Ocultar' : 'Mostrar Importación'}
+            </Button>
+          </div>
+
+          {showImportSection && (
+            <div className="border-t border-green-200 pt-4">
+              <AdvancedImportSystem
+                profile={profile}
+                onImportComplete={handleImportComplete}
+              />
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Date Filter */}
       <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">

@@ -485,6 +485,423 @@ Devuelve un JSON con recomendaciones:
     };
   }
 
+  // =====================================================
+  // FUNCIONES PARA OBTENER MODELOS DINÁMICOS
+  // =====================================================
+
+  // =====================================================
+  // FUNCIONES PARA OBTENER MODELOS DINÁMICAMENTE
+  // =====================================================
+
+  async getGroqModels(apiKey) {
+    if (!apiKey) return [];
+
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // MOSTRAR TODOS LOS MODELOS DISPONIBLES sin filtrar
+      return data.data
+        .filter(model => model.id) // Solo filtrar modelos sin ID
+        .map(model => ({
+          value: model.id,
+          label: this.formatModelName(model.id),
+          id: model.id,
+          owned_by: model.owned_by,
+          created: model.created,
+          object: model.object,
+          context_window: model.context_window || null
+        }))
+        .sort((a, b) => {
+          // Ordenar: primero modelos de Groq, luego por nombre
+          const aIsGroq = a.owned_by === 'groq';
+          const bIsGroq = b.owned_by === 'groq';
+          if (aIsGroq && !bIsGroq) return -1;
+          if (!aIsGroq && bIsGroq) return 1;
+          return a.label.localeCompare(b.label);
+        });
+
+    } catch (error) {
+      console.error('Error obteniendo modelos de Groq:', error);
+      // Retornar TODOS los modelos conocidos de Groq si falla la API
+      return [
+        { value: 'llama-3.1-70b-versatile', label: 'Llama 3.1 70B Versatile', id: 'llama-3.1-70b-versatile', owned_by: 'groq' },
+        { value: 'llama-3.1-70b-preview', label: 'Llama 3.1 70B Preview', id: 'llama-3.1-70b-preview', owned_by: 'groq' },
+        { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant', id: 'llama-3.1-8b-instant', owned_by: 'groq' },
+        { value: 'llama-3.1-8b-preview', label: 'Llama 3.1 8B Preview', id: 'llama-3.1-8b-preview', owned_by: 'groq' },
+        { value: 'llama-3.2-1b-preview', label: 'Llama 3.2 1B Preview', id: 'llama-3.2-1b-preview', owned_by: 'groq' },
+        { value: 'llama-3.2-3b-preview', label: 'Llama 3.2 3B Preview', id: 'llama-3.2-3b-preview', owned_by: 'groq' },
+        { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B 32K', id: 'mixtral-8x7b-32768', owned_by: 'groq' },
+        { value: 'gemma-7b-it', label: 'Gemma 7B IT', id: 'gemma-7b-it', owned_by: 'google' }
+      ];
+    }
+  }
+
+  async getChutesModels(apiKey) {
+    if (!apiKey) return [];
+
+    try {
+      // Intentar obtener modelos desde la API de Chutes
+      const response = await fetch('https://api.chutes.ai/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Transformar la respuesta a formato compatible con el frontend
+        if (data.models && Array.isArray(data.models)) {
+          return data.models.map(model => ({
+            value: model.id || model.name,
+            label: this.formatModelName(model.name || model.id),
+            id: model.id || model.name,
+            owned_by: model.provider || 'chutes',
+            created: model.created_at || Date.now(),
+            description: model.description,
+            context_window: model.context_window || null
+          }));
+        }
+
+        // Si la respuesta tiene otro formato, intentar adaptarse
+        if (Array.isArray(data)) {
+          return data.map(model => ({
+            value: model.id || model.name,
+            label: this.formatModelName(model.name || model.id),
+            id: model.id || model.name,
+            owned_by: model.provider || 'chutes',
+            created: model.created_at || Date.now(),
+            context_window: model.context_window || null
+          }));
+        }
+      }
+
+      console.warn('Respuesta de Chutes API no tiene el formato esperado, usando modelos conocidos');
+
+    } catch (error) {
+      console.error('Error obteniendo modelos de Chutes API:', error);
+    }
+
+    // Retornar TODOS los modelos conocidos que Chutes podría ofrecer
+    // Chutes es un agregador que da acceso a múltiples proveedores
+    return [
+      // Modelos propios de Chutes
+      { value: 'chutes-dobby', label: 'Chutes Dobby', id: 'chutes-dobby', owned_by: 'chutes', description: 'Modelo propio optimizado para contenido creativo' },
+      { value: 'chutes-elf', label: 'Chutes Elf', id: 'chutes-elf', owned_by: 'chutes', description: 'Modelo propio para análisis y automatización' },
+      { value: 'chutes-goblin', label: 'Chutes Goblin', id: 'chutes-goblin', owned_by: 'chutes', description: 'Modelo optimizado para tareas rápidas' },
+      
+      // Modelos OpenAI (disponibles vía Chutes)
+      { value: 'gpt-4o', label: 'GPT-4o', id: 'gpt-4o', owned_by: 'openai', description: 'Modelo multimodal avanzado' },
+      { value: 'gpt-4o-mini', label: 'GPT-4o Mini', id: 'gpt-4o-mini', owned_by: 'openai', description: 'Versión ligera y económica' },
+      { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', id: 'gpt-4-turbo', owned_by: 'openai', description: 'GPT-4 con mayor velocidad' },
+      { value: 'gpt-4', label: 'GPT-4', id: 'gpt-4', owned_by: 'openai', description: 'Modelo flagship de OpenAI' },
+      { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', id: 'gpt-3.5-turbo', owned_by: 'openai', description: 'Modelo rápido y eficiente' },
+      { value: 'gpt-3.5-turbo-16k', label: 'GPT-3.5 Turbo 16K', id: 'gpt-3.5-turbo-16k', owned_by: 'openai', description: 'GPT-3.5 con contexto extendido' },
+      
+      // Modelos Anthropic (disponibles vía Chutes)
+      { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet', id: 'claude-3-5-sonnet-20241022', owned_by: 'anthropic', description: 'Último modelo con capacidades avanzadas' },
+      { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku', id: 'claude-3-5-haiku-20241022', owned_by: 'anthropic', description: 'Modelo rápido y económico' },
+      { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus', id: 'claude-3-opus-20240229', owned_by: 'anthropic', description: 'Modelo más potente de Claude 3' },
+      { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet', id: 'claude-3-sonnet-20240229', owned_by: 'anthropic', description: 'Modelo balanceado de Claude 3' },
+      { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku', id: 'claude-3-haiku-20240307', owned_by: 'anthropic', description: 'Modelo rápido y económico' },
+      
+      // Modelos Meta (disponibles vía Chutes)
+      { value: 'llama-3.1-405b', label: 'Llama 3.1 405B', id: 'llama-3.1-405b', owned_by: 'meta', description: 'Modelo gigante de Meta' },
+      { value: 'llama-3.1-70b', label: 'Llama 3.1 70B', id: 'llama-3.1-70b', owned_by: 'meta', description: 'Modelo grande de Meta' },
+      { value: 'llama-3.1-8b', label: 'Llama 3.1 8B', id: 'llama-3.1-8b', owned_by: 'meta', description: 'Modelo eficiente de Meta' },
+      { value: 'llama-3-70b', label: 'Llama 3 70B', id: 'llama-3-70b', owned_by: 'meta', description: 'Llama 3 con 70B parámetros' },
+      { value: 'llama-3-8b', label: 'Llama 3 8B', id: 'llama-3-8b', owned_by: 'meta', description: 'Llama 3 con 8B parámetros' },
+      
+      // Modelos Google (disponibles vía Chutes)
+      { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', id: 'gemini-1.5-pro', owned_by: 'google', description: 'Modelo avanzado de Google' },
+      { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', id: 'gemini-1.5-flash', owned_by: 'google', description: 'Modelo rápido de Google' },
+      { value: 'gemini-pro', label: 'Gemini Pro', id: 'gemini-pro', owned_by: 'google', description: 'Modelo Pro de Google' },
+      { value: 'gemma-7b-it', label: 'Gemma 7B IT', id: 'gemma-7b-it', owned_by: 'google', description: 'Modelo optimizado para instrucciones' },
+      { value: 'gemma-2b-it', label: 'Gemma 2B IT', id: 'gemma-2b-it', owned_by: 'google', description: 'Modelo ligero de Gemma' },
+      
+      // Modelos Mistral (disponibles vía Chutes)
+      { value: 'mixtral-8x7b', label: 'Mixtral 8x7B', id: 'mixtral-8x7b', owned_by: 'mistral', description: 'Modelo de mezcla de expertos' },
+      { value: 'mistral-7b', label: 'Mistral 7B', id: 'mistral-7b', owned_by: 'mistral', description: 'Modelo base de Mistral' },
+      { value: 'mistral-large', label: 'Mistral Large', id: 'mistral-large', owned_by: 'mistral', description: 'Modelo grande de Mistral' },
+      { value: 'mistral-medium', label: 'Mistral Medium', id: 'mistral-medium', owned_by: 'mistral', description: 'Modelo mediano de Mistral' },
+      { value: 'mistral-small', label: 'Mistral Small', id: 'mistral-small', owned_by: 'mistral', description: 'Modelo pequeño de Mistral' },
+      
+      // Modelos Cohere (disponibles vía Chutes)
+      { value: 'command-r-plus', label: 'Command R+', id: 'command-r-plus', owned_by: 'cohere', description: 'Modelo avanzado de Cohere' },
+      { value: 'command-r', label: 'Command R', id: 'command-r', owned_by: 'cohere', description: 'Modelo de Cohere' },
+      { value: 'command', label: 'Command', id: 'command', owned_by: 'cohere', description: 'Modelo base de Cohere' }
+    ].sort((a, b) => {
+      // Ordenar por proveedor luego por nombre
+      const providerOrder = ['chutes', 'openai', 'anthropic', 'meta', 'google', 'mistral', 'cohere'];
+      const aProviderIndex = providerOrder.indexOf(a.owned_by);
+      const bProviderIndex = providerOrder.indexOf(b.owned_by);
+      
+      if (aProviderIndex !== bProviderIndex) {
+        return aProviderIndex - bProviderIndex;
+      }
+      
+      return a.label.localeCompare(b.label);
+    });
+  }
+
+  // =====================================================
+  // FUNCIONES PARA OBTENER MODELOS DE EMBEDDING
+  // =====================================================
+
+  async getGroqEmbeddingModels(apiKey) {
+    if (!apiKey) return [];
+
+    try {
+      // Groq no tiene modelos de embedding propios, pero ofrece acceso a modelos de OpenAI
+      const response = await fetch('https://api.groq.com/openai/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Filtrar SOLO modelos de embedding (Groq principalmente ofrece OpenAI embeddings)
+      const embeddingModels = data.data
+        .filter(model =>
+          model.id && (
+            model.id.includes('embedding') ||
+            model.id.includes('embed') ||
+            model.object === 'embedding'
+          )
+        )
+        .map(model => ({
+          value: model.id,
+          label: `${this.formatModelName(model.id)} (via Groq)`,
+          id: model.id,
+          owned_by: model.owned_by || 'openai',
+          created: model.created,
+          object: model.object,
+          context_window: model.context_window || null,
+          provider: 'groq'
+        }));
+
+      // Si no se encuentran modelos de embedding, retornar los conocidos
+      if (embeddingModels.length === 0) {
+        return [
+          { value: 'text-embedding-ada-002', label: 'Text Embedding Ada 002 (via Groq)', id: 'text-embedding-ada-002', owned_by: 'openai', provider: 'groq' },
+          { value: 'text-embedding-3-small', label: 'Text Embedding 3 Small (via Groq)', id: 'text-embedding-3-small', owned_by: 'openai', provider: 'groq' },
+          { value: 'text-embedding-3-large', label: 'Text Embedding 3 Large (via Groq)', id: 'text-embedding-3-large', owned_by: 'openai', provider: 'groq' }
+        ];
+      }
+
+      return embeddingModels.sort((a, b) => a.label.localeCompare(b.label));
+
+    } catch (error) {
+      console.error('Error obteniendo modelos de embedding de Groq:', error);
+      // Retornar modelos de embedding conocidos de Groq
+      return [
+        { value: 'text-embedding-ada-002', label: 'Text Embedding Ada 002 (via Groq)', id: 'text-embedding-ada-002', owned_by: 'openai', provider: 'groq' },
+        { value: 'text-embedding-3-small', label: 'Text Embedding 3 Small (via Groq)', id: 'text-embedding-3-small', owned_by: 'openai', provider: 'groq' },
+        { value: 'text-embedding-3-large', label: 'Text Embedding 3 Large (via Groq)', id: 'text-embedding-3-large', owned_by: 'openai', provider: 'groq' }
+      ];
+    }
+  }
+
+  async getChutesEmbeddingModels(apiKey) {
+    if (!apiKey) return [];
+
+    try {
+      // Chutes es un agregador - intentar obtener modelos desde su API
+      const response = await fetch('https://api.chutes.ai/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Transformar la respuesta y filtrar SOLO modelos de embedding
+        let models = [];
+        if (data.models && Array.isArray(data.models)) {
+          models = data.models;
+        } else if (Array.isArray(data)) {
+          models = data;
+        }
+
+        const embeddingModels = models
+          .filter(model =>
+            (model.id || model.name) && (
+              (model.id || model.name).includes('embedding') ||
+              (model.id || model.name).includes('embed') ||
+              model.object === 'embedding' ||
+              model.type === 'embedding' ||
+              model.capabilities?.includes('embedding')
+            )
+          )
+          .map(model => ({
+            value: model.id || model.name,
+            label: `${this.formatModelName(model.name || model.id)} (via Chutes)`,
+            id: model.id || model.name,
+            owned_by: model.provider || 'chutes',
+            created: model.created_at || Date.now(),
+            description: model.description,
+            context_window: model.context_window || null,
+            provider: 'chutes'
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        if (embeddingModels.length > 0) {
+          return embeddingModels;
+        }
+      }
+
+      console.warn('Respuesta de Chutes API no tiene modelos de embedding, usando catálogo conocido');
+
+    } catch (error) {
+      console.error('Error obteniendo modelos de embedding de Chutes API:', error);
+    }
+
+    // Retornar modelos de embedding conocidos que Chutes ofrece (diferentes a Groq)
+    return [
+      // Modelos OpenAI (disponibles vía Chutes)
+      { value: 'text-embedding-ada-002', label: 'Text Embedding Ada 002 (via Chutes)', id: 'text-embedding-ada-002', owned_by: 'openai', description: 'Modelo estándar de OpenAI vía Chutes', provider: 'chutes' },
+      { value: 'text-embedding-3-small', label: 'Text Embedding 3 Small (via Chutes)', id: 'text-embedding-3-small', owned_by: 'openai', description: 'Modelo pequeño y eficiente vía Chutes', provider: 'chutes' },
+      { value: 'text-embedding-3-large', label: 'Text Embedding 3 Large (via Chutes)', id: 'text-embedding-3-large', owned_by: 'openai', description: 'Modelo grande y preciso vía Chutes', provider: 'chutes' },
+      
+      // Modelos Cohere (disponibles vía Chutes - NO disponibles en Groq)
+      { value: 'embed-english-v3.0', label: 'Embed English v3.0 (via Chutes)', id: 'embed-english-v3.0', owned_by: 'cohere', description: 'Modelo de embedding para inglés vía Chutes', provider: 'chutes' },
+      { value: 'embed-multilingual-v3.0', label: 'Embed Multilingual v3.0 (via Chutes)', id: 'embed-multilingual-v3.0', owned_by: 'cohere', description: 'Modelo multilingüe vía Chutes', provider: 'chutes' },
+      { value: 'embed-english-light-v3.0', label: 'Embed English Light v3.0 (via Chutes)', id: 'embed-english-light-v3.0', owned_by: 'cohere', description: 'Modelo ligero para inglés vía Chutes', provider: 'chutes' },
+      
+      // Modelos Google (disponibles vía Chutes - NO disponibles en Groq)
+      { value: 'text-embedding-004', label: 'Text Embedding 004 (via Chutes)', id: 'text-embedding-004', owned_by: 'google', description: 'Modelo de Google vía Chutes', provider: 'chutes' },
+      
+      // Modelos propios de Chutes (NO disponibles en Groq)
+      { value: 'chutes-embed-v1', label: 'Chutes Embed v1', id: 'chutes-embed-v1', owned_by: 'chutes', description: 'Modelo propio de Chutes', provider: 'chutes' },
+      { value: 'chutes-embed-multilingual', label: 'Chutes Embed Multilingual', id: 'chutes-embed-multilingual', owned_by: 'chutes', description: 'Modelo multilingüe de Chutes', provider: 'chutes' }
+    ].sort((a, b) => {
+      // Ordenar por proveedor luego por nombre
+      const providerOrder = ['chutes', 'cohere', 'google', 'openai'];
+      const aProviderIndex = providerOrder.indexOf(a.owned_by);
+      const bProviderIndex = providerOrder.indexOf(b.owned_by);
+      
+      if (aProviderIndex !== bProviderIndex) {
+        return aProviderIndex - bProviderIndex;
+      }
+      
+      return a.label.localeCompare(b.label);
+    });
+  }
+
+  formatModelName(modelId) {
+    // Formatear nombres de modelos para mejor legibilidad
+    const nameMap = {
+      // Groq Models
+      'llama-3.1-70b-versatile': 'Llama 3.1 70B Versatile',
+      'llama-3.1-70b-preview': 'Llama 3.1 70B Preview',
+      'llama-3.1-8b-instant': 'Llama 3.1 8B Instant',
+      'llama-3.1-8b-preview': 'Llama 3.1 8B Preview',
+      'llama-3.2-1b-preview': 'Llama 3.2 1B Preview',
+      'llama-3.2-3b-preview': 'Llama 3.2 3B Preview',
+      'mixtral-8x7b-32768': 'Mixtral 8x7B 32K',
+      'gemma-7b-it': 'Gemma 7B IT',
+      
+      // Chutes Models
+      'chutes-dobby': 'Chutes Dobby',
+      'chutes-elf': 'Chutes Elf',
+      'chutes-goblin': 'Chutes Goblin',
+      'chutes-embed-v1': 'Chutes Embed v1',
+      'chutes-embed-multilingual': 'Chutes Embed Multilingual',
+      
+      // OpenAI Models
+      'gpt-4o': 'GPT-4o',
+      'gpt-4o-mini': 'GPT-4o Mini',
+      'gpt-4-turbo': 'GPT-4 Turbo',
+      'gpt-4': 'GPT-4',
+      'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+      'gpt-3.5-turbo-16k': 'GPT-3.5 Turbo 16K',
+      
+      // OpenAI Embedding Models
+      'text-embedding-ada-002': 'Text Embedding Ada 002',
+      'text-embedding-3-small': 'Text Embedding 3 Small',
+      'text-embedding-3-large': 'Text Embedding 3 Large',
+      
+      // Anthropic Models
+      'claude-3-5-sonnet-20241022': 'Claude 3.5 Sonnet',
+      'claude-3-5-haiku-20241022': 'Claude 3.5 Haiku',
+      'claude-3-opus-20240229': 'Claude 3 Opus',
+      'claude-3-sonnet-20240229': 'Claude 3 Sonnet',
+      'claude-3-haiku-20240307': 'Claude 3 Haiku',
+      
+      // Meta Models
+      'llama-3.1-405b': 'Llama 3.1 405B',
+      'llama-3.1-70b': 'Llama 3.1 70B',
+      'llama-3.1-8b': 'Llama 3.1 8B',
+      'llama-3-70b': 'Llama 3 70B',
+      'llama-3-8b': 'Llama 3 8B',
+      
+      // Google Models
+      'gemini-1.5-pro': 'Gemini 1.5 Pro',
+      'gemini-1.5-flash': 'Gemini 1.5 Flash',
+      'gemini-pro': 'Gemini Pro',
+      'gemma-2b-it': 'Gemma 2B IT',
+      'text-embedding-004': 'Text Embedding 004',
+      
+      // Mistral Models
+      'mistral-large': 'Mistral Large',
+      'mistral-medium': 'Mistral Medium',
+      'mistral-small': 'Mistral Small',
+      
+      // Cohere Models
+      'command-r-plus': 'Command R+',
+      'command-r': 'Command R',
+      'command': 'Command',
+      'embed-english-v3.0': 'Embed English v3.0',
+      'embed-multilingual-v3.0': 'Embed Multilingual v3.0',
+      'embed-english-light-v3.0': 'Embed English Light v3.0'
+    };
+
+    // Si tenemos un mapeo exacto, usarlo
+    if (nameMap[modelId]) {
+      return nameMap[modelId];
+    }
+
+    // Formateo automático para modelos no mapeados
+    return modelId
+      .split(/[-_]/)
+      .map(word => {
+        // Manejar casos especiales
+        if (word.toLowerCase() === 'ai') return 'AI';
+        if (word.toLowerCase() === 'gpt') return 'GPT';
+        if (word.toLowerCase() === 'it') return 'IT';
+        if (/^\d+b$/.test(word)) return word.toUpperCase(); // 70b -> 70B
+        if (/^\d+$/.test(word)) return word; // números保持原样
+        
+        // Capitalizar primera letra
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+
   async logUsage(logData) {
     try {
       await supabase.from('ai_usage_logs').insert(logData);
@@ -723,5 +1140,9 @@ Devuelve en formato JSON con predictedConversionRate, confidence, keyFactors, se
     };
   }
 };
+
+// Exportar funciones para obtener modelos de embedding
+export const getGroqEmbeddingModels = (apiKey) => aiService.getGroqEmbeddingModels(apiKey);
+export const getChutesEmbeddingModels = (apiKey) => aiService.getChutesEmbeddingModels(apiKey);
 
 export default aiService;

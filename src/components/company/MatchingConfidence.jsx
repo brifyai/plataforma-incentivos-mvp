@@ -16,10 +16,10 @@ const MatchingConfidence = ({ stats }) => {
             <TrendingUp className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-sm font-bold text-gray-900">
               Confianza de Matching
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-xs text-gray-600">
               Precisión promedio del sistema de matching inteligente
             </p>
           </div>

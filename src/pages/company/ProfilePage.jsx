@@ -534,7 +534,13 @@ const ProfilePage = () => {
       });
       setShowPasswordModal(false);
     } catch (err) {
-      alert('Error al cambiar la contraseña: ' + err.message);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al Cambiar Contraseña',
+        text: 'Error al cambiar la contraseña: ' + err.message,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
     } finally {
       setLoading(false);
     }
@@ -780,7 +786,6 @@ const ProfilePage = () => {
             {currentSection === 'operations' && (
               <OperationsSection
                 profile={profile}
-                onImportComplete={refreshProfile}
               />
             )}
 
@@ -935,6 +940,20 @@ const ProfilePage = () => {
               placeholder="Repite la nueva contraseña"
               leftIcon={<CheckCircle className="w-4 h-4" />}
             />
+          </div>
+
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                // Redirigir a la página de recuperación de contraseña
+                window.location.href = '/recuperar-contrasena';
+              }}
+              className="text-blue-600 hover:text-blue-700 text-sm"
+            >
+              ¿Olvidaste tu contraseña?
+            </Button>
           </div>
 
           <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl border border-yellow-200">

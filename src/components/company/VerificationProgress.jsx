@@ -6,6 +6,7 @@
  */
 
 import { CheckCircle, Circle, CreditCard, FileText, TrendingUp } from 'lucide-react';
+import { VERIFICATION_STATUS } from '../../services/verificationService';
 
 const VerificationProgress = ({ profile, verification }) => {
   // Verificar estado de cada paso
@@ -181,7 +182,7 @@ const VerificationProgress = ({ profile, verification }) => {
       </div>
 
       {/* Mensaje motivacional */}
-      {completedSteps === totalSteps && (
+      {completedSteps === totalSteps && verification?.status === VERIFICATION_STATUS.APPROVED && (
         <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
@@ -189,6 +190,20 @@ const VerificationProgress = ({ profile, verification }) => {
               <p className="font-semibold text-green-900 text-xs">¡Felicitaciones!</p>
               <p className="text-xs text-green-700">
                 Has completado todos los pasos de verificación. Tu empresa está lista para operar.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {completedSteps === totalSteps && verification?.status !== VERIFICATION_STATUS.APPROVED && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-3 h-3 text-blue-600 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-blue-900 text-xs">¡Documentos completados!</p>
+              <p className="text-xs text-blue-700">
+                Has subido todos los documentos requeridos. Tu verificación está en proceso de revisión.
               </p>
             </div>
           </div>

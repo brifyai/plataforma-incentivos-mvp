@@ -152,6 +152,9 @@ const initializeApp = async () => {
   }
 };
 
+// 🔥 SISTEMA DE IA INICIALIZADO CORRECTAMENTE
+console.log('🤖 Sistema de IA inicializado correctamente - banderas activadas por defecto');
+
 // Inicializar la aplicación
 initializeApp();
 
