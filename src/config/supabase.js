@@ -56,6 +56,17 @@ export const handleSupabaseError = (error) => {
   // Log del error en desarrollo
   if (import.meta.env.DEV) {
     console.error('Supabase Error:', error);
+    
+    // Log adicional para errores específicos
+    if (error.code === 'PGRST116') {
+      console.warn('🔍 Recurso no encontrado (404): La función o tabla solicitada no existe');
+    }
+    if (error.code === '400' || error.status === 400) {
+      console.warn('🔍 Error de sintaxis en consulta (400): Verifica la estructura de la consulta');
+    }
+    if (error.code === '42501' || error.message?.includes('permission denied')) {
+      console.warn('🔍 Error de permisos: Verifica las políticas RLS en Supabase');
+    }
   }
 
   // Retornar mensaje amigable para el usuario
@@ -65,7 +76,25 @@ export const handleSupabaseError = (error) => {
     'Email not confirmed': 'Por favor, confirma tu email antes de iniciar sesión.',
     'Password should be at least 6 characters': 'La contraseña debe tener al menos 6 caracteres.',
     'Network request failed': 'Error de conexión. Por favor, verifica tu conexión a internet.',
+    'function get_conversations_with_stats(uuid, uuid, integer, integer) does not exist':
+      'La función de conversaciones no está disponible. Usando consulta alternativa.',
+    'permission denied for table': 'No tienes permisos para acceder a esta tabla.',
+    'column does not exist': 'La columna solicitada no existe en la tabla.',
+    'relation does not exist': 'La tabla o relación especificada no existe.',
   };
+
+  // Manejo específico para errores comunes
+  if (error.code === 'PGRST116') {
+    return 'El recurso solicitado no fue encontrado. Puede que la función no esté disponible aún.';
+  }
+  
+  if (error.code === '400' || error.status === 400) {
+    return 'Error en la consulta. Por favor, intenta recargar la página.';
+  }
+
+  if (error.code === '42501' || error.message?.includes('permission denied')) {
+    return 'No tienes permisos para realizar esta acción. Contacta al administrador.';
+  }
 
   return errorMessages[error.message] || error.message || 'Ha ocurrido un error. Por favor, intenta de nuevo.';
 };

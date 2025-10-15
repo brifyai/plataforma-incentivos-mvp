@@ -245,6 +245,7 @@ const ClientsPage = () => {
 
       const companyId = profile.company.id;
 
+      // Obtener solo deudas asociadas a clientes corporativos
       const [debtsRes, paymentsRes] = await Promise.all([
         getCompanyDebts(companyId),
         getCompanyPayments(companyId)
@@ -253,7 +254,13 @@ const ClientsPage = () => {
       if (debtsRes.error) console.error('Error fetching company debts:', debtsRes.error);
       if (paymentsRes.error) console.error('Error fetching company payments:', paymentsRes.error);
 
-      const debts = debtsRes.debts || [];
+      // FILTRAR SOLO DEUDAS DE CLIENTES CORPORATIVOS
+      // Solo incluir deudas que tengan un client_id asociado (clientes corporativos)
+      const debts = (debtsRes.debts || []).filter(debt => {
+        // Solo incluir deudas que estén asociadas a un cliente corporativo
+        return debt.client_id !== null && debt.client_id !== undefined;
+      });
+      
       const payments = (paymentsRes.payments || []).filter(p => p.status === 'completed');
 
       // Agrupar pagos por usuario
@@ -369,10 +376,10 @@ const ClientsPage = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold mb-1">
-                Gestión de Clientes
+                Gestión de Clientes/Deudores Corporativos
               </h1>
               <p className="text-blue-100 text-base">
-                Administra tus deudores, pagos y acuerdos de manera eficiente
+                Administra los deudores de tus clientes corporativos, pagos y acuerdos de manera eficiente
               </p>
             </div>
             <div className="hidden md:block">

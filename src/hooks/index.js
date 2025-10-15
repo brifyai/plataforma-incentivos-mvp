@@ -11,7 +11,9 @@ export { useWallet } from './useWallet';
 export { useAgreements } from './useAgreements';
 export { usePayments } from './usePayments';
 export { useMessages } from './useMessages';
+export { useCompanyMessages } from './useCompanyMessages';
 export { useCompanyAnalytics } from './useCompanyAnalytics';
+export { useMessagingErrors } from './useMessagingErrors';
 
 // Hooks avanzados
 export { default as useDebouncedValue } from './useDebouncedValue';
