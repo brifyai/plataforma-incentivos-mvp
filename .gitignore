@@ -24,7 +24,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment variables
+# Environment variables (excluyendo .env.test para pruebas)
 .env
 .env.local
 .env.development.local
@@ -32,7 +32,6 @@ dist-ssr
 .env.production.local
 .env.production
 .env.backup
-.env.test
 
 # Build outputs
 build
