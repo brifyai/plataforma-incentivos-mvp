@@ -220,7 +220,7 @@ const CompanyMessagesPage = () => {
             : conv
         );
         
-        setConversations(updatedConversations);
+        // Las conversaciones se actualizan automáticamente a través del hook
         
         // Actualizar la conversación seleccionada si está en el modal
         if (showConversationModal && selectedConversation?.id === conversation.id) {
@@ -1122,10 +1122,10 @@ const CompanyMessagesPage = () => {
                     onChange={(e) => setNewMessage(prev => ({ ...prev, corporateClientId: e.target.value, selectedDebtors: [], showDebtorSelection: false }))}
                     className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all appearance-none"
                     required
-                    disabled={loadingCorporateClients}
+                    disabled={loading}
                   >
                     <option value="">
-                      {loadingCorporateClients ? 'Cargando clientes corporativos...' : 'Seleccionar cliente corporativo...'}
+                      {loading ? 'Cargando clientes corporativos...' : 'Seleccionar cliente corporativo...'}
                     </option>
                     {corporateClients.map(client => (
                       <option key={client.id} value={client.id}>

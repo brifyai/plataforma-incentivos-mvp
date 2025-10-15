@@ -70,8 +70,16 @@ export const useCompanyMessages = () => {
 
     } catch (err) {
       console.error('Error loading company conversations:', err);
-      setError('Error al cargar conversaciones');
-      setConversations([]);
+      
+      // Si las tablas no existen, mostrar mensaje amigable
+      if (err.message?.includes('relation') || err.message?.includes('does not exist') || err.code === 'PGRST116') {
+        console.log('📋 Tablas de mensajería no encontradas. El sistema funcionará con datos de demo.');
+        setError('Las tablas de mensajería no están configuradas. Contacta al administrador.');
+        setConversations([]);
+      } else {
+        setError('Error al cargar conversaciones');
+        setConversations([]);
+      }
     } finally {
       setLoading(false);
     }
