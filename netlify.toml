@@ -3,6 +3,8 @@
   command = "npm run build"
 
 [build.environment]
+  VITE_SUPABASE_URL = "https://wvluqdldygmgncqqjkow.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2bHVxZGxkeWdtZ25jcXFqa293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzIzMTgsImV4cCI6MjA3NTAwODMxOH0.MAdrj__CjDY8DlLn9Nzsm1spx8MXH1_uWe6OjVGiWM4"
   NODE_OPTIONS = "--no-warnings"
   CI = "false"
 
