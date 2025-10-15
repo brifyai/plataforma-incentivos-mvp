@@ -92,10 +92,10 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
-# Configuración de funciones serverless si se necesitan
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
+# Configuración de funciones serverless (no se usan actualmente)
+# [functions]
+#   directory = "netlify/functions"
+#   node_bundler = "esbuild"
 
 # Configuración de plugins
 [[plugins]]
