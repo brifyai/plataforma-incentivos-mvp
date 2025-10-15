@@ -345,8 +345,8 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Gestión de Clientes</h3>
-          <p className="text-sm text-gray-600">Administra tus deudores y sus pagos</p>
+          <h3 className="text-lg font-semibold text-gray-900">Gestión de Clientes/Deudores Corporativos</h3>
+          <p className="text-sm text-gray-600">Administra los deudores de tus clientes corporativos y sus pagos</p>
         </div>
         <div className="flex gap-3">
           <Button

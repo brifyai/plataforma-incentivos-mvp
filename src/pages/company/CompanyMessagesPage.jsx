@@ -11,7 +11,11 @@ import { supabase } from '../../config/supabase';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select, DateFilter } from '../../components/common';
 import AIMessageHandler from '../../components/messaging/AIMessageHandler';
 import HumanResponseHandler from '../../components/messaging/HumanResponseHandler';
-import { getCompanyMessages, sendMessage, getCorporateClients, getCompanyDebts } from '../../services/databaseService';
+import ConnectionStatus from '../../components/messaging/ConnectionStatus';
+import ErrorDisplay from '../../components/messaging/ErrorDisplay';
+import { useCompanyMessages, useMessagingErrors } from '../../hooks';
+import { getCorporateClients, getCompanyDebts } from '../../services/databaseService';
+import messageService from '../../services/messageService';
 import { formatDate } from '../../utils/formatters';
 import { DEBT_TYPES, DEBT_TYPE_LABELS, DEBT_STATUS } from '../../config/constants';
 import Swal from 'sweetalert2';
@@ -23,6 +27,7 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   RefreshCw,
   Plus,
   Search,
@@ -33,10 +38,25 @@ const CompanyMessagesPage = () => {
   const { profile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [messages, setMessages] = useState([]);
-  const [conversations, setConversations] = useState([]);
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [loading, setLoading] = useState(true);
+  
+  // Usar el nuevo hook de mensajes de empresa
+  const {
+    conversations,
+    loading,
+    loadingCorporateClients,
+    error,
+    unreadCount,
+    selectedConversation,
+    sendingMessage,
+    debtors,
+    corporateClients,
+    getConversation,
+    sendMessage: sendCompanyMessage,
+    loadConversations,
+    loadDebtors,
+    loadCorporateClients
+  } = useCompanyMessages();
+  
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showConversationModal, setShowConversationModal] = useState(false);
   const [selectedDebtor, setSelectedDebtor] = useState(null);
@@ -56,9 +76,23 @@ const CompanyMessagesPage = () => {
   });
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [corporateClients, setCorporateClients] = useState([]);
-  const [loadingCorporateClients, setLoadingCorporateClients] = useState(false);
   const [campaignFilter, setCampaignFilter] = useState('');
+  const [showErrorPanel, setShowErrorPanel] = useState(false);
+
+  // Hook para manejo de errores
+  const {
+    errors,
+    connectionStatus,
+    isReconnecting,
+    hasErrors,
+    hasConnectionIssues,
+    isHealthy,
+    addError,
+    resolveError,
+    clearErrors,
+    attemptReconnection,
+    testMessageSending
+  } = useMessagingErrors();
 
   // Función helper para calcular rangos de fechas
   const getDateRange = (range) => {
@@ -98,9 +132,7 @@ const CompanyMessagesPage = () => {
     setDateFilter(dates);
   };
 
-  // Debtors and filters state
-  const [debtors, setDebtors] = useState([]);
-  const [loadingDebtors, setLoadingDebtors] = useState(false);
+  // Filters state
   const [debtorFilters, setDebtorFilters] = useState({
     clientType: '', // 'individual' or 'corporate'
     debtType: '',
@@ -111,12 +143,23 @@ const CompanyMessagesPage = () => {
 
   useEffect(() => {
     if (profile?.company?.id) {
-      loadMessages();
       loadConversations();
       loadDebtors();
       loadCorporateClients();
     }
   }, [profile?.company?.id]);
+
+  // Monitorear errores de carga
+  useEffect(() => {
+    if (error) {
+      addError({
+        type: 'message',
+        message: 'Error al cargar conversaciones',
+        details: error,
+        severity: 'high'
+      });
+    }
+  }, [error, addError]);
 
   useEffect(() => {
     if (showNewMessageModal) {
@@ -138,125 +181,24 @@ const CompanyMessagesPage = () => {
     }
   }, [searchParams, debtors, showNewMessageModal, setSearchParams]);
 
-  const loadMessages = async () => {
-    if (!profile?.company?.id) return;
+  // loadMessages ya no es necesario - usamos loadConversations del hook
 
-    try {
-      setLoading(true);
-      const result = await getCompanyMessages(profile.company.id);
+  // loadConversations ya no es necesario - usamos el hook
 
-      if (result.error) {
-        console.error('Error loading messages:', result.error);
-        // Datos de ejemplo
-        setMessages([
-          {
-            id: '1',
-            debtorName: 'Juan Pérez',
-            subject: 'Recordatorio de pago pendiente',
-            message: 'Estimado cliente, le recordamos que tiene un pago pendiente...',
-            status: 'sent',
-            priority: 'high',
-            sentAt: new Date(Date.now() - 86400000), // 1 día atrás
-            readAt: null
-          },
-          {
-            id: '2',
-            debtorName: 'María González',
-            subject: 'Oferta especial de descuento',
-            message: 'Tenemos una oferta especial para usted...',
-            status: 'read',
-            priority: 'normal',
-            sentAt: new Date(Date.now() - 172800000), // 2 días atrás
-            readAt: new Date(Date.now() - 86400000)
-          }
-        ]);
-      } else {
-        setMessages(result.messages || []);
-      }
-    } catch (error) {
-      console.error('Error loading messages:', error);
-      setMessages([]);
-    } finally {
-      setLoading(false);
+  const handleOpenConversation = async (conversation) => {
+    // Cargar conversación completa con mensajes
+    const fullConversation = await getConversation(conversation.id);
+    if (fullConversation) {
+      // Enriquecer la conversación con información adicional para la IA
+      const enrichedConversation = {
+        ...fullConversation,
+        debtorId: fullConversation.debtorRut, // Usar RUT como identificador único
+        corporateClientId: fullConversation.corporateClientId || profile?.company?.id,
+        companyId: profile?.company?.id
+      };
+      setSelectedConversation(enrichedConversation);
+      setShowConversationModal(true);
     }
-  };
-
-  const loadConversations = async () => {
-    if (!profile?.company?.id) return;
-
-    try {
-      // Cargar conversaciones con respuestas de deudores
-      // En producción, esto vendría de la base de datos
-      const mockConversations = [
-        {
-          id: 'conv1',
-          debtorName: 'Juan Pérez',
-          debtorRut: '12.345.678-9',
-          subject: 'Propuesta de descuento 15%',
-          status: 'active',
-          lastMessage: '¿Podrían ofrecerme un descuento mayor? Tengo dificultades económicas.',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          unreadCount: 1,
-          corporateClientId: 'corp1', // Agregar información del cliente corporativo
-          messages: [
-            {
-              id: 'msg1',
-              sender: 'company',
-              content: 'Hola Juan, tenemos una propuesta especial de descuento del 15% para tu deuda.',
-              timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-            },
-            {
-              id: 'msg2',
-              sender: 'debtor',
-              content: '¿Podrían ofrecerme un descuento mayor? Tengo dificultades económicas.',
-              timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-            }
-          ]
-        },
-        {
-          id: 'conv2',
-          debtorName: 'María González',
-          debtorRut: '15.234.567-8',
-          subject: 'Plan de cuotas especial',
-          status: 'active',
-          lastMessage: 'Me interesa el plan, pero necesito más cuotas',
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-          unreadCount: 0,
-          corporateClientId: 'corp2', // Agregar información del cliente corporativo
-          messages: [
-            {
-              id: 'msg3',
-              sender: 'company',
-              content: 'María, te ofrecemos un plan de pago en 6 cuotas sin intereses.',
-              timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-            },
-            {
-              id: 'msg4',
-              sender: 'debtor',
-              content: 'Me interesa el plan, pero necesito más cuotas',
-              timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-            }
-          ]
-        }
-      ];
-
-      setConversations(mockConversations);
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-      setConversations([]);
-    }
-  };
-
-  const handleOpenConversation = (conversation) => {
-    // Enriquecer la conversación con información adicional para la IA
-    const enrichedConversation = {
-      ...conversation,
-      debtorId: conversation.debtorRut, // Usar RUT como identificador único
-      corporateClientId: conversation.corporateClientId || getCorporateClientIdFromDebtor(conversation.debtorName),
-      companyId: profile?.company?.id
-    };
-    setSelectedConversation(enrichedConversation);
-    setShowConversationModal(true);
   };
 
   // Función para obtener el ID del cliente corporativo basado en el nombre del deudor
@@ -269,25 +211,19 @@ const CompanyMessagesPage = () => {
     if (!selectedConversation) return;
 
     try {
-      // Agregar mensaje a la conversación
-      const updatedConversation = {
-        ...selectedConversation,
-        messages: [...selectedConversation.messages, message],
-        lastMessage: message.content,
-        timestamp: new Date()
-      };
+      const result = await sendCompanyMessage(selectedConversation.id, {
+        content: message.content,
+        contentType: 'text',
+        metadata: message.metadata || {},
+        aiGenerated: message.metadata?.aiGenerated || false,
+        aiConfidence: message.metadata?.aiConfidence || null,
+        escalationTriggered: message.metadata?.escalationTriggered || false,
+        escalationReason: message.metadata?.escalationReason || null
+      });
 
-      setSelectedConversation(updatedConversation);
-      
-      // Actualizar la lista de conversaciones
-      setConversations(prev =>
-        prev.map(conv =>
-          conv.id === selectedConversation.id ? updatedConversation : conv
-        )
-      );
-
-      // Enviar a la base de datos (simulado)
-      console.log('Sending message:', message);
+      if (!result.success) {
+        console.error('Error sending message:', result.error);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -322,7 +258,7 @@ const CompanyMessagesPage = () => {
             : conv
         );
         
-        setConversations(updatedConversations);
+        // El hook se encargará de actualizar el estado
         
         // Actualizar la conversación seleccionada si está en el modal
         if (showConversationModal && selectedConversation?.id === conversation.id) {
@@ -363,319 +299,9 @@ const CompanyMessagesPage = () => {
     });
   };
 
-  const loadDebtors = async () => {
-    if (!profile?.company?.id) return;
+  // loadDebtors ahora viene del hook useCompanyMessages
 
-    try {
-      setLoadingDebtors(true);
-      const result = await getCompanyDebts(profile.company.id);
-
-      if (result.error) {
-        console.error('Error loading debts:', result.error);
-        // Datos de ejemplo con los 12 deudores del sistema
-        setDebtors([
-          {
-            id: '1',
-            name: 'María González',
-            rut: '12.345.678-9',
-            clientType: 'individual',
-            corporateClientId: 'corp1',
-            debts: [
-              {
-                id: 'd1',
-                type: 'loan',
-                amount: 2500000,
-                status: 'active',
-                dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-                daysOverdue: 5
-              }
-            ]
-          },
-          {
-            id: '2',
-            name: 'Carlos Rodríguez',
-            rut: '15.234.567-8',
-            clientType: 'individual',
-            corporateClientId: 'corp2',
-            debts: [
-              {
-                id: 'd2',
-                type: 'loan',
-                amount: 1800000,
-                status: 'active',
-                dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-                daysOverdue: 3
-              }
-            ]
-          },
-          {
-            id: '3',
-            name: 'Ana López',
-            rut: '18.345.678-1',
-            clientType: 'individual',
-            corporateClientId: 'corp1',
-            debts: [
-              {
-                id: 'd3',
-                type: 'loan',
-                amount: 3200000,
-                status: 'active',
-                dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-                daysOverdue: 1
-              }
-            ]
-          },
-          {
-            id: '4',
-            name: 'Pedro Martínez',
-            rut: '11.456.789-2',
-            clientType: 'individual',
-            corporateClientId: 'corp2',
-            debts: [
-              {
-                id: 'd4',
-                type: 'loan',
-                amount: 950000,
-                status: 'completed',
-                dueDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-                daysOverdue: 0
-              }
-            ]
-          },
-          {
-            id: '5',
-            name: 'Sofía Ramírez',
-            rut: '19.876.543-2',
-            clientType: 'individual',
-            corporateClientId: 'corp1',
-            debts: [
-              {
-                id: 'd5',
-                type: 'loan',
-                amount: 1450000,
-                status: 'active',
-                dueDate: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
-                daysOverdue: 9
-              }
-            ]
-          },
-          {
-            id: '6',
-            name: 'Diego Silva',
-            rut: '20.123.456-7',
-            clientType: 'individual',
-            corporateClientId: 'corp2',
-            debts: [
-              {
-                id: 'd6',
-                type: 'loan',
-                amount: 2800000,
-                status: 'completed',
-                dueDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-                daysOverdue: 0
-              }
-            ]
-          },
-          {
-            id: '7',
-            name: 'Valentina Torres',
-            rut: '21.234.567-8',
-            clientType: 'individual',
-            corporateClientId: 'corp1',
-            debts: [
-              {
-                id: 'd7',
-                type: 'loan',
-                amount: 2100000,
-                status: 'active',
-                dueDate: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
-                daysOverdue: 11
-              }
-            ]
-          },
-          {
-            id: '8',
-            name: 'Felipe Morales',
-            rut: '22.345.678-9',
-            clientType: 'individual',
-            corporateClientId: 'corp2',
-            debts: [
-              {
-                id: 'd8',
-                type: 'loan',
-                amount: 3600000,
-                status: 'active',
-                dueDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-                daysOverdue: 8
-              }
-            ]
-          },
-          {
-            id: '9',
-            name: 'Camila Herrera',
-            rut: '23.456.789-0',
-            clientType: 'individual',
-            corporateClientId: 'corp1',
-            debts: [
-              {
-                id: 'd9',
-                type: 'loan',
-                amount: 1750000,
-                status: 'completed',
-                dueDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-                daysOverdue: 0
-              }
-            ]
-          },
-          {
-            id: '10',
-            name: 'Matías Castro',
-            rut: '24.567.890-1',
-            clientType: 'individual',
-            corporateClientId: 'corp2',
-            debts: [
-              {
-                id: 'd10',
-                type: 'loan',
-                amount: 3200000,
-                status: 'active',
-                dueDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-                daysOverdue: 4
-              }
-            ]
-          },
-          {
-            id: '11',
-            name: 'Isabella Vargas',
-            rut: '25.678.901-2',
-            clientType: 'individual',
-            corporateClientId: 'corp1',
-            debts: [
-              {
-                id: 'd11',
-                type: 'loan',
-                amount: 1900000,
-                status: 'active',
-                dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-                daysOverdue: 2
-              }
-            ]
-          },
-          {
-            id: '12',
-            name: 'Sebastián Reyes',
-            rut: '26.789.012-3',
-            clientType: 'individual',
-            corporateClientId: 'corp2',
-            debts: [
-              {
-                id: 'd12',
-                type: 'loan',
-                amount: 2700000,
-                status: 'completed',
-                dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-                daysOverdue: 0
-              }
-            ]
-          }
-        ]);
-      } else {
-        // Extraer deudores únicos de las deudas
-        const debtorsMap = new Map();
-
-        result.debts.forEach(debt => {
-          const debtorId = debt.user_id || debt.user?.id;
-          const debtorName = debt.user?.full_name || 'Usuario desconocido';
-          const debtorRut = debt.user?.rut || 'Sin RUT';
-          const clientType = debt.client?.business_name ? 'corporate' : 'individual';
-
-          if (!debtorsMap.has(debtorId)) {
-            debtorsMap.set(debtorId, {
-              id: debtorId,
-              name: clientType === 'corporate' ? (debt.client?.business_name || debtorName) : debtorName,
-              rut: clientType === 'corporate' ? (debt.client?.rut || debtorRut) : debtorRut,
-              clientType: clientType,
-              debts: []
-            });
-          }
-
-          // Agregar la deuda al deudor
-          const debtor = debtorsMap.get(debtorId);
-          debtor.debts.push({
-            id: debt.id,
-            type: debt.type,
-            amount: parseFloat(debt.current_amount || debt.original_amount),
-            status: debt.status,
-            dueDate: new Date(debt.due_date),
-            daysOverdue: debt.days_overdue || 0
-          });
-        });
-
-        setDebtors(Array.from(debtorsMap.values()));
-      }
-    } catch (error) {
-      console.error('Error loading debtors:', error);
-      setDebtors([]);
-    } finally {
-      setLoadingDebtors(false);
-    }
-  };
-
-  const loadCorporateClients = async () => {
-    if (!profile?.company?.id) return;
-
-    try {
-      setLoadingCorporateClients(true);
-      
-      // Cargar clientes corporativos con soporte para god_mode
-      let corporateClientsData;
-      if (profile?.role === 'god_mode') {
-        console.log('🔑 God Mode: Cargando todos los clientes corporativos para CompanyMessagesPage');
-        const { data: allClients, error } = await supabase
-          .from('corporate_clients')
-          .select('*')
-          .eq('is_active', true)
-          .order('name');
-        
-        if (error) {
-          console.error('Error loading all corporate clients:', error);
-          setCorporateClients([]);
-        } else {
-          corporateClientsData = { corporateClients: allClients };
-        }
-      } else {
-        corporateClientsData = await getCorporateClients(profile.company.id);
-      }
-
-      if (corporateClientsData?.error) {
-        console.error('Error loading corporate clients:', corporateClientsData.error);
-        // Datos de ejemplo
-        setCorporateClients([
-          {
-            id: 'corp1',
-            name: 'Empresa XYZ S.A.',
-            display_category: 'Corporativo',
-            contact_email: 'contacto@empresa-xyz.cl',
-            contact_phone: '+56912345678'
-          },
-          {
-            id: 'corp2',
-            name: 'Corporación ABC Ltda.',
-            display_category: 'Corporativo',
-            contact_email: 'info@corporacion-abc.cl',
-            contact_phone: '+56987654321'
-          }
-        ]);
-      } else {
-        setCorporateClients(corporateClientsData.corporateClients || []);
-      }
-    } catch (error) {
-      console.error('Error loading corporate clients:', error);
-      setCorporateClients([]);
-    } finally {
-      setLoadingCorporateClients(false);
-    }
-  };
+  // loadCorporateClients ahora viene del hook useCompanyMessages
 
   const handleSendBulkMessage = async () => {
     if (!newMessage.corporateClientId || !newMessage.subject || !newMessage.message) {
@@ -765,7 +391,7 @@ const CompanyMessagesPage = () => {
         minAmount: '',
         maxAmount: ''
       });
-      loadMessages(); // Recargar mensajes
+      loadConversations(); // Recargar conversaciones
     } catch (error) {
       Swal.fire({
         title: 'Error al Enviar Campaña',
@@ -823,9 +449,9 @@ const CompanyMessagesPage = () => {
     }
   };
 
-  const filteredMessages = messages.filter(message =>
-    message.debtorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    message.subject.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMessages = conversations.filter(conversation =>
+    conversation.debtorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (conversation.subject && conversation.subject.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Determine which list to show based on selections
@@ -955,8 +581,13 @@ const CompanyMessagesPage = () => {
 
           <div className="flex items-center gap-2">
             <Badge variant="info" size="sm">
-              {messages.length} Mensajes
+              {conversations.length} Conversaciones
             </Badge>
+            {unreadCount > 0 && (
+              <Badge variant="warning" size="sm">
+                {unreadCount} No leídos
+              </Badge>
+            )}
             <Button
               variant="primary"
               size="sm"
@@ -968,7 +599,7 @@ const CompanyMessagesPage = () => {
             <Button
               variant="primary"
               size="sm"
-              onClick={loadMessages}
+              onClick={loadConversations}
               leftIcon={<RefreshCw className="w-3 h-3" />}
             >
               Actualizar
@@ -1199,17 +830,17 @@ const CompanyMessagesPage = () => {
 
       {/* Messages List */}
       <Card
-        title="Mensajes Enviados"
-        subtitle={`${filteredMessages.length} mensaje${filteredMessages.length !== 1 ? 's' : ''} encontrado${filteredMessages.length !== 1 ? 's' : ''}`}
+        title="Conversaciones Activas"
+        subtitle={`${filteredMessages.length} conversación${filteredMessages.length !== 1 ? 'es' : ''} encontrada${filteredMessages.length !== 1 ? 's' : ''}`}
       >
         {filteredMessages.length === 0 ? (
           <div className="text-center py-16">
             <MessageSquare className="w-16 h-16 text-secondary-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-secondary-900 mb-2">
-              No hay mensajes
+              No hay conversaciones
             </h3>
             <p className="text-secondary-600 mb-6">
-              {searchTerm ? 'No se encontraron mensajes que coincidan con tu búsqueda.' : 'Envía tu primer mensaje para comenzar a comunicarte con tus deudores.'}
+              {searchTerm ? 'No se encontraron conversaciones que coincidan con tu búsqueda.' : 'Las conversaciones con deudores aparecerán aquí cuando respondan a tus mensajes.'}
             </p>
             {!searchTerm && (
               <Button
@@ -1223,47 +854,54 @@ const CompanyMessagesPage = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredMessages.map((message) => (
+            {filteredMessages.map((conversation) => (
               <div
-                key={message.id}
-                className="flex items-center justify-between p-6 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                key={conversation.id}
+                className="flex items-center justify-between p-6 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                onClick={() => handleOpenConversation(conversation)}
               >
                 <div className="flex items-center gap-6">
-                  {getStatusIcon(message.status)}
-
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-secondary-900">
-                        {message.subject}
+                        {conversation.debtorName}
                       </h3>
-                      {getStatusBadge(message.status)}
-                      {getPriorityBadge(message.priority)}
+                      {conversation.unreadCount > 0 && (
+                        <Badge variant="warning" className="text-xs">
+                          {conversation.unreadCount} nuevo{conversation.unreadCount !== 1 ? 's' : ''}
+                        </Badge>
+                      )}
+                      {getPriorityBadge(conversation.priority)}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-secondary-600">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        <span>{message.debtorName}</span>
+                        <span>{conversation.debtorRut}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4" />
-                        <span>Enviado {formatDate(message.sentAt)}</span>
+                        <span>Último mensaje {formatDate(conversation.timestamp)}</span>
                       </div>
                     </div>
 
                     <p className="text-sm text-secondary-600 mt-2 line-clamp-2">
-                      {message.message}
+                      {conversation.subject}: {conversation.lastMessage}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {message.readAt && (
-                    <div className="text-right text-sm text-secondary-600">
-                      <p>Leído</p>
-                      <p>{formatDate(message.readAt)}</p>
-                    </div>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenConversation(conversation);
+                    }}
+                  >
+                    Ver Conversación
+                  </Button>
                 </div>
               </div>
             ))}
@@ -1523,7 +1161,7 @@ const CompanyMessagesPage = () => {
                     onChange={(e) => setNewMessage(prev => ({ ...prev, corporateClientId: e.target.value, selectedDebtors: [], showDebtorSelection: false }))}
                     className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all appearance-none"
                     required
-                    disabled={loadingCorporateClients}
+                    disabled={loading}
                   >
                     <option value="">
                       {loadingCorporateClients ? 'Cargando clientes corporativos...' : 'Seleccionar cliente corporativo...'}

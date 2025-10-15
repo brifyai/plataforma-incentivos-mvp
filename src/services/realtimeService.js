@@ -205,6 +205,114 @@ class RealtimeService {
   }
 
   /**
+   * Suscribe a cambios en conversaciones de mensajes
+   * @param {Function} onConversationCreated - Callback cuando se crea una conversación
+   * @param {Function} onConversationUpdated - Callback cuando se actualiza una conversación
+   * @param {string} userId - ID del usuario (opcional, para filtrar)
+   * @param {string} companyId - ID de la empresa (opcional, para filtrar)
+   */
+  subscribeToConversations(onConversationCreated, onConversationUpdated, userId = null, companyId = null) {
+    const filter = userId ? `debtor_id=eq.${userId}` :
+                   companyId ? `company_id=eq.${companyId}` : null;
+
+    const insertChannel = this.subscribeToTable('conversations', 'INSERT', onConversationCreated, filter);
+    const updateChannel = this.subscribeToTable('conversations', 'UPDATE', onConversationUpdated, filter);
+
+    return { insertChannel, updateChannel };
+  }
+
+  /**
+   * Suscribe a cambios en mensajes
+   * @param {Function} onMessageCreated - Callback cuando se crea un mensaje
+   * @param {Function} onMessageUpdated - Callback cuando se actualiza un mensaje
+   * @param {string} conversationId - ID de la conversación (opcional, para filtrar)
+   */
+  subscribeToMessages(onMessageCreated, onMessageUpdated, conversationId = null) {
+    const filter = conversationId ? `conversation_id=eq.${conversationId}` : null;
+
+    const insertChannel = this.subscribeToTable('messages', 'INSERT', onMessageCreated, filter);
+    const updateChannel = this.subscribeToTable('messages', 'UPDATE', onMessageUpdated, filter);
+
+    return { insertChannel, updateChannel };
+  }
+
+  /**
+   * Suscribe a cambios en archivos adjuntos de mensajes
+   * @param {Function} onAttachmentCreated - Callback cuando se crea un adjunto
+   * @param {Function} onAttachmentUpdated - Callback cuando se actualiza un adjunto
+   * @param {string} messageId - ID del mensaje (opcional, para filtrar)
+   */
+  subscribeToMessageAttachments(onAttachmentCreated, onAttachmentUpdated, messageId = null) {
+    const filter = messageId ? `message_id=eq.${messageId}` : null;
+
+    const insertChannel = this.subscribeToTable('message_attachments', 'INSERT', onAttachmentCreated, filter);
+    const updateChannel = this.subscribeToTable('message_attachments', 'UPDATE', onAttachmentUpdated, filter);
+
+    return { insertChannel, updateChannel };
+  }
+
+  /**
+   * Suscribe a todos los eventos de mensajería para un usuario
+   * @param {string} userId - ID del usuario
+   * @param {Function} onNewConversation - Callback para nuevas conversaciones
+   * @param {Function} onConversationUpdate - Callback para actualizaciones de conversaciones
+   * @param {Function} onNewMessage - Callback para nuevos mensajes
+   * @param {Function} onMessageUpdate - Callback para actualizaciones de mensajes
+   */
+  subscribeToUserMessaging(userId, onNewConversation, onConversationUpdate, onNewMessage, onMessageUpdate) {
+    const channels = {};
+
+    // Suscribir a conversaciones del usuario
+    const conversationChannels = this.subscribeToConversations(
+      onNewConversation,
+      onConversationUpdate,
+      userId
+    );
+    channels.conversations = conversationChannels;
+
+    // Suscribir a mensajes en conversaciones del usuario
+    // Nota: Esto requerirá una consulta adicional para obtener las conversaciones del usuario
+    // y suscribirse a cada una individualmente, o usar RLS policies en Supabase
+    const messageChannels = this.subscribeToMessages(
+      onNewMessage,
+      onMessageUpdate
+    );
+    channels.messages = messageChannels;
+
+    return channels;
+  }
+
+  /**
+   * Suscribe a todos los eventos de mensajería para una empresa
+   * @param {string} companyId - ID de la empresa
+   * @param {Function} onNewConversation - Callback para nuevas conversaciones
+   * @param {Function} onConversationUpdate - Callback para actualizaciones de conversaciones
+   * @param {Function} onNewMessage - Callback para nuevos mensajes
+   * @param {Function} onMessageUpdate - Callback para actualizaciones de mensajes
+   */
+  subscribeToCompanyMessaging(companyId, onNewConversation, onConversationUpdate, onNewMessage, onMessageUpdate) {
+    const channels = {};
+
+    // Suscribir a conversaciones de la empresa
+    const conversationChannels = this.subscribeToConversations(
+      onNewConversation,
+      onConversationUpdate,
+      null,
+      companyId
+    );
+    channels.conversations = conversationChannels;
+
+    // Suscribir a mensajes en conversaciones de la empresa
+    const messageChannels = this.subscribeToMessages(
+      onNewMessage,
+      onMessageUpdate
+    );
+    channels.messages = messageChannels;
+
+    return channels;
+  }
+
+  /**
    * Cancela una suscripción específica
    * @param {string} channelName - Nombre del canal a cancelar
    */
