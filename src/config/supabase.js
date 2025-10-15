@@ -13,9 +13,20 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validar que las variables de entorno estén configuradas
 if (!supabaseUrl || !supabaseAnonKey) {
+  // En producción, mostrar error más específico
+  if (import.meta.env.PROD) {
+    console.error('❌ Error Crítico: Variables de Supabase no configuradas en producción');
+    console.error('🔧 Solución: Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en Netlify Dashboard');
+    console.error('📋 Verifica: Site settings > Build & deploy > Environment');
+  }
+  
   throw new Error(
-    'Las variables de entorno VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY son requeridas. ' +
-    'Por favor, configúralas en tu archivo .env'
+    `❌ Variables de entorno faltantes:\n` +
+    `- VITE_SUPABASE_URL: ${supabaseUrl ? '✅' : '❌ FALTANTE'}\n` +
+    `- VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✅' : '❌ FALTANTE'}\n\n` +
+    `🔧 En producción, configura estas variables en Netlify Dashboard:\n` +
+    `Site settings > Build & deploy > Environment\n\n` +
+    `📋 Revisa SOLUCION_ERROR_SUPABASE_KEY.md para instrucciones detalladas.`
   );
 }
 
