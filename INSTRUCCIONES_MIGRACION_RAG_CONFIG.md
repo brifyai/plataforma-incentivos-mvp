@@ -23,15 +23,21 @@ He creado la migración `016_add_rag_config_column.sql` que agrega la columna fa
 
 ### 3. Ejecutar la Migración
 
-Copia y pega el siguiente código SQL en el editor:
+**IMPORTANTE:** Usa el archivo `SQL_MIGRACION_RAG_CONFIG.sql` que contiene solo el código SQL puro.
 
+**Opción A: Usar el archivo SQL**
+1. Abre el archivo `SQL_MIGRACION_RAG_CONFIG.sql` en tu editor
+2. Copia todo el contenido (SIN los backticks ```sql```)
+3. Pega directamente en el editor SQL de Supabase
+
+**Opción B: Copiar desde aquí (SIN backticks)**
 ```sql
 -- Migration: Agregar columna rag_config a company_ai_config
 -- Descripción: Agregar configuración RAG para Retrieval-Augmented Generation
 -- Versión: 1.0
 
 -- Agregar columna rag_config a la tabla company_ai_config
-ALTER TABLE company_ai_config 
+ALTER TABLE company_ai_config
 ADD COLUMN IF NOT EXISTS rag_config JSONB DEFAULT '{
     "enabled": false,
     "model": "text-embedding-ada-002",
@@ -52,7 +58,7 @@ ADD COLUMN IF NOT EXISTS rag_config JSONB DEFAULT '{
 COMMENT ON COLUMN company_ai_config.rag_config IS 'Configuración para sistema RAG (Retrieval-Augmented Generation) de IA';
 
 -- Actualizar configuraciones existentes con valores por defecto para RAG
-UPDATE company_ai_config 
+UPDATE company_ai_config
 SET rag_config = '{
     "enabled": false,
     "model": "text-embedding-ada-002",
@@ -73,6 +79,8 @@ WHERE rag_config IS NULL;
 
 4. Haz clic en **Run** para ejecutar la migración
 5. Espera a que aparezca el mensaje "Success"
+
+**⚠️ NO COPIES LOS BACKTICKS ```sql```** - Solo copia el código SQL puro.
 
 ### 4. Verificar la Migración
 
