@@ -179,131 +179,64 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
   try {
     console.log('🔍 getCompanyDebts called with:', { companyId, clientId });
     
-    // Primero intentar la consulta con relaciones complejas
-    try {
-      let query = supabase
-        .from('debts')
-        .select(`
-          *,
-          user:users(id, full_name, email, rut),
-          client:clients(id, name, rut)
-        `);
-
-      if (clientId) {
-        // Si hay clientId específico, filtrar por ese cliente
-        query = query.eq('client_id', clientId);
-      } else {
-        // Si no hay clientId específico, obtener deudas de dos maneras:
-        // 1. Deudas asociadas a clientes de la empresa
-        // 2. Deudas directas de la empresa (sin client_id)
-        const { data: clients, error: clientsError } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('company_id', companyId);
-
-        if (clientsError) {
-          console.warn('Error getting clients for company:', clientsError);
-        }
-
-        const clientIds = clients?.map(c => c.id) || [];
-        
-        if (clientIds.length > 0) {
-          // Si hay clientes, obtener deudas de clientes Y deudas directas de la empresa
-          query = query.or(`client_id.in.(${clientIds.join(',')}),company_id.eq.${companyId}`);
-        } else {
-          // Si no hay clientes, obtener solo deudas directas de la empresa
-          query = query.eq('company_id', companyId);
-        }
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (!error) {
-        console.log(`📊 Found ${data?.length || 0} debts for company ${companyId}`);
-        
-        // Log detallado de las deudas encontradas para depuración
-        if (data && data.length > 0) {
-          console.log('📋 Debts found:', data.map(d => ({
-            id: d.id,
-            user_id: d.user_id,
-            company_id: d.company_id,
-            client_id: d.client_id,
-            user_name: d.user?.full_name,
-            client_name: d.client?.business_name,
-            amount: d.current_amount || d.original_amount
-          })));
-        }
-
-        return { debts: data || [], error: null };
-      }
-    } catch (complexQueryError) {
-      console.warn('Complex query failed, trying simplified approach:', complexQueryError);
-    }
-
-    // Fallback: Consulta simplificada sin relaciones complejas
-    console.log('🔄 Using simplified query approach');
-    
     let query = supabase
       .from('debts')
-      .select('*');
+      .select(`
+        *,
+        user:users(id, full_name, email, rut),
+        client:clients(id, business_name, rut)
+      `);
 
     if (clientId) {
+      // Si hay clientId específico, filtrar por ese cliente
       query = query.eq('client_id', clientId);
     } else {
-      // Para el fallback, intentar solo con company_id
-      query = query.eq('company_id', companyId);
+      // Si no hay clientId específico, obtener deudas de dos maneras:
+      // 1. Deudas asociadas a clientes de la empresa
+      // 2. Deudas directas de la empresa (sin client_id)
+      const { data: clients, error: clientsError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('company_id', companyId);
+
+      if (clientsError) {
+        console.warn('Error getting clients for company:', clientsError);
+      }
+
+      const clientIds = clients?.map(c => c.id) || [];
+      
+      if (clientIds.length > 0) {
+        // Si hay clientes, obtener deudas de clientes Y deudas directas de la empresa
+        query = query.or(`client_id.in.(${clientIds.join(',')}),company_id.eq.${companyId}`);
+      } else {
+        // Si no hay clientes, obtener solo deudas directas de la empresa
+        query = query.eq('company_id', companyId);
+      }
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error in simplified getCompanyDebts query:', error);
+      console.error('❌ Error in getCompanyDebts query:', error);
       return { debts: [], error: handleSupabaseError(error) };
     }
 
-    // Obtener información de usuarios y clientes por separado si hay datos
-    let enrichedData = data || [];
-    if (enrichedData.length > 0) {
-      try {
-        // Obtener información de usuarios
-        const userIds = [...new Set(enrichedData.map(d => d.user_id).filter(Boolean))];
-        const { data: users } = await supabase
-          .from('users')
-          .select('id, full_name, email, rut')
-          .in('id', userIds);
-
-        // Obtener información de clientes si es necesario
-        const clientIds = [...new Set(enrichedData.map(d => d.client_id).filter(Boolean))];
-        const { data: clients } = await supabase
-          .from('clients')
-          .select('id, business_name, rut')
-          .in('id', clientIds);
-
-        // Enriquecer los datos
-        const userMap = users?.reduce((map, user) => {
-          map[user.id] = user;
-          return map;
-        }, {}) || {};
-
-        const clientMap = clients?.reduce((map, client) => {
-          map[client.id] = client;
-          return map;
-        }, {}) || {};
-
-        enrichedData = enrichedData.map(debt => ({
-          ...debt,
-          user: userMap[debt.user_id] || null,
-          client: clientMap[debt.client_id] || null
-        }));
-      } catch (enrichmentError) {
-        console.warn('Error enriching debt data:', enrichmentError);
-        // Continuar con los datos sin enriquecer
-      }
+    console.log(`📊 Found ${data?.length || 0} debts for company ${companyId}`);
+    
+    // Log detallado de las deudas encontradas para depuración
+    if (data && data.length > 0) {
+      console.log('📋 Debts found:', data.map(d => ({
+        id: d.id,
+        user_id: d.user_id,
+        company_id: d.company_id,
+        client_id: d.client_id,
+        user_name: d.user?.full_name,
+        client_name: d.client?.business_name,
+        amount: d.current_amount || d.original_amount
+      })));
     }
 
-    console.log(`📊 Found ${enrichedData?.length || 0} debts for company ${companyId} (simplified)`);
-    
-    return { debts: enrichedData, error: null };
+    return { debts: data || [], error: null };
   } catch (error) {
     console.error('💥 Error in getCompanyDebts:', error);
     return { debts: [], error: 'Error al obtener deudas de la empresa.' };

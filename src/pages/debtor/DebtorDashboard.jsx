@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Card, Badge, LoadingSpinner, Button } from '../../components/common';
-import { useDebts, useOffers, useWallet, useMessages } from '../../hooks';
+import { useDebts, useOffers, useWallet } from '../../hooks';
 import { useRealtimePayments, useRealtimeDebts, useRealtimeAgreements, useRealtimeNotifications } from '../../hooks/useRealtime';
 import { getDebtorDashboardStats, getUserCommissionStats, updateUserProfile } from '../../services/databaseService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
@@ -31,7 +31,6 @@ const DebtorDashboard = () => {
   const { debts, loading: debtsLoading, refreshDebts } = useDebts();
   const { offers, loading: offersLoading, refreshOffers } = useOffers();
   const { balance, loading: walletLoading, refreshWallet } = useWallet();
-  const { conversations, unreadCount, refreshConversations } = useMessages();
   const [stats, setStats] = useState(null);
   const [commissionStats, setCommissionStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -128,72 +127,6 @@ const DebtorDashboard = () => {
       showNotification(notification.title || 'Nueva notificación', 'info');
     }
   );
-
-  // Sincronización en tiempo real para mensajes y conversaciones
-  useEffect(() => {
-    if (!user) return;
-
-    // Importar realtimeService dinámicamente para evitar ciclos
-    import('../../services/realtimeService').then(({ default: realtimeService }) => {
-      // Conectar a tiempo real si no está conectado
-      if (!realtimeService.isRealtimeConnected()) {
-        realtimeService.connect();
-      }
-
-      // Suscribir a conversaciones del usuario
-      const conversationChannels = realtimeService.subscribeToConversations(
-        (payload) => {
-          console.log('💬 Nueva conversación en dashboard:', payload);
-          refreshConversations();
-          showNotification('Nueva conversación iniciada', 'info');
-        },
-        (payload) => {
-          console.log('💬 Conversación actualizada en dashboard:', payload);
-          refreshConversations();
-          
-          // Si hay mensajes no leídos, mostrar notificación
-          const updatedConversation = payload.new;
-          if (updatedConversation.unread_count > 0) {
-            showNotification(`Tienes ${updatedConversation.unread_count} mensaje${updatedConversation.unread_count > 1 ? 's' : ''} nuevo${updatedConversation.unread_count > 1 ? 's' : ''}`, 'info');
-          }
-        },
-        user.id
-      );
-
-      // Suscribir a mensajes del usuario
-      const messageChannels = realtimeService.subscribeToMessages(
-        (payload) => {
-          console.log('💬 Nuevo mensaje en dashboard:', payload);
-          refreshConversations();
-          
-          const newMessage = payload.new;
-          if (newMessage.sender !== 'debtor') {
-            showNotification('Has recibido un nuevo mensaje', 'info');
-          }
-        },
-        (payload) => {
-          console.log('💬 Mensaje actualizado en dashboard:', payload);
-          refreshConversations();
-        }
-      );
-
-      // Limpiar suscripciones al desmontar
-      return () => {
-        if (conversationChannels.insertChannel) {
-          realtimeService.unsubscribe(conversationChannels.insertChannel);
-        }
-        if (conversationChannels.updateChannel) {
-          realtimeService.unsubscribe(conversationChannels.updateChannel);
-        }
-        if (messageChannels.insertChannel) {
-          realtimeService.unsubscribe(messageChannels.insertChannel);
-        }
-        if (messageChannels.updateChannel) {
-          realtimeService.unsubscribe(messageChannels.updateChannel);
-        }
-      };
-    });
-  }, [user, refreshConversations]);
 
   // Función para mostrar notificaciones visuales
   const showNotification = (message, type = 'info') => {

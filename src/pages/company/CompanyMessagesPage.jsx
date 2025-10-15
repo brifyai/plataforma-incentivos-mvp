@@ -11,13 +11,11 @@ import { supabase } from '../../config/supabase';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select, DateFilter } from '../../components/common';
 import AIMessageHandler from '../../components/messaging/AIMessageHandler';
 import HumanResponseHandler from '../../components/messaging/HumanResponseHandler';
-import ConnectionStatus from '../../components/messaging/ConnectionStatus';
-import ErrorDisplay from '../../components/messaging/ErrorDisplay';
-import { useCompanyMessages, useMessagingErrors } from '../../hooks';
-import { getCorporateClients, getCompanyDebts } from '../../services/databaseService';
+import { getCompanyMessages, sendMessage, getCorporateClients, getCompanyDebts } from '../../services/databaseService';
 import messageService from '../../services/messageService';
 import { formatDate } from '../../utils/formatters';
 import { DEBT_TYPES, DEBT_TYPE_LABELS, DEBT_STATUS } from '../../config/constants';
+import { useCompanyMessages } from '../../hooks';
 import Swal from 'sweetalert2';
 import {
   MessageSquare,
@@ -27,7 +25,6 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  AlertTriangle,
   RefreshCw,
   Plus,
   Search,
@@ -39,11 +36,10 @@ const CompanyMessagesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   
-  // Usar el nuevo hook de mensajes de empresa
+  // Usar el hook de mensajería real
   const {
     conversations,
     loading,
-    loadingCorporateClients,
     error,
     unreadCount,
     selectedConversation,
@@ -51,10 +47,9 @@ const CompanyMessagesPage = () => {
     debtors,
     corporateClients,
     getConversation,
-    sendMessage: sendCompanyMessage,
-    loadConversations,
-    loadDebtors,
-    loadCorporateClients
+    sendMessage: sendRealMessage,
+    searchConversations,
+    setSelectedConversation: setSelectedRealConversation
   } = useCompanyMessages();
   
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
@@ -77,22 +72,6 @@ const CompanyMessagesPage = () => {
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [campaignFilter, setCampaignFilter] = useState('');
-  const [showErrorPanel, setShowErrorPanel] = useState(false);
-
-  // Hook para manejo de errores
-  const {
-    errors,
-    connectionStatus,
-    isReconnecting,
-    hasErrors,
-    hasConnectionIssues,
-    isHealthy,
-    addError,
-    resolveError,
-    clearErrors,
-    attemptReconnection,
-    testMessageSending
-  } = useMessagingErrors();
 
   // Función helper para calcular rangos de fechas
   const getDateRange = (range) => {
@@ -132,7 +111,8 @@ const CompanyMessagesPage = () => {
     setDateFilter(dates);
   };
 
-  // Filters state
+  // Filters state for new message modal
+  const [loadingDebtors, setLoadingDebtors] = useState(false);
   const [debtorFilters, setDebtorFilters] = useState({
     clientType: '', // 'individual' or 'corporate'
     debtType: '',
@@ -140,32 +120,6 @@ const CompanyMessagesPage = () => {
     minAmount: '',
     maxAmount: ''
   });
-
-  useEffect(() => {
-    if (profile?.company?.id) {
-      loadConversations();
-      loadDebtors();
-      loadCorporateClients();
-    }
-  }, [profile?.company?.id]);
-
-  // Monitorear errores de carga
-  useEffect(() => {
-    if (error) {
-      addError({
-        type: 'message',
-        message: 'Error al cargar conversaciones',
-        details: error,
-        severity: 'high'
-      });
-    }
-  }, [error, addError]);
-
-  useEffect(() => {
-    if (showNewMessageModal) {
-      // Los datos ya están cargados, no necesitamos hacer nada adicional aquí
-    }
-  }, [showNewMessageModal]);
 
   // Check for client parameter and auto-open message modal
   useEffect(() => {
@@ -181,23 +135,22 @@ const CompanyMessagesPage = () => {
     }
   }, [searchParams, debtors, showNewMessageModal, setSearchParams]);
 
-  // loadMessages ya no es necesario - usamos loadConversations del hook
-
-  // loadConversations ya no es necesario - usamos el hook
-
   const handleOpenConversation = async (conversation) => {
-    // Cargar conversación completa con mensajes
-    const fullConversation = await getConversation(conversation.id);
-    if (fullConversation) {
-      // Enriquecer la conversación con información adicional para la IA
-      const enrichedConversation = {
-        ...fullConversation,
-        debtorId: fullConversation.debtorRut, // Usar RUT como identificador único
-        corporateClientId: fullConversation.corporateClientId || profile?.company?.id,
-        companyId: profile?.company?.id
-      };
-      setSelectedConversation(enrichedConversation);
-      setShowConversationModal(true);
+    try {
+      // Cargar la conversación completa con mensajes
+      const fullConversation = await getConversation(conversation.id);
+      if (fullConversation) {
+        setSelectedRealConversation(fullConversation);
+        setShowConversationModal(true);
+      }
+    } catch (error) {
+      console.error('Error opening conversation:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo cargar la conversación',
+        icon: 'error',
+        confirmButtonColor: '#3b82f6'
+      });
     }
   };
 
@@ -207,25 +160,34 @@ const CompanyMessagesPage = () => {
     return debtor?.corporateClientId || 'corp1'; // Fallback a corp1 para demo
   };
 
-  const handleSendMessage = async (message) => {
+  const handleSendMessage = async (messageData) => {
     if (!selectedConversation) return;
 
     try {
-      const result = await sendCompanyMessage(selectedConversation.id, {
-        content: message.content,
-        contentType: 'text',
-        metadata: message.metadata || {},
-        aiGenerated: message.metadata?.aiGenerated || false,
-        aiConfidence: message.metadata?.aiConfidence || null,
-        escalationTriggered: message.metadata?.escalationTriggered || false,
-        escalationReason: message.metadata?.escalationReason || null
+      const result = await sendRealMessage(selectedConversation.id, {
+        content: messageData.content,
+        contentType: messageData.contentType || 'text',
+        metadata: messageData.metadata || {},
+        aiGenerated: messageData.aiGenerated || false,
+        aiConfidence: messageData.aiConfidence || null
       });
 
       if (!result.success) {
-        console.error('Error sending message:', result.error);
+        Swal.fire({
+          title: 'Error',
+          text: result.error || 'No se pudo enviar el mensaje',
+          icon: 'error',
+          confirmButtonColor: '#3b82f6'
+        });
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo enviar el mensaje',
+        icon: 'error',
+        confirmButtonColor: '#3b82f6'
+      });
     }
   };
 
@@ -258,7 +220,7 @@ const CompanyMessagesPage = () => {
             : conv
         );
         
-        // El hook se encargará de actualizar el estado
+        setConversations(updatedConversations);
         
         // Actualizar la conversación seleccionada si está en el modal
         if (showConversationModal && selectedConversation?.id === conversation.id) {
@@ -299,9 +261,8 @@ const CompanyMessagesPage = () => {
     });
   };
 
-  // loadDebtors ahora viene del hook useCompanyMessages
-
-  // loadCorporateClients ahora viene del hook useCompanyMessages
+  // Los deudores y clientes corporativos ya se cargan a través del hook useCompanyMessages
+  // Estas funciones ya no son necesarias ya que el hook maneja la carga de datos
 
   const handleSendBulkMessage = async () => {
     if (!newMessage.corporateClientId || !newMessage.subject || !newMessage.message) {
@@ -391,7 +352,7 @@ const CompanyMessagesPage = () => {
         minAmount: '',
         maxAmount: ''
       });
-      loadConversations(); // Recargar conversaciones
+      // Los mensajes se recargan automáticamente a través del hook
     } catch (error) {
       Swal.fire({
         title: 'Error al Enviar Campaña',
@@ -449,9 +410,10 @@ const CompanyMessagesPage = () => {
     }
   };
 
-  const filteredMessages = conversations.filter(conversation =>
+  // Usar las conversaciones reales en lugar de mensajes filtrados
+  const filteredConversations = conversations.filter(conversation =>
     conversation.debtorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (conversation.subject && conversation.subject.toLowerCase().includes(searchTerm.toLowerCase()))
+    conversation.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Determine which list to show based on selections
@@ -583,11 +545,6 @@ const CompanyMessagesPage = () => {
             <Badge variant="info" size="sm">
               {conversations.length} Conversaciones
             </Badge>
-            {unreadCount > 0 && (
-              <Badge variant="warning" size="sm">
-                {unreadCount} No leídos
-              </Badge>
-            )}
             <Button
               variant="primary"
               size="sm"
@@ -599,7 +556,7 @@ const CompanyMessagesPage = () => {
             <Button
               variant="primary"
               size="sm"
-              onClick={loadConversations}
+              onClick={() => window.location.reload()}
               leftIcon={<RefreshCw className="w-3 h-3" />}
             >
               Actualizar
@@ -831,9 +788,9 @@ const CompanyMessagesPage = () => {
       {/* Messages List */}
       <Card
         title="Conversaciones Activas"
-        subtitle={`${filteredMessages.length} conversación${filteredMessages.length !== 1 ? 'es' : ''} encontrada${filteredMessages.length !== 1 ? 's' : ''}`}
+        subtitle={`${filteredConversations.length} conversación${filteredConversations.length !== 1 ? 'es' : ''} encontrada${filteredConversations.length !== 1 ? 's' : ''}`}
       >
-        {filteredMessages.length === 0 ? (
+        {filteredConversations.length === 0 ? (
           <div className="text-center py-16">
             <MessageSquare className="w-16 h-16 text-secondary-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-secondary-900 mb-2">
@@ -848,36 +805,40 @@ const CompanyMessagesPage = () => {
                 onClick={() => navigate('/empresa/mensajes/nuevo')}
                 leftIcon={<Plus className="w-4 h-4" />}
               >
-                Enviar Primer Mensaje
+                Enviar Nuevo Mensaje
               </Button>
             )}
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredMessages.map((conversation) => (
+            {filteredConversations.map((conversation) => (
               <div
                 key={conversation.id}
                 className="flex items-center justify-between p-6 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                 onClick={() => handleOpenConversation(conversation)}
               >
                 <div className="flex items-center gap-6">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <MessageSquare className="w-4 h-4 text-blue-600" />
+                  </div>
+
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-secondary-900">
-                        {conversation.debtorName}
+                        {conversation.subject || 'Sin asunto'}
                       </h3>
                       {conversation.unreadCount > 0 && (
-                        <Badge variant="warning" className="text-xs">
-                          {conversation.unreadCount} nuevo{conversation.unreadCount !== 1 ? 's' : ''}
-                        </Badge>
+                        <Badge variant="warning">{conversation.unreadCount} nuevo{conversation.unreadCount !== 1 ? 's' : ''}</Badge>
                       )}
-                      {getPriorityBadge(conversation.priority)}
+                      <Badge variant={conversation.priority === 'high' ? 'danger' : conversation.priority === 'low' ? 'secondary' : 'info'}>
+                        {conversation.priority === 'high' ? 'Alta' : conversation.priority === 'low' ? 'Baja' : 'Normal'}
+                      </Badge>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-secondary-600">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        <span>{conversation.debtorRut}</span>
+                        <span>{conversation.debtorName}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4" />
@@ -886,7 +847,7 @@ const CompanyMessagesPage = () => {
                     </div>
 
                     <p className="text-sm text-secondary-600 mt-2 line-clamp-2">
-                      {conversation.subject}: {conversation.lastMessage}
+                      {conversation.lastMessage}
                     </p>
                   </div>
                 </div>
@@ -1161,7 +1122,7 @@ const CompanyMessagesPage = () => {
                     onChange={(e) => setNewMessage(prev => ({ ...prev, corporateClientId: e.target.value, selectedDebtors: [], showDebtorSelection: false }))}
                     className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all appearance-none"
                     required
-                    disabled={loading}
+                    disabled={loadingCorporateClients}
                   >
                     <option value="">
                       {loadingCorporateClients ? 'Cargando clientes corporativos...' : 'Seleccionar cliente corporativo...'}

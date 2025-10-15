@@ -30,7 +30,14 @@ import {
 } from 'lucide-react';
 
 const MessagesPage = () => {
-  const { conversations, loading } = useMessages();
+  const {
+    conversations,
+    loading,
+    error,
+    getConversation,
+    sendMessage: sendRealMessage,
+    setSelectedConversation: setSelectedRealConversation
+  } = useMessages();
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showPaymentProofModal, setShowPaymentProofModal] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -50,9 +57,23 @@ const MessagesPage = () => {
   // Lista de empresas disponibles - TODO: Obtener de BD
   const companies = [];
 
-  const handleViewConversation = (conversation) => {
-    setSelectedConversation(conversation);
-    setAttachedFiles([]); // Limpiar archivos previos
+  const handleViewConversation = async (conversation) => {
+    try {
+      // Cargar la conversación completa con mensajes
+      const fullConversation = await getConversation(conversation.id);
+      if (fullConversation) {
+        setSelectedRealConversation(fullConversation);
+        setAttachedFiles([]); // Limpiar archivos previos
+      }
+    } catch (error) {
+      console.error('Error opening conversation:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo cargar la conversación',
+        icon: 'error',
+        confirmButtonColor: '#3b82f6'
+      });
+    }
   };
 
   const handleNewMessage = () => {
@@ -68,28 +89,33 @@ const MessagesPage = () => {
     }
   };
 
-  const handleSendMessage = () => {
-    if (companies.length === 0) {
-      Swal.fire('Error', 'No hay empresas disponibles para enviar mensajes', 'error');
-      return;
+  const handleSendMessage = async () => {
+    if (!selectedConversation) return;
+
+    try {
+      const result = await sendRealMessage(selectedConversation.id, {
+        content: newMessage,
+        contentType: 'text',
+        metadata: {
+          files: attachedFiles.length > 0 ? attachedFiles.map(f => ({
+            name: f.name,
+            size: f.size,
+            type: f.type
+          })) : []
+        }
+      });
+
+      if (result.success) {
+        setNewMessage('');
+        setAttachedFiles([]);
+        Swal.fire('¡Mensaje Enviado!', 'Mensaje enviado exitosamente', 'success');
+      } else {
+        Swal.fire('Error', result.error || 'No se pudo enviar el mensaje', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      Swal.fire('Error', 'No se pudo enviar el mensaje', 'error');
     }
-    if (!selectedCompany || !newMessage.trim()) {
-      Swal.fire('Error', 'Por favor selecciona una empresa e ingresa un mensaje', 'error');
-      return;
-    }
-
-    // Simular envío
-    const messageData = {
-      message: newMessage,
-      files: attachedFiles.length > 0 ? `${attachedFiles.length} archivo(s) adjunto(s)` : null
-    };
-
-    Swal.fire('¡Mensaje Enviado!', 'Mensaje enviado exitosamente', 'success');
-
-    setShowNewMessageModal(false);
-    setSelectedCompany('');
-    setNewMessage('');
-    setAttachedFiles([]);
   };
 
   const handleUploadPaymentProof = () => {
@@ -582,13 +608,7 @@ const MessagesPage = () => {
                         <Button
                           variant="gradient"
                           className="px-6 py-3 rounded-2xl shadow-soft hover:shadow-glow transition-all"
-                          onClick={() => {
-                            if (newMessage.trim() || attachedFiles.length > 0) {
-                              Swal.fire('¡Mensaje enviado!', 'Tu mensaje ha sido enviado exitosamente', 'success');
-                              setNewMessage('');
-                              setAttachedFiles([]);
-                            }
-                          }}
+                          onClick={handleSendMessage}
                           disabled={!newMessage.trim() && attachedFiles.length === 0}
                         >
                           <Send className="w-4 h-4" />

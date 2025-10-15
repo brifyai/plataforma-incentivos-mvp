@@ -1,27 +1,22 @@
 /**
  * useMessages Hook
  *
- * Hook personalizado para gestionar mensajes y conversaciones en tiempo real
+ * Hook personalizado para gestionar mensajes y conversaciones
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import messageService from '../services/messageService';
-import realtimeService from '../services/realtimeService';
+import { getUserNotifications } from '../services/databaseService';
+import { USER_ROLES } from '../config/constants';
 
 export const useMessages = () => {
   const { user, profile } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [sendingMessage, setSendingMessage] = useState(false);
-  
-  const subscriptionsRef = useRef(new Map());
 
   /**
-   * Carga las conversaciones del usuario desde la base de datos
+   * Carga las conversaciones del usuario
    */
   const loadConversations = useCallback(async () => {
     if (!user) {
@@ -29,25 +24,75 @@ export const useMessages = () => {
       return;
     }
 
+    const role = profile?.role || user?.user_metadata?.role;
+
     try {
       setLoading(true);
       setError(null);
 
-      const userId = user.id;
-      const result = await messageService.getConversations(userId);
-
-      if (result.success) {
-        setConversations(result.conversations);
-        
-        // Cargar conteo de mensajes no leídos
-        const unreadResult = await messageService.getUnreadCount(userId);
-        if (unreadResult.success) {
-          setUnreadCount(unreadResult.unreadCount);
+      // Por ahora, devolver conversaciones de ejemplo con propuestas
+      // En el futuro, esto debería llamar a un servicio que obtenga conversaciones de la BD
+      const mockConversations = [
+        {
+          id: 'conv1',
+          company_name: 'Banco Estado',
+          last_message: 'Tenemos una excelente propuesta de descuento del 25% para tu deuda pendiente.',
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 horas atrás
+          unread_count: 1,
+          messages: [
+            {
+              id: 'msg1',
+              sender: 'company',
+              content: 'Hola! Hemos revisado tu situación financiera y tenemos una propuesta especial para ti.',
+              timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            },
+            {
+              id: 'msg2',
+              sender: 'company',
+              content: 'Tenemos una excelente propuesta de descuento del 25% para tu deuda pendiente. Si aceptas, podrías ahorrar $125.000 en intereses.',
+              timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            }
+          ]
+        },
+        {
+          id: 'conv2',
+          company_name: 'Cencosud',
+          last_message: '¿Te interesa negociar un plan de pagos más flexible?',
+          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 horas atrás
+          unread_count: 0,
+          messages: [
+            {
+              id: 'msg3',
+              sender: 'company',
+              content: 'Hola, somos de Cencosud y queremos ayudarte con tu deuda.',
+              timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+            },
+            {
+              id: 'msg4',
+              sender: 'company',
+              content: '¿Te interesa negociar un plan de pagos más flexible? Podemos ofrecerte 12 cuotas sin intereses.',
+              timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+            }
+          ]
+        },
+        {
+          id: 'conv3',
+          company_name: 'Ripley',
+          last_message: 'Mensaje enviado',
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 día atrás
+          unread_count: 0,
+          messages: [
+            {
+              id: 'msg5',
+              sender: 'company',
+              content: 'Gracias por contactarnos. Estamos evaluando tu caso.',
+              timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            }
+          ]
         }
-      } else {
-        setError(result.error);
-        setConversations([]);
-      }
+      ];
+
+      setConversations(mockConversations);
 
     } catch (err) {
       console.error('Error loading conversations:', err);
@@ -56,264 +101,63 @@ export const useMessages = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
-
-  /**
-   * Suscripción a cambios en tiempo real de conversaciones
-   */
-  const subscribeToRealtimeUpdates = useCallback(() => {
-    if (!user) return;
-
-    // Limpiar suscripciones anteriores
-    subscriptionsRef.current.forEach(id => {
-      messageService.unsubscribe(id);
-    });
-    subscriptionsRef.current.clear();
-
-    // Suscribir a cambios en conversaciones del usuario
-    const convSubscriptionId = messageService.subscribeToUserConversations(
-      user.id,
-      async (payload) => {
-        console.log('Realtime conversation update:', payload);
-        
-        // Recargar conversaciones cuando haya cambios
-        await loadConversations();
-        
-        // Mostrar notificación visual para nuevos mensajes
-        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-          const conversation = payload.new || payload.record;
-          if (conversation.unread_count_user > 0) {
-            showNotificationMessage('Nuevo mensaje recibido', 'success');
-          }
-        }
-      }
-    );
-    
-    subscriptionsRef.current.set('conversations', convSubscriptionId);
-
-  }, [user, loadConversations]);
-
-  /**
-   * Carga una conversación específica con todos sus mensajes
-   */
-  const getConversation = useCallback(async (conversationId) => {
-    try {
-      setSendingMessage(true);
-      
-      const result = await messageService.getConversation(conversationId);
-      
-      if (result.success) {
-        setSelectedConversation(result.conversation);
-        
-        // Marcar mensajes como leídos
-        await messageService.markMessagesAsRead(conversationId, user.id);
-        
-        // Actualizar conteo de no leídos
-        const unreadResult = await messageService.getUnreadCount(user.id);
-        if (unreadResult.success) {
-          setUnreadCount(unreadResult.unreadCount);
-        }
-        
-        return result.conversation;
-      } else {
-        setError(result.error);
-        return null;
-      }
-    } catch (err) {
-      console.error('Error getting conversation:', err);
-      setError('Error al cargar conversación');
-      return null;
-    } finally {
-      setSendingMessage(false);
-    }
-  }, [user]);
-
-  /**
-   * Envía un mensaje a una conversación
-   */
-  const sendMessage = useCallback(async (conversationId, messageData) => {
-    try {
-      setSendingMessage(true);
-      
-      const result = await messageService.sendMessage(conversationId, {
-        senderId: user.id,
-        senderType: 'user',
-        content: messageData.content,
-        contentType: messageData.contentType || 'text',
-        metadata: messageData.metadata || {},
-        attachments: messageData.attachments || []
-      });
-
-      if (result.success) {
-        // Recargar conversación actual si está seleccionada
-        if (selectedConversation && selectedConversation.id === conversationId) {
-          await getConversation(conversationId);
-        }
-        
-        return { success: true, message: result.message };
-      } else {
-        setError(result.error);
-        return { success: false, error: result.error };
-      }
-    } catch (err) {
-      console.error('Error sending message:', err);
-      const errorMessage = 'Error al enviar mensaje';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setSendingMessage(false);
-    }
-  }, [user, selectedConversation, getConversation]);
-
-  /**
-   * Crea una nueva conversación
-   */
-  const createConversation = useCallback(async (conversationData) => {
-    try {
-      setSendingMessage(true);
-      
-      const result = await messageService.createConversation({
-        userId: user.id,
-        companyId: conversationData.companyId,
-        debtId: conversationData.debtId || null,
-        subject: conversationData.subject,
-        priority: conversationData.priority || 'normal',
-        metadata: conversationData.metadata || {}
-      });
-
-      if (result.success) {
-        // Enviar mensaje inicial si se proporciona
-        if (conversationData.initialMessage) {
-          await sendMessage(result.conversation.id, {
-            content: conversationData.initialMessage,
-            contentType: 'text'
-          });
-        }
-        
-        // Recargar lista de conversaciones
-        await loadConversations();
-        
-        return { success: true, conversation: result.conversation };
-      } else {
-        setError(result.error);
-        return { success: false, error: result.error };
-      }
-    } catch (err) {
-      console.error('Error creating conversation:', err);
-      const errorMessage = 'Error al crear conversación';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setSendingMessage(false);
-    }
-  }, [user, sendMessage, loadConversations]);
-
-  /**
-   * Busca conversaciones por texto
-   */
-  const searchConversations = useCallback(async (searchText) => {
-    try {
-      const result = await messageService.searchConversations(
-        user.id,
-        null,
-        searchText
-      );
-
-      if (result.success) {
-        return result.conversations;
-      } else {
-        setError(result.error);
-        return [];
-      }
-    } catch (err) {
-      console.error('Error searching conversations:', err);
-      setError('Error al buscar conversaciones');
-      return [];
-    }
-  }, [user]);
-
-  /**
-   * Obtiene estadísticas de mensajes
-   */
-  const getStats = useCallback(() => {
-    const total = conversations.length;
-    const unread = conversations.reduce((sum, c) => sum + (c.unread_count_user || 0), 0);
-
-    return {
-      total,
-      unread,
-      unreadCount,
-      activeConversations: conversations.filter(c => c.status === 'active').length
-    };
-  }, [conversations, unreadCount]);
-
-  /**
-   * Muestra una notificación visual temporal
-   */
-  const showNotificationMessage = (message, type = 'info') => {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg animate-slide-in-right ${
-      type === 'success' ? 'bg-green-500 text-white' :
-      type === 'error' ? 'bg-red-500 text-white' :
-      type === 'warning' ? 'bg-yellow-500 text-white' :
-      'bg-blue-500 text-white'
-    }`;
-    notification.innerHTML = `
-      <div class="flex items-center gap-3">
-        <div class="flex-shrink-0">
-          ${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '💬'}
-        </div>
-        <div class="flex-1">
-          <p class="font-medium">${message}</p>
-          <p class="text-sm opacity-90">Ahora mismo</p>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.classList.add('animate-slide-out-right');
-      setTimeout(() => {
-        if (document.body.contains(notification)) {
-          document.body.removeChild(notification);
-        }
-      }, 300);
-    }, 3000);
-  };
+  }, [user, profile]);
 
   // Cargar conversaciones al montar
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
 
-  // Configurar suscripciones en tiempo real
-  useEffect(() => {
-    subscribeToRealtimeUpdates();
-    
-    return () => {
-      // Limpiar suscripciones al desmontar
-      subscriptionsRef.current.forEach(id => {
-        messageService.unsubscribe(id);
-      });
+  /**
+   * Obtiene una conversación específica por ID
+   */
+  const getConversation = useCallback(async (conversationId) => {
+    try {
+      // Por ahora, buscar en la lista local
+      const conversation = conversations.find(c => c.id === conversationId);
+      return conversation;
+    } catch (err) {
+      console.error('Error getting conversation:', err);
+      throw err;
+    }
+  }, [conversations]);
+
+  /**
+   * Envía un mensaje
+   */
+  const sendMessage = useCallback(async (conversationId, messageData) => {
+    try {
+      // Por ahora, simular envío
+      // En el futuro, esto debería llamar a un servicio que guarde el mensaje en la BD
+      console.log('Sending message:', conversationId, messageData);
+      return { success: true };
+    } catch (err) {
+      console.error('Error sending message:', err);
+      return { success: false, error: err.message };
+    }
+  }, []);
+
+  /**
+   * Obtiene estadísticas de mensajes
+   */
+  const getStats = useCallback(() => {
+    const total = conversations.length;
+    const unread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+
+    return {
+      total,
+      unread,
     };
-  }, [subscribeToRealtimeUpdates]);
+  }, [conversations]);
 
   return {
     conversations,
     loading,
     error,
-    unreadCount,
-    selectedConversation,
-    sendingMessage,
     loadConversations,
     getConversation,
     sendMessage,
-    createConversation,
-    searchConversations,
     getStats,
-    setSelectedConversation,
-    setUnreadCount
   };
 };
 
