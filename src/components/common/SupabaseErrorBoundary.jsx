@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { isSupabaseMockMode, isSupabaseConfigured } from '../../config/supabase';
+import EmergencyMode from './EmergencyMode';
 
 const SupabaseErrorBoundary = ({ children, fallback = null }) => {
   const [hasError, setHasError] = useState(false);
@@ -88,7 +89,12 @@ const SupabaseErrorBoundary = ({ children, fallback = null }) => {
     );
   }
 
-  // Si estamos en modo mock, mostrar una advertencia sutil
+  // Si estamos en modo mock en producción, mostrar modo de emergencia
+  if (isMockMode && process.env.NODE_ENV === 'production') {
+    return <EmergencyMode />;
+  }
+
+  // Si estamos en modo mock en desarrollo, mostrar una advertencia sutil
   if (isMockMode && process.env.NODE_ENV === 'development') {
     return (
       <>
