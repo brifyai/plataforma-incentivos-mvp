@@ -49,13 +49,21 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2bHVxZGx
 
 ### Paso 4: Verificar CORS en Supabase
 
+📍 **Guía detallada con capturas de pantalla**: [`GUIA_CONFIGURAR_CORS_SUPABASE.md`](GUIA_CONFIGURAR_CORS_SUPABASE.md)
+
+**Resumen rápido:**
 1. **Ve a Supabase Dashboard**: https://app.supabase.com
 2. **Selecciona tu proyecto**: `wvluqdldygmgncqqjkow`
-3. **Ve a Settings** > **API**
-4. **En "Additional URLs"**, agrega tu dominio de Netlify:
+3. **Ve a Settings** (⚙️) > **API** (📡)
+4. **Busca la sección "CORS"** 🌐
+5. **En "Additional URLs"**, agrega tu dominio de Netlify:
    ```
    https://tu-app-netlify.app
    ```
+
+**Para encontrar tu dominio exacto de Netlify:**
+- Ve a Netlify Dashboard > Tu sitio > El dominio aparece en la parte superior
+- Copia el dominio completo (incluyendo https://)
 
 ## 🔍 Diagnóstico Adicional
 
@@ -114,4 +122,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Site settings > Build & deploy > Environment
 
 **URL de configuración Supabase:**
-Settings > API > Additional URLs
+Settings > API > CORS > Additional URLs
+
+**Guía visual completa:**
+[`GUIA_CONFIGURAR_CORS_SUPABASE.md`](GUIA_CONFIGURAR_CORS_SUPABASE.md)
