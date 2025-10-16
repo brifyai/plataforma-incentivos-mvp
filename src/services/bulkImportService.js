@@ -42,6 +42,7 @@ const IMPORT_CONFIG = {
  */
 const validateDebtData = (debtData) => {
   const errors = [];
+  const validationDetails = {};
 
   // Validar campos requeridos
   console.log('🔍 Validando RUT:', {
@@ -52,22 +53,48 @@ const validateDebtData = (debtData) => {
     regexTest: debtData.rut ? /^\d{1,2}\.\d{3}\.\d{3}-[\dKk]$/.test(debtData.rut) : 'N/A'
   });
   
+  validationDetails.rut = {
+    value: debtData.rut,
+    isEmpty: !debtData.rut,
+    trimResult: debtData.rut?.trim?.(),
+    regexTest: debtData.rut ? /^\d{1,2}\.\d{3}\.\d{3}-[\dKk]$/.test(debtData.rut) : false
+  };
+  
   if (!debtData.rut || !debtData.rut.trim()) {
     errors.push('RUT es requerido');
   } else if (!/^\d{1,2}\.\d{3}\.\d{3}-[\dKk]$/.test(debtData.rut)) {
     errors.push(`RUT "${debtData.rut}" debe tener formato XX.XXX.XXX-X`);
   }
 
+  validationDetails.fullName = {
+    value: debtData.full_name,
+    isEmpty: !debtData.full_name || !debtData.full_name.trim()
+  };
+  
   if (!debtData.full_name || !debtData.full_name.trim()) {
     errors.push('Nombre completo es requerido');
   }
 
+  validationDetails.debtAmount = {
+    value: debtData.debt_amount,
+    isNumber: !isNaN(parseFloat(debtData.debt_amount)),
+    isPositive: parseFloat(debtData.debt_amount) > 0,
+    parsedValue: parseFloat(debtData.debt_amount)
+  };
+  
   if (!debtData.debt_amount || isNaN(parseFloat(debtData.debt_amount))) {
     errors.push('Monto de deuda debe ser un número válido');
   } else if (parseFloat(debtData.debt_amount) <= 0) {
     errors.push('Monto de deuda debe ser mayor a 0');
   }
 
+  validationDetails.dueDate = {
+    value: debtData.due_date,
+    isEmpty: !debtData.due_date,
+    isValidDate: debtData.due_date ? !isNaN(new Date(debtData.due_date).getTime()) : false,
+    parsedDate: debtData.due_date ? new Date(debtData.due_date) : null
+  };
+  
   if (!debtData.due_date) {
     errors.push('Fecha de vencimiento es requerida');
   } else {
@@ -77,6 +104,11 @@ const validateDebtData = (debtData) => {
     }
   }
 
+  validationDetails.creditorName = {
+    value: debtData.creditor_name,
+    isEmpty: !debtData.creditor_name || !debtData.creditor_name.trim()
+  };
+  
   if (!debtData.creditor_name || !debtData.creditor_name.trim()) {
     errors.push('Nombre del acreedor es requerido');
   }
@@ -84,6 +116,10 @@ const validateDebtData = (debtData) => {
   // Validar email si está presente
   if (debtData.email && typeof debtData.email === 'string' && debtData.email.trim()) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    validationDetails.email = {
+      value: debtData.email,
+      isValid: emailRegex.test(debtData.email)
+    };
     if (!emailRegex.test(debtData.email)) {
       errors.push('Email tiene formato inválido');
     }
@@ -92,14 +128,21 @@ const validateDebtData = (debtData) => {
   // Validar teléfono si está presente
   if (debtData.phone && typeof debtData.phone === 'string' && debtData.phone.trim()) {
     const phoneRegex = /^\+\d{10,15}$/;
+    validationDetails.phone = {
+      value: debtData.phone,
+      isValid: phoneRegex.test(debtData.phone)
+    };
     if (!phoneRegex.test(debtData.phone)) {
       errors.push('Teléfono debe tener formato internacional (+569XXXXXXXX)');
     }
   }
 
+  console.log('📋 Detalles completos de validación:', validationDetails);
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
+    validationDetails
   };
 };
 
@@ -284,15 +327,37 @@ const processImportBatch = async (batch, options) => {
       // 1. Validar datos
       console.log(`🔍 Validando fila ${rowNumber}...`);
       const validation = validateDebtData(rowData);
-      console.log(`✅ Resultado validación fila ${rowNumber}:`, validation);
+      console.log(`✅ Resultado validación fila ${rowNumber}:`, {
+        isValid: validation.isValid,
+        errors: validation.errors,
+        errorsCount: validation.errors?.length || 0
+      });
       
       if (!validation.isValid) {
         console.error(`❌ Errores de validación en fila ${rowNumber}:`, validation.errors);
+        console.error(`📋 Datos que causaron el error:`, rowData);
         results.failed++;
         results.errors.push({
           row: rowNumber,
           errors: validation.errors,
-          data: rowData
+          data: rowData,
+          validationDetails: {
+            rutValidation: {
+              value: rowData.rut,
+              isEmpty: !rowData.rut,
+              trimResult: rowData.rut?.trim?.(),
+              regexTest: rowData.rut ? /^\d{1,2}\.\d{3}\.\d{3}-[\dKk]$/.test(rowData.rut) : 'N/A'
+            },
+            amountValidation: {
+              value: rowData.debt_amount,
+              isNumber: !isNaN(parseFloat(rowData.debt_amount)),
+              isPositive: parseFloat(rowData.debt_amount) > 0
+            },
+            dateValidation: {
+              value: rowData.due_date,
+              isValid: rowData.due_date ? !isNaN(new Date(rowData.due_date).getTime()) : false
+            }
+          }
         });
         continue;
       }
