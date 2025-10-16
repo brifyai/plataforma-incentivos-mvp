@@ -34,20 +34,41 @@ class AIImportService {
   }
 
   /**
-   * Obtener configuración de Groq desde la base de datos
+   * Obtener configuración de Groq desde la base de datos o fallback a .env
    */
   async getGroqConfig() {
     try {
-      const importConfig = await aiProvidersService.getImportConfiguration();
-      
-      if (!importConfig.provider || !importConfig.apiKey) {
-        throw new Error('No hay configuración de Groq disponible para importación. Por favor, configure Groq en la sección de Proveedores IA.');
+      // Primero intentar obtener desde la base de datos
+      try {
+        const importConfig = await aiProvidersService.getImportConfiguration();
+        
+        if (importConfig.provider && importConfig.apiKey) {
+          console.log('✅ Usando configuración de Groq desde base de datos');
+          return {
+            provider: 'groq',
+            apiKey: importConfig.apiKey,
+            models: importConfig.models || []
+          };
+        }
+      } catch (dbError) {
+        console.warn('⚠️ No se pudo obtener configuración desde BD, usando fallback:', dbError.message);
       }
 
+      // Fallback a variables de entorno
+      const envApiKey = import.meta.env.VITE_GROQ_API_KEY;
+      if (!envApiKey) {
+        throw new Error('No hay API key de Groq configurada. Configure en Proveedores IA o agregue VITE_GROQ_API_KEY al .env');
+      }
+
+      console.log('✅ Usando configuración de Groq desde variables de entorno');
       return {
         provider: 'groq',
-        apiKey: importConfig.apiKey,
-        models: importConfig.models || []
+        apiKey: envApiKey,
+        models: [
+          { id: 'llama-3.1-70b-versatile', name: 'Llama 3.1 70B Versatile' },
+          { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant' },
+          { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' }
+        ]
       };
     } catch (error) {
       console.error('Error getting Groq config:', error);
