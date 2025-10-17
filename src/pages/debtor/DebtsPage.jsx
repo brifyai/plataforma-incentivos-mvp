@@ -155,7 +155,7 @@ const DebtsPage = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      {/* Header Modernizado */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
@@ -181,57 +181,88 @@ const DebtsPage = () => {
 
             <div className="flex gap-3">
               <Button
-                variant="primary"
+                variant="glass"
                 size="md"
                 onClick={() => setShowAddDebtModal(true)}
-                className="hover:scale-105 transition-all shadow-glow"
+                className="hover:scale-105 transition-all"
                 leftIcon={<Plus className="w-4 h-4" />}
               >
                 Registrar Nueva Deuda
               </Button>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Quick stats in header */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-danger-300" />
-                <div>
-                  <p className="text-xs text-primary-100">Activas</p>
-                  <p className="text-lg font-bold">{debts.filter(d => d.status === 'active').length}</p>
-                </div>
+      {/* Stats Cards Modernizadas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-0.5">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-red-100 to-red-200 rounded-lg group-hover:shadow-glow-red transition-all duration-300">
+                <AlertCircle className="w-4 h-4 text-red-600" />
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-warning-300" />
-                <div>
-                  <p className="text-xs text-primary-100">En Negociación</p>
-                  <p className="text-lg font-bold">{debts.filter(d => d.status === 'in_negotiation').length}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-success-300" />
-                <div>
-                  <p className="text-xs text-primary-100">Pagadas</p>
-                  <p className="text-lg font-bold">{debts.filter(d => d.status === 'paid').length}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-accent-300" />
-                <div>
-                  <p className="text-xs text-primary-100">Total</p>
-                  <p className="text-lg font-bold">{formatCurrency(debts.reduce((sum, debt) => sum + debt.current_amount, 0))}</p>
-                </div>
-              </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {debts.filter(d => d.status === 'active').length}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Activas</p>
+            <div className="text-xs text-red-600 mt-0.5 font-medium">
+              Pendientes
             </div>
           </div>
-        </div>
+        </Card>
+
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-0.5">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg group-hover:shadow-glow-yellow transition-all duration-300">
+                <Clock className="w-4 h-4 text-yellow-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {debts.filter(d => d.status === 'in_negotiation').length}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Negociación</p>
+            <div className="text-xs text-yellow-600 mt-0.5 font-medium">
+              En proceso
+            </div>
+          </div>
+        </Card>
+
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-0.5">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {debts.filter(d => d.status === 'paid').length}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Pagadas</p>
+            <div className="text-xs text-green-600 mt-0.5 font-medium">
+              Saldados
+            </div>
+          </div>
+        </Card>
+
+        <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+          <div className="p-0.5">
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
+                <DollarSign className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+              {formatCurrency(debts.reduce((sum, debt) => sum + debt.current_amount, 0))}
+            </h3>
+            <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Total</p>
+            <div className="text-xs text-blue-600 mt-0.5 font-medium">
+              Adeudado
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Filters */}

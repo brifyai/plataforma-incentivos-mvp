@@ -18,6 +18,9 @@ import SystemStatus from './components/SystemStatus';
 import MobileNavigation from './components/MobileNavigation';
 import BankAccountSetup from '../../components/company/BankAccountSetup';
 import { FormField, FormSection, ActionButtons } from '../../components/common';
+import UnifiedDashboard from '../../components/common/UnifiedDashboard';
+import SharedNegotiationStatus from '../../components/common/SharedNegotiationStatus';
+import ConsolidatedFinancialProgress from '../../components/common/ConsolidatedFinancialProgress';
 import {
   Users,
   FileText,
@@ -53,6 +56,8 @@ const CompanyDashboard = () => {
   const [createCompanyLoading, setCreateCompanyLoading] = useState(false);
   const [createCompanyError, setCreateCompanyError] = useState(null);
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
+  const [showEcosystemView, setShowEcosystemView] = useState(false); // Temporalmente desactivado
+  const [ecosystemViewMode, setEcosystemViewMode] = useState('unified'); // unified, negotiations, financial
 
   // Load verification status
   useEffect(() => {
@@ -311,6 +316,91 @@ const CompanyDashboard = () => {
       {/* System Status */}
       <SystemStatus />
 
+      {/* Ecosystem Integration Section - Temporalmente desactivado */}
+      {false && showEcosystemView && (
+        <div className="space-y-6 animate-slide-up">
+          {/* Ecosystem Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-green-100 to-blue-100 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-secondary-900">
+                  🌐 Vista del Ecosistema
+                </h2>
+                <p className="text-secondary-600 text-sm">
+                  Sincronización en tiempo real entre portales empresas-personas
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={ecosystemViewMode}
+                onChange={(e) => setEcosystemViewMode(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="unified">Dashboard Unificado</option>
+                <option value="negotiations">Negociaciones Compartidas</option>
+                <option value="financial">Progreso Financiero</option>
+              </select>
+              <button
+                onClick={() => setShowEcosystemView(false)}
+                className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+
+          {/* Ecosystem Content */}
+          {ecosystemViewMode === 'unified' && (
+            <UnifiedDashboard
+              userType="company"
+              timeRange="30d"
+              showNotifications={true}
+              showRealTimeStatus={true}
+              compact={false}
+            />
+          )}
+
+          {ecosystemViewMode === 'negotiations' && (
+            <SharedNegotiationStatus
+              userType="company"
+              compact={false}
+              showFilters={true}
+              autoRefresh={true}
+              refreshInterval={30000}
+            />
+          )}
+
+          {ecosystemViewMode === 'financial' && (
+            <ConsolidatedFinancialProgress
+              userType="company"
+              timeRange="30d"
+              compact={false}
+              showCharts={true}
+              showPredictions={true}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Ecosystem Toggle Button - Temporalmente desactivado */}
+      {false && !showEcosystemView && (
+        <div className="fixed bottom-6 left-6 z-40">
+          <button
+            onClick={() => setShowEcosystemView(true)}
+            className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center group"
+          >
+            <TrendingUp className="w-6 h-6 group-hover:animate-pulse" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
+            <span className="absolute bottom-full mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              🌐 Vista del Ecosistema
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Mobile Navigation */}
       <MobileNavigation />

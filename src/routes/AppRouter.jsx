@@ -7,6 +7,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GestureNavigation from '../components/common/GestureNavigation';
 
 
 // Landing Page
@@ -31,6 +32,9 @@ import DashboardLayout from '../components/layout/DashboardLayout';
 
 // Páginas de personas
 import DebtorDashboard from '../pages/debtor/DebtorDashboard';
+import DebtorAnalyticsPage from '../pages/debtor/DebtorAnalyticsPage';
+import DebtorAIAssistantPage from '../pages/debtor/DebtorAIAssistantPage';
+import DebtorGamificationPage from '../pages/debtor/DebtorGamificationPage';
 import SimulatorPage from '../pages/debtor/SimulatorPage';
 
 // Páginas completas para el flujo de personas
@@ -311,6 +315,38 @@ const AppContent = () => {
             <DashboardLayout>
               <SimulatorPage />
             </DashboardLayout>
+          }
+        />
+
+        {/* Rutas especializadas del dashboard de personas */}
+        <Route
+          path="/personas/analytics"
+          element={
+            <ProtectedRoute allowedRoles={['debtor']}>
+              <DashboardLayout>
+                <DebtorAnalyticsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/personas/asistente-ia"
+          element={
+            <ProtectedRoute allowedRoles={['debtor']}>
+              <DashboardLayout>
+                <DebtorAIAssistantPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/personas/gamificacion"
+          element={
+            <ProtectedRoute allowedRoles={['debtor']}>
+              <DashboardLayout>
+                <DebtorGamificationPage />
+              </DashboardLayout>
+            </ProtectedRoute>
           }
         />
 
@@ -801,7 +837,9 @@ const AppContent = () => {
 const AppRouter = () => {
   return (
     <BrowserRouter>
-      <AppContent />
+      <GestureNavigation>
+        <AppContent />
+      </GestureNavigation>
     </BrowserRouter>
   );
 };

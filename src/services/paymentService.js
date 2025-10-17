@@ -191,7 +191,6 @@ export const processPayment = async (paymentInfo) => {
       payment_method: paymentMethod,
       status: 'pending',
       platform_commission: mercadopagoCommission, // Comisión real de MP
-      user_incentive: userIncentive, // $30.000 fijo
       business_closure_fee: businessClosureFee, // $60.000 fijo
       installment_number: installmentNumber || null,
       payment_gateway_id: paymentGatewayId,
@@ -572,7 +571,6 @@ export const processBankTransferPayment = async (bankTransferData) => {
       status: 'awaiting_validation',
       requires_validation: true,
       platform_commission: 0, // Sin comisión de MP en transferencias
-      user_incentive: userIncentive, // $30.000 fijo
       business_closure_fee: businessClosureFee, // $60.000 fijo
       installment_number: installmentNumber || null,
       metadata: {
@@ -854,7 +852,6 @@ export const processMercadoPagoSplitPayment = async (mercadopagoPaymentData) => 
       payment_method: 'mercadopago',
       status: 'pending', // Se confirmará vía webhook
       platform_commission: mercadopagoCommission, // Comisión real de MP
-      user_incentive: userIncentive, // $30.000 fijo
       business_closure_fee: businessClosureFee, // $60.000 fijo
       installment_number: installmentNumber || null,
       payment_gateway_id: paymentGatewayId,

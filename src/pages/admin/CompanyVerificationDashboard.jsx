@@ -21,7 +21,8 @@ import {
   TrendingUp,
   Users,
   CheckSquare,
-  XSquare
+  XSquare,
+  Calendar
 } from 'lucide-react';
 import {
   getPendingVerifications,
@@ -45,8 +46,11 @@ const CompanyVerificationDashboard = () => {
   // Filtros
   const [filters, setFilters] = useState({
     status: '',
-    search: ''
+    search: '',
+    startDate: '',
+    endDate: ''
   });
+  const [quickFilter, setQuickFilter] = useState(''); // 'today', 'week', 'month'
 
   useEffect(() => {
     loadData();
@@ -149,6 +153,74 @@ const CompanyVerificationDashboard = () => {
     }
   };
 
+  // Función para aplicar filtros rápidos
+  const applyQuickFilter = (filterType) => {
+    const now = new Date();
+    let startDate = '';
+    let endDate = now.toISOString().split('T')[0]; // Hoy en formato YYYY-MM-DD
+
+    switch (filterType) {
+      case 'today':
+        startDate = endDate; // Desde hoy hasta hoy
+        break;
+      case 'week':
+        const weekAgo = new Date(now);
+        weekAgo.setDate(now.getDate() - 7);
+        startDate = weekAgo.toISOString().split('T')[0];
+        break;
+      case 'month':
+        const monthAgo = new Date(now);
+        monthAgo.setMonth(now.getMonth() - 1);
+        startDate = monthAgo.toISOString().split('T')[0];
+        break;
+      default:
+        startDate = '';
+        endDate = '';
+    }
+
+    setFilters({...filters, startDate, endDate});
+    setQuickFilter(filterType);
+  };
+
+  // Función helper para calcular rangos de fechas
+  const getDateRange = (range) => {
+    const today = new Date();
+    const startDate = new Date();
+    const endDate = new Date();
+
+    switch (range) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'last7days':
+        startDate.setDate(today.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'thisMonth':
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setMonth(today.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return { startDate: '', endDate: '' };
+    }
+
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
+
+  // Función para aplicar rangos predefinidos
+  const applyDateRange = (range) => {
+    const dates = getDateRange(range);
+    setFilters({...filters, startDate: dates.startDate, endDate: dates.endDate});
+    setQuickFilter(range);
+  };
+
   const filteredVerifications = verifications.filter(v => {
     const matchesSearch = !filters.search ||
       v.company?.company_name?.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -156,7 +228,17 @@ const CompanyVerificationDashboard = () => {
 
     const matchesStatus = !filters.status || v.status === filters.status;
 
-    return matchesSearch && matchesStatus;
+    // Filtrar por fecha de creación
+    const matchesDate = !filters.startDate && !filters.endDate ||
+                      (filters.startDate && filters.endDate &&
+                       new Date(v.submitted_at).toISOString().split('T')[0] >= filters.startDate &&
+                       new Date(v.submitted_at).toISOString().split('T')[0] <= filters.endDate) ||
+                      (filters.startDate && !filters.endDate &&
+                       new Date(v.submitted_at).toISOString().split('T')[0] >= filters.startDate) ||
+                      (!filters.startDate && filters.endDate &&
+                       new Date(v.submitted_at).toISOString().split('T')[0] <= filters.endDate);
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   if (loading) {
@@ -170,195 +252,330 @@ const CompanyVerificationDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 rounded-3xl p-8 text-white shadow-strong">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <FileText className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold tracking-tight">
-                Verificación de Empresas
-              </h1>
-              <p className="text-purple-100 text-lg">
-                Gestiona las verificaciones de empresas pendientes
-              </p>
-            </div>
-          </div>
-
-          <Button
-            variant="secondary"
-            onClick={loadData}
-            leftIcon={<RefreshCw className="w-4 h-4" />}
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20"
-          >
-            Actualizar
-          </Button>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 rounded-3xl p-4 text-white shadow-strong animate-fade-in">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-24 -translate-x-24" />
         </div>
 
-        {/* Stats */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-purple-300" />
-                <div>
-                  <p className="text-sm text-purple-100">Total Empresas</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                </div>
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <FileText className="w-5 h-5" />
               </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-purple-300" />
-                <div>
-                  <p className="text-sm text-purple-100">En Revisión</p>
-                  <p className="text-2xl font-bold">{stats.underReview}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <CheckSquare className="w-6 h-6 text-purple-300" />
-                <div>
-                  <p className="text-sm text-purple-100">Aprobadas</p>
-                  <p className="text-2xl font-bold">{stats.approved}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="w-6 h-6 text-purple-300" />
-                <div>
-                  <p className="text-sm text-purple-100">Tasa Aprobación</p>
-                  <p className="text-2xl font-bold">{stats.approvalRate?.toFixed(1)}%</p>
-                </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  Verificación de Empresas
+                </h1>
+                <p className="text-primary-100 text-sm">
+                  Gestiona las verificaciones de empresas pendientes
+                </p>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Buscar por nombre de empresa o RUT..."
-              value={filters.search}
-              onChange={(e) => setFilters({...filters, search: e.target.value})}
-              leftIcon={<Search className="w-4 h-4" />}
-            />
+      {/* Stats Cards */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+          <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+            <div className="p-0.5">
+              <div className="flex items-center justify-center mb-2">
+                <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+                  <Users className="w-4 h-4 text-green-600" />
+                </div>
+              </div>
+              <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+                {stats.total}
+              </h3>
+              <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Total</p>
+              <div className="text-xs text-green-600 mt-0.5 font-medium">
+                Empresas
+              </div>
+            </div>
+          </Card>
+
+          <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+            <div className="p-0.5">
+              <div className="flex items-center justify-center mb-2">
+                <div className="p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg group-hover:shadow-glow-blue transition-all duration-300">
+                  <Clock className="w-4 h-4 text-blue-600" />
+                </div>
+              </div>
+              <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+                {stats.underReview}
+              </h3>
+              <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">En Revisión</p>
+              <div className="text-xs text-blue-600 mt-0.5 font-medium">
+                Pendientes
+              </div>
+            </div>
+          </Card>
+
+          <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+            <div className="p-0.5">
+              <div className="flex items-center justify-center mb-2">
+                <div className="p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg group-hover:shadow-glow-green transition-all duration-300">
+                  <CheckSquare className="w-4 h-4 text-green-600" />
+                </div>
+              </div>
+              <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+                {stats.approved}
+              </h3>
+              <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Aprobadas</p>
+              <div className="text-xs text-green-600 mt-0.5 font-medium">
+                Verificadas
+              </div>
+            </div>
+          </Card>
+
+          <Card className="text-center group hover:scale-[1.02] transition-all duration-300 animate-slide-up">
+            <div className="p-0.5">
+              <div className="flex items-center justify-center mb-2">
+                <div className="p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg group-hover:shadow-glow-purple transition-all duration-300">
+                  <TrendingUp className="w-4 h-4 text-purple-600" />
+                </div>
+              </div>
+              <h3 className="text-lg font-display font-bold text-secondary-900 mb-0.5">
+                {stats.approvalRate?.toFixed(1)}%
+              </h3>
+              <p className="text-secondary-600 font-medium uppercase tracking-wide text-xs">Tasa</p>
+              <div className="text-xs text-purple-600 mt-0.5 font-medium">
+                Aprobación
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Date Filter */}
+      <div className="bg-white/60 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 border border-white/30 shadow-sm w-full lg:min-w-fit">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900">Período de análisis</span>
           </div>
 
-          <Select
-            value={filters.status}
-            onChange={(value) => setFilters({...filters, status: value})}
-            placeholder="Filtrar por estado"
-            className="md:w-48"
-          >
-            <option value="">Todos los estados</option>
-            <option value={VERIFICATION_STATUS.SUBMITTED}>Enviados</option>
-            <option value={VERIFICATION_STATUS.UNDER_REVIEW}>En Revisión</option>
-          </Select>
+          {/* Date Inputs */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="startDate" className="text-sm text-gray-600">Desde:</label>
+              <input
+                id="startDate"
+                type="date"
+                value={filters.startDate || ''}
+                onChange={(e) => setFilters({...filters, startDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="endDate" className="text-sm text-gray-600">Hasta:</label>
+              <input
+                id="endDate"
+                type="date"
+                value={filters.endDate || ''}
+                onChange={(e) => setFilters({...filters, endDate: e.target.value})}
+                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Quick Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Rangos rápidos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyQuickFilter('today')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Hoy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('last7days')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Últimos 7 días
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyDateRange('thisMonth')}
+              className="text-xs px-3 py-1 h-8"
+            >
+              Este mes
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters and Search */}
+      <Card>
+        <div className="p-1">
+          <div className="flex flex-row gap-4 items-start">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
+                <Input
+                  placeholder="Buscar por nombre de empresa o RUT..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({...filters, search: e.target.value})}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-secondary-400" />
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({...filters, status: e.target.value})}
+                className="px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-w-[160px]"
+              >
+                <option value="">Todos los Estados</option>
+                <option value={VERIFICATION_STATUS.SUBMITTED}>Enviados</option>
+                <option value={VERIFICATION_STATUS.UNDER_REVIEW}>En Revisión</option>
+                <option value={VERIFICATION_STATUS.APPROVED}>Aprobados</option>
+                <option value={VERIFICATION_STATUS.REJECTED}>Rechazados</option>
+                <option value={VERIFICATION_STATUS.NEEDS_CORRECTIONS}>Correcciones</option>
+              </select>
+            </div>
+          </div>
         </div>
       </Card>
 
-      {/* Verifications Table */}
+      {/* Verifications List */}
       <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Empresa
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Documentos
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Enviado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Analista
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredVerifications.map((verification) => (
-                <tr key={verification.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <Building className="h-5 w-5 text-blue-600" />
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {verification.company?.company_name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {verification.company?.rut}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-secondary-900">
+              Lista de Verificaciones ({filteredVerifications.length})
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadData}
+              leftIcon={<RefreshCw className="w-4 h-4" />}
+            >
+              Actualizar
+            </Button>
+          </div>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(verification.status)}
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className={`w-4 h-4 ${verification.certificado_vigencia_url ? 'text-green-600' : 'text-gray-400'}`} />
-                      <span className="text-xs text-gray-500">Vigencia</span>
-                      <CheckCircle className={`w-4 h-4 ml-2 ${verification.informe_equifax_url ? 'text-green-600' : 'text-gray-400'}`} />
-                      <span className="text-xs text-gray-500">Equifax</span>
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(verification.submitted_at)}
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {verification.assigned_to_user?.full_name || 'Sin asignar'}
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openReviewModal(verification)}
-                      leftIcon={<Eye className="w-4 h-4" />}
-                    >
-                      Revisar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {filteredVerifications.length === 0 && (
+          {loading ? (
             <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No hay verificaciones pendientes
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-success-600 mx-auto mb-4"></div>
+              <p className="text-secondary-600">Cargando verificaciones...</p>
+            </div>
+          ) : filteredVerifications.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="w-16 h-16 text-secondary-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-secondary-900 mb-2">
+                No se encontraron verificaciones
               </h3>
-              <p className="text-gray-500">
-                Todas las verificaciones han sido procesadas
+              <p className="text-secondary-600">
+                {filters.search || filters.status || filters.startDate || filters.endDate
+                  ? 'Intenta ajustar los filtros de búsqueda'
+                  : 'Aún no hay verificaciones registradas'
+                }
               </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredVerifications.map((verification) => (
+                <div
+                  key={verification.id}
+                  className="p-6 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-success-100 rounded-full flex items-center justify-center">
+                        <Building className="w-6 h-6 text-success-700" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-secondary-900">
+                          {verification.company?.company_name}
+                        </h3>
+                        <p className="text-secondary-600 text-sm">{verification.company?.rut}</p>
+                        <div className="flex items-center gap-4 text-xs text-secondary-500 mt-1">
+                          <span>Enviado: {formatDate(verification.submitted_at)}</span>
+                          <span>•</span>
+                          <span>Analista: {verification.assigned_to_user?.full_name || 'Sin asignar'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      {getStatusBadge(verification.status)}
+
+                      <div className="text-right text-sm text-secondary-600">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>{formatDate(new Date(verification.submitted_at))}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          leftIcon={<Eye className="w-4 h-4" />}
+                          onClick={() => openReviewModal(verification)}
+                        >
+                          Revisar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Documentos */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
+                    <div className="text-center">
+                      <div className={`text-lg font-semibold ${verification.certificado_vigencia_url ? 'text-green-600' : 'text-gray-400'}`}>
+                        {verification.certificado_vigencia_url ? '✓' : '✗'}
+                      </div>
+                      <div className="text-xs text-secondary-600">Certificado Vigencia</div>
+                    </div>
+                    <div className="text-center">
+                      <div className={`text-lg font-semibold ${verification.informe_equifax_url ? 'text-green-600' : 'text-gray-400'}`}>
+                        {verification.informe_equifax_url ? '✓' : '✗'}
+                      </div>
+                      <div className="text-xs text-secondary-600">Informe Equifax</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-blue-600">
+                        {((verification.certificado_vigencia_url ? 1 : 0) + (verification.informe_equifax_url ? 1 : 0))}
+                      </div>
+                      <div className="text-xs text-secondary-600">Archivos Subidos</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-purple-600">
+                        {formatDate(verification.submitted_at, 'short')}
+                      </div>
+                      <div className="text-xs text-secondary-600">Fecha Envío</div>
+                    </div>
+                  </div>
+
+                  {/* Barra de progreso de documentos */}
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium text-secondary-700">Documentación Completa</span>
+                      <span className="text-sm text-secondary-600">
+                        {((verification.certificado_vigencia_url ? 1 : 0) + (verification.informe_equifax_url ? 1 : 0)) / 2 * 100}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${((verification.certificado_vigencia_url ? 1 : 0) + (verification.informe_equifax_url ? 1 : 0)) / 2 * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

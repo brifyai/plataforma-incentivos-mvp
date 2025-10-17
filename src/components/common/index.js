@@ -6,6 +6,7 @@ export { default as Select } from './Select';
 export { default as Badge } from './Badge';
 export { default as Modal } from './Modal';
 export { default as ProgressBar } from './ProgressBar';
+export { default as Progress } from './ProgressBar';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as EmptyState } from './EmptyState';
 export { default as ErrorBoundary } from './ErrorBoundary';
@@ -15,6 +16,11 @@ export { default as PaymentMethodSelector } from './PaymentMethodSelector';
 export { default as PaymentReceiptManager } from './PaymentReceiptManager';
 export { default as DateFilter } from './DateFilter';
 export { default as SEO } from './SEO';
+
+// Componentes del ecosistema
+export { default as UnifiedDashboard } from './UnifiedDashboard';
+export { default as SharedNegotiationStatus } from './SharedNegotiationStatus';
+export { default as ConsolidatedFinancialProgress } from './ConsolidatedFinancialProgress';
 
 // Nuevos componentes de formularios reutilizables
 export { default as FormField } from './FormField';

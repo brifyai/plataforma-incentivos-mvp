@@ -10,6 +10,16 @@ import { useAuth } from '../../context/AuthContext';
 import { Card, Badge, Button, Input, LoadingSpinner, Modal } from '../../components/common';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import Swal from 'sweetalert2';
+import BusinessMetricsCard from '../../components/admin/BusinessMetricsCard';
+import RealTimeIndicator from '../../components/admin/RealTimeIndicator';
+import PredictiveForecastCard from '../../components/admin/PredictiveForecastCard';
+import ReportExportCard from '../../components/admin/ReportExportCard';
+import GamificationCard from '../../components/admin/GamificationCard';
+import { cacheUtils } from '../../components/admin/PerformanceCache';
+import useAdminStats from '../../hooks/useAdminStats';
+import { predictiveAnalyticsService } from '../../services/predictiveAnalyticsService';
+import { reportExportService } from '../../services/reportExportService';
+import { gamificationService } from '../../services/gamificationService';
 import {
   getAllUsers,
   getAllCompanies,
@@ -43,7 +53,17 @@ import {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  
+  // Hook personalizado para estadísticas de administrador con caché
+  const {
+    stats: adminStats,
+    loading: adminStatsLoading,
+    error: adminStatsError,
+    refetch
+  } = useAdminStats();
+  
   const [activitySearch, setActivitySearch] = useState('');
+  const [intelligentAlerts, setIntelligentAlerts] = useState([]);
   const [dateFilter, setDateFilter] = useState({
     startDate: '',
     endDate: ''
@@ -209,7 +229,25 @@ const AdminDashboard = () => {
     };
 
     loadDashboardData();
+    
+    // Inicializar servicios del Sprint 2
+    initializeSprint2Services();
   }, []);
+
+  // Inicializar servicios del Sprint 2
+  const initializeSprint2Services = async () => {
+    try {
+      // Inicializar servicio predictivo
+      await predictiveAnalyticsService.initialize();
+      
+      // Inicializar servicio de gamificación
+      // (ya se inicializa automáticamente al importar)
+      
+      console.log('🚀 Servicios Sprint 2 inicializados');
+    } catch (error) {
+      console.error('Error inicializando servicios Sprint 2:', error);
+    }
+  };
 
   // Estado para actividades reales del analytics
   const [realActivities, setRealActivities] = useState([]);
@@ -431,6 +469,16 @@ const AdminDashboard = () => {
             </div>
 
           </div>
+        </div>
+
+        {/* Real Time Indicator */}
+        <div className="absolute top-4 right-4">
+          <RealTimeIndicator
+            connectionStatus={adminStatsError ? 'error' : adminStatsLoading ? 'connecting' : 'connected'}
+            lastUpdate={adminStats?.lastUpdated}
+            updateFrequency={30000}
+            showDetails={false}
+          />
         </div>
       </div>
 
@@ -727,6 +775,64 @@ const AdminDashboard = () => {
           </div>
         </Card>
       </div>
+
+      {/* Business Metrics Card - Sprint 1 Implementation */}
+      <BusinessMetricsCard
+        metrics={adminStats?.businessMetrics}
+        loading={adminStatsLoading}
+      />
+
+      {/* Performance Cache Status - Sprint 1 */}
+      <Card>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-secondary-900">⚡ Rendimiento del Sistema</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                cacheUtils.clear();
+                refetch();
+              }}
+              className="text-xs"
+            >
+              Limpiar Caché
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {cacheUtils.getStats().size}
+              </div>
+              <div className="text-xs text-gray-600">Entradas en caché</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {cacheUtils.getStats().hitRate.toFixed(1)}%
+              </div>
+              <div className="text-xs text-gray-600">Tasa de acierto</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {Math.round(cacheUtils.getStats().memoryUsage / 1024)}KB
+              </div>
+              <div className="text-xs text-gray-600">Uso de memoria</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">
+                {adminStats?.isStale ? 'Sí' : 'No'}
+              </div>
+              <div className="text-xs text-gray-600">Datos desactualizados</div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+            <span>Última actualización: {adminStats?.lastUpdated ? new Date(adminStats.lastUpdated).toLocaleTimeString() : 'N/A'}</span>
+            <span>Estado: {adminStatsError ? 'Error' : adminStatsLoading ? 'Cargando' : 'Listo'}</span>
+          </div>
+        </div>
+      </Card>
 
       {/* Recent Activity - Compact Version */}
       <Card>

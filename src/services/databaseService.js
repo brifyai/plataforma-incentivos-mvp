@@ -1187,7 +1187,6 @@ export const getUserCommissionStats = async (userId) => {
       .select(`
         id,
         amount,
-        user_incentive,
         company_id,
         companies!inner(
           nexupay_commission,
@@ -1220,10 +1219,8 @@ export const getUserCommissionStats = async (userId) => {
           userIncentive = parseFloat(company.user_incentive_percentage) || 0;
         }
 
-        // Si hay incentivo específico en el pago, usarlo
-        if (payment.user_incentive) {
-          userIncentive = parseFloat(payment.user_incentive);
-        }
+        // El incentivo se calcula según configuración de la empresa
+        // No hay incentivo específico en el pago
 
         earnedCommissions += userIncentive;
         totalPayments++;
@@ -2215,7 +2212,6 @@ export const getCommissionStats = async () => {
       .select(`
         id,
         amount,
-        user_incentive,
         company_id,
         companies!inner(
           id,
@@ -2265,10 +2261,8 @@ export const getCommissionStats = async () => {
           userIncentive = parseFloat(company.user_incentive_percentage) || 0;
         }
 
-        // Si hay incentivo específico en el pago, usarlo
-        if (payment.user_incentive) {
-          userIncentive = parseFloat(payment.user_incentive);
-        }
+        // El incentivo se calcula según configuración de la empresa
+        // No hay incentivo específico en el pago
 
         totalPaidToNexuPay += nexupayCommission;
         totalPaidToUsers += userIncentive;
@@ -2324,7 +2318,7 @@ export const getCompanyCommissionDetails = async (companyId) => {
     // Obtener pagos completados de la empresa
     const { data: payments, error: paymentsError } = await supabase
       .from('payments')
-      .select('id, amount, user_incentive, transaction_date')
+      .select('id, amount, transaction_date')
       .eq('company_id', companyId)
       .eq('status', 'completed')
       .order('transaction_date', { ascending: false });
@@ -2353,10 +2347,8 @@ export const getCompanyCommissionDetails = async (companyId) => {
         userIncentive = parseFloat(company.user_incentive_percentage) || 0;
       }
 
-      // Si hay incentivo específico en el pago, usarlo
-      if (payment.user_incentive) {
-        userIncentive = parseFloat(payment.user_incentive);
-      }
+      // El incentivo se calcula según configuración de la empresa
+      // No hay incentivo específico en el pago
 
       return {
         paymentId: payment.id,
@@ -4894,7 +4886,6 @@ export const getCommissionStatsRealtime = async () => {
       .select(`
         id,
         amount,
-        user_incentive,
         company_id,
         transaction_date,
         companies!inner(
@@ -4947,10 +4938,8 @@ export const getCommissionStatsRealtime = async () => {
           userIncentive = parseFloat(company.user_incentive_percentage) || 0;
         }
 
-        // Si hay incentivo específico en el pago, usarlo
-        if (payment.user_incentive) {
-          userIncentive = parseFloat(payment.user_incentive);
-        }
+        // El incentivo se calcula según configuración de la empresa
+        // No hay incentivo específico en el pago
 
         totalPaidToNexuPay += nexupayCommission;
         totalPaidToUsers += userIncentive;

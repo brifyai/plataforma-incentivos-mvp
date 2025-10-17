@@ -11,6 +11,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AppRouter from './routes/AppRouter';
 import SupabaseErrorBoundary from './components/common/SupabaseErrorBoundary';
+import OnboardingTour from './components/common/OnboardingTour';
 
 function App() {
   // 🔥 ACTIVACIÓN FORZADA DEL MÓDULO DE IA AL INICIO DE LA APLICACIÓN
@@ -51,6 +52,7 @@ function App() {
           <NotificationProvider>
             <SupabaseErrorBoundary>
               <AppRouter />
+              <OnboardingTour />
             </SupabaseErrorBoundary>
           </NotificationProvider>
         </AuthProvider>
