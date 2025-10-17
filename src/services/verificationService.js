@@ -9,40 +9,8 @@
  */
 
 import { supabase } from '../config/supabase';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseInstance } from './supabaseInstances';
 import { getVerificationSubmittedTemplate } from './emailTemplates';
-
-// Cliente con service role para operaciones administrativas
-// Solo se inicializa si hay una SERVICE_ROLE_KEY válida
-let supabaseAdmin = null;
-
-const initializeSupabaseAdmin = () => {
-  const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!serviceRoleKey || serviceRoleKey.includes('3k3k3k3k') || serviceRoleKey.length < 100) {
-    console.warn('⚠️ SERVICE_ROLE_KEY no válida o no configurada. Las operaciones de administrador estarán limitadas.');
-    return null;
-  }
-
-  try {
-    return createClient(
-      import.meta.env.VITE_SUPABASE_URL,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-  } catch (error) {
-    console.error('❌ Error inicializando supabaseAdmin:', error);
-    return null;
-  }
-};
-
-// Inicializar cliente admin
-supabaseAdmin = initializeSupabaseAdmin();
 
 /**
  * Tipos de estado de verificación

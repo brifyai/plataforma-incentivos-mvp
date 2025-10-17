@@ -8,29 +8,16 @@
  */
 
 import { supabase } from '../config/supabase';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseInstance } from './supabaseInstances';
 import { aiImportService } from './aiImportService';
 
-// Obtener variables de entorno para el cliente admin
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
-
-// Crear cliente admin con manejo mejorado de errores
+// Obtener instancia admin usando el gestor centralizado
 let supabaseAdmin = null;
 try {
-  if (supabaseUrl && supabaseServiceKey) {
-    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-    console.log('✅ Cliente admin de Supabase inicializado correctamente');
-  } else {
-    console.warn('⚠️ No se pudo inicializar cliente admin - faltan variables de entorno');
-  }
+  supabaseAdmin = getSupabaseInstance('admin');
+  console.log('✅ Cliente admin de Supabase obtenido del gestor centralizado');
 } catch (error) {
-  console.error('❌ Error inicializando cliente admin:', error);
+  console.warn('⚠️ No se pudo obtener cliente admin - usando fallback:', error.message);
 }
 
 // Configuración mejorada de importación

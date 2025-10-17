@@ -8,21 +8,9 @@
  * 4. Garantizar que la importación siempre tenga éxito
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../config/supabase';
+import { getSupabaseInstance } from './supabaseInstances';
 import { aiProvidersService } from './aiProvidersService';
-
-// Configuración
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
-
-// Cliente admin con permisos elevados
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
 
 /**
  * Servicio de IA para importación autónoma
@@ -163,6 +151,7 @@ class AIImportService {
       console.log('🔍 Analizando estructura de la base de datos...');
 
       // Obtener estructura de tablas principales
+      const supabaseAdmin = getSupabaseInstance('admin');
       const { data: tables, error: tablesError } = await supabaseAdmin
         .from('information_schema.tables')
         .select('table_name')
@@ -536,6 +525,7 @@ class AIImportService {
       console.log('🔧 Ejecutando SQL:', sql);
 
       // Usar el cliente admin para ejecutar SQL directamente
+      const supabaseAdmin = getSupabaseInstance('admin');
       const { data, error } = await supabaseAdmin
         .from('pg_tables')
         .select('*')

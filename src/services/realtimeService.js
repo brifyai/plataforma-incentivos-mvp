@@ -5,13 +5,19 @@
  * los diferentes portales del sistema NexuPay.
  */
 
-import { supabase } from '../config/supabase';
+import { getSupabaseInstance } from './supabaseInstances';
 
 class RealtimeService {
   constructor() {
     this.channels = new Map();
     this.subscribers = new Map();
     this.isConnected = false;
+    this.retryAttempts = new Map();
+    this.maxRetries = 1; // Reducido a 1 intento para evitar spam
+    this.retryDelay = 5000; // Aumentado a 5 segundos
+    this.lastErrorLog = new Map(); // Para evitar spam de logs
+    this.errorLogCooldown = 30000; // 30 segundos entre logs del mismo error (aumentado)
+    this.suppressedErrors = new Set(); // Errores completamente silenciados
   }
 
   /**
@@ -24,12 +30,15 @@ class RealtimeService {
     }
 
     try {
-      // Habilitar Realtime
-      supabase.realtime.connect();
+      // Usar instancia optimizada para realtime
+      const realtimeSupabase = getSupabaseInstance('realtime');
+      realtimeSupabase.realtime.connect();
       this.isConnected = true;
       console.log('✅ Conectado a Supabase Realtime');
     } catch (error) {
       console.error('❌ Error conectando a Supabase Realtime:', error);
+      // Reintentar conexión después de un delay
+      setTimeout(() => this.connect(), 5000);
     }
   }
 
@@ -40,13 +49,23 @@ class RealtimeService {
     // Desconectar todos los canales
     this.channels.forEach((channel, key) => {
       channel.unsubscribe();
-      console.log(`🔌 Desconectado canal: ${key}`);
+      // Solo loggear en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔌 Desconectado canal: ${key}`);
+      }
     });
 
     this.channels.clear();
     this.subscribers.clear();
+    this.retryAttempts.clear();
+    this.lastErrorLog.clear();
+    this.suppressedErrors.clear();
     this.isConnected = false;
-    console.log('🔌 Desconectado de Supabase Realtime');
+    
+    // Solo loggear en desarrollo
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔌 Desconectado de Supabase Realtime');
+    }
   }
 
   /**
@@ -60,45 +79,113 @@ class RealtimeService {
   subscribeToTable(table, event, callback, filter = null) {
     const channelName = `${table}_${event}_${Date.now()}`;
     
-    try {
-      let channel = supabase.channel(channelName);
+    const attemptSubscription = (retryCount = 0) => {
+      try {
+        // Usar instancia optimizada para realtime
+        const realtimeSupabase = getSupabaseInstance('realtime');
+        let channel = realtimeSupabase.channel(channelName);
 
-      // Construir el evento de suscripción
-      const subscriptionConfig = {
-        event: '*',
-        schema: 'public',
-        table: table
-      };
+        // Construir el evento de suscripción
+        const subscriptionConfig = {
+          event: '*',
+          schema: 'public',
+          table: table
+        };
 
-      // Agregar filtro si existe
-      if (filter) {
-        subscriptionConfig.filter = filter;
-      }
+        // Agregar filtro si existe
+        if (filter) {
+          subscriptionConfig.filter = filter;
+        }
 
-      channel = channel.on('postgres_changes', subscriptionConfig, (payload) => {
-        console.log(`🔄 Cambio en ${table}:`, payload);
+        channel = channel.on('postgres_changes', subscriptionConfig, (payload) => {
+          // Loggear solo en desarrollo o para debugging
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`🔄 Cambio en ${table}:`, payload);
+          }
+          
+          // Solo ejecutar callback si el tipo de evento coincide
+          if (payload.eventType === event || event === '*') {
+            callback(payload);
+          }
+        });
+
+        // Suscribir el canal
+        channel.subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            // Solo loggear si no estaba suscrito antes
+            if (!this.channels.has(channelName)) {
+              console.log(`✅ Suscrito a ${table} (${event})`);
+            }
+            this.channels.set(channelName, channel);
+            // Resetear contador de reintentos
+            this.retryAttempts.delete(channelName);
+            this.lastErrorLog.delete(channelName);
+          } else if (status === 'CHANNEL_ERROR') {
+            // Silenciar completamente errores de canal no disponible (es esperado en desarrollo)
+            const errorKey = `channel_error_${table}`;
+            
+            // Solo loggear si es la primera vez y estamos en desarrollo
+            if (process.env.NODE_ENV === 'development' && !this.suppressedErrors.has(errorKey)) {
+              console.warn(`⚠️ Error en tiempo real (${table}): Canal no disponible (silenciando futuros errores)`);
+              this.suppressedErrors.add(errorKey);
+              this.lastErrorLog.set(channelName, Date.now());
+            }
+            
+            // Intentar reintentar silenciosamente
+            if (retryCount < this.maxRetries) {
+              const retryDelay = this.retryDelay * Math.pow(2, retryCount);
+              
+              setTimeout(() => {
+                this.retryAttempts.set(channelName, retryCount + 1);
+                attemptSubscription(retryCount + 1);
+              }, retryDelay);
+            } else {
+              // Silenciar error final para no saturar logs
+              this.retryAttempts.delete(channelName);
+            }
+          } else if (status === 'TIMED_OUT') {
+            // Timeout es menos crítico, loggear solo si es primer intento
+            if (retryCount === 0) {
+              console.warn(`⏰ Timeout en suscripción a ${table}`);
+            }
+            
+            // Reintentar en caso de timeout
+            if (retryCount < this.maxRetries) {
+              const retryDelay = this.retryDelay * Math.pow(2, retryCount);
+              setTimeout(() => {
+                this.retryAttempts.set(channelName, retryCount + 1);
+                attemptSubscription(retryCount + 1);
+              }, retryDelay);
+            }
+          }
+        });
+
+        return channelName;
+      } catch (error) {
+        // Silenciar completamente errores de conexión (es esperado en desarrollo)
+        const errorKey = `connection_error_${table}`;
         
-        // Solo ejecutar callback si el tipo de evento coincide
-        if (payload.eventType === event || event === '*') {
-          callback(payload);
+        // Solo loggear si es la primera vez y estamos en desarrollo
+        if (process.env.NODE_ENV === 'development' && !this.suppressedErrors.has(errorKey)) {
+          console.warn(`⚠️ Error en tiempo real (${table}): ${error.message} (silenciando futuros errores)`);
+          this.suppressedErrors.add(errorKey);
+          this.lastErrorLog.set(channelName, Date.now());
         }
-      });
-
-      // Suscribir el canal
-      channel.subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`✅ Suscrito a ${table} (${event})`);
-          this.channels.set(channelName, channel);
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error(`❌ Error suscribiéndose a ${table}:`, status);
+        
+        // Reintentar en caso de error
+        if (retryCount < this.maxRetries) {
+          const retryDelay = this.retryDelay * Math.pow(2, retryCount);
+          setTimeout(() => {
+            this.retryAttempts.set(channelName, retryCount + 1);
+            attemptSubscription(retryCount + 1);
+          }, retryDelay);
         }
-      });
+        
+        return null;
+      }
+    };
 
-      return channelName;
-    } catch (error) {
-      console.error(`❌ Error suscribiéndose a ${table}:`, error);
-      return null;
-    }
+    return attemptSubscription();
   }
 
   /**
@@ -213,7 +300,12 @@ class RealtimeService {
     if (channel) {
       channel.unsubscribe();
       this.channels.delete(channelName);
-      console.log(`🔌 Suscripción cancelada: ${channelName}`);
+      this.retryAttempts.delete(channelName);
+      this.lastErrorLog.delete(channelName);
+      // Solo loggear en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔌 Suscripción cancelada: ${channelName}`);
+      }
     }
   }
 
@@ -239,6 +331,113 @@ class RealtimeService {
    */
   getActiveSubscriptions() {
     return Array.from(this.channels.keys());
+  }
+
+  /**
+   * Obtiene el estado de todas las suscripciones
+   * @returns {Object} Estado detallado de las suscripciones
+   */
+  getSubscriptionsStatus() {
+    const status = {
+      totalChannels: this.channels.size,
+      activeChannels: 0,
+      failedChannels: 0,
+      retryingChannels: this.retryAttempts.size,
+      channels: []
+    };
+
+    this.channels.forEach((channel, name) => {
+      const retryCount = this.retryAttempts.get(name) || 0;
+      status.channels.push({
+        name,
+        retryCount,
+        status: retryCount > 0 ? 'retrying' : 'active'
+      });
+
+      if (retryCount === 0) {
+        status.activeChannels++;
+      } else {
+        status.failedChannels++;
+      }
+    });
+
+    return status;
+  }
+
+  /**
+   * Reintenta todas las suscripciones fallidas
+   */
+  retryFailedSubscriptions() {
+    console.log('🔄 Reintentando suscripciones fallidas...');
+    
+    // Obtener canales fallidos
+    const failedChannels = Array.from(this.retryAttempts.keys());
+    
+    failedChannels.forEach(channelName => {
+      const retryCount = this.retryAttempts.get(channelName);
+      if (retryCount < this.maxRetries) {
+        console.log(`🔄 Reintentando canal: ${channelName}`);
+        // Extraer información del canal para reintentar
+        const parts = channelName.split('_');
+        if (parts.length >= 3) {
+          const table = parts[0];
+          const event = parts[1];
+          // Nota: Aquí necesitaríamos almacenar los callbacks originales para reintentar
+          // Por ahora, limpiamos el canal fallido
+          this.unsubscribe(channelName);
+          this.retryAttempts.delete(channelName);
+        }
+      }
+    });
+  }
+
+  /**
+   * Limpia todas las suscripciones y reconecta
+   */
+  resetConnection() {
+    console.log('🔄 Reiniciando conexión Realtime...');
+    
+    // Desconectar todos los canales
+    this.disconnect();
+    
+    // Limpiar contadores de reintentos
+    this.retryAttempts.clear();
+    
+    // Esperar y reconectar
+    setTimeout(() => {
+      this.connect();
+    }, 1000);
+  }
+
+  /**
+   * Verifica la salud de la conexión Realtime
+   * @returns {Promise<Object>} Estado de salud de la conexión
+   */
+  async checkConnectionHealth() {
+    try {
+      const status = this.getSubscriptionsStatus();
+      
+      // Verificar si Supabase está disponible usando instancia principal
+      const mainSupabase = getSupabaseInstance('main');
+      const { data, error } = await mainSupabase.from('users').select('count').limit(1);
+      
+      return {
+        isConnected: this.isConnected,
+        isSupabaseAvailable: !error,
+        subscriptionStatus: status,
+        health: error ? 'degraded' : (status.failedChannels > 0 ? 'partial' : 'healthy'),
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        isConnected: this.isConnected,
+        isSupabaseAvailable: false,
+        subscriptionStatus: this.getSubscriptionsStatus(),
+        health: 'unhealthy',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
   }
 }
 

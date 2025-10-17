@@ -8,23 +8,8 @@
  */
 
 import { supabase } from '../config/supabase';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseInstance } from './supabaseInstances';
 import { aiImportService } from './aiImportService';
-
-// Obtener variables de entorno para el cliente admin
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
-
-// Crear cliente admin para operaciones con permisos elevados
-let supabaseAdmin = null;
-if (supabaseUrl && supabaseServiceKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  });
-}
 
 // Configuración de importación
 const IMPORT_CONFIG = {
@@ -156,8 +141,8 @@ const upsertDebtorUser = async (userData) => {
     console.log('👤 Intentando crear/actualizar usuario:', userData.rut);
     
     // Usar cliente admin para operaciones de importación
-    const client = supabaseAdmin || supabase;
-    console.log('🔧 Usando cliente:', supabaseAdmin ? 'admin' : 'regular');
+    const client = getSupabaseInstance('admin');
+    console.log('🔧 Usando cliente admin centralizado');
     
     // Verificar si el usuario ya existe
     const { data: existingUser, error: findError } = await client
@@ -239,8 +224,8 @@ const createDebt = async (debtData, userId, companyId, clientId) => {
     });
 
     // Usar cliente admin para operaciones de importación
-    const client = supabaseAdmin || supabase;
-    console.log('🔧 Usando cliente para deuda:', supabaseAdmin ? 'admin' : 'regular');
+    const client = getSupabaseInstance('admin');
+    console.log('🔧 Usando cliente admin centralizado para deuda');
 
     // NOTA: La tabla debts real no tiene campo client_id
     // Los deudores se asocian directamente a la empresa (company_id) y al usuario (user_id)
@@ -307,7 +292,7 @@ const processImportBatch = async (batch, options) => {
     batchSize: batch.length,
     companyId,
     clientId,
-    hasAdminClient: !!supabaseAdmin
+    hasAdminClient: !!getSupabaseInstance('admin')
   });
 
   for (let i = 0; i < batch.length; i++) {

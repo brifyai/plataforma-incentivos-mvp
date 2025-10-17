@@ -5,12 +5,9 @@
  * basado en coincidencias de nombre y RUT
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseInstance } from './supabaseInstances';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const supabase = getSupabaseInstance('main');
 
 class DebtorCorporateMatchingService {
   constructor() {

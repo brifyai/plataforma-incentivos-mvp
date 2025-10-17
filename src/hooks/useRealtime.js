@@ -15,9 +15,10 @@ import realtimeService from '../services/realtimeService';
  * @param {Object} options - Opciones adicionales
  * @returns {Object} Estado y funciones del hook
  */
-export const useRealtimePayments = (onPaymentCreated, onPaymentUpdated, options = {}) => {
+export const useRealtimePayments = (onPaymentCreated, onPaymentUpdated, onError, options = {}) => {
   const { user, company } = useAuth();
   const channelsRef = useRef({});
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
 
   const userId = options.userId || user?.id;
   const companyId = options.companyId || company?.id;
@@ -25,43 +26,65 @@ export const useRealtimePayments = (onPaymentCreated, onPaymentUpdated, options 
   useEffect(() => {
     if (!userId && !companyId) {
       console.log('⚠️ useRealtimePayments: Se requiere userId o companyId');
+      setConnectionStatus('error');
+      onError?.({ message: 'Se requiere userId o companyId', type: 'validation' });
       return;
     }
 
     // Conectar a realtime si no está conectado
     if (!realtimeService.isRealtimeConnected()) {
       realtimeService.connect();
+      setConnectionStatus('connecting');
     }
 
-    // Suscribir a cambios en pagos
-    const channels = realtimeService.subscribeToPayments(
-      (payload) => {
-        console.log('💰 Nuevo pago creado:', payload);
-        onPaymentCreated?.(payload);
-      },
-      (payload) => {
-        console.log('💰 Pago actualizado:', payload);
-        onPaymentUpdated?.(payload);
-      },
-      userId,
-      companyId
-    );
+    // Suscribir a cambios en pagos con manejo de errores
+    try {
+      const channels = realtimeService.subscribeToPayments(
+        (payload) => {
+          console.log('💰 Nuevo pago creado:', payload);
+          setConnectionStatus('connected');
+          onPaymentCreated?.(payload);
+        },
+        (payload) => {
+          console.log('💰 Pago actualizado:', payload);
+          setConnectionStatus('connected');
+          onPaymentUpdated?.(payload);
+        },
+        userId,
+        companyId
+      );
 
-    channelsRef.current = channels;
+      if (channels) {
+        channelsRef.current = channels;
+        setConnectionStatus('connected');
+      } else {
+        setConnectionStatus('error');
+        onError?.({ message: 'Error al suscribirse a pagos', type: 'subscription' });
+      }
+    } catch (error) {
+      console.error('❌ Error en useRealtimePayments:', error);
+      setConnectionStatus('error');
+      onError?.({ message: error.message, type: 'connection' });
+    }
 
     // Limpiar suscripciones al desmontar
     return () => {
-      if (channels.insertChannel) {
-        realtimeService.unsubscribe(channels.insertChannel);
-      }
-      if (channels.updateChannel) {
-        realtimeService.unsubscribe(channels.updateChannel);
+      try {
+        if (channelsRef.current.insertChannel) {
+          realtimeService.unsubscribe(channelsRef.current.insertChannel);
+        }
+        if (channelsRef.current.updateChannel) {
+          realtimeService.unsubscribe(channelsRef.current.updateChannel);
+        }
+      } catch (error) {
+        console.error('❌ Error limpiando suscripciones de pagos:', error);
       }
     };
-  }, [userId, companyId, onPaymentCreated, onPaymentUpdated]);
+  }, [userId, companyId, onPaymentCreated, onPaymentUpdated, onError]);
 
   return {
     isConnected: realtimeService.isRealtimeConnected(),
+    connectionStatus,
     channels: channelsRef.current
   };
 };
@@ -73,9 +96,10 @@ export const useRealtimePayments = (onPaymentCreated, onPaymentUpdated, options 
  * @param {Object} options - Opciones adicionales
  * @returns {Object} Estado y funciones del hook
  */
-export const useRealtimeDebts = (onDebtCreated, onDebtUpdated, options = {}) => {
+export const useRealtimeDebts = (onDebtCreated, onDebtUpdated, onError, options = {}) => {
   const { user, company } = useAuth();
   const channelsRef = useRef({});
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
 
   const userId = options.userId || user?.id;
   const companyId = options.companyId || company?.id;
@@ -83,43 +107,65 @@ export const useRealtimeDebts = (onDebtCreated, onDebtUpdated, options = {}) => 
   useEffect(() => {
     if (!userId && !companyId) {
       console.log('⚠️ useRealtimeDebts: Se requiere userId o companyId');
+      setConnectionStatus('error');
+      onError?.({ message: 'Se requiere userId o companyId', type: 'validation' });
       return;
     }
 
     // Conectar a realtime si no está conectado
     if (!realtimeService.isRealtimeConnected()) {
       realtimeService.connect();
+      setConnectionStatus('connecting');
     }
 
-    // Suscribir a cambios en deudas
-    const channels = realtimeService.subscribeToDebts(
-      (payload) => {
-        console.log('📄 Nueva deuda creada:', payload);
-        onDebtCreated?.(payload);
-      },
-      (payload) => {
-        console.log('📄 Deuda actualizada:', payload);
-        onDebtUpdated?.(payload);
-      },
-      userId,
-      companyId
-    );
+    // Suscribir a cambios en deudas con manejo de errores
+    try {
+      const channels = realtimeService.subscribeToDebts(
+        (payload) => {
+          console.log('📄 Nueva deuda creada:', payload);
+          setConnectionStatus('connected');
+          onDebtCreated?.(payload);
+        },
+        (payload) => {
+          console.log('📄 Deuda actualizada:', payload);
+          setConnectionStatus('connected');
+          onDebtUpdated?.(payload);
+        },
+        userId,
+        companyId
+      );
 
-    channelsRef.current = channels;
+      if (channels) {
+        channelsRef.current = channels;
+        setConnectionStatus('connected');
+      } else {
+        setConnectionStatus('error');
+        onError?.({ message: 'Error al suscribirse a deudas', type: 'subscription' });
+      }
+    } catch (error) {
+      console.error('❌ Error en useRealtimeDebts:', error);
+      setConnectionStatus('error');
+      onError?.({ message: error.message, type: 'connection' });
+    }
 
     // Limpiar suscripciones al desmontar
     return () => {
-      if (channels.insertChannel) {
-        realtimeService.unsubscribe(channels.insertChannel);
-      }
-      if (channels.updateChannel) {
-        realtimeService.unsubscribe(channels.updateChannel);
+      try {
+        if (channelsRef.current.insertChannel) {
+          realtimeService.unsubscribe(channelsRef.current.insertChannel);
+        }
+        if (channelsRef.current.updateChannel) {
+          realtimeService.unsubscribe(channelsRef.current.updateChannel);
+        }
+      } catch (error) {
+        console.error('❌ Error limpiando suscripciones de deudas:', error);
       }
     };
-  }, [userId, companyId, onDebtCreated, onDebtUpdated]);
+  }, [userId, companyId, onDebtCreated, onDebtUpdated, onError]);
 
   return {
     isConnected: realtimeService.isRealtimeConnected(),
+    connectionStatus,
     channels: channelsRef.current
   };
 };
@@ -131,9 +177,10 @@ export const useRealtimeDebts = (onDebtCreated, onDebtUpdated, options = {}) => 
  * @param {Object} options - Opciones adicionales
  * @returns {Object} Estado y funciones del hook
  */
-export const useRealtimeAgreements = (onAgreementCreated, onAgreementUpdated, options = {}) => {
+export const useRealtimeAgreements = (onAgreementCreated, onAgreementUpdated, onError, options = {}) => {
   const { user, company } = useAuth();
   const channelsRef = useRef({});
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
 
   const userId = options.userId || user?.id;
   const companyId = options.companyId || company?.id;
@@ -141,43 +188,65 @@ export const useRealtimeAgreements = (onAgreementCreated, onAgreementUpdated, op
   useEffect(() => {
     if (!userId && !companyId) {
       console.log('⚠️ useRealtimeAgreements: Se requiere userId o companyId');
+      setConnectionStatus('error');
+      onError?.({ message: 'Se requiere userId o companyId', type: 'validation' });
       return;
     }
 
     // Conectar a realtime si no está conectado
     if (!realtimeService.isRealtimeConnected()) {
       realtimeService.connect();
+      setConnectionStatus('connecting');
     }
 
-    // Suscribir a cambios en acuerdos
-    const channels = realtimeService.subscribeToAgreements(
-      (payload) => {
-        console.log('🤝 Nuevo acuerdo creado:', payload);
-        onAgreementCreated?.(payload);
-      },
-      (payload) => {
-        console.log('🤝 Acuerdo actualizado:', payload);
-        onAgreementUpdated?.(payload);
-      },
-      userId,
-      companyId
-    );
+    // Suscribir a cambios en acuerdos con manejo de errores
+    try {
+      const channels = realtimeService.subscribeToAgreements(
+        (payload) => {
+          console.log('🤝 Nuevo acuerdo creado:', payload);
+          setConnectionStatus('connected');
+          onAgreementCreated?.(payload);
+        },
+        (payload) => {
+          console.log('🤝 Acuerdo actualizado:', payload);
+          setConnectionStatus('connected');
+          onAgreementUpdated?.(payload);
+        },
+        userId,
+        companyId
+      );
 
-    channelsRef.current = channels;
+      if (channels) {
+        channelsRef.current = channels;
+        setConnectionStatus('connected');
+      } else {
+        setConnectionStatus('error');
+        onError?.({ message: 'Error al suscribirse a acuerdos', type: 'subscription' });
+      }
+    } catch (error) {
+      console.error('❌ Error en useRealtimeAgreements:', error);
+      setConnectionStatus('error');
+      onError?.({ message: error.message, type: 'connection' });
+    }
 
     // Limpiar suscripciones al desmontar
     return () => {
-      if (channels.insertChannel) {
-        realtimeService.unsubscribe(channels.insertChannel);
-      }
-      if (channels.updateChannel) {
-        realtimeService.unsubscribe(channels.updateChannel);
+      try {
+        if (channelsRef.current.insertChannel) {
+          realtimeService.unsubscribe(channelsRef.current.insertChannel);
+        }
+        if (channelsRef.current.updateChannel) {
+          realtimeService.unsubscribe(channelsRef.current.updateChannel);
+        }
+      } catch (error) {
+        console.error('❌ Error limpiando suscripciones de acuerdos:', error);
       }
     };
-  }, [userId, companyId, onAgreementCreated, onAgreementUpdated]);
+  }, [userId, companyId, onAgreementCreated, onAgreementUpdated, onError]);
 
   return {
     isConnected: realtimeService.isRealtimeConnected(),
+    connectionStatus,
     channels: channelsRef.current
   };
 };
@@ -244,44 +313,66 @@ export const useRealtimeOffers = (onOfferCreated, onOfferUpdated, options = {}) 
  * @param {Object} options - Opciones adicionales
  * @returns {Object} Estado y funciones del hook
  */
-export const useRealtimeNotifications = (onNotificationCreated, options = {}) => {
+export const useRealtimeNotifications = (onNotificationCreated, onError, options = {}) => {
   const { user } = useAuth();
   const channelsRef = useRef({});
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
 
   const userId = options.userId || user?.id;
 
   useEffect(() => {
     if (!userId) {
       console.log('⚠️ useRealtimeNotifications: Se requiere userId');
+      setConnectionStatus('error');
+      onError?.({ message: 'Se requiere userId', type: 'validation' });
       return;
     }
 
     // Conectar a realtime si no está conectado
     if (!realtimeService.isRealtimeConnected()) {
       realtimeService.connect();
+      setConnectionStatus('connecting');
     }
 
-    // Suscribir a cambios en notificaciones
-    const channel = realtimeService.subscribeToNotifications(
-      userId,
-      (payload) => {
-        console.log('🔔 Nueva notificación:', payload);
-        onNotificationCreated?.(payload);
-      }
-    );
+    // Suscribir a cambios en notificaciones con manejo de errores
+    try {
+      const channel = realtimeService.subscribeToNotifications(
+        userId,
+        (payload) => {
+          console.log('🔔 Nueva notificación:', payload);
+          setConnectionStatus('connected');
+          onNotificationCreated?.(payload);
+        }
+      );
 
-    channelsRef.current.notificationChannel = channel;
+      if (channel) {
+        channelsRef.current.notificationChannel = channel;
+        setConnectionStatus('connected');
+      } else {
+        setConnectionStatus('error');
+        onError?.({ message: 'Error al suscribirse a notificaciones', type: 'subscription' });
+      }
+    } catch (error) {
+      console.error('❌ Error en useRealtimeNotifications:', error);
+      setConnectionStatus('error');
+      onError?.({ message: error.message, type: 'connection' });
+    }
 
     // Limpiar suscripciones al desmontar
     return () => {
-      if (channel) {
-        realtimeService.unsubscribe(channel);
+      try {
+        if (channelsRef.current.notificationChannel) {
+          realtimeService.unsubscribe(channelsRef.current.notificationChannel);
+        }
+      } catch (error) {
+        console.error('❌ Error limpiando suscripciones de notificaciones:', error);
       }
     };
-  }, [userId, onNotificationCreated]);
+  }, [userId, onNotificationCreated, onError]);
 
   return {
     isConnected: realtimeService.isRealtimeConnected(),
+    connectionStatus,
     notificationChannel: channelsRef.current.notificationChannel
   };
 };
