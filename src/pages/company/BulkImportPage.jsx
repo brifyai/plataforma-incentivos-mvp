@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getCompanyVerification } from '../../services/verificationService';
-import BulkImportDebts from '../../components/company/BulkImportDebts';
+import BulkImportDebtsFixed from '../../components/company/BulkImportDebtsFixed';
 
 const BulkImportPage = () => {
   const { user, profile } = useAuth();
@@ -158,7 +158,9 @@ const BulkImportPage = () => {
           </div>
         </div>
 
-        <BulkImportDebts />
+        <BulkImportDebtsFixed profile={profile} onImportComplete={() => {
+          console.log('✅ Importación completada exitosamente');
+        }} />
       </div>
     </div>
   );
