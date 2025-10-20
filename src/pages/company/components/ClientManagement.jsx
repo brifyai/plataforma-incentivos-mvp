@@ -4,10 +4,12 @@
  * Client management section for company dashboard
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, Button, Input, Badge } from '../../../components/common';
 import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { useAuth } from '../../../context/AuthContext';
+import { createClient } from '../../../services/databaseService';
 import {
   Users,
   Search,
@@ -31,6 +33,7 @@ import {
 
 const ClientManagement = ({ clients, loading, selectedCorporateClient, corporateClients }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filteredClients, setFilteredClients] = useState([]);
@@ -403,10 +406,34 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
     if (formValues) {
       try {
-        // Aquí iría la lógica para agregar el cliente a la base de datos
-        console.log('Agregando cliente:', formValues);
+        // Validar que tengamos el usuario actual
+        if (!user || !user.id) {
+          throw new Error('No se pudo identificar la empresa del usuario actual');
+        }
+
+        // Preparar los datos del cliente
+        const clientData = {
+          company_id: user.id,
+          business_name: formValues.name,
+          contact_email: formValues.email,
+          contact_phone: formValues.phone || null,
+          rut: formValues.rut || null,
+          corporate_client_id: formValues.corporateClientId && formValues.corporateClientId !== '' ? formValues.corporateClientId : null, // Permitir null si no se selecciona
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        console.log('🔄 Creando cliente:', clientData);
         
-        // Simulación de agregado exitoso
+        // Crear el cliente en la base de datos
+        const { client, error } = await createClient(clientData);
+        
+        if (error) {
+          throw error;
+        }
+        
+        console.log('✅ Cliente creado exitosamente:', client);
+        
         await Swal.fire({
           icon: 'success',
           title: '¡Cliente Agregado!',
@@ -414,15 +441,15 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           confirmButtonColor: '#3b82f6'
         });
         
-        // Recargar clientes (esto debería venir de una prop)
-        // window.location.reload();
+        // Recargar la página para mostrar el nuevo cliente
+        window.location.reload();
         
       } catch (error) {
-        console.error('Error al agregar cliente:', error);
+        console.error('❌ Error al agregar cliente:', error);
         await Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'Error al agregar cliente. Por favor, intenta nuevamente.',
+          text: error.message || 'Error al agregar cliente. Por favor, intenta nuevamente.',
           confirmButtonColor: '#3b82f6'
         });
       }
