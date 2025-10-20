@@ -424,12 +424,45 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
         };
 
         console.log('🔄 Creando cliente:', clientData);
+        console.log('📋 Datos del formulario:', formValues);
+        console.log('👤 Usuario actual:', user);
+        
+        // Mostrar indicador de carga
+        Swal.fire({
+          title: 'Creando cliente...',
+          text: 'Por favor, espera mientras guardamos la información.',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
         
         // Crear el cliente en la base de datos
         const { client, error } = await createClient(clientData);
         
+        // Cerrar el indicador de carga
+        Swal.close();
+        
         if (error) {
-          throw error;
+          console.error('❌ Error de base de datos:', error);
+          
+          // Mensajes de error más específicos
+          let errorMessage = 'Error al agregar cliente. Por favor, intenta nuevamente.';
+          if (error.message) {
+            if (error.message.includes('duplicate key')) {
+              errorMessage = 'Ya existe un cliente con este email o RUT.';
+            } else if (error.message.includes('permission denied')) {
+              errorMessage = 'No tienes permisos para crear clientes.';
+            } else if (error.message.includes('foreign key')) {
+              errorMessage = 'El cliente corporativo seleccionado no es válido.';
+            } else if (error.message.includes('null value')) {
+              errorMessage = 'Faltan campos obligatorios. Por favor, verifica los datos.';
+            } else {
+              errorMessage = error.message;
+            }
+          }
+          
+          throw new Error(errorMessage);
         }
         
         console.log('✅ Cliente creado exitosamente:', client);
@@ -437,20 +470,48 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
         await Swal.fire({
           icon: 'success',
           title: '¡Cliente Agregado!',
-          text: `${formValues.name} ha sido agregado exitosamente.`,
-          confirmButtonColor: '#3b82f6'
+          html: `
+            <div class="text-left">
+              <p><strong>${formValues.name}</strong> ha sido agregado exitosamente.</p>
+              <div class="mt-2 text-sm text-gray-600">
+                <p>• Email: ${formValues.email}</p>
+                <p>• RUT: ${formValues.rut}</p>
+                <p>• Cliente Corporativo: ${formValues.corporateClientId ? 'Asignado' : 'Sin asignación'}</p>
+              </div>
+            </div>
+          `,
+          confirmButtonColor: '#3b82f6',
+          showCancelButton: true,
+          cancelButtonText: 'Cerrar',
+          confirmButtonText: 'Ver Clientes'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Recargar la página para mostrar el nuevo cliente
+            window.location.reload();
+          }
         });
-        
-        // Recargar la página para mostrar el nuevo cliente
-        window.location.reload();
         
       } catch (error) {
         console.error('❌ Error al agregar cliente:', error);
         await Swal.fire({
           icon: 'error',
-          title: 'Error',
-          text: error.message || 'Error al agregar cliente. Por favor, intenta nuevamente.',
-          confirmButtonColor: '#3b82f6'
+          title: 'Error al Crear Cliente',
+          html: `
+            <div class="text-left">
+              <p class="mb-2">${error.message || 'Error al agregar cliente. Por favor, intenta nuevamente.'}</p>
+              <div class="mt-3 p-3 bg-gray-100 rounded text-xs">
+                <p class="font-semibold mb-1">Información de depuración:</p>
+                <p>• Nombre: ${formValues.name}</p>
+                <p>• Email: ${formValues.email}</p>
+                <p>• RUT: ${formValues.rut}</p>
+                <p>• Teléfono: ${formValues.phone || 'No proporcionado'}</p>
+                <p>• Cliente Corporativo ID: ${formValues.corporateClientId || 'Ninguno'}</p>
+                <p>• Usuario ID: ${user?.id || 'No disponible'}</p>
+              </div>
+            </div>
+          `,
+          confirmButtonColor: '#3b82f6',
+          width: '600px'
         });
       }
     }

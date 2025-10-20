@@ -183,8 +183,7 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
       .from('debts')
       .select(`
         *,
-        user:users(id, full_name, email, rut),
-        client:clients(id, business_name, rut)
+        user:users(id, full_name, email, rut)
       `);
 
     if (clientId) {
@@ -1560,6 +1559,21 @@ export const getClientById = async (clientId) => {
  */
 export const createClient = async (clientData) => {
   try {
+    console.log('🔄 createClient: Iniciando creación de cliente:', clientData);
+    
+    // Validaciones básicas
+    if (!clientData.company_id) {
+      throw new Error('El ID de la empresa es obligatorio');
+    }
+    
+    if (!clientData.business_name || clientData.business_name.trim() === '') {
+      throw new Error('El nombre del cliente es obligatorio');
+    }
+    
+    if (!clientData.contact_email || clientData.contact_email.trim() === '') {
+      throw new Error('El email del cliente es obligatorio');
+    }
+
     const { data, error } = await supabase
       .from('clients')
       .insert(clientData)
@@ -1567,13 +1581,27 @@ export const createClient = async (clientData) => {
       .single();
 
     if (error) {
-      return { client: null, error: handleSupabaseError(error) };
+      console.error('❌ Error de Supabase en createClient:', error);
+      
+      // Manejo específico de errores comunes
+      if (error.code === '23505') {
+        return { client: null, error: new Error('Ya existe un cliente con este email o RUT en esta empresa.') };
+      } else if (error.code === '23503') {
+        return { client: null, error: new Error('El cliente corporativo seleccionado no es válido.') };
+      } else if (error.code === '23502') {
+        return { client: null, error: new Error('Faltan campos obligatorios. Por favor, verifica todos los datos.') };
+      } else if (error.code === '42501') {
+        return { client: null, error: new Error('No tienes permisos para crear clientes.') };
+      } else {
+        return { client: null, error: handleSupabaseError(error) };
+      }
     }
 
+    console.log('✅ Cliente creado exitosamente:', data);
     return { client: data, error: null };
   } catch (error) {
-    console.error('Error in createClient:', error);
-    return { client: null, error: 'Error al crear cliente.' };
+    console.error('💥 Error in createClient:', error);
+    return { client: null, error: error };
   }
 };
 
