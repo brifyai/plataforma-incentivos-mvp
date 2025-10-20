@@ -1674,18 +1674,21 @@ export const findExistingDebtors = async (rut, fullName = null) => {
  */
 export const createClient = async (clientData) => {
   try {
-    console.log('🔄 createClient: Iniciando creación de cliente:', clientData);
+    console.log('🔄 createClient: Iniciando creación de cliente:', JSON.stringify(clientData, null, 2));
     
     // Validaciones básicas
     if (!clientData.company_id) {
+      console.error('❌ Validación fallida: company_id está vacío:', clientData.company_id);
       throw new Error('El ID de la empresa es obligatorio');
     }
     
     if (!clientData.business_name || clientData.business_name.trim() === '') {
+      console.error('❌ Validación fallida: business_name está vacío:', clientData.business_name);
       throw new Error('El nombre del cliente es obligatorio');
     }
     
     if (!clientData.contact_email || clientData.contact_email.trim() === '') {
+      console.error('❌ Validación fallida: contact_email está vacío:', clientData.contact_email);
       throw new Error('El email del cliente es obligatorio');
     }
 
@@ -1701,8 +1704,17 @@ export const createClient = async (clientData) => {
       updated_at: clientData.updated_at || new Date().toISOString()
     };
 
-    console.log('📋 Datos limpios para inserción:', cleanClientData);
+    console.log('📋 Datos limpios para inserción:', JSON.stringify(cleanClientData, null, 2));
+    console.log('🔍 Verificando conexión con Supabase...');
+    
+    // Verificar que Supabase esté disponible
+    if (!supabase) {
+      console.error('❌ Error: Supabase client no está disponible');
+      throw new Error('Error de conexión con la base de datos');
+    }
 
+    console.log('✅ Supabase disponible, ejecutando inserción...');
+    
     const { data, error } = await supabase
       .from('clients')
       .insert(cleanClientData)
@@ -1710,23 +1722,41 @@ export const createClient = async (clientData) => {
       .single();
 
     if (error) {
-      console.error('❌ Error de Supabase en createClient:', error);
+      console.error('❌ Error de Supabase en createClient:', JSON.stringify(error, null, 2));
+      console.error('📊 Detalles del error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        table: error.table,
+        constraint: error.constraint
+      });
       
       // Manejo específico de errores comunes
       if (error.code === '23505') {
+        console.error('🔑 Error de clave duplicada');
         return { client: null, error: new Error('Ya existe un cliente con este email o RUT en esta empresa.') };
       } else if (error.code === '23503') {
+        console.error('🔑 Error de llave foránea');
         return { client: null, error: new Error('El cliente corporativo seleccionado no es válido.') };
       } else if (error.code === '23502') {
+        console.error('🔑 Error de valor nulo no permitido');
         return { client: null, error: new Error('Faltan campos obligatorios. Por favor, verifica todos los datos.') };
       } else if (error.code === '42501') {
+        console.error('🔑 Error de permisos');
         return { client: null, error: new Error('No tienes permisos para crear clientes.') };
+      } else if (error.code === '42P01') {
+        console.error('🔑 Error: tabla no existe');
+        return { client: null, error: new Error('La tabla de clientes no existe. Contacte al administrador.') };
       } else {
-        return { client: null, error: handleSupabaseError(error) };
+        console.error('🔑 Error genérico de Supabase');
+        const errorMessage = handleSupabaseError(error);
+        console.error('📝 Mensaje procesado:', errorMessage);
+        return { client: null, error: new Error(errorMessage) };
       }
     }
 
-    console.log('✅ Cliente creado exitosamente:', data);
+    console.log('✅ Cliente creado exitosamente:', JSON.stringify(data, null, 2));
     return { client: data, error: null };
   } catch (error) {
     console.error('💥 Error in createClient:', error);
