@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "seo-check": "node scripts/seo-check.js",
-    "generate-seo-images": "node scripts/generate-seo-images.js"
+    "generate-seo-images": "node scripts/generate-seo-images.js",
+    "verify-config": "node scripts/verify-netlify-config.js",
+    "test:netlify": "npm run verify-config && npm run build"
   },
   "keywords": [],
   "author": "",
