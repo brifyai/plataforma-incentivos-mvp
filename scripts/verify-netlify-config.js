@@ -9,9 +9,9 @@
  * Uso: npm run verify-config
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 
 // Colores para consola
 const colors = {
@@ -418,11 +418,11 @@ ${colors.reset}`);
 }
 
 // Ejecutar script
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(error => {
     console.error(`${colors.red}Error fatal: ${error.message}${colors.reset}`);
     process.exit(1);
   });
 }
 
-module.exports = { main, checks };
+export { main, checks };
