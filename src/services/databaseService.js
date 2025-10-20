@@ -179,6 +179,18 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
   try {
     console.log('🔍 getCompanyDebts called with:', { companyId, clientId });
     
+    // First check if client_id column exists
+    const { data: columnCheck, error: columnError } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_name', 'debts')
+      .eq('column_name', 'client_id')
+      .eq('table_schema', 'public')
+      .single();
+
+    const hasClientIdColumn = !columnError && columnCheck;
+    console.log('🔍 client_id column exists:', hasClientIdColumn);
+
     let query = supabase
       .from('debts')
       .select(`
@@ -186,31 +198,37 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
         user:users(id, full_name, email, rut)
       `);
 
-    if (clientId) {
-      // Si hay clientId específico, filtrar por ese cliente
-      query = query.eq('client_id', clientId);
-    } else {
-      // Si no hay clientId específico, obtener deudas de dos maneras:
-      // 1. Deudas asociadas a clientes de la empresa
-      // 2. Deudas directas de la empresa (sin client_id)
-      const { data: clients, error: clientsError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('company_id', companyId);
-
-      if (clientsError) {
-        console.warn('Error getting clients for company:', clientsError);
-      }
-
-      const clientIds = clients?.map(c => c.id) || [];
-      
-      if (clientIds.length > 0) {
-        // Si hay clientes, obtener deudas de clientes Y deudas directas de la empresa
-        query = query.or(`client_id.in.(${clientIds.join(',')}),company_id.eq.${companyId}`);
+    if (hasClientIdColumn) {
+      if (clientId) {
+        // Si hay clientId específico, filtrar por ese cliente
+        query = query.eq('client_id', clientId);
       } else {
-        // Si no hay clientes, obtener solo deudas directas de la empresa
-        query = query.eq('company_id', companyId);
+        // Si no hay clientId específico, obtener deudas de dos maneras:
+        // 1. Deudas asociadas a clientes de la empresa
+        // 2. Deudas directas de la empresa (sin client_id)
+        const { data: clients, error: clientsError } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('company_id', companyId);
+
+        if (clientsError) {
+          console.warn('Error getting clients for company:', clientsError);
+        }
+
+        const clientIds = clients?.map(c => c.id) || [];
+        
+        if (clientIds.length > 0) {
+          // Si hay clientes, obtener deudas de clientes Y deudas directas de la empresa
+          query = query.or(`client_id.in.(${clientIds.join(',')}),company_id.eq.${companyId}`);
+        } else {
+          // Si no hay clientes, obtener solo deudas directas de la empresa
+          query = query.eq('company_id', companyId);
+        }
       }
+    } else {
+      // Si no existe la columna client_id, filtrar solo por company_id
+      console.log('⚠️ client_id column does not exist, filtering only by company_id');
+      query = query.eq('company_id', companyId);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -228,9 +246,9 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
         id: d.id,
         user_id: d.user_id,
         company_id: d.company_id,
-        client_id: d.client_id,
+        client_id: hasClientIdColumn ? d.client_id : 'N/A (column not exists)',
         user_name: d.user?.full_name,
-        client_name: d.client?.business_name,
+        client_name: hasClientIdColumn && d.client ? d.client.business_name : 'N/A',
         amount: d.current_amount || d.original_amount
       })));
     }
