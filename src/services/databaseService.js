@@ -1689,9 +1689,23 @@ export const createClient = async (clientData) => {
       throw new Error('El email del cliente es obligatorio');
     }
 
+    // Preparar datos limpios para la inserción
+    const cleanClientData = {
+      company_id: clientData.company_id,
+      business_name: clientData.business_name,
+      contact_email: clientData.contact_email,
+      contact_phone: clientData.contact_phone || null,
+      rut: clientData.rut || null,
+      corporate_client_id: clientData.corporate_client_id || null,
+      created_at: clientData.created_at || new Date().toISOString(),
+      updated_at: clientData.updated_at || new Date().toISOString()
+    };
+
+    console.log('📋 Datos limpios para inserción:', cleanClientData);
+
     const { data, error } = await supabase
       .from('clients')
-      .insert(clientData)
+      .insert(cleanClientData)
       .select()
       .single();
 
