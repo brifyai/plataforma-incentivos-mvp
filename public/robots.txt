@@ -1,0 +1,36 @@
+# Robots.txt para NexuPay
+# https://nexupay.netlify.app/
+
+User-agent: *
+Allow: /
+
+# Prioridad para páginas importantes
+Allow: /$
+Allow: /login
+Allow: /register
+Allow: /debtor/dashboard
+Allow: /company/dashboard
+Allow: /payment
+
+# Bloquear áreas administrativas y privadas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /webhook/
+Disallow: /*.json$
+Disallow: /src/
+
+# Sitemaps
+Sitemap: https://nexupay.netlify.app/sitemap.xml
+
+# Tiempo de crawl (opcional)
+Crawl-delay: 1
+
+# User agents específicos
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /

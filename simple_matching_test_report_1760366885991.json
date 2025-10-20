@@ -1,0 +1,121 @@
+{
+  "success": true,
+  "algorithmResults": {
+    "totalMatches": 2,
+    "highQualityMatches": 0,
+    "successRate": 0.6666666666666666
+  },
+  "existingMatches": [],
+  "results": [
+    {
+      "timestamp": "2025-10-13T14:48:04.456Z",
+      "message": "🚀 Iniciando prueba simple del sistema de matching",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:04.457Z",
+      "message": "==============================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:04.457Z",
+      "message": "Probando algoritmo de matching con datos existentes...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.238Z",
+      "message": "Se encontraron 3 deudores para testing",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.593Z",
+      "message": "Se encontraron 6 clientes corporativos",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.593Z",
+      "message": "\nAnalizando deudor: Maria Concha (hola@aintelligence.cl)",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "  ❌ No se encontraron matches para Maria Concha",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "\nAnalizando deudor: Usuario de Prueba Reset (test-reset-1760128668290@example.com)",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "  ❌ No se encontraron matches para Usuario de Prueba Reset",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "\nAnalizando deudor: Maria Concha Corporación (maria.concha@corporacion-abc.cl)",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "  ✅ Match con Corporación ABC Ltda.: 70.0% (medium)",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "  ✅ Match con Maria Concha Corporación: 70.0% (medium)",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "  📊 2 matches encontrados para Maria Concha Corporación",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "\n📈 Resumen del Matching:",
+      "type": "success"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "  - Total de matches: 2",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "  - Matches de alta calidad: 0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "  - Tasa de éxito: 66.7%",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.594Z",
+      "message": "Verificando matches existentes en la base de datos...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.990Z",
+      "message": "⚠️ La tabla debtor_corporate_matches no existe aún - debe crearse manualmente",
+      "type": "warning"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.990Z",
+      "message": "📋 Ejecuta el SQL proporcionado por el script create_matching_table.js en el panel de Supabase",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.990Z",
+      "message": "==============================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-10-13T14:48:05.991Z",
+      "message": "🎉 Prueba simple completada exitosamente",
+      "type": "success"
+    }
+  ]
+}

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ToggleSwitch - Proveedores IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #3b82f6;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Test ToggleSwitch - Proveedores de IA</h1>
+        
+        <!-- Configuración de Supabase -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Configuración de Supabase</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Supabase URL</label>
+                    <input type="text" id="supabaseUrl" class="w-full border rounded px-3 py-2" 
+                           placeholder="https://tu-proyecto.supabase.co">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Supabase Anon Key</label>
+                    <input type="text" id="supabaseKey" class="w-full border rounded px-3 py-2" 
+                           placeholder="tu-anon-key">
+                </div>
+            </div>
+            <button onclick="initializeSupabase()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Conectar a Supabase
+            </button>
+        </div>
+
+        <!-- Panel de Control -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Panel de Control - Proveedores IA</h2>
+            
+            <div class="space-y-4">
+                <!-- Proveedor Chutes -->
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold">Chutes AI</h3>
+                            <p class="text-sm text-gray-600">Proveedor principal de IA</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="chutes-toggle" onchange="handleToggle('chutes', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Proveedor Groq -->
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold">Groq AI</h3>
+                            <p class="text-sm text-gray-600">Proveedor alternativo de IA</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="groq-toggle" onchange="handleToggle('groq', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <h3 class="font-semibold mb-2">Estado Actual:</h3>
+                <div id="current-state" class="bg-gray-50 rounded p-3 font-mono text-sm">
+                    Esperando conexión a Supabase...
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Pruebas -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Pruebas Automáticas</h2>
+            <div class="space-x-4">
+                <button onclick="runExclusivityTest()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Probar Exclusión Mutua
+                </button>
+                <button onclick="runPersistenceTest()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                    Probar Persistencia
+                </button>
+                <button onclick="runAllTests()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    Ejecutar Todas las Pruebas
+                </button>
+            </div>
+        </div>
+
+        <!-- Resultados -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Resultados de Pruebas</h2>
+            <div id="test-results" class="space-y-2">
+                <p class="text-gray-500">No se han ejecutado pruebas aún...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let supabase = null;
+        let currentConfig = null;
+        let companyId = null;
+
+        // Inicializar Supabase
+        async function initializeSupabase() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+            
+            if (!url || !key) {
+                alert('Por favor, ingresa la URL y la clave de Supabase');
+                return;
+            }
+            
+            try {
+                supabase = createClient(url, key);
+                
+                // Obtener empresa de prueba
+                const { data: companies, error } = await supabase
+                    .from('companies')
+                    .select('id')
+                    .limit(1);
+                
+                if (error) throw error;
+                if (!companies || companies.length === 0) {
+                    throw new Error('No se encontraron empresas');
+                }
+                
+                companyId = companies[0].id;
+                await loadCurrentConfig();
+                
+                document.getElementById('current-state').textContent = '✅ Conectado a Supabase';
+                logResult('success', 'Conexión a Supabase establecida correctamente');
+                
+            } catch (error) {
+                console.error('Error conectando a Supabase:', error);
+                document.getElementById('current-state').textContent = '❌ Error de conexión';
+                logResult('error', `Error: ${error.message}`);
+            }
+        }
+
+        // Cargar configuración actual
+        async function loadCurrentConfig() {
+            try {
+                const { data, error } = await supabase
+                    .from('company_ai_config')
+                    .select('ai_providers')
+                    .eq('company_id', companyId)
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') throw error;
+                
+                currentConfig = data?.ai_providers || {
+                    providers: {
+                        chutes: { enabled: false },
+                        groq: { enabled: false }
+                    },
+                    selectedProvider: 'chutes'
+                };
+                
+                updateUI();
+                
+            } catch (error) {
+                console.error('Error cargando configuración:', error);
+                logResult('error', `Error cargando configuración: ${error.message}`);
+            }
+        }
+
+        // Actualizar UI con estado actual
+        function updateUI() {
+            if (!currentConfig) return;
+            
+            const chutesEnabled = currentConfig.providers.chutes?.enabled || false;
+            const groqEnabled = currentConfig.providers.groq?.enabled || false;
+            
+            document.getElementById('chutes-toggle').checked = chutesEnabled;
+            document.getElementById('groq-toggle').checked = groqEnabled;
+            
+            const stateText = `Chutes: ${chutesEnabled ? '✅' : '❌'} | Groq: ${groqEnabled ? '✅' : '❌'} | Selected: ${currentConfig.selectedProvider}`;
+            document.getElementById('current-state').textContent = stateText;
+        }
+
+        // Manejar cambio de toggle
+        async function handleToggle(provider, enabled) {
+            if (!supabase || !currentConfig) {
+                alert('Primero conecta a Supabase');
+                return;
+            }
+            
+            try {
+                // Aplicar lógica de exclusión mutua
+                const newProviders = { ...currentConfig.providers };
+                
+                Object.keys(newProviders).forEach(key => {
+                    if (key !== provider) {
+                        newProviders[key] = { ...newProviders[key], enabled: false };
+                    } else {
+                        newProviders[key] = { ...newProviders[key], enabled };
+                    }
+                });
+                
+                const newSelectedProvider = enabled ? provider : currentConfig.selectedProvider;
+                
+                const newConfig = {
+                    ...currentConfig,
+                    providers: newProviders,
+                    selectedProvider: newSelectedProvider
+                };
+                
+                // Guardar en Supabase
+                const { error } = await supabase
+                    .from('company_ai_config')
+                    .upsert({
+                        company_id: companyId,
+                        ai_providers: newConfig,
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (error) throw error;
+                
+                currentConfig = newConfig;
+                updateUI();
+                
+                logResult('success', `Toggle ${provider}: ${enabled ? 'activado' : 'desactivado'}`);
+                
+            } catch (error) {
+                console.error('Error en toggle:', error);
+                logResult('error', `Error en toggle ${provider}: ${error.message}`);
+                // Revertir UI en caso de error
+                updateUI();
+            }
+        }
+
+        // Prueba de exclusión mutua
+        async function runExclusivityTest() {
+            logResult('info', '🧪 Iniciando prueba de exclusión mutua...');
+            
+            try {
+                // Activar Chutes
+                await handleToggle('chutes', true);
+                await sleep(500);
+                
+                const chutesState = currentConfig.providers.chutes?.enabled;
+                const groqState = currentConfig.providers.groq?.enabled;
+                
+                if (chutesState && !groqState) {
+                    logResult('success', '✅ Chutes activado correctamente (exclusión mutua OK)');
+                } else {
+                    logResult('error', '❌ Fallo en exclusión mutua al activar Chutes');
+                    return;
+                }
+                
+                // Activar Groq (debería desactivar Chutes)
+                await handleToggle('groq', true);
+                await sleep(500);
+                
+                const chutesState2 = currentConfig.providers.chutes?.enabled;
+                const groqState2 = currentConfig.providers.groq?.enabled;
+                
+                if (!chutesState2 && groqState2) {
+                    logResult('success', '✅ Groq activado y Chutes desactivado (exclusión mutua OK)');
+                } else {
+                    logResult('error', '❌ Fallo en exclusión mutua al activar Groq');
+                    return;
+                }
+                
+                logResult('success', '🎉 Prueba de exclusión mutua completada exitosamente');
+                
+            } catch (error) {
+                logResult('error', `❌ Error en prueba de exclusión mutua: ${error.message}`);
+            }
+        }
+
+        // Prueba de persistencia
+        async function runPersistenceTest() {
+            logResult('info', '🧪 Iniciando prueba de persistencia...');
+            
+            try {
+                // Guardar estado actual
+                const originalConfig = JSON.parse(JSON.stringify(currentConfig));
+                
+                // Cambiar estado
+                await handleToggle('chutes', true);
+                await sleep(1000);
+                
+                // Recargar desde base de datos
+                await loadCurrentConfig();
+                
+                const chutesEnabled = currentConfig.providers.chutes?.enabled;
+                
+                if (chutesEnabled) {
+                    logResult('success', '✅ Persistencia de datos correcta');
+                } else {
+                    logResult('error', '❌ Fallo en persistencia de datos');
+                }
+                
+                // Restaurar estado original
+                await supabase
+                    .from('company_ai_config')
+                    .upsert({
+                        company_id: companyId,
+                        ai_providers: originalConfig,
+                        updated_at: new Date().toISOString()
+                    });
+                
+                await loadCurrentConfig();
+                
+            } catch (error) {
+                logResult('error', `❌ Error en prueba de persistencia: ${error.message}`);
+            }
+        }
+
+        // Ejecutar todas las pruebas
+        async function runAllTests() {
+            logResult('info', '🚀 Iniciando todas las pruebas...');
+            
+            await runExclusivityTest();
+            await sleep(1000);
+            await runPersistenceTest();
+            
+            logResult('success', '🎉 Todas las pruebas completadas');
+        }
+
+        // Funciones auxiliares
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function logResult(type, message) {
+            const resultsDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const colorClass = {
+                'success': 'text-green-600',
+                'error': 'text-red-600',
+                'info': 'text-blue-600'
+            }[type] || 'text-gray-600';
+            
+            const resultHtml = `
+                <div class="${colorClass} text-sm">
+                    [${timestamp}] ${message}
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = resultHtml + resultsDiv.innerHTML;
+            
+            // Limitar a 20 resultados
+            const results = resultsDiv.children;
+            if (results.length > 20) {
+                results[results.length - 1].remove();
+            }
+        }
+
+        // Auto-cargar configuración si hay variables de entorno
+        window.addEventListener('load', () => {
+            // Intentar cargar desde variables de entorno si están disponibles
+            if (typeof VITE_SUPABASE_URL !== 'undefined') {
+                document.getElementById('supabaseUrl').value = VITE_SUPABASE_URL;
+            }
+            if (typeof VITE_SUPABASE_ANON_KEY !== 'undefined') {
+                document.getElementById('supabaseKey').value = VITE_SUPABASE_ANON_KEY;
+            }
+        });
+    </script>
+</body>
+</html>

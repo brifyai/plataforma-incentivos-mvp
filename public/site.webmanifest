@@ -1,0 +1,58 @@
+{
+  "name": "NexuPay - Gestión Inteligente de Deudas",
+  "short_name": "NexuPay",
+  "description": "La primera plataforma que combina IA predictiva, blockchain y machine learning para convertir tus deudas en oportunidades de ingresos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es-CL",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mis Deudas",
+      "short_name": "Deudas",
+      "description": "Ver todas mis deudas activas",
+      "url": "/debtor/dashboard",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Comisiones",
+      "short_name": "Ganancias",
+      "description": "Ver mis comisiones e ingresos",
+      "url": "/debtor/wallet",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
+    }
+  ]
+}
