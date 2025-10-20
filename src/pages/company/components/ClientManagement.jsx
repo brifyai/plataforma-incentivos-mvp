@@ -9,7 +9,7 @@ import { Card, Button, Input, Badge } from '../../../components/common';
 import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useAuth } from '../../../context/AuthContext';
-import { createClient } from '../../../services/databaseService';
+import { createClient, findExistingDebtors } from '../../../services/databaseService';
 import {
   Users,
   Search,
@@ -348,6 +348,22 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
           }
+          .match-info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+          }
+          .match-item {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            font-size: 0.8rem;
+          }
         </style>
         <div class="swal2-form-container">
           <div class="mb-3">
@@ -361,6 +377,10 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           <div class="mb-3">
             <label>RUT *</label>
             <input id="swal-input3" placeholder="Ej: 12.345.678-9" required>
+            <div id="match-info-rut" class="match-info" style="display: none;">
+              <strong>⚠️ Deudor existente encontrado:</strong>
+              <div id="match-details-rut"></div>
+            </div>
           </div>
           <div class="mb-3">
             <label>Teléfono</label>
@@ -379,6 +399,10 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
               </select>
             </div>
           ` : ''}
+          <div class="match-info">
+            <strong>🔍 Matching Automático:</strong> NexuPay buscará deudores existentes por RUT y nombre para evitar duplicados.
+            Los datos de contacto (email, teléfono) no se comparten por privacidad.
+          </div>
         </div>
       `,
       focusConfirm: false,
@@ -387,6 +411,48 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#3b82f6',
       cancelButtonColor: '#6b7280',
+      didOpen: () => {
+        // Agregar listeners para búsqueda automática de matching
+        const rutInput = document.getElementById('swal-input3');
+        const nameInput = document.getElementById('swal-input1');
+        let searchTimeout;
+
+        const performSearch = async () => {
+          const rut = rutInput.value.trim();
+          const name = nameInput.value.trim();
+          
+          if (rut.length >= 5 || name.length >= 3) {
+            try {
+              const { matches, error } = await findExistingDebtors(rut, name);
+              
+              const matchInfoRut = document.getElementById('match-info-rut');
+              const matchDetailsRut = document.getElementById('match-details-rut');
+              
+              if (!error && matches.length > 0) {
+                matchInfoRut.style.display = 'block';
+                matchDetailsRut.innerHTML = matches.map(match => `
+                  <div class="match-item">
+                    <strong>${match.full_name}</strong> (${match.rut})<br>
+                    <small>Score: ${match.match_score}% | Tipo: ${match.match_type}</small>
+                  </div>
+                `).join('');
+              } else {
+                matchInfoRut.style.display = 'none';
+              }
+            } catch (err) {
+              console.warn('Error en búsqueda de matching:', err);
+            }
+          }
+        };
+
+        const debouncedSearch = () => {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(performSearch, 500);
+        };
+
+        rutInput.addEventListener('input', debouncedSearch);
+        nameInput.addEventListener('input', debouncedSearch);
+      },
       preConfirm: () => {
         const name = document.getElementById('swal-input1').value;
         const email = document.getElementById('swal-input2').value;
@@ -411,6 +477,51 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           throw new Error('No se pudo identificar la empresa del usuario actual');
         }
 
+        // Realizar matching automático antes de crear el cliente
+        console.log('🔍 Realizando matching automático para:', { rut: formValues.rut, name: formValues.name });
+        
+        const { matches, error: matchError } = await findExistingDebtors(formValues.rut, formValues.name);
+        
+        if (matchError) {
+          console.warn('⚠️ Error en matching automático:', matchError);
+          // Continuar con la creación aunque falle el matching
+        } else if (matches.length > 0) {
+          // Mostrar advertencia si se encontraron coincidencias
+          const highScoreMatches = matches.filter(m => m.match_score >= 80);
+          
+          if (highScoreMatches.length > 0) {
+            const { value: continueAnyway } = await Swal.fire({
+              title: '⚠️ Deudores Existentes Encontrados',
+              html: `
+                <div class="text-left">
+                  <p class="mb-3">Se encontraron <strong>${highScoreMatches.length} deudor(es) existente(s)</strong> con alta coincidencia:</p>
+                  ${highScoreMatches.map(match => `
+                    <div class="match-item" style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 0.375rem; padding: 0.75rem; margin: 0.5rem 0;">
+                      <strong>${match.full_name}</strong><br>
+                      <small>RUT: ${match.rut} | Score: ${match.match_score}%</small><br>
+                      <small>Estado: ${match.validation_status}</small>
+                    </div>
+                  `).join('')}
+                  <p class="mt-3 text-sm text-gray-600">
+                    <strong>¿Desea continuar creando el cliente de todos modos?</strong><br>
+                    Esto podría crear un duplicado en el sistema.
+                  </p>
+                </div>
+              `,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Sí, crear de todos modos',
+              cancelButtonText: 'Cancelar',
+              confirmButtonColor: '#ef4444',
+              cancelButtonColor: '#6b7280'
+            });
+            
+            if (!continueAnyway) {
+              return; // Usuario canceló la creación
+            }
+          }
+        }
+
         // Preparar los datos del cliente
         const clientData = {
           company_id: user.id,
@@ -426,6 +537,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
         console.log('🔄 Creando cliente:', clientData);
         console.log('📋 Datos del formulario:', formValues);
         console.log('👤 Usuario actual:', user);
+        console.log('🔍 Resultados del matching:', matches);
         
         // Mostrar indicador de carga
         Swal.fire({
@@ -467,19 +579,29 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
         
         console.log('✅ Cliente creado exitosamente:', client);
         
+        let successMessage = `
+          <div class="text-left">
+            <p><strong>${formValues.name}</strong> ha sido agregado exitosamente.</p>
+            <div class="mt-2 text-sm text-gray-600">
+              <p>• Email: ${formValues.email}</p>
+              <p>• RUT: ${formValues.rut}</p>
+              <p>• Cliente Corporativo: ${formValues.corporateClientId ? 'Asignado' : 'Sin asignación'}</p>
+        `;
+        
+        if (matches && matches.length > 0) {
+          successMessage += `
+            <div class="mt-3 p-2 bg-blue-50 rounded text-xs">
+              <strong>🔍 Matching:</strong> Se encontraron ${matches.length} coincidencia(s) en la base de datos durante la verificación.
+            </div>
+          `;
+        }
+        
+        successMessage += `</div></div>`;
+        
         await Swal.fire({
           icon: 'success',
           title: '¡Cliente Agregado!',
-          html: `
-            <div class="text-left">
-              <p><strong>${formValues.name}</strong> ha sido agregado exitosamente.</p>
-              <div class="mt-2 text-sm text-gray-600">
-                <p>• Email: ${formValues.email}</p>
-                <p>• RUT: ${formValues.rut}</p>
-                <p>• Cliente Corporativo: ${formValues.corporateClientId ? 'Asignado' : 'Sin asignación'}</p>
-              </div>
-            </div>
-          `,
+          html: successMessage,
           confirmButtonColor: '#3b82f6',
           showCancelButton: true,
           cancelButtonText: 'Cerrar',

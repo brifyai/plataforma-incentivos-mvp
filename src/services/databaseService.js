@@ -1553,6 +1553,121 @@ export const getClientById = async (clientId) => {
 };
 
 /**
+ * Busca deudores existentes por RUT y nombre (sin exponer información de contacto)
+ * @param {string} rut - RUT del deudor a buscar
+ * @param {string} fullName - Nombre completo del deudor a buscar
+ * @returns {Promise<{matches, error}>}
+ */
+export const findExistingDebtors = async (rut, fullName = null) => {
+  try {
+    console.log('🔍 Buscando deudores existentes:', { rut, fullName });
+    
+    // Normalizar RUT para búsqueda (quitar puntos y guión)
+    const normalizedRut = rut ? rut.replace(/[.-]/g, '').toUpperCase() : null;
+    
+    let query = supabase
+      .from('users')
+      .select(`
+        id,
+        full_name,
+        rut,
+        role,
+        validation_status,
+        created_at
+      `)
+      .eq('role', 'debtor');
+
+    // Buscar por RUT normalizado si se proporciona
+    if (normalizedRut) {
+      // Buscar coincidencias exactas y similares de RUT
+      query = query.or(`rut.eq.${rut},rut.eq.${normalizedRut}`);
+    }
+    
+    // Buscar por nombre si se proporciona
+    if (fullName) {
+      const nameConditions = [
+        `full_name.ilike.%${fullName}%`,
+        `full_name.ilike.%${fullName.split(' ')[0]}%` // Primera palabra del nombre
+      ];
+      
+      if (normalizedRut) {
+        // Combinar búsqueda por RUT y nombre
+        query = query.or(`${nameConditions.join(',')},rut.eq.${rut},rut.eq.${normalizedRut}`);
+      } else {
+        // Solo búsqueda por nombre
+        query = query.or(nameConditions.join(','));
+      }
+    }
+
+    const { data, error } = await query.limit(10); // Limitar a 10 resultados para no sobrecargar
+
+    if (error) {
+      console.error('❌ Error buscando deudores existentes:', error);
+      return { matches: [], error: handleSupabaseError(error) };
+    }
+
+    // Procesar resultados para calcular similitud y proteger datos
+    const processedMatches = (data || []).map(user => {
+      // Calcular score de similitud para RUT
+      let rutScore = 0;
+      if (rut && user.rut) {
+        const userRutNormalized = user.rut.replace(/[.-]/g, '').toUpperCase();
+        if (userRutNormalized === normalizedRut) {
+          rutScore = 100; // Coincidencia exacta
+        } else if (userRutNormalized.includes(normalizedRut) || normalizedRut.includes(userRutNormalized)) {
+          rutScore = 80; // Coincidencia parcial
+        }
+      }
+
+      // Calcular score de similitud para nombre
+      let nameScore = 0;
+      if (fullName && user.full_name) {
+        const userName = user.full_name.toLowerCase();
+        const searchName = fullName.toLowerCase();
+        
+        if (userName === searchName) {
+          nameScore = 100; // Coincidencia exacta
+        } else if (userName.includes(searchName) || searchName.includes(userName)) {
+          nameScore = 70; // Coincidencia parcial
+        } else {
+          // Calcular similitud de palabras
+          const userWords = userName.split(' ');
+          const searchWords = searchName.split(' ');
+          const commonWords = userWords.filter(word => searchWords.includes(word));
+          nameScore = (commonWords.length / Math.max(userWords.length, searchWords.length)) * 50;
+        }
+      }
+
+      // Score total (dar más peso al RUT)
+      const totalScore = rut ? (rutScore * 0.7 + nameScore * 0.3) : nameScore;
+
+      return {
+        id: user.id,
+        full_name: user.full_name,
+        rut: user.rut,
+        validation_status: user.validation_status,
+        created_at: user.created_at,
+        match_score: Math.round(totalScore),
+        match_type: rutScore === 100 ? 'rut_exact' :
+                  rutScore >= 80 ? 'rut_partial' :
+                  nameScore === 100 ? 'name_exact' :
+                  nameScore >= 70 ? 'name_partial' : 'fuzzy',
+        // Importante: NO incluir email, teléfono u otros datos de contacto
+      };
+    })
+    .filter(match => match.match_score >= 30) // Filtrar coincidencias con score mínimo
+    .sort((a, b) => b.match_score - a.match_score); // Ordenar por score descendente
+
+    console.log(`✅ Encontrados ${processedMatches.length} deudores coincidentes`);
+    
+    return { matches: processedMatches, error: null };
+  } catch (error) {
+    console.error('💥 Error en findExistingDebtors:', error);
+    return { matches: [], error: 'Error al buscar deudores existentes.' };
+  }
+};
+
+/**
  * Crea un nuevo cliente para una empresa de cobranza
  * @param {Object} clientData - Datos del cliente
  * @returns {Promise<{client, error}>}
