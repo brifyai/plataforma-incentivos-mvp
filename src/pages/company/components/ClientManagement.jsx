@@ -33,7 +33,7 @@ import {
 
 const ClientManagement = ({ clients, loading, selectedCorporateClient, corporateClients }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filteredClients, setFilteredClients] = useState([]);
@@ -472,9 +472,19 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
     if (formValues) {
       try {
-        // Validar que tengamos el usuario actual
+        // Validar que tengamos el usuario actual y su perfil de empresa
         if (!user || !user.id) {
           throw new Error('No se pudo identificar la empresa del usuario actual');
+        }
+        
+        // Para usuarios de tipo COMPANY, usar el ID de la empresa (profile.company.id)
+        // No usar user.id que es el ID del usuario en la tabla users
+        let companyId;
+        if (profile?.company?.id) {
+          companyId = profile.company.id;
+          console.log('🏢 Usando company_id del perfil:', companyId);
+        } else {
+          throw new Error('No se pudo encontrar el ID de la empresa asociada al usuario. Por favor, completa tu perfil de empresa.');
         }
 
         // Realizar matching automático antes de crear el cliente
@@ -524,7 +534,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
         // Preparar los datos del cliente
         const clientData = {
-          company_id: user.id,
+          company_id: companyId, // Usar el ID correcto de la empresa
           business_name: formValues.name,
           contact_email: formValues.email,
           contact_phone: formValues.phone || null,
@@ -537,6 +547,8 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
         console.log('🔄 Creando cliente:', clientData);
         console.log('📋 Datos del formulario:', formValues);
         console.log('👤 Usuario actual:', user);
+        console.log('🏢 Perfil de empresa:', profile);
+        console.log('🆔 Company ID a usar:', companyId);
         console.log('🔍 Resultados del matching:', matches);
         
         // Mostrar indicador de carga
@@ -629,6 +641,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                 <p>• Teléfono: ${formValues.phone || 'No proporcionado'}</p>
                 <p>• Cliente Corporativo ID: ${formValues.corporateClientId || 'Ninguno'}</p>
                 <p>• Usuario ID: ${user?.id || 'No disponible'}</p>
+                <p>• Company ID: ${companyId || 'No disponible'}</p>
               </div>
             </div>
           `,
