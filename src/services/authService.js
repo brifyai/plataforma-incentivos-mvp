@@ -1637,17 +1637,39 @@ const validateUserManually = async (userId) => {
   try {
     console.log('🔍 Validando usuario manualmente:', userId);
 
-    // Actualizar el estado de validación del usuario
-    const { data: userData, error: updateError } = await supabase
+    // Intentar actualizar con email_verified primero
+    let updateData = {
+      validation_status: 'validated',
+      email_verified: true,
+      updated_at: new Date().toISOString()
+    };
+
+    let { data: userData, error: updateError } = await supabase
       .from('users')
-      .update({
-        validation_status: 'validated',
-        email_verified: true,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', userId)
       .select()
       .single();
+
+    // Si falla por columna email_verified no existente, intentar sin ella
+    if (updateError && updateError.message.includes('email_verified')) {
+      console.warn('⚠️ Columna email_verified no existe, intentando sin ella...');
+      
+      updateData = {
+        validation_status: 'validated',
+        updated_at: new Date().toISOString()
+      };
+
+      const retryResult = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single();
+
+      userData = retryResult.data;
+      updateError = retryResult.error;
+    }
 
     if (updateError) {
       console.error('❌ Error actualizando usuario:', updateError);
