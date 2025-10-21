@@ -424,8 +424,38 @@ const signUp = async (userData, currentUserRole = null) => {
       return { user: null, error: handleSupabaseError(insertError) };
     }
 
-    // 3. Si es empresa, crear registro en companies
+    // 3. Si es empresa, validar y crear registro en companies
     if (role === USER_ROLES.COMPANY && companyData) {
+      // Validaciones específicas para empresas en orden de prioridad
+      
+      // Prioridad 1: Validar RUT de empresa
+      const { exists: companyRutExists, error: rutCheckError } = await checkCompanyRutExists(companyData.companyRut);
+      if (rutCheckError) {
+        return { user: null, error: rutCheckError };
+      }
+      if (companyRutExists) {
+        return { user: null, error: 'El RUT de empresa ya está registrado. Cada empresa debe tener un RUT único.' };
+      }
+
+      // Prioridad 2: Validar Razón Social
+      const { exists: companyNameExists, error: nameCheckError } = await checkCompanyNameExists(companyData.businessName);
+      if (nameCheckError) {
+        return { user: null, error: nameCheckError };
+      }
+      if (companyNameExists) {
+        return { user: null, error: 'La razón social ya está registrada. Verifica los datos e intenta con otra razón social.' };
+      }
+
+      // Prioridad 3: Validar dominio corporativo
+      const { exists: domainExists, error: domainCheckError } = await checkCorporateDomainExists(email);
+      if (domainCheckError) {
+        return { user: null, error: domainCheckError };
+      }
+      if (domainExists) {
+        return { user: null, error: 'El dominio corporativo ya está registrado. Usa un email corporativo único para tu empresa (@nombredeempresa.cl).' };
+      }
+
+      // Si todas las validaciones pasan, crear la empresa
       const { error: companyError } = await supabase
         .from('companies')
         .insert({
@@ -439,7 +469,9 @@ const signUp = async (userData, currentUserRole = null) => {
 
       if (companyError) {
         console.error('Error creating company profile:', companyError);
-        // No eliminar el usuario, solo registrar el error
+        // Eliminar el usuario si no se puede crear la empresa
+        await supabase.from('users').delete().eq('id', userDataResult.id);
+        return { user: null, error: `Error al crear empresa: ${companyError.message}` };
       } else {
         console.log('✅ Empresa registrada exitosamente');
         
@@ -1022,6 +1054,83 @@ const checkPhoneExists = async (phone) => {
   } catch (error) {
     console.error('Error in checkPhoneExists:', error);
     return { exists: false, error: 'Error al verificar teléfono.' };
+  }
+};
+
+/**
+ * Verifica si el RUT de empresa ya está registrado
+ * @param {string} rut - RUT de empresa a verificar
+ * @returns {Promise<{exists, error}>}
+ */
+const checkCompanyRutExists = async (rut) => {
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('rut', rut)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      return { exists: false, error: handleSupabaseError(error) };
+    }
+
+    return { exists: !!data, error: null };
+  } catch (error) {
+    console.error('Error in checkCompanyRutExists:', error);
+    return { exists: false, error: 'Error al verificar RUT de empresa.' };
+  }
+};
+
+/**
+ * Verifica si la razón social de empresa ya está registrada
+ * @param {string} companyName - Razón social a verificar
+ * @returns {Promise<{exists, error}>}
+ */
+const checkCompanyNameExists = async (companyName) => {
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('company_name', companyName)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      return { exists: false, error: handleSupabaseError(error) };
+    }
+
+    return { exists: !!data, error: null };
+  } catch (error) {
+    console.error('Error in checkCompanyNameExists:', error);
+    return { exists: false, error: 'Error al verificar razón social.' };
+  }
+};
+
+/**
+ * Verifica si el dominio corporativo ya está registrado por otra empresa
+ * @param {string} email - Email corporativo a verificar
+ * @returns {Promise<{exists, error}>}
+ */
+const checkCorporateDomainExists = async (email) => {
+  try {
+    const domain = email.split('@')[1]?.toLowerCase();
+    if (!domain) {
+      return { exists: false, error: null };
+    }
+
+    // Buscar empresas que usen el mismo dominio en su email de contacto
+    const { data, error } = await supabase
+      .from('companies')
+      .select('id, contact_email')
+      .like('contact_email', `%@${domain}`);
+
+    if (error) {
+      return { exists: false, error: handleSupabaseError(error) };
+    }
+
+    return { exists: data && data.length > 0, error: null };
+  } catch (error) {
+    console.error('Error in checkCorporateDomainExists:', error);
+    return { exists: false, error: 'Error al verificar dominio corporativo.' };
   }
 };
 
@@ -1947,6 +2056,9 @@ export {
   checkEmailExists,
   checkRutExists,
   checkPhoneExists,
+  checkCompanyRutExists,
+  checkCompanyNameExists,
+  checkCorporateDomainExists,
   onAuthStateChange,
   updateUserProfile,
   signInWithGoogle,

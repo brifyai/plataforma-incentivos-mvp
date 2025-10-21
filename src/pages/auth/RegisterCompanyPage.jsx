@@ -13,6 +13,7 @@ import { Mail, Lock, User, Phone, CreditCard, Building, CheckCircle, Chrome, Ale
 import { validateRutInput, validatePassword, validatePhone, isValidEmail } from '../../utils/validators';
 import { formatRut } from '../../utils/formatters';
 import { USER_ROLES } from '../../config/constants';
+import { checkCompanyRutExists, checkCompanyNameExists, checkCorporateDomainExists } from '../../services/authService';
 import Swal from 'sweetalert2';
 
 const RegisterCompanyPage = () => {
@@ -78,7 +79,7 @@ const RegisterCompanyPage = () => {
     });
   };
 
-  const validate = () => {
+  const validate = async () => {
     const newErrors = {};
 
     // Email
@@ -87,12 +88,20 @@ const RegisterCompanyPage = () => {
     } else if (!isValidEmail(formData.email)) {
       newErrors.email = 'Email inválido';
     } else {
-      // Validar que el dominio base del email coincida con el nombre de la empresa
-      const emailDomainBase = extractDomainBase(formData.email);
-      const expectedDomainBase = normalizeCompanyNameToDomain(formData.businessName);
+      // Validar dominio corporativo (prioridad 3)
+      const { exists: domainExists, error: domainError } = await checkCorporateDomainExists(formData.email);
+      if (domainError) {
+        newErrors.email = 'Error verificando dominio corporativo';
+      } else if (domainExists) {
+        newErrors.email = 'El dominio corporativo ya está registrado. Usa un email corporativo único (@nombredeempresa.cl)';
+      } else {
+        // Validar que el dominio base del email coincida con el nombre de la empresa
+        const emailDomainBase = extractDomainBase(formData.email);
+        const expectedDomainBase = normalizeCompanyNameToDomain(formData.businessName);
 
-      if (emailDomainBase !== expectedDomainBase) {
-        newErrors.email = `El dominio debe coincidir con: @${expectedDomainBase}.com`;
+        if (emailDomainBase !== expectedDomainBase) {
+          newErrors.email = `El dominio debe coincidir con: @${expectedDomainBase}.cl`;
+        }
       }
     }
 
@@ -121,11 +130,27 @@ const RegisterCompanyPage = () => {
     // Campos adicionales para empresa
     if (!formData.businessName) {
       newErrors.businessName = 'El nombre de la empresa es requerido';
+    } else {
+      // Validar Razón Social (prioridad 2)
+      const { exists: nameExists, error: nameError } = await checkCompanyNameExists(formData.businessName);
+      if (nameError) {
+        newErrors.businessName = 'Error verificando razón social';
+      } else if (nameExists) {
+        newErrors.businessName = 'La razón social ya está registrada. Verifica los datos e intenta con otra razón social.';
+      }
     }
 
     const companyRutValidation = validateRutInput(formData.companyRut);
     if (!companyRutValidation.isValid) {
       newErrors.companyRut = companyRutValidation.error;
+    } else {
+      // Validar RUT de empresa (prioridad 1)
+      const { exists: rutExists, error: rutError } = await checkCompanyRutExists(formData.companyRut);
+      if (rutError) {
+        newErrors.companyRut = 'Error verificando RUT de empresa';
+      } else if (rutExists) {
+        newErrors.companyRut = 'El RUT de empresa ya está registrado. Cada empresa debe tener un RUT único.';
+      }
     }
 
     // Teléfono (requerido para empresas)
@@ -151,7 +176,7 @@ const RegisterCompanyPage = () => {
 
     // Limpiar errores previos y validar nuevamente
     setErrors({});
-    const { isValid, errors: validationErrors } = validate();
+    const { isValid, errors: validationErrors } = await validate();
 
     if (!isValid) {
       const errorFields = Object.keys(validationErrors);
@@ -171,15 +196,21 @@ const RegisterCompanyPage = () => {
       }).join('\n');
 
       Swal.fire({
-        title: 'Campos requeridos faltantes',
+        title: 'Validación de Registro Empresarial',
         html: `<div style="text-align: left; font-size: 14px; line-height: 1.5;">
-          <p style="margin-bottom: 10px; font-weight: bold;">Por favor completa los siguientes campos:</p>
+          <p style="margin-bottom: 10px; font-weight: bold;">Por favor corrige los siguientes campos:</p>
           <div style="background: #fef2f2; padding: 10px; border-radius: 5px; border-left: 4px solid #ef4444;">
             ${errorMessages.replace(/\n/g, '<br>')}
           </div>
+          <p style="margin-top: 10px; font-size: 12px; color: #6b7280;">
+            <strong>Nota:</strong> Las validaciones siguen este orden de prioridad:<br>
+            1️⃣ RUT de empresa (único)<br>
+            2️⃣ Razón Social (única)<br>
+            3️⃣ Dominio corporativo (@empresa.cl)
+          </p>
         </div>`,
         icon: 'warning',
-        confirmButtonText: 'Entendido',
+        confirmButtonText: 'Corregir campos',
         confirmButtonColor: '#7c3aed'
       });
       return;
@@ -206,7 +237,17 @@ const RegisterCompanyPage = () => {
       const { success, error } = await register(userData);
 
       if (success) {
-        Swal.fire('¡Registro exitoso!', 'Por favor, verifica tu email.', 'success');
+        Swal.fire({
+          title: '¡Registro Empresarial Exitoso!',
+          html: `<div style="text-align: center; font-size: 14px; line-height: 1.5;">
+            <p style="margin-bottom: 10px;">Tu empresa ha sido registrada correctamente.</p>
+            <p style="color: #6b7280;">Hemos enviado un email de confirmación a <strong>${formData.email}</strong></p>
+            <p style="color: #6b7280;">Por favor, verifica tu email para activar tu cuenta.</p>
+          </div>`,
+          icon: 'success',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#7c3aed'
+        });
         navigate('/login');
       } else {
         Swal.fire('Error', error || 'Error al registrar empresa', 'error');
