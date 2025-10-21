@@ -1775,20 +1775,57 @@ const sendPasswordResetForUser = async (userId) => {
  */
 const setupCompanyBankAccount = async (bankAccountData) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    console.log('🚀 Iniciando setupCompanyBankAccount...');
+    console.log('📋 Datos recibidos:', bankAccountData);
+
+    // Primero intentar obtener el usuario de la sesión actual
+    console.log('🔍 Verificando sesión actual...');
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    console.log('📊 Datos de sesión:', { session: sessionData?.session ? 'presente' : 'ausente', error: sessionError });
+
+    // Si no hay sesión, intentar obtener el usuario directamente
+    let user = sessionData?.session?.user;
+    if (!user) {
+      console.log('🔄 Intentando obtener usuario directamente...');
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      console.log('📊 Datos de usuario:', { user: userData?.user ? 'presente' : 'ausente', error: userError });
+      user = userData?.user;
+    }
+
+    // Si todavía no hay usuario, intentar desde localStorage (sistema legacy)
+    if (!user) {
+      console.log('🔄 Intentando obtener desde localStorage...');
+      try {
+        const sessionData = localStorage.getItem('secure_session') || localStorage.getItem('mock_session');
+        if (sessionData) {
+          const parsedSession = JSON.parse(sessionData);
+          user = parsedSession.user;
+          console.log('✅ Usuario obtenido desde localStorage:', user?.email);
+        }
+      } catch (localStorageError) {
+        console.warn('⚠️ Error leyendo localStorage:', localStorageError);
+      }
+    }
+
+    console.log('👤 Usuario final:', user ? { id: user.id, email: user.email } : 'No encontrado');
 
     if (!user) {
-      return { success: false, error: 'Usuario no autenticado.' };
+      console.error('❌ Usuario no autenticado - No se encontró ninguna sesión');
+      return { success: false, error: 'Usuario no autenticado. Por favor, inicia sesión nuevamente.' };
     }
 
     // Obtener información de la empresa
+    console.log('🏢 Buscando información de la empresa...');
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
+    console.log('📊 Resultado búsqueda empresa:', { company: company ? 'encontrada' : 'no encontrada', error: companyError });
+
     if (companyError || !company) {
+      console.error('❌ Empresa no encontrada:', companyError);
       return { success: false, error: 'Empresa no encontrada.' };
     }
 
@@ -1832,7 +1869,7 @@ const setupCompanyBankAccount = async (bankAccountData) => {
     // Los datos del beneficiario se proporcionan con cada solicitud de pago.
     // Simplemente marcamos como "registrado" ya que tenemos la información necesaria.
     mercadopagoBeneficiaryId = `verified-${user.id}-${Date.now()}`;
-    console.log('✅ Beneficiario listo para Mercado Pago (no requiere registro previo)');
+    console.log('✅ Beneficiario listo para Mercado Pago (no requiere registro previo):', mercadopagoBeneficiaryId);
 
     // Guardar información bancaria
     bankAccountInfo = {
@@ -1842,8 +1879,10 @@ const setupCompanyBankAccount = async (bankAccountData) => {
       accountHolderName: bankAccountData.accountHolderName,
       bankId: bankCodeMap[bankAccountData.bankName.toLowerCase()] || '000'
     };
+    console.log('💳 Información bancaria preparada:', bankAccountInfo);
 
     // Actualizar empresa con información bancaria
+    console.log('💾 Actualizando empresa con información bancaria...');
     const { error: updateError } = await supabase
       .from('companies')
       .update({
@@ -1853,7 +1892,10 @@ const setupCompanyBankAccount = async (bankAccountData) => {
       })
       .eq('user_id', user.id);
 
+    console.log('📊 Resultado actualización:', { error: updateError });
+
     if (updateError) {
+      console.error('❌ Error actualizando empresa:', updateError);
       return { success: false, error: handleSupabaseError(updateError) };
     }
 
@@ -1865,8 +1907,9 @@ const setupCompanyBankAccount = async (bankAccountData) => {
     };
 
   } catch (error) {
-    console.error('Error configurando cuenta bancaria:', error);
-    return { success: false, error: 'Error al configurar cuenta bancaria. Por favor, intenta de nuevo.' };
+    console.error('❌ Error en setupCompanyBankAccount:', error);
+    console.error('Stack trace:', error.stack);
+    return { success: false, error: `Error al configurar cuenta bancaria: ${error.message}` };
   }
 };
 

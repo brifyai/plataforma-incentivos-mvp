@@ -1520,6 +1520,148 @@ export const createCompany = async (companyData) => {
   }
 };
 
+/**
+ * Actualiza una empresa (solo para administradores)
+ * @param {string} companyId - ID de la empresa
+ * @param {Object} updates - Datos a actualizar
+ * @returns {Promise<{error}>}
+ */
+export const updateCompany = async (companyId, updates) => {
+  try {
+    console.log('🔄 updateCompany called:', { companyId, updates });
+    
+    // Validar que companyId exista
+    if (!companyId) {
+      return { error: 'El ID de la empresa es obligatorio.' };
+    }
+
+    // Campos que existen en la tabla companies (basado en el schema real)
+    const validFields = [
+      'company_name',
+      'contact_email',
+      'contact_phone',
+      'rut',
+      'business_name',
+      'contact_person',
+      'address',
+      'phone',
+      'email',
+      'website',
+      'description',
+      'industry',
+      'employees_count',
+      'annual_revenue',
+      'nexupay_commission',
+      'nexupay_commission_type',
+      'user_incentive_percentage',
+      'user_incentive_type',
+      'bank_account_info',
+      'mercadopago_beneficiary_id',
+      'logo_url',
+      'is_active',
+      'validation_status',
+      'notes'
+    ];
+
+    // Preparar datos limpios para la actualización
+    const cleanUpdates = {
+      updated_at: new Date().toISOString()
+    };
+
+    // Solo incluir campos que existen en la tabla y que estén en los updates
+    Object.keys(updates).forEach(key => {
+      if (validFields.includes(key) && key !== 'id') {
+        let value = updates[key];
+        
+        // Convertir valores vacíos a null para campos opcionales
+        if (value === '' || value === undefined) {
+          value = null;
+        }
+        
+        cleanUpdates[key] = value;
+      }
+    });
+
+    // Remover campos que no deben ser actualizados directamente
+    delete cleanUpdates.id;
+    delete cleanUpdates.created_at;
+    delete cleanUpdates.user_id; // No permitir cambiar el user_id
+
+    // Validar que los campos obligatorios tengan valores
+    const requiredFields = ['company_name', 'contact_email', 'rut', 'validation_status'];
+    for (const field of requiredFields) {
+      if (!cleanUpdates[field] || cleanUpdates[field].trim() === '') {
+        return { error: `El campo ${field} es obligatorio.` };
+      }
+    }
+
+    console.log('📋 Clean updates for company:', JSON.stringify(cleanUpdates, null, 2));
+
+    // Ejecutar la actualización con manejo de errores mejorado
+    let updateData, updateError;
+    try {
+      const result = await supabase
+        .from('companies')
+        .update(cleanUpdates)
+        .eq('id', companyId)
+        .select()
+        .single();
+      
+      updateData = result.data;
+      updateError = result.error;
+    } catch (supabaseError) {
+      console.error('❌ Supabase query error:', supabaseError);
+      updateError = supabaseError;
+    }
+
+    if (updateError) {
+      console.error('❌ Error updating company:', JSON.stringify(updateError, null, 2));
+      
+      // Manejo específico de errores comunes
+      if (updateError.code === '42501') {
+        return { error: 'No tienes permisos para actualizar empresas.' };
+      } else if (updateError.code === '23503') {
+        return { error: 'Relación inválida en los datos proporcionados.' };
+      } else if (updateError.code === '23502') {
+        return { error: 'Faltan campos obligatorios.' };
+      } else if (updateError.code === '42601') {
+        return { error: 'Error de sintaxis en la consulta. Por favor, verifique los datos enviados.' };
+      } else if (updateError.code === 'PGRST204') {
+        // Error de columna no encontrada - eliminar el campo problemático y reintentar
+        const problematicField = updateError.message.match(/'([^']+)'/)?.[1];
+        if (problematicField && cleanUpdates[problematicField]) {
+          console.warn(`⚠️ Removing problematic field: ${problematicField}`);
+          delete cleanUpdates[problematicField];
+          
+          // Reintentar la actualización sin el campo problemático
+          const retryResult = await supabase
+            .from('companies')
+            .update(cleanUpdates)
+            .eq('id', companyId)
+            .select()
+            .single();
+          
+          if (retryResult.error) {
+            return { error: `Error al actualizar empresa: ${retryResult.message}` };
+          }
+          
+          console.log('✅ Company updated successfully after removing problematic field:', JSON.stringify(retryResult.data, null, 2));
+          return { error: null, data: retryResult.data };
+        }
+        return { error: 'Error de esquema: campo no encontrado en la tabla.' };
+      } else {
+        return { error: handleSupabaseError(updateError) };
+      }
+    }
+
+    console.log('✅ Company updated successfully:', JSON.stringify(updateData, null, 2));
+    return { error: null, data: updateData };
+  } catch (error) {
+    console.error('💥 Error in updateCompany:', error);
+    return { error: 'Error al actualizar empresa.' };
+  }
+};
+
 // ==================== CLIENTES ====================
 
 /**
@@ -4732,6 +4874,7 @@ export default {
 
   // Empresas
   createCompany,
+  updateCompany,
 
   // Clientes
   getCompanyClients,

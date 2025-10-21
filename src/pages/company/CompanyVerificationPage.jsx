@@ -41,17 +41,7 @@ const CompanyVerificationPage = () => {
     loadVerification();
   }, []);
 
-  // Efecto para actualizar el estado cuando los documentos se suben
-  useEffect(() => {
-    if (verification?.certificado_vigencia_url || verification?.informe_equifax_url) {
-      console.log('🔄 Documentos detectados, actualizando estado...');
-      // Forzar una recarga para asegurar que la UI esté sincronizada
-      const timer = setTimeout(() => {
-        loadVerification();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [verification?.certificado_vigencia_url, verification?.informe_equifax_url]);
+  // Eliminado el useEffect que causaba recargas innecesarias y confusión en el estado
 
   const loadVerification = async () => {
     try {
@@ -125,12 +115,14 @@ const CompanyVerificationPage = () => {
 
     try {
       setUploading(true);
-      const companyId = verification.company_id;
+      // Obtener companyId del perfil del usuario en lugar de verification
+      const companyId = profile?.company?.id;
 
       console.log('📤 Enviando documento al servicio:', {
         companyId,
         documentType,
-        verificationExists: !!verification
+        verificationExists: !!verification,
+        profile: profile?.company
       });
 
       const { url, fileName, error } = await uploadVerificationDocument(companyId, documentType, file);
@@ -171,14 +163,11 @@ const CompanyVerificationPage = () => {
         [`informe_equifax_filename`]: updated?.informe_equifax_filename
       });
       
-      // Forzar actualización del estado inmediatamente
+      // Actualizar el estado con los datos frescos del servidor
       setVerification(updated);
       
-      // Recargar datos frescos desde la base de datos para asegurar sincronización
-      setTimeout(() => {
-        console.log('🔄 Recargando verificación desde la base de datos...');
-        loadVerification();
-      }, 500);
+      // No hacer recarga automática para evitar confusión en el estado
+      console.log('✅ Estado actualizado sin recarga adicional');
       
       // Mostrar mensaje de éxito más informativo
       Swal.fire({
@@ -228,8 +217,9 @@ const CompanyVerificationPage = () => {
 
     try {
       setSubmitting(true);
-      console.log('📤 Enviando verificación para revisión:', verification.company_id);
-      const { success, error } = await submitVerificationForReview(verification.company_id);
+      const companyId = profile?.company?.id || verification?.company_id;
+      console.log('📤 Enviando verificación para revisión:', { companyId, verification });
+      const { success, error } = await submitVerificationForReview(companyId);
 
       if (success) {
         console.log('✅ Verificación enviada exitosamente');
@@ -456,18 +446,42 @@ const CompanyVerificationPage = () => {
                   <input
                     type="file"
                     accept=".pdf"
-                    onChange={(e) => handleFileUpload('certificado_vigencia', e.target.files[0])}
+                    onChange={(e) => {
+                      console.log('🔍 Certificado vigencia - File input change:', {
+                        files: e.target.files,
+                        file: e.target.files[0],
+                        uploading
+                      });
+                      handleFileUpload('certificado_vigencia', e.target.files[0]);
+                    }}
                     className="hidden"
                     id="certificado-vigencia"
                     disabled={uploading}
                   />
-                  <label htmlFor="certificado-vigencia">
+                  <label
+                    htmlFor="certificado-vigencia"
+                    onClick={(e) => {
+                      console.log('🔍 Certificado vigencia - Label clicked:', { uploading });
+                      if (uploading) {
+                        e.preventDefault();
+                        return;
+                      }
+                    }}
+                  >
                     <Button
                       variant="outline"
                       leftIcon={<Upload className="w-4 h-4" />}
                       disabled={uploading}
-                      className="w-full"
+                      className="w-full cursor-pointer"
                       as="span"
+                      onClick={(e) => {
+                        console.log('🔍 Certificado vigencia - Button clicked:', { uploading });
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!uploading) {
+                          document.getElementById('certificado-vigencia').click();
+                        }
+                      }}
                     >
                       {uploading ? '⏳ Subiendo...' : '📤 Subir Certificado de Vigencia'}
                     </Button>
@@ -513,12 +527,6 @@ const CompanyVerificationPage = () => {
                   <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <strong>Costo:</strong> <span className="text-green-700 font-medium">$27.990 CLP</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Clock className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <strong>Tiempo:</strong> 1-3 días hábiles
                   </div>
                 </div>
               </div>
@@ -573,18 +581,42 @@ const CompanyVerificationPage = () => {
                   <input
                     type="file"
                     accept=".pdf"
-                    onChange={(e) => handleFileUpload('informe_equifax', e.target.files[0])}
+                    onChange={(e) => {
+                      console.log('🔍 Informe Equifax - File input change:', {
+                        files: e.target.files,
+                        file: e.target.files[0],
+                        uploading
+                      });
+                      handleFileUpload('informe_equifax', e.target.files[0]);
+                    }}
                     className="hidden"
                     id="informe-equifax"
                     disabled={uploading}
                   />
-                  <label htmlFor="informe-equifax">
+                  <label
+                    htmlFor="informe-equifax"
+                    onClick={(e) => {
+                      console.log('🔍 Informe Equifax - Label clicked:', { uploading });
+                      if (uploading) {
+                        e.preventDefault();
+                        return;
+                      }
+                    }}
+                  >
                     <Button
                       variant="outline"
                       leftIcon={<Upload className="w-4 h-4" />}
                       disabled={uploading}
-                      className="w-full"
+                      className="w-full cursor-pointer"
                       as="span"
+                      onClick={(e) => {
+                        console.log('🔍 Informe Equifax - Button clicked:', { uploading });
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!uploading) {
+                          document.getElementById('informe-equifax').click();
+                        }
+                      }}
                     >
                       {uploading ? '⏳ Subiendo...' : '📤 Subir Informe Equifax'}
                     </Button>
