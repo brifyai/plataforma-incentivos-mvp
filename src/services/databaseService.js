@@ -1693,21 +1693,48 @@ export const findExistingDebtors = async (rut, fullName = null) => {
 export const createClient = async (clientData) => {
   try {
     console.log('🔄 createClient: Iniciando creación de cliente:', JSON.stringify(clientData, null, 2));
-    
+
     // Validaciones básicas
     if (!clientData.company_id) {
       console.error('❌ Validación fallida: company_id está vacío:', clientData.company_id);
       throw new Error('El ID de la empresa es obligatorio');
     }
-    
+
     if (!clientData.business_name || clientData.business_name.trim() === '') {
       console.error('❌ Validación fallida: business_name está vacío:', clientData.business_name);
       throw new Error('El nombre del cliente es obligatorio');
     }
-    
+
     if (!clientData.contact_email || clientData.contact_email.trim() === '') {
       console.error('❌ Validación fallida: contact_email está vacío:', clientData.contact_email);
       throw new Error('El email del cliente es obligatorio');
+    }
+
+    // Validación para evitar duplicados: verificar si ya existe un cliente con el mismo email o RUT para esta empresa
+    console.log('🔍 Verificando duplicados para empresa:', clientData.company_id);
+    const { data: existingClients, error: checkError } = await supabase
+      .from('clients')
+      .select('id, business_name, contact_email, rut')
+      .eq('company_id', clientData.company_id)
+      .or(`contact_email.eq.${clientData.contact_email}${clientData.rut ? `,rut.eq.${clientData.rut}` : ''}`);
+
+    if (checkError) {
+      console.warn('⚠️ Error verificando duplicados:', checkError);
+      // Continuar con la creación aunque falle la verificación
+    } else if (existingClients && existingClients.length > 0) {
+      const duplicate = existingClients[0];
+      console.error('❌ Cliente duplicado encontrado:', duplicate);
+
+      let errorMessage = 'Ya existe un cliente con ';
+      if (duplicate.contact_email === clientData.contact_email) {
+        errorMessage += 'este email';
+      }
+      if (duplicate.rut === clientData.rut) {
+        errorMessage += (duplicate.contact_email === clientData.contact_email ? ' y ' : '') + 'este RUT';
+      }
+      errorMessage += ' en esta empresa.';
+
+      throw new Error(errorMessage);
     }
 
     // Preparar datos limpios para la inserción

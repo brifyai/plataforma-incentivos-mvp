@@ -31,7 +31,7 @@ import {
   ChevronsRight
 } from 'lucide-react';
 
-const ClientManagement = ({ clients, loading, selectedCorporateClient, corporateClients }) => {
+const ClientManagement = ({ clients, loading, selectedCorporateClient, corporateClients, onClientCreated }) => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,6 +39,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
   const [filteredClients, setFilteredClients] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Función para calcular días de atraso (tolerante a datos reales)
   const calculateDaysOverdue = (client) => {
@@ -290,7 +291,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
     setFilteredClients(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [searchTerm, filterStatus, selectedCorporateClient, clients]);
+  }, [searchTerm, filterStatus, selectedCorporateClient, clients, refreshTrigger]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
@@ -622,8 +623,17 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           confirmButtonText: 'Ver Clientes'
         }).then((result) => {
           if (result.isConfirmed) {
-            // Recargar la página para mostrar el nuevo cliente
-            window.location.reload();
+            // Refrescar la lista de clientes sin recargar la página completa
+            setRefreshTrigger(prev => prev + 1);
+            if (onClientCreated) {
+              onClientCreated(client);
+            }
+          } else {
+            // Solo refrescar la lista si el usuario elige "Cerrar"
+            setRefreshTrigger(prev => prev + 1);
+            if (onClientCreated) {
+              onClientCreated(client);
+            }
           }
         });
         
