@@ -36,6 +36,7 @@ import { getCompanyVerification, VERIFICATION_STATUS } from '../../services/veri
 const ClientsPage = () => {
   const { profile } = useAuth();
   const [clients, setClients] = useState([]);
+  const [realClients, setRealClients] = useState([]); // Clientes reales de la tabla clients
   const [loading, setLoading] = useState(true);
   const [corporateClients, setCorporateClients] = useState([]);
   const [selectedCorporateClient, setSelectedCorporateClient] = useState('');
@@ -107,6 +108,7 @@ const ClientsPage = () => {
   useEffect(() => {
     loadCorporateClients();
     loadClients();
+    loadRealClients(); // Cargar clientes reales de la tabla clients
     loadVerificationStatus();
   }, []);
 
@@ -170,6 +172,32 @@ const ClientsPage = () => {
   const handleImportComplete = () => {
     console.log('✅ Importación completada, recargando clientes...');
     loadClients();
+    loadRealClients(); // También recargar clientes reales
+  };
+
+  // Función para cargar clientes reales de la tabla clients
+  const loadRealClients = async () => {
+    try {
+      if (!profile?.company?.id) {
+        setRealClients([]);
+        return;
+      }
+
+      console.log('📋 Cargando clientes reales de la tabla clients...');
+      const { clients: companyClients, error } = await getCompanyClients(profile.company.id);
+
+      if (error) {
+        console.error('❌ Error cargando clientes reales:', error);
+        setRealClients([]);
+        return;
+      }
+
+      console.log(`✅ Cargados ${companyClients?.length || 0} clientes reales`);
+      setRealClients(companyClients || []);
+    } catch (error) {
+      console.error('💥 Error en loadRealClients:', error);
+      setRealClients([]);
+    }
   };
 
   const loadCorporateClients = async () => {
@@ -740,10 +768,13 @@ const ClientsPage = () => {
 
       {/* Client Management Component */}
       <ClientManagement
-        clients={clients}
+        clients={realClients} // Usar clientes reales de la tabla clients
         loading={loading}
         selectedCorporateClient={selectedCorporateClient}
         corporateClients={corporateClients}
+        onClientCreated={() => {
+          loadRealClients(); // Recargar clientes reales cuando se crea uno nuevo
+        }}
       />
     </div>
   );
