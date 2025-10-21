@@ -65,7 +65,16 @@ const SimulatorPage = () => {
 
   return (
     <div className="space-y-6">
-        {/* Información adicional - Ahora al principio */}
+        {/* Calculador de comisiones - PRIMERO */}
+        {user ? (
+          <CommissionCalculator />
+        ) : (
+          <div className="text-center p-8">
+            <p>Cargando...</p>
+          </div>
+        )}
+
+        {/* Información adicional - SEGUNDO */}
         <Card className="p-6 bg-gradient-to-br from-blue-50 to-purple-50">
           <h3 className="text-xl font-bold text-gray-900 mb-4">
             📚 ¿Cómo usar el simulador?
@@ -102,16 +111,7 @@ const SimulatorPage = () => {
           </div>
         </Card>
 
-        {/* Calculador de comisiones */}
-        {user ? (
-          <CommissionCalculator />
-        ) : (
-          <div className="text-center p-8">
-            <p>Cargando...</p>
-          </div>
-        )}
-
-        {/* Simulaciones guardadas */}
+        {/* Simulaciones guardadas - TERCERO */}
         {!loading && savedSimulations.length > 0 && (
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-6">

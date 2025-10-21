@@ -1125,8 +1125,7 @@ const DebtorDashboard = () => {
       {/* CTA Banners */}
       {activeOffers.length === 0 && activeDebts.length > 0 && (
         <Card
-          variant="gradient"
-          className="relative overflow-hidden animate-slide-up"
+          className="relative overflow-hidden animate-slide-up bg-blue-600"
           style={{ animationDelay: '900ms' }}
         >
           {/* Animated background elements */}
