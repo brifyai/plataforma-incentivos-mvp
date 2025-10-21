@@ -768,12 +768,12 @@ const ClientsPage = () => {
 
       {/* Client Management Component */}
       <ClientManagement
-        clients={realClients} // Usar clientes reales de la tabla clients
+        clients={clients} // Usar deudores calculados (como debe ser)
         loading={loading}
         selectedCorporateClient={selectedCorporateClient}
         corporateClients={corporateClients}
         onClientCreated={() => {
-          loadRealClients(); // Recargar clientes reales cuando se crea uno nuevo
+          loadClients(); // Recargar deudores cuando se crea un cliente/deudor
         }}
       />
     </div>
