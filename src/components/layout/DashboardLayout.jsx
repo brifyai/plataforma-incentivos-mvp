@@ -10,6 +10,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { Button, Badge } from '../common';
 import QuickNav from '../common/QuickNav';
+import NotificationCenter from '../notifications/NotificationCenter';
+import Swal from 'sweetalert2';
 import {
   Menu,
   X,
@@ -36,12 +38,13 @@ import {
 
 const DashboardLayout = ({ children }) => {
   const { profile, logout, user, loading, initializing } = useAuth();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, notifications, markAsRead } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -207,6 +210,12 @@ const DashboardLayout = ({ children }) => {
         <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-gradient-to-br from-amber-200/10 to-orange-200/10 rounded-full blur-2xl animate-pulse" />
       </div>
 
+      {/* Notification Center Modal */}
+      <NotificationCenter
+        isOpen={showNotificationCenter}
+        onClose={() => setShowNotificationCenter(false)}
+      />
+
       {/* Enhanced Header */}
       <header
         className={`
@@ -268,9 +277,62 @@ const DashboardLayout = ({ children }) => {
               </div>
 
               {/* Enhanced Notificaciones */}
-              <Link
-                to={displayMode === 'debtor' ? '/personas/notificaciones' : displayMode === 'company' ? '/empresa/notificaciones' : '/admin/notificaciones'}
+              <button
+                onClick={() => {
+                  console.log('🔔 Click en campana de notificaciones - SweetAlert compacto');
+                  
+                  const unreadNotifications = notifications.filter(n => n.status === 'unread');
+                  
+                  if (unreadNotifications.length > 0) {
+                    // Crear HTML para mostrar todas las notificaciones en SweetAlert
+                    const notificationHtml = unreadNotifications.map(n =>
+                      `<div style="margin-bottom: 12px; padding: 8px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #3B82F6;">
+                        <strong style="color: #1f2937; font-size: 14px;">${n.title}</strong>
+                        <div style="color: #6b7280; font-size: 12px; margin-top: 4px;">${n.message}</div>
+                      </div>`
+                    ).join('');
+                    
+                    Swal.fire({
+                      title: `Tienes ${unreadNotifications.length} notificación(es) no leída(s)`,
+                      html: notificationHtml,
+                      icon: 'info',
+                      confirmButtonText: 'Marcar todas como leídas',
+                      showCancelButton: true,
+                      cancelButtonText: 'Ver centro de notificaciones',
+                      confirmButtonColor: '#3B82F6',
+                      cancelButtonColor: '#6B7280',
+                      width: '500px',
+                      customClass: {
+                        popup: 'compact-notification-popup'
+                      }
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        // Marcar todas como leídas
+                        unreadNotifications.forEach(n => markAsRead(n.id));
+                        Swal.fire({
+                          icon: 'success',
+                          title: '¡Listo!',
+                          text: 'Todas las notificaciones han sido marcadas como leídas',
+                          timer: 2000,
+                          showConfirmButton: false
+                        });
+                      } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        // Abrir centro de notificaciones
+                        setShowNotificationCenter(true);
+                      }
+                    });
+                  } else {
+                    Swal.fire({
+                      title: 'Notificaciones',
+                      text: 'No tienes notificaciones nuevas',
+                      icon: 'info',
+                      confirmButtonColor: '#3B82F6',
+                      timer: 2000
+                    });
+                  }
+                }}
                 className="relative p-3 rounded-xl hover:bg-slate-100/80 transition-all duration-200 hover:scale-105 group bg-white/50 border border-slate-200/30"
+                title="Centro de Notificaciones"
               >
                 <Bell className="w-6 h-6 text-slate-600 group-hover:text-blue-600 transition-colors" />
                 {unreadCount > 0 && (
@@ -278,7 +340,7 @@ const DashboardLayout = ({ children }) => {
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
-              </Link>
+              </button>
 
               {/* Enhanced Cerrar Sesión */}
               <button

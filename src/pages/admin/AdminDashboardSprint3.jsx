@@ -766,7 +766,17 @@ const AdminDashboardSprint3 = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowNotifications(!showNotifications)}
+                  onClick={() => {
+                    console.log('🔔 Click en campana de notificaciones - Nueva implementación');
+                    // Mostrar alerta simple en lugar de panel grande
+                    const unreadCount = notifications.filter(n => !n.read).length;
+                    if (unreadCount > 0) {
+                      alert(`Tienes ${unreadCount} notificación(es) no leída(s):\n\n${notifications.filter(n => !n.read).map(n => `• ${n.title}: ${n.message}`).join('\n\n')}`);
+                    } else {
+                      alert('No tienes notificaciones nuevas');
+                    }
+                    setShowNotifications(false);
+                  }}
                   className="relative"
                 >
                   <Bell className="w-4 h-4" />
@@ -775,30 +785,47 @@ const AdminDashboardSprint3 = () => {
                   )}
                 </Button>
                 
+                {/* Panel reducido y compacto - solo se muestra si se necesita */}
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                    <div className="p-4 border-b border-gray-200">
-                      <h3 className="font-medium text-gray-900">Notificaciones</h3>
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="p-2 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-medium text-gray-900 text-xs">Notificaciones</h3>
+                        <button
+                          onClick={() => setShowNotifications(false)}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      {notifications.map(notification => (
-                        <div key={notification.id} className="p-4 border-b border-gray-100 hover:bg-gray-50">
-                          <div className="flex items-start gap-3">
-                            <div className={`w-2 h-2 rounded-full mt-2 ${
-                              notification.type === 'success' ? 'bg-green-500' :
-                              notification.type === 'warning' ? 'bg-yellow-500' :
-                              notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                            }`}></div>
-                            <div className="flex-1">
-                              <h4 className="font-medium text-gray-900 text-sm">{notification.title}</h4>
-                              <p className="text-gray-600 text-xs mt-1">{notification.message}</p>
-                              <p className="text-gray-400 text-xs mt-1">
-                                {new Date(notification.timestamp).toLocaleString()}
-                              </p>
+                    <div className="max-h-32 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-2 text-center text-gray-500">
+                          <p className="text-xs">Sin notificaciones</p>
+                        </div>
+                      ) : (
+                        notifications.slice(0, 3).map(notification => (
+                          <div key={notification.id} className="p-2 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+                            <div className="flex items-start gap-1">
+                              <div className={`w-1.5 h-1.5 rounded-full mt-0.5 flex-shrink-0 ${
+                                notification.type === 'success' ? 'bg-green-500' :
+                                notification.type === 'warning' ? 'bg-yellow-500' :
+                                notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                              }`}></div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-gray-900 text-xs leading-tight truncate">{notification.title}</h4>
+                                <p className="text-gray-600 text-xs mt-0.5 leading-relaxed line-clamp-1">{notification.message}</p>
+                              </div>
                             </div>
                           </div>
+                        ))
+                      )}
+                      {notifications.length > 3 && (
+                        <div className="p-2 text-center">
+                          <p className="text-xs text-blue-600">+{notifications.length - 3} más...</p>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 )}
