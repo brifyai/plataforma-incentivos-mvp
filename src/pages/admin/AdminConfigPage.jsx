@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, Badge, Button, LoadingSpinner } from '../../components/common';
 import { Settings, Shield, Database, Mail, Key, CreditCard, BarChart3, Bell, Brain, ArrowRight, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { getSystemConfig, getIntegrationStats } from '../../services/databaseService';
@@ -14,6 +14,7 @@ import AIModuleControl from '../../components/admin/AIModuleControl'; // Reactiv
 
 const AdminConfigPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [systemStatus, setSystemStatus] = useState(null);
@@ -259,8 +260,20 @@ const AdminConfigPage = () => {
           return (
             <Card
               key={section.id}
-              className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary-200"
-              onClick={() => navigate(section.path)}
+              className={`group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary-200 ${
+                location.pathname === section.path ? 'ring-2 ring-primary-500 bg-primary-50' : ''
+              }`}
+              onClick={() => {
+                if (section.id === 'ai-module') {
+                  // Scroll to AI Module Control section
+                  const aiModuleElement = document.getElementById('ai-module-control');
+                  if (aiModuleElement) {
+                    aiModuleElement.scrollIntoView({ behavior: 'smooth' });
+                  }
+                } else {
+                  navigate(section.path);
+                }
+              }}
             >
               <div className="p-3">
                 <div className="flex items-center justify-between mb-3">
@@ -334,7 +347,9 @@ const AdminConfigPage = () => {
       </Card>
 
       {/* AI Module Control Section */}
-      <AIModuleControl />
+      <div id="ai-module-control">
+        <AIModuleControl />
+      </div>
     </div>
   );
 };

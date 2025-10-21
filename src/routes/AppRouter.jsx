@@ -701,6 +701,16 @@ const AppContent = () => {
           }
         />
         <Route
+          path="/admin/ai-module"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <AdminConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/analytics"
           element={
             <ProtectedRoute allowedRoles={['god_mode']}>

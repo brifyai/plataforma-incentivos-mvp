@@ -47,6 +47,7 @@ const ClientsPage = () => {
   const [stats, setStats] = useState({
     totalClients: 0,
     activeClients: 0,
+    corporateClients: 0,
     totalDebt: 0,
     totalPaid: 0,
     totalPending: 0
@@ -264,6 +265,7 @@ const ClientsPage = () => {
         setStats({
           totalClients: 0,
           activeClients: 0,
+          corporateClients: 0,
           totalDebt: 0,
           totalPaid: 0,
           totalPending: 0
@@ -273,16 +275,26 @@ const ClientsPage = () => {
 
       const companyId = profile.company.id;
 
-      const [debtsRes, paymentsRes] = await Promise.all([
+      // Cargar datos en paralelo: deudas, pagos y clientes corporativos
+      const [debtsRes, paymentsRes, corporateClientsRes] = await Promise.all([
         getCompanyDebts(companyId),
-        getCompanyPayments(companyId)
+        getCompanyPayments(companyId),
+        getCompanyClients(companyId) // ← NUEVO: Cargar clientes corporativos
       ]);
 
       if (debtsRes.error) console.error('Error fetching company debts:', debtsRes.error);
       if (paymentsRes.error) console.error('Error fetching company payments:', paymentsRes.error);
+      if (corporateClientsRes.error) console.error('Error fetching corporate clients:', corporateClientsRes.error);
 
       const debts = debtsRes.debts || [];
       const payments = (paymentsRes.payments || []).filter(p => p.status === 'completed');
+      const corporateClients = corporateClientsRes.clients || [];
+
+      console.log('📊 ClientsPage - Datos cargados:', {
+        debts: debts.length,
+        payments: payments.length,
+        corporateClients: corporateClients.length
+      });
 
       // Agrupar pagos por usuario
       const payByUser = {};
@@ -296,7 +308,7 @@ const ClientsPage = () => {
         if (!payByUser[uid].last || dt > payByUser[uid].last) payByUser[uid].last = dt;
       }
 
-      // Agregar deudas por usuario
+      // 1. PRIMERO: Crear deudores con deudas (lógica existente)
       const mapByUser = new Map();
       for (const d of debts) {
         const uid = d.user?.id || d.user_id;
@@ -316,7 +328,8 @@ const ClientsPage = () => {
             companyName: profile?.company?.business_name || profile?.company?.name || 'Empresa',
             corporateClientName: d.client?.business_name || null,
             corporateClientId: d.client?.id || null,
-            firstDebtDate: d.created_at
+            firstDebtDate: d.created_at,
+            type: 'debtor' // ← Tipo: deudor con deudas
           });
         }
         const item = mapByUser.get(uid);
@@ -336,7 +349,7 @@ const ClientsPage = () => {
         if (d.client?.id) item.corporateClientId = d.client.id;
       }
 
-      // Aplicar pagos
+      // Aplicar pagos a deudores
       mapByUser.forEach((item, uid) => {
         const pay = payByUser[uid];
         item.paidAmount = pay ? pay.total : 0;
@@ -347,20 +360,59 @@ const ClientsPage = () => {
         }
       });
 
-      const clientSummaries = Array.from(mapByUser.values()).sort((a, b) => b.pendingAmount - a.pendingAmount);
+      // 2. SEGUNDO: Agregar clientes corporativos (sin deudas aún)
+      const corporateClientSummaries = corporateClients.map(client => ({
+        id: client.id,
+        name: client.business_name || 'Cliente Corporativo',
+        email: client.contact_email || '',
+        phone: client.contact_phone || '',
+        rut: client.rut || '',
+        totalDebt: 0, // No tienen deudas directas
+        paidAmount: 0,
+        pendingAmount: 0,
+        lastPayment: null,
+        status: 'corporate', // ← Estado especial para clientes corporativos
+        companyName: profile?.company?.business_name || profile?.company?.name || 'Empresa',
+        corporateClientName: client.business_name,
+        corporateClientId: client.id,
+        firstDebtDate: client.created_at,
+        type: 'corporate', // ← Tipo: cliente corporativo
+        corporate_client_id: client.corporate_client_id // ← Referencia al cliente corporativo padre
+      }));
 
-      setClients(clientSummaries);
+      // 3. TERCERO: Combinar deudores y clientes corporativos
+      const allClientSummaries = [
+        ...Array.from(mapByUser.values()), // Deudores con deudas
+        ...corporateClientSummaries // Clientes corporativos
+      ].sort((a, b) => {
+        // Ordenar por: pendientes > corporativos > completados
+        if (a.pendingAmount > 0 && b.pendingAmount === 0) return -1;
+        if (a.pendingAmount === 0 && b.pendingAmount > 0) return 1;
+        if (a.type === 'corporate' && b.type === 'debtor') return 1;
+        if (a.type === 'debtor' && b.type === 'corporate') return -1;
+        return b.pendingAmount - a.pendingAmount;
+      });
 
-      // Calcular estadísticas reales
-      const totalClients = clientSummaries.length;
-      const activeClients = clientSummaries.filter(c => c.status !== 'completed').length;
-      const totalDebt = clientSummaries.reduce((sum, c) => sum + c.totalDebt, 0);
-      const totalPaid = clientSummaries.reduce((sum, c) => sum + c.paidAmount, 0);
-      const totalPending = clientSummaries.reduce((sum, c) => sum + c.pendingAmount, 0);
+      console.log('✅ ClientsPage - Clientes combinados:', {
+        debtors: mapByUser.size,
+        corporate: corporateClientSummaries.length,
+        total: allClientSummaries.length
+      });
+
+      setClients(allClientSummaries);
+
+      // Calcular estadísticas combinadas
+      const totalClients = allClientSummaries.length;
+      const activeClients = allClientSummaries.filter(c => c.status !== 'completed' && c.status !== 'corporate').length;
+      const corporateClientsCount = allClientSummaries.filter(c => c.type === 'corporate').length;
+      const totalDebt = allClientSummaries.reduce((sum, c) => sum + c.totalDebt, 0);
+      const totalPaid = allClientSummaries.reduce((sum, c) => sum + c.paidAmount, 0);
+      const totalPending = allClientSummaries.reduce((sum, c) => sum + c.pendingAmount, 0);
 
       setStats({
         totalClients,
         activeClients,
+        corporateClients: corporateClientsCount,
         totalDebt,
         totalPaid,
         totalPending
@@ -371,6 +423,7 @@ const ClientsPage = () => {
       setStats({
         totalClients: 0,
         activeClients: 0,
+        corporateClients: 0,
         totalDebt: 0,
         totalPaid: 0,
         totalPending: 0

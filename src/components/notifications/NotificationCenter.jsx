@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { Bell, Check, CheckCheck, Archive, Trash2, X } from 'lucide-react';
-import { useNotifications } from '../../hooks/gamification/useNotifications';
+import { useNotifications } from '../../context/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
