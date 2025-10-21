@@ -65,6 +65,43 @@ const SimulatorPage = () => {
 
   return (
     <div className="space-y-6">
+        {/* Información adicional - Ahora al principio */}
+        <Card className="p-6 bg-gradient-to-br from-blue-50 to-purple-50">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">
+            📚 ¿Cómo usar el simulador?
+          </h3>
+          <div className="space-y-3 text-gray-700">
+            <div className="flex gap-3">
+              <span className="text-2xl">1️⃣</span>
+              <div>
+                <p className="font-semibold">Ingresa los datos de tu deuda</p>
+                <p className="text-sm">Monto total, tasa de interés y el pago que planeas hacer</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-2xl">2️⃣</span>
+              <div>
+                <p className="font-semibold">Selecciona la frecuencia de pago</p>
+                <p className="text-sm">Elige si pagarás semanal, quincenal o mensualmente</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-2xl">3️⃣</span>
+              <div>
+                <p className="font-semibold">Analiza los resultados</p>
+                <p className="text-sm">Revisa cuánto pagarás en total, los intereses y el tiempo que tomará</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-2xl">4️⃣</span>
+              <div>
+                <p className="font-semibold">Guarda y compara</p>
+                <p className="text-sm">Guarda diferentes escenarios para comparar y elegir el mejor</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+
         {/* Calculador de comisiones */}
         {user ? (
           <CommissionCalculator />
@@ -139,43 +176,6 @@ const SimulatorPage = () => {
             </div>
           </Card>
         )}
-
-        {/* Información adicional */}
-        <Card className="p-6 bg-gradient-to-br from-blue-50 to-purple-50">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">
-            📚 ¿Cómo usar el simulador?
-          </h3>
-          <div className="space-y-3 text-gray-700">
-            <div className="flex gap-3">
-              <span className="text-2xl">1️⃣</span>
-              <div>
-                <p className="font-semibold">Ingresa los datos de tu deuda</p>
-                <p className="text-sm">Monto total, tasa de interés y el pago que planeas hacer</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-2xl">2️⃣</span>
-              <div>
-                <p className="font-semibold">Selecciona la frecuencia de pago</p>
-                <p className="text-sm">Elige si pagarás semanal, quincenal o mensualmente</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-2xl">3️⃣</span>
-              <div>
-                <p className="font-semibold">Analiza los resultados</p>
-                <p className="text-sm">Revisa cuánto pagarás en total, los intereses y el tiempo que tomará</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-2xl">4️⃣</span>
-              <div>
-                <p className="font-semibold">Guarda y compara</p>
-                <p className="text-sm">Guarda diferentes escenarios para comparar y elegir el mejor</p>
-              </div>
-            </div>
-          </div>
-        </Card>
       </div>
   );
 };
