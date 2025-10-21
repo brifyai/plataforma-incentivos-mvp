@@ -471,6 +471,8 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
     });
 
     if (formValues) {
+      let companyId = null;
+
       try {
         // Validar que tengamos el usuario actual y su perfil de empresa
         if (!user || !user.id) {
