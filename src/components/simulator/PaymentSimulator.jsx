@@ -148,120 +148,38 @@ const CommissionCalculator = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Commission Scenarios Selector */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Target className="w-5 h-5 text-purple-600" />
-            <h2 className="text-xl font-bold text-gray-900">
-              Estrategia de Comisiones
-            </h2>
-          </div>
-
-          <div className="space-y-3 mb-4">
-            {[
-              { key: 'conservative', name: 'Conservador', commission: '$30.000', rate: '70%', desc: 'Más seguro, comisiones moderadas' },
-              { key: 'moderate', name: 'Moderado', commission: '$45.000', rate: '80%', desc: 'Balance perfecto' },
-              { key: 'aggressive', name: 'Agresivo', commission: '$60.000', rate: '90%', desc: 'Máximo potencial' }
-            ].map((scenario) => (
-              <button
-                key={scenario.key}
-                onClick={() => setSelectedScenario(scenario.key)}
-                className={`w-full p-3 rounded-lg border transition-all duration-300 ${
-                  selectedScenario === scenario.key
-                    ? 'border-purple-500 bg-purple-50 shadow-md'
-                    : 'border-gray-200 bg-white hover:border-purple-300'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-left">
-                    <h3 className="font-bold text-gray-900">{scenario.name}</h3>
-                    <p className="text-xs text-gray-600">{scenario.desc}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-green-600">{scenario.commission}</p>
-                    <p className="text-xs text-purple-600">{scenario.rate} éxito</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Estadísticas compactas */}
-          {commissionStats && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="w-4 h-4 text-green-600" />
-                  <span className="text-xs font-medium text-green-800">Comisión Potencial</span>
-                </div>
-                <p className="text-lg font-bold text-green-900">
-                  {formatCurrency(commissionStats.potentialCommission)}
-                </p>
-              </div>
-
-              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <Target className="w-4 h-4 text-blue-600" />
-                  <span className="text-xs font-medium text-blue-800">Acuerdos Esperados</span>
-                </div>
-                <p className="text-lg font-bold text-blue-900">
-                  {commissionStats.expectedClosures}
-                </p>
-              </div>
-
-              <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="w-4 h-4 text-purple-600" />
-                  <span className="text-xs font-medium text-purple-800">Proyección Mensual</span>
-                </div>
-                <p className="text-lg font-bold text-purple-900">
-                  {formatCurrency(commissionStats.monthlyProjection)}
-                </p>
-              </div>
-
-              <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <AlertTriangle className="w-4 h-4 text-orange-600" />
-                  <span className="text-xs font-medium text-orange-800">Deudas Morosas</span>
-                </div>
-                <p className="text-lg font-bold text-orange-900">
-                  {commissionStats.overdueDebts}
-                </p>
-              </div>
+      {/* Call to Action - Segundo */}
+      <Card className="p-6 bg-gradient-to-r from-green-500 to-blue-600 text-white">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+              <Zap className="w-6 h-6 animate-pulse" />
             </div>
-          )}
-        </Card>
-
-        {/* Journey Section Compact */}
-        <Card className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">🎯 Tu Viaje hacia las Comisiones</h2>
-            <p className="text-sm text-gray-600">Así es como convertirás tus deudas en ingresos</p>
+            <div>
+              <h2 className="text-xl font-bold mb-1">¡Es hora de actuar!</h2>
+              <p className="text-green-100 text-sm">Cada deuda morosa es una oportunidad de $36.000 en tu bolsillo</p>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            {[
-              { icon: AlertTriangle, color: 'blue', title: '1. Deuda en Mora', desc: 'Tus deudas pasan la fecha de vencimiento' },
-              { icon: Clock, color: 'orange', title: '2. Contacto Empresarial', desc: 'Las empresas te contactan para negociar' },
-              { icon: Award, color: 'green', title: '3. Acuerdo Exitoso', desc: 'Cierras un acuerdo de negociación' },
-              { icon: PiggyBank, color: 'yellow', title: '4. ¡Comisión Ganada!', desc: 'Recibes tu comisión por el acuerdo' }
-            ].map((step, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <div className={`w-12 h-12 bg-${step.color}-100 rounded-full flex items-center justify-center flex-shrink-0`}>
-                  <step.icon className={`w-6 h-6 text-${step.color}-600`} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-sm">{step.title}</h3>
-                  <p className="text-xs text-gray-600">{step.desc}</p>
-                </div>
-              </div>
-            ))}
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4">
+            <h3 className="text-lg font-bold mb-2">🚀 ¿Listo para cambiar tu futuro financiero?</h3>
+            <p className="text-sm mb-4">
+              Miles de personas ya están ganando dinero gestionando sus deudas.
+              ¡Únete a la revolución financiera y comienza hoy mismo!
+            </p>
+            <Button
+              variant="glass"
+              size="lg"
+              className="bg-white text-green-600 hover:bg-green-50 border-2 border-white"
+              leftIcon={<DollarSign className="w-5 h-5" />}
+            >
+              ¡Comenzar Ahora!
+            </Button>
           </div>
-        </Card>
-      </div>
+        </div>
+      </Card>
 
-      {/* Achievement Section Compact */}
+      {/* Achievement Section Compact - Tercero */}
       <Card className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
         <div className="text-center mb-4">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -309,34 +227,114 @@ const CommissionCalculator = () => {
         </div>
       </Card>
 
-      {/* Call to Action Compact */}
-      <Card className="p-6 bg-gradient-to-r from-green-500 to-blue-600 text-white">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
-              <Zap className="w-6 h-6 animate-pulse" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold mb-1">¡Es hora de actuar!</h2>
-              <p className="text-green-100 text-sm">Cada deuda morosa es una oportunidad de $36.000 en tu bolsillo</p>
-            </div>
-          </div>
+      {/* Commission Scenarios Selector - Cuarto */}
+      <Card className="p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Target className="w-5 h-5 text-purple-600" />
+          <h2 className="text-xl font-bold text-gray-900">
+            Estrategia de Comisiones
+          </h2>
+        </div>
 
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4">
-            <h3 className="text-lg font-bold mb-2">🚀 ¿Listo para cambiar tu futuro financiero?</h3>
-            <p className="text-sm mb-4">
-              Miles de personas ya están ganando dinero gestionando sus deudas.
-              ¡Únete a la revolución financiera y comienza hoy mismo!
-            </p>
-            <Button
-              variant="glass"
-              size="lg"
-              className="bg-white text-green-600 hover:bg-green-50 border-2 border-white"
-              leftIcon={<DollarSign className="w-5 h-5" />}
+        <div className="space-y-3 mb-4">
+          {[
+            { key: 'conservative', name: 'Conservador', commission: '$30.000', rate: '70%', desc: 'Más seguro, comisiones moderadas' },
+            { key: 'moderate', name: 'Moderado', commission: '$45.000', rate: '80%', desc: 'Balance perfecto' },
+            { key: 'aggressive', name: 'Agresivo', commission: '$60.000', rate: '90%', desc: 'Máximo potencial' }
+          ].map((scenario) => (
+            <button
+              key={scenario.key}
+              onClick={() => setSelectedScenario(scenario.key)}
+              className={`w-full p-3 rounded-lg border transition-all duration-300 ${
+                selectedScenario === scenario.key
+                  ? 'border-purple-500 bg-purple-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-purple-300'
+              }`}
             >
-              ¡Comenzar Ahora!
-            </Button>
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <h3 className="font-bold text-gray-900">{scenario.name}</h3>
+                  <p className="text-xs text-gray-600">{scenario.desc}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-green-600">{scenario.commission}</p>
+                  <p className="text-xs text-purple-600">{scenario.rate} éxito</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Estadísticas compactas */}
+        {commissionStats && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="w-4 h-4 text-green-600" />
+                <span className="text-xs font-medium text-green-800">Comisión Potencial</span>
+              </div>
+              <p className="text-lg font-bold text-green-900">
+                {formatCurrency(commissionStats.potentialCommission)}
+              </p>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-1">
+                <Target className="w-4 h-4 text-blue-600" />
+                <span className="text-xs font-medium text-blue-800">Acuerdos Esperados</span>
+              </div>
+              <p className="text-lg font-bold text-blue-900">
+                {commissionStats.expectedClosures}
+              </p>
+            </div>
+
+            <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-medium text-purple-800">Proyección Mensual</span>
+              </div>
+              <p className="text-lg font-bold text-purple-900">
+                {formatCurrency(commissionStats.monthlyProjection)}
+              </p>
+            </div>
+
+            <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-4 h-4 text-orange-600" />
+                <span className="text-xs font-medium text-orange-800">Deudas Morosas</span>
+              </div>
+              <p className="text-lg font-bold text-orange-900">
+                {commissionStats.overdueDebts}
+              </p>
+            </div>
           </div>
+        )}
+      </Card>
+
+      {/* Journey Section Compact - Quinto */}
+      <Card className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+        <div className="text-center mb-4">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">🎯 Tu Viaje hacia las Comisiones</h2>
+          <p className="text-sm text-gray-600">Así es como convertirás tus deudas en ingresos</p>
+        </div>
+
+        <div className="space-y-4">
+          {[
+            { icon: AlertTriangle, color: 'blue', title: '1. Deuda en Mora', desc: 'Tus deudas pasan la fecha de vencimiento' },
+            { icon: Clock, color: 'orange', title: '2. Contacto Empresarial', desc: 'Las empresas te contactan para negociar' },
+            { icon: Award, color: 'green', title: '3. Acuerdo Exitoso', desc: 'Cierras un acuerdo de negociación' },
+            { icon: PiggyBank, color: 'yellow', title: '4. ¡Comisión Ganada!', desc: 'Recibes tu comisión por el acuerdo' }
+          ].map((step, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <div className={`w-12 h-12 bg-${step.color}-100 rounded-full flex items-center justify-center flex-shrink-0`}>
+                <step.icon className={`w-6 h-6 text-${step.color}-600`} />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-sm">{step.title}</h3>
+                <p className="text-xs text-gray-600">{step.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
     </div>
