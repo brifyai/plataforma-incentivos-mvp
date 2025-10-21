@@ -1731,6 +1731,43 @@ export const createClient = async (clientData) => {
       throw new Error('Error de conexión con la base de datos');
     }
 
+    console.log('✅ Supabase disponible, validando company_id antes de insertar...');
+    
+    // Validar que company_id exista en tabla companies.
+    // Si no existe, intentar mapearlo desde user_id (caso builds antiguos que enviaban user.id)
+    try {
+      let companyToUse = cleanClientData.company_id;
+      const { data: companyById, error: companyByIdError } = await supabase
+        .from('companies')
+        .select('id,user_id')
+        .eq('id', companyToUse)
+        .maybeSingle();
+
+      if (companyByIdError) {
+        console.warn('⚠️ Error verificando empresa por ID:', companyByIdError);
+      }
+
+      if (!companyById) {
+        console.warn('⚠️ company_id no encontrado en companies. Intentando usarlo como user_id para resolver empresa.');
+        const { data: companyByUser, error: companyByUserError } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('user_id', companyToUse)
+          .maybeSingle();
+
+        if (!companyByUserError && companyByUser?.id) {
+          console.log('🔁 Mapeando user_id -> company_id resuelto:', companyByUser.id);
+          cleanClientData.company_id = companyByUser.id;
+        } else {
+          console.error('❌ No se encontró empresa válida asociada al identificador proporcionado.');
+          return { client: null, error: new Error('No se encontró una empresa válida asociada al usuario. Verifica tu Perfil de Empresa y vuelve a intentarlo.') };
+        }
+      }
+    } catch (verifyErr) {
+      console.warn('⚠️ Excepción durante verificación de empresa:', verifyErr);
+      // Continuar; el insert entregará un error más específico si corresponde
+    }
+
     console.log('✅ Supabase disponible, ejecutando inserción...');
     
     const { data, error } = await supabase
@@ -1756,7 +1793,14 @@ export const createClient = async (clientData) => {
         return { client: null, error: new Error('Ya existe un cliente con este email o RUT en esta empresa.') };
       } else if (error.code === '23503') {
         console.error('🔑 Error de llave foránea');
-        return { client: null, error: new Error('El cliente corporativo seleccionado no es válido.') };
+        const detailsText = `${error.details || ''} ${error.message || ''}`;
+        if (detailsText.includes('clients_company_id_fkey') || detailsText.includes('company_id')) {
+          return { client: null, error: new Error('La empresa asociada (company_id) no existe o no es válida. Abre tu Perfil de Empresa y confirma que la empresa esté creada y activa.') };
+        }
+        if (detailsText.includes('clients_corporate_client_id_fkey') || detailsText.includes('corporate_client_id')) {
+          return { client: null, error: new Error('El cliente corporativo seleccionado no es válido.') };
+        }
+        return { client: null, error: new Error('Relación inválida en los datos proporcionados.') };
       } else if (error.code === '23502') {
         console.error('🔑 Error de valor nulo no permitido');
         return { client: null, error: new Error('Faltan campos obligatorios. Por favor, verifica todos los datos.') };
