@@ -153,6 +153,218 @@ const DebtsPage = () => {
     }
   };
 
+  const handleViewDetails = (debt) => {
+    Swal.fire({
+      title: 'Detalles de la Deuda',
+      html: `
+        <div class="text-left">
+          <div class="mb-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Deuda #${debt.debt_reference || debt.id.slice(-8)}</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm text-gray-600">Empresa:</p>
+                <p class="font-semibold">${debt.company?.business_name || 'Empresa'}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Estado:</p>
+                <p class="font-semibold">${debt.status === 'active' ? 'Activa' : debt.status === 'in_negotiation' ? 'En Negociación' : debt.status === 'paid' ? 'Pagada' : debt.status}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Monto Original:</p>
+                <p class="font-semibold">${formatCurrency(debt.original_amount)}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Monto Actual:</p>
+                <p class="font-semibold">${formatCurrency(debt.current_amount)}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Fecha de Origen:</p>
+                <p class="font-semibold">${formatDate(debt.origin_date)}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Fecha de Vencimiento:</p>
+                <p class="font-semibold">${formatDate(debt.due_date)}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Tipo de Deuda:</p>
+                <p class="font-semibold capitalize">${debt.debt_type || 'No especificado'}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Días de Mora:</p>
+                <p class="font-semibold">${calculateDaysOverdue(debt.due_date, debt.last_payment_date)} días</p>
+              </div>
+            </div>
+          </div>
+          ${debt.description ? `
+          <div class="mb-4">
+            <p class="text-sm text-gray-600">Descripción:</p>
+            <p class="text-sm">${debt.description}</p>
+          </div>
+          ` : ''}
+        </div>
+      `,
+      icon: 'info',
+      confirmButtonText: 'Cerrar',
+      confirmButtonColor: '#3b82f6',
+      width: '600px'
+    });
+  };
+
+  const handleNegotiate = (debt) => {
+    Swal.fire({
+      title: 'Iniciar Negociación',
+      html: `
+        <div class="text-left">
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-2">Estás a punto de iniciar la negociación para:</p>
+            <div class="bg-gray-50 p-3 rounded-lg">
+              <p class="font-semibold">Deuda #${debt.debt_reference || debt.id.slice(-8)}</p>
+              <p class="text-sm">Empresa: ${debt.company?.business_name || 'Empresa'}</p>
+              <p class="text-sm">Monto: ${formatCurrency(debt.current_amount)}</p>
+            </div>
+          </div>
+          <div class="mb-4">
+            <p class="text-sm text-blue-600">
+              <strong>💰 Comisión potencial:</strong> ${formatCurrency(36000)}
+            </p>
+            <p class="text-xs text-gray-500">
+              Si logras un acuerdo exitoso, recibirás $36.000 de comisión
+            </p>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Propuesta de pago (opcional)
+            </label>
+            <textarea
+              id="negotiationProposal"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="3"
+              placeholder="Describe tu propuesta de pago..."
+            ></textarea>
+          </div>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Iniciar Negociación',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const proposal = document.getElementById('negotiationProposal')?.value || '';
+        
+        // En producción, aquí iría la lógica para iniciar la negociación
+        console.log('Iniciando negociación para deuda:', debt.id, 'con propuesta:', proposal);
+        
+        Swal.fire({
+          title: 'Negociación Iniciada',
+          html: `
+            <div class="text-left">
+              <p class="text-green-600 mb-2">✅ Tu solicitud de negociación ha sido enviada</p>
+              <p class="text-sm text-gray-600">La empresa ${debt.company?.business_name || 'Empresa'} revisará tu propuesta y te responderá pronto.</p>
+              ${proposal ? `<p class="text-sm text-gray-600 mt-2"><strong>Tu propuesta:</strong> ${proposal}</p>` : ''}
+            </div>
+          `,
+          icon: 'success',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#10b981'
+        });
+      }
+    });
+  };
+
+  const handleViewCompleteDetails = () => {
+    const totalDebts = debts.length;
+    const activeDebts = debts.filter(d => d.status === 'active').length;
+    const negotiatingDebts = debts.filter(d => d.status === 'in_negotiation').length;
+    const paidDebts = debts.filter(d => d.status === 'paid').length;
+    const totalAmount = debts.reduce((sum, debt) => sum + debt.current_amount, 0);
+    const overdueDebts = debts.filter(debt => {
+      if (!debt.due_date) return false;
+      const dueDate = new Date(debt.due_date);
+      return dueDate < new Date() && debt.status === 'active';
+    });
+    const totalOverdueAmount = overdueDebts.reduce((sum, debt) => sum + parseFloat(debt.current_amount || 0), 0);
+    const potentialCommission = overdueDebts.length * 36000;
+
+    Swal.fire({
+      title: '📊 Detalles Completos de Mis Deudas',
+      html: `
+        <div class="text-left">
+          <div class="mb-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-3">Resumen General</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-blue-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-600">Total Deudas:</p>
+                <p class="text-xl font-bold text-blue-600">${totalDebts}</p>
+              </div>
+              <div class="bg-green-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-600">Monto Total:</p>
+                <p class="text-xl font-bold text-green-600">${formatCurrency(totalAmount)}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-3">Estado de Deudas</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-red-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-600">Activas:</p>
+                <p class="text-xl font-bold text-red-600">${activeDebts}</p>
+              </div>
+              <div class="bg-yellow-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-600">En Negociación:</p>
+                <p class="text-xl font-bold text-yellow-600">${negotiatingDebts}</p>
+              </div>
+              <div class="bg-green-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-600">Pagadas:</p>
+                <p class="text-xl font-bold text-green-600">${paidDebts}</p>
+              </div>
+              <div class="bg-orange-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-600">Morosas:</p>
+                <p class="text-xl font-bold text-orange-600">${overdueDebts.length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-3">💰 Potencial de Ganancias</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-purple-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-600">Monto Moroso:</p>
+                <p class="text-xl font-bold text-purple-600">${formatCurrency(totalOverdueAmount)}</p>
+              </div>
+              <div class="bg-green-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-600">Comisión Potencial:</p>
+                <p class="text-xl font-bold text-green-600">${formatCurrency(potentialCommission)}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-blue-900 mb-2">🎯 Recomendaciones</h4>
+            <ul class="text-sm text-blue-800 space-y-1">
+              <li>• Prioriza las deudas morosas para maximizar tus ganancias</li>
+              <li>• Cada acuerdo exitoso te genera $36.000 de comisión</li>
+              <li>• Usa el simulador para calcular tus ganancias potenciales</li>
+            </ul>
+          </div>
+
+          <div class="mt-4 text-center">
+            <button onclick="window.location.href='/debtor/simulator'" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+              🚀 Ir al Simulador de Ganancias
+            </button>
+          </div>
+        </div>
+      `,
+      icon: 'info',
+      confirmButtonText: 'Cerrar',
+      confirmButtonColor: '#3b82f6',
+      width: '700px'
+    });
+  };
+
   return (
     <div className="space-y-8">
       {/* Header Modernizado */}
@@ -426,6 +638,7 @@ const DebtsPage = () => {
                     variant="primary"
                     size="sm"
                     className="shadow-soft hover:shadow-glow hover:scale-105 transition-all"
+                    onClick={() => handleViewDetails(debt)}
                   >
                     Ver Detalles
                   </Button>
@@ -434,6 +647,7 @@ const DebtsPage = () => {
                       variant="gradient"
                       size="sm"
                       className="shadow-soft hover:shadow-glow hover:scale-105 transition-all"
+                      onClick={() => handleNegotiate(debt)}
                     >
                       Negociar
                     </Button>
@@ -471,7 +685,7 @@ const DebtsPage = () => {
               <Button
                 variant="gradient"
                 size="sm"
-                onClick={() => window.location.href = '/debtor/simulator'}
+                onClick={() => handleViewCompleteDetails()}
                 className="hover:scale-105 transition-all shadow-glow"
               >
                 Ver Detalles Completos
