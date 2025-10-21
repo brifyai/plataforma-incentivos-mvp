@@ -58,7 +58,13 @@ INSERT INTO public.notifications (user_id, title, message, type, read) VALUES
     ('eb7b4a35-2c3c-413c-9406-5a0316d0b01b', 'Campana de notificaciones', 'Haz click en la campana para ver tus notificaciones en formato SweetAlert compacto.', 'info', false);
 
 -- Create company profile for empresa@nexupay.cl if it doesn't exist
-INSERT INTO public.companies (user_id, company_name, rut, contact_email, contact_phone, created_at, updated_at)
-VALUES
-    ('eb7b4a35-2c3c-413c-9406-5a0316d0b01b', 'Empresa NexuPay', '76.123.456-7', 'empresa@nexupay.cl', '+56 9 1234 5678', NOW(), NOW())
-ON CONFLICT (user_id) DO NOTHING;
+-- Check if company already exists first, then insert if not
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.companies WHERE user_id = 'eb7b4a35-2c3c-413c-9406-5a0316d0b01b'
+    ) THEN
+        INSERT INTO public.companies (user_id, company_name, rut, contact_email, contact_phone, created_at, updated_at)
+        VALUES ('eb7b4a35-2c3c-413c-9406-5a0316d0b01b', 'Empresa NexuPay', '76.123.456-7', 'empresa@nexupay.cl', '+56 9 1234 5678', NOW(), NOW());
+    END IF;
+END $$;
