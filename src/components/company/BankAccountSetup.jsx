@@ -183,7 +183,7 @@ const BankAccountSetup = ({ onComplete, onSkip }) => {
           icon: 'success',
           title: '¡Cuenta Bancaria Configurada!',
           html: '✅ ¡Cuenta bancaria configurada exitosamente!<br><br>Ahora podrás recibir transferencias automáticas cuando los deudores realicen pagos.',
-          confirmButtonText: 'Aceptar',
+          confirmButtonText: 'Ir al Dashboard',
           confirmButtonColor: '#10B981',
           timer: 4000,
           timerProgressBar: true
@@ -193,6 +193,9 @@ const BankAccountSetup = ({ onComplete, onSkip }) => {
         if (onComplete) {
           await onComplete(formData);
         }
+
+        // Redirigir al dashboard de la empresa
+        navigate('/empresa/dashboard');
 
         setShowConfirmModal(false);
       } else {
