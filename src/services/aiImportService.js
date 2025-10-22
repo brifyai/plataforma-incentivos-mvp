@@ -152,24 +152,40 @@ class AIImportService {
 
       // Obtener estructura de tablas principales
       const supabaseAdmin = getSupabaseInstance('admin');
-      const { data: tables, error: tablesError } = await supabaseAdmin
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_schema', 'public')
-        .in('table_name', ['users', 'debts', 'companies']);
+      let tables, columns;
+      
+      try {
+        const { data: tablesData, error: tablesError } = await supabaseAdmin
+          .from('information_schema.tables')
+          .select('table_name')
+          .eq('table_schema', 'public')
+          .in('table_name', ['users', 'debts', 'companies']);
 
-      if (tablesError) throw tablesError;
+        if (tablesError) throw tablesError;
+        tables = tablesData;
+      } catch (schemaError) {
+        console.warn('⚠️ No se puede acceder a information_schema.tables, usando estructura por defecto:', schemaError.message);
+        // Retornar estructura por defecto si no hay permisos para information_schema
+        return this.getDefaultSchema();
+      }
 
       const schema = {};
 
       for (const table of tables) {
-        const { data: columns, error: columnsError } = await supabaseAdmin
-          .from('information_schema.columns')
-          .select('column_name, data_type, is_nullable, column_default')
-          .eq('table_schema', 'public')
-          .eq('table_name', table.table_name);
+        try {
+          const { data: columnsData, error: columnsError } = await supabaseAdmin
+            .from('information_schema.columns')
+            .select('column_name, data_type, is_nullable, column_default')
+            .eq('table_schema', 'public')
+            .eq('table_name', table.table_name);
 
-        if (columnsError) throw columnsError;
+          if (columnsError) throw columnsError;
+          columns = columnsData;
+        } catch (columnError) {
+          console.warn(`⚠️ No se puede acceder a information_schema.columns para tabla ${table.table_name}, usando estructura por defecto:`, columnError.message);
+          // Retornar estructura por defecto si no hay permisos para information_schema
+          return this.getDefaultSchema();
+        }
 
         schema[table.table_name] = columns;
       }
@@ -177,9 +193,44 @@ class AIImportService {
       console.log('✅ Estructura de base de datos analizada:', schema);
       return schema;
     } catch (error) {
-      console.error('❌ Error analizando estructura de BD:', error);
-      throw error;
+      console.warn('⚠️ Error analizando estructura de BD, usando estructura por defecto:', error.message);
+      // Siempre retornar estructura por defecto como fallback
+      return this.getDefaultSchema();
     }
+  }
+
+  /**
+   * Obtener estructura por defecto de la base de datos
+   */
+  getDefaultSchema() {
+    return {
+      users: [
+        { column_name: 'id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'email', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'rut', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'full_name', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'phone', data_type: 'text', is_nullable: 'YES' }
+      ],
+      debts: [
+        { column_name: 'id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'user_id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'company_id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'client_id', data_type: 'uuid', is_nullable: 'YES' }, // La columna existe
+        { column_name: 'original_amount', data_type: 'numeric', is_nullable: 'NO' },
+        { column_name: 'current_amount', data_type: 'numeric', is_nullable: 'NO' },
+        { column_name: 'due_date', data_type: 'date', is_nullable: 'YES' },
+        { column_name: 'description', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'status', data_type: 'text', is_nullable: 'YES' }
+      ],
+      companies: [
+        { column_name: 'id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'user_id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'company_name', data_type: 'text', is_nullable: 'NO' },
+        { column_name: 'contact_email', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'contact_phone', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'rut', data_type: 'text', is_nullable: 'YES' }
+      ]
+    };
   }
 
   /**

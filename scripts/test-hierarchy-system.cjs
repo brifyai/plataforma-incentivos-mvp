@@ -51,7 +51,7 @@ async function testHierarchySystem() {
 
     console.log('✅ Nivel 2 - Empresa encontrada:', {
       id: company.id,
-      business_name: company.business_name || 'Sin nombre',
+      company_name: company.company_name || 'Sin nombre',
       contact_email: company.contact_email,
       validation_status: company.validation_status
     });
@@ -186,7 +186,7 @@ async function testHierarchySystem() {
     console.log('');
     console.log('📊 Datos Verificados:');
     console.log(`   - Usuario (Nivel 1): ${user.email} (${user.role})`);
-    console.log(`   - Empresa (Nivel 2): ${company.business_name || 'Sin nombre'} (${company.validation_status})`);
+    console.log(`   - Empresa (Nivel 2): ${company.company_name || 'Sin nombre'} (${company.validation_status})`);
     console.log(`   - Empresa Corporativa (Nivel 3): ${corporateClient.rut} (${corporateClient.industry})`);
     console.log(`   - Clientes (Nivel 4): ${clients.length} registrados`);
     console.log(`   - Deudas (Nivel 5): ${debts.length} registradas`);

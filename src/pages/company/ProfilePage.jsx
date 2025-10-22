@@ -26,7 +26,6 @@ import VerificationProgress from '../../components/company/VerificationProgress'
 import CRMConfiguration from '../../components/company/CRMConfiguration';
 import CRMSyncDashboard from '../../components/company/CRMSyncDashboard';
 import CRMCustomFields from '../../components/company/CRMCustomFields';
-import BulkImportDebts from '../../components/company/BulkImportDebts';
 
 // New organized section components
 import CompanyMetricsDashboard from '../../components/company/CompanyMetricsDashboard';
