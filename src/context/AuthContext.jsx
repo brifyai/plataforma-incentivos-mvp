@@ -135,6 +135,24 @@ export const AuthProvider = ({ children }) => {
 
       if (profileError) {
         console.error('Error loading user profile:', profileError);
+        // Si hay un error al cargar el perfil, limpiar la sesión
+        console.warn('🔄 Clearing session due to profile load error');
+        setUser(null);
+        setProfile(null);
+        setSession(null);
+        localStorage.removeItem('secure_session');
+        localStorage.removeItem('mock_session');
+        return;
+      }
+
+      // Si el perfil es null (usuario no existe), limpiar la sesión
+      if (!userProfile) {
+        console.warn('⚠️ User profile not found, user may have been deleted. Clearing session.');
+        setUser(null);
+        setProfile(null);
+        setSession(null);
+        localStorage.removeItem('secure_session');
+        localStorage.removeItem('mock_session');
         return;
       }
 
@@ -163,6 +181,12 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error in loadUserProfile:', error);
+      // En caso de error, limpiar la sesión por seguridad
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      localStorage.removeItem('secure_session');
+      localStorage.removeItem('mock_session');
     }
   };
 

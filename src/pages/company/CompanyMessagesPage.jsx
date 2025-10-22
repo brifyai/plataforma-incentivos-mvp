@@ -71,7 +71,6 @@ const CompanyMessagesPage = () => {
   });
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [campaignFilter, setCampaignFilter] = useState('');
 
   // Función helper para calcular rangos de fechas
   const getDateRange = (range) => {
@@ -423,56 +422,8 @@ const CompanyMessagesPage = () => {
         : debtors.filter(d => d.corporateClientId === newMessage.corporateClientId))
     : (debtorFilters.clientType === 'corporate' ? corporateClients : debtors);
 
-  // Si no hay datos cargados aún, usar datos de ejemplo
-  const effectiveRecipients = availableRecipients.length > 0 ? availableRecipients :
-    (newMessage.corporateClientId ? [
-      {
-        id: '1',
-        name: 'María González',
-        rut: '12.345.678-9',
-        clientType: 'individual',
-        corporateClientId: 'corp1',
-        debts: [{ id: 'd1', type: 'loan', amount: 2500000, status: 'active', daysOverdue: 5 }]
-      },
-      {
-        id: '3',
-        name: 'Ana López',
-        rut: '18.345.678-1',
-        clientType: 'individual',
-        corporateClientId: 'corp1',
-        debts: [{ id: 'd3', type: 'loan', amount: 3200000, status: 'active', daysOverdue: 1 }]
-      }
-    ] : (debtorFilters.clientType === 'corporate' ? [
-      {
-        id: 'corp1',
-        name: 'Empresa XYZ S.A.',
-        display_category: 'Corporativo',
-        contact_email: 'contacto@empresa-xyz.cl',
-        contact_phone: '+56912345678'
-      },
-      {
-        id: 'corp2',
-        name: 'Corporación ABC Ltda.',
-        display_category: 'Corporativo',
-        contact_email: 'info@corporacion-abc.cl',
-        contact_phone: '+56987654321'
-      }
-    ] : [
-      {
-        id: '1',
-        name: 'Juan Pérez',
-        rut: '12.345.678-9',
-        clientType: 'individual',
-        debts: [{ id: 'd1', type: 'credit_card', amount: 500000, status: 'active', daysOverdue: 30 }]
-      },
-      {
-        id: '2',
-        name: 'María González',
-        rut: '9.876.543-2',
-        clientType: 'individual',
-        debts: [{ id: 'd2', type: 'mortgage', amount: 2500000, status: 'active', daysOverdue: 15 }]
-      }
-    ]));
+  // Usar solo datos reales, sin fallbacks mock
+  const effectiveRecipients = availableRecipients;
 
   // Debug logs removed for production
 
@@ -631,7 +582,7 @@ const CompanyMessagesPage = () => {
 
       {/* Content */}
       <div>
-        {/* Stats */}
+        {/* Stats - Datos dinámicos reales */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
           <Card padding={false} className="hover:shadow-medium transition-shadow">
             <div className="p-2">
@@ -639,10 +590,10 @@ const CompanyMessagesPage = () => {
                 <div className="p-1.5 bg-primary-100 rounded-lg">
                   <Send className="w-3 h-3 text-primary-600" />
                 </div>
-                <Badge variant="primary" className="text-sm">2</Badge>
+                <Badge variant="primary" className="text-sm">{conversations.length}</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1 font-medium">Campañas Enviadas</p>
-              <p className="text-lg font-bold text-secondary-900">2</p>
+              <p className="text-sm text-secondary-600 mb-1 font-medium">Conversaciones Activas</p>
+              <p className="text-lg font-bold text-secondary-900">{conversations.length}</p>
             </div>
           </Card>
 
@@ -652,10 +603,10 @@ const CompanyMessagesPage = () => {
                 <div className="p-1.5 bg-success-100 rounded-lg">
                   <CheckCircle className="w-3 h-3 text-success-600" />
                 </div>
-                <Badge variant="success" className="text-sm">57</Badge>
+                <Badge variant="success" className="text-sm">{conversations.filter(c => c.unreadCount === 0).length}</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1 font-medium">Mensajes Vistos</p>
-              <p className="text-lg font-bold text-secondary-900">57</p>
+              <p className="text-sm text-secondary-600 mb-1 font-medium">Mensajes Leídos</p>
+              <p className="text-lg font-bold text-secondary-900">{conversations.filter(c => c.unreadCount === 0).length}</p>
             </div>
           </Card>
 
@@ -665,10 +616,10 @@ const CompanyMessagesPage = () => {
                 <div className="p-1.5 bg-warning-100 rounded-lg">
                   <MessageSquare className="w-3 h-3 text-warning-600" />
                 </div>
-                <Badge variant="warning" className="text-sm">20</Badge>
+                <Badge variant="warning" className="text-sm">{unreadCount}</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1 font-medium">Respuestas Recibidas</p>
-              <p className="text-lg font-bold text-secondary-900">20</p>
+              <p className="text-sm text-secondary-600 mb-1 font-medium">Mensajes No Leídos</p>
+              <p className="text-lg font-bold text-secondary-900">{unreadCount}</p>
             </div>
           </Card>
 
@@ -676,12 +627,12 @@ const CompanyMessagesPage = () => {
             <div className="p-2">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-1.5 bg-info-100 rounded-lg">
-                  <AlertCircle className="w-3 h-3 text-info-600" />
+                  <User className="w-3 h-3 text-info-600" />
                 </div>
-                <Badge variant="info" className="text-sm">16</Badge>
+                <Badge variant="info" className="text-sm">{debtors.length}</Badge>
               </div>
-              <p className="text-sm text-secondary-600 mb-1 font-medium">Intervenciones IA</p>
-              <p className="text-lg font-bold text-secondary-900">16</p>
+              <p className="text-sm text-secondary-600 mb-1 font-medium">Deudores Totales</p>
+              <p className="text-lg font-bold text-secondary-900">{debtors.length}</p>
             </div>
           </Card>
         </div>
@@ -870,182 +821,9 @@ const CompanyMessagesPage = () => {
         )}
       </Card>
 
-      {/* Campaigns Reports */}
-      <Card
-        title="📊 Reportes de Campañas"
-        subtitle="Seguimiento automático de campañas enviadas"
-      >
-        {/* Filter by Corporate Client */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-bold text-secondary-900 font-display mb-2">
-                🏢 Filtrar por Empresa Corporativa
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400 font-medium">🏢</span>
-                <select
-                  value={campaignFilter}
-                  onChange={(e) => setCampaignFilter(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-lg transition-all appearance-none"
-                >
-                  <option value="">Todas las empresas</option>
-                  {corporateClients.map(client => (
-                    <option key={client.id} value={client.id}>
-                      🏢 {client.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            {campaignFilter && (
-              <Button
-                variant="outline"
-                onClick={() => setCampaignFilter('')}
-                className="mt-7"
-              >
-                🗑️ Limpiar Filtro
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Search Filter */}
-        <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-bold text-secondary-900 font-display mb-2">
-                🔍 Buscar Campañas
-              </label>
-              <div className="relative">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  placeholder="Buscar por nombre de campaña..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            {searchTerm && (
-              <Button
-                variant="outline"
-                onClick={() => setSearchTerm('')}
-                className="mt-7"
-              >
-                🗑️ Limpiar Búsqueda
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {/* Mock campaign data - In a real implementation, this would come from the database */}
-          {[
-            {
-              id: 'camp1',
-              title: 'Oferta Especial Descuento 15%',
-              clientId: 'corp1',
-              clientName: 'Empresa XYZ S.A.',
-              sentDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-              status: 'active',
-              stats: { sent: 45, viewed: 32, responded: 8, notViewed: 13 }
-            },
-            {
-              id: 'camp2',
-              title: 'Recordatorio Pago Pendiente',
-              clientId: 'corp2',
-              clientName: 'Corporación ABC Ltda.',
-              sentDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-              status: 'completed',
-              stats: { sent: 28, viewed: 25, responded: 12, notViewed: 3 }
-            },
-            {
-              id: 'camp3',
-              title: 'Plan de Cuotas Especial',
-              clientId: 'corp1',
-              clientName: 'Empresa XYZ S.A.',
-              sentDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-              status: 'completed',
-              stats: { sent: 62, viewed: 48, responded: 15, notViewed: 14 }
-            },
-            {
-              id: 'camp4',
-              title: 'Oferta Urgente - 20% Descuento',
-              clientId: 'corp2',
-              clientName: 'Corporación ABC Ltda.',
-              sentDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-              status: 'completed',
-              stats: { sent: 35, viewed: 28, responded: 9, notViewed: 7 }
-            }
-          ].filter(campaign => !campaignFilter || campaign.clientId === campaignFilter).map((campaign, index) => (
-            <div
-              key={campaign.id}
-              className={`p-4 rounded-lg border ${
-                index % 2 === 0
-                  ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
-                  : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className={`font-semibold ${
-                    index % 2 === 0 ? 'text-blue-900' : 'text-green-900'
-                  }`}>
-                    Campaña: "{campaign.title}"
-                  </h4>
-                  <p className={`text-sm ${
-                    index % 2 === 0 ? 'text-blue-700' : 'text-green-700'
-                  }`}>
-                    Cliente: {campaign.clientName} • Enviada: hace {Math.floor((Date.now() - campaign.sentDate.getTime()) / (1000 * 60 * 60 * 24))} día{Math.floor((Date.now() - campaign.sentDate.getTime()) / (1000 * 60 * 60 * 24)) !== 1 ? 's' : ''}
-                  </p>
-                </div>
-                <Badge variant={campaign.status === 'active' ? 'success' : 'info'}>
-                  {campaign.status === 'active' ? 'Activa' : 'Completada'}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className={`text-xl font-bold ${
-                    index % 2 === 0 ? 'text-blue-600' : 'text-green-600'
-                  }`}>
-                    {campaign.stats.sent}
-                  </div>
-                  <div className={`text-sm ${
-                    index % 2 === 0 ? 'text-blue-700' : 'text-green-700'
-                  }`}>
-                    Enviados
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-green-600">
-                    {campaign.stats.viewed}
-                  </div>
-                  <div className="text-sm text-green-700">Vistos</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-blue-600">
-                    {campaign.stats.responded}
-                  </div>
-                  <div className="text-sm text-blue-700">Respondieron</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-xl font-bold ${
-                    campaign.stats.notViewed > 10 ? 'text-red-600' : 'text-orange-600'
-                  }`}>
-                    {campaign.stats.notViewed}
-                  </div>
-                  <div className={`text-sm ${
-                    campaign.stats.notViewed > 10 ? 'text-red-700' : 'text-orange-700'
-                  }`}>
-                    Sin Ver
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+      {/* Nota: La sección de Reportes de Campañas ha sido eliminada para usar solo datos reales.
+          Cuando se implemente la tabla de campañas en la base de datos, esta sección puede ser restaurada
+          con datos dinámicos desde la base de datos. */}
 
       {/* New Message Modal */}
       <Modal

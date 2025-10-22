@@ -1746,6 +1746,18 @@ const validateUserManually = async (userId) => {
   try {
     console.log('🔍 Validando usuario manualmente:', userId);
 
+    // Primero obtener los datos del usuario para saber si es empresa
+    const { data: existingUser, error: userError } = await supabase
+      .from('users')
+      .select('role, email, full_name, rut')
+      .eq('id', userId)
+      .single();
+
+    if (userError) {
+      console.error('❌ Error obteniendo datos del usuario:', userError);
+      return { user: null, error: handleSupabaseError(userError) };
+    }
+
     // Intentar actualizar con email_verified primero
     let updateData = {
       validation_status: 'validated',
@@ -1785,7 +1797,28 @@ const validateUserManually = async (userId) => {
       return { user: null, error: handleSupabaseError(updateError) };
     }
 
-    console.log('✅ Usuario validado manualmente:', userData.email);
+    console.log('✅ Usuario validado manualmente en tabla users:', userData.email);
+
+    // Si es empresa, también actualizar la tabla companies
+    if (existingUser.role === 'company') {
+      console.log('🏢 Actualizando estado en tabla companies para empresa:', existingUser.email);
+      
+      const { error: companyUpdateError } = await supabase
+        .from('companies')
+        .update({
+          validation_status: 'validated',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (companyUpdateError) {
+        console.error('❌ Error actualizando tabla companies:', companyUpdateError);
+        // No fallar la operación principal, pero registrar el error
+        console.warn('⚠️ Usuario validado en users pero no se actualizó companies');
+      } else {
+        console.log('✅ Empresa también validada en tabla companies');
+      }
+    }
 
     // Crear objeto user para retorno
     const user = {
@@ -1815,6 +1848,18 @@ const rejectUser = async (userId) => {
   try {
     console.log('🔍 Rechazando usuario:', userId);
 
+    // Primero obtener los datos del usuario para saber si es empresa
+    const { data: existingUser, error: userError } = await supabase
+      .from('users')
+      .select('role, email, full_name, rut')
+      .eq('id', userId)
+      .single();
+
+    if (userError) {
+      console.error('❌ Error obteniendo datos del usuario:', userError);
+      return { user: null, error: handleSupabaseError(userError) };
+    }
+
     // Actualizar el estado de validación del usuario
     const { data: userData, error: updateError } = await supabase
       .from('users')
@@ -1831,7 +1876,28 @@ const rejectUser = async (userId) => {
       return { user: null, error: handleSupabaseError(updateError) };
     }
 
-    console.log('✅ Usuario rechazado:', userData.email);
+    console.log('✅ Usuario rechazado en tabla users:', userData.email);
+
+    // Si es empresa, también actualizar la tabla companies
+    if (existingUser.role === 'company') {
+      console.log('🏢 Actualizando estado en tabla companies para empresa:', existingUser.email);
+      
+      const { error: companyUpdateError } = await supabase
+        .from('companies')
+        .update({
+          validation_status: 'rejected',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (companyUpdateError) {
+        console.error('❌ Error actualizando tabla companies:', companyUpdateError);
+        // No fallar la operación principal, pero registrar el error
+        console.warn('⚠️ Usuario rechazado en users pero no se actualizó companies');
+      } else {
+        console.log('✅ Empresa también rechazada en tabla companies');
+      }
+    }
 
     // Crear objeto user para retorno
     const user = {

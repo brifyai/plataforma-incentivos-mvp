@@ -9,6 +9,7 @@ import { Card, Badge, LoadingSpinner, Button, Input, Modal } from '../../compone
 import { useDebts } from '../../hooks';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import Swal from 'sweetalert2';
+import { calculateCommissions } from '../../services/paymentService';
 import {
   FileText,
   AlertCircle,
@@ -38,6 +39,12 @@ const DebtsPage = () => {
     debtType: 'credit_card'
   });
   const [saving, setSaving] = useState(false);
+
+  // Función para calcular comisión simple (compatibilidad)
+  const calculateCommission = (amount) => {
+    const commissionData = calculateCommissions(amount);
+    return commissionData.userIncentive; // $30.000 fijo por acuerdo exitoso
+  };
 
   if (loading) {
     return <LoadingSpinner fullScreen text="Cargando deudas..." />;
@@ -122,7 +129,21 @@ const DebtsPage = () => {
       //   pending_installments: debtForm.pendingInstallments ? parseInt(debtForm.pendingInstallments) : null
       // });
 
-      // Por ahora, solo mostrar éxito
+      // En producción, esto sería una llamada a la API para crear la deuda
+      console.log('Creando deuda:', {
+        original_amount: parseFloat(debtForm.totalDebt),
+        current_amount: parseFloat(debtForm.totalDebt),
+        interest_rate: 0,
+        origin_date: debtForm.lastPaymentDate || new Date().toISOString().split('T')[0],
+        due_date: debtForm.dueDate,
+        debt_type: debtForm.debtType,
+        company_name: debtForm.companyName,
+        days_overdue: daysOverdue,
+        installment_amount: debtForm.installmentAmount ? parseFloat(debtForm.installmentAmount) : null,
+        paid_installments: debtForm.paidInstallments ? parseInt(debtForm.paidInstallments) : null,
+        pending_installments: debtForm.pendingInstallments ? parseInt(debtForm.pendingInstallments) : null
+      });
+
       Swal.fire({
         title: '¡Deuda Registrada!',
         text: `Deuda con ${debtForm.companyName} registrada exitosamente${daysOverdue > 0 ? ` (${daysOverdue} días de mora)` : ''}`,
@@ -225,10 +246,10 @@ const DebtsPage = () => {
           </div>
           <div class="mb-4">
             <p class="text-sm text-blue-600">
-              <strong>💰 Comisión potencial:</strong> ${formatCurrency(36000)}
+              <strong>💰 Comisión potencial:</strong> ${formatCurrency(calculateCommission(debt.current_amount))}
             </p>
             <p class="text-xs text-gray-500">
-              Si logras un acuerdo exitoso, recibirás $36.000 de comisión
+              Si logras un acuerdo exitoso, recibirás ${formatCurrency(calculateCommission(debt.current_amount))} de comisión
             </p>
           </div>
           <div class="mb-4">
@@ -286,7 +307,7 @@ const DebtsPage = () => {
       return dueDate < new Date() && debt.status === 'active';
     });
     const totalOverdueAmount = overdueDebts.reduce((sum, debt) => sum + parseFloat(debt.current_amount || 0), 0);
-    const potentialCommission = overdueDebts.length * 36000;
+    const potentialCommission = overdueDebts.reduce((sum, debt) => sum + calculateCommission(debt.current_amount), 0);
 
     Swal.fire({
       title: '📊 Detalles Completos de Mis Deudas',
@@ -346,7 +367,7 @@ const DebtsPage = () => {
             <h4 class="font-semibold text-blue-900 mb-2">🎯 Recomendaciones</h4>
             <ul class="text-sm text-blue-800 space-y-1">
               <li>• Prioriza las deudas morosas para maximizar tus ganancias</li>
-              <li>• Cada acuerdo exitoso te genera $36.000 de comisión</li>
+              <li>• Cada acuerdo exitoso te genera ${formatCurrency(calculateCommission(60000))} de comisión</li>
               <li>• Usa el simulador para calcular tus ganancias potenciales</li>
             </ul>
           </div>
@@ -702,7 +723,7 @@ const DebtsPage = () => {
                   return dueDate < now && debt.status === 'active';
                 });
                 const totalOverdueAmount = overdueDebts.reduce((sum, debt) => sum + parseFloat(debt.current_amount || 0), 0);
-                const potentialCommission = overdueDebts.length * 36000; // $36.000 por deuda morosa
+                const potentialCommission = overdueDebts.reduce((sum, debt) => sum + calculateCommission(debt.current_amount), 0);
 
                 return (
                   <>
@@ -729,7 +750,7 @@ const DebtsPage = () => {
 
                     <div className="text-center p-3 bg-white/60 rounded-lg">
                       <div className="text-lg font-bold text-purple-600 mb-1">
-                        $36.000
+                        {formatCurrency(calculateCommission(60000))}
                       </div>
                       <div className="text-xs text-secondary-600">Por Cierre</div>
                     </div>
@@ -747,7 +768,7 @@ const DebtsPage = () => {
                 <div>
                   <h4 className="font-semibold text-green-900 text-sm">¡Oportunidad de Ingresos Extra!</h4>
                   <p className="text-xs text-green-800">
-                    Registra más deudas morosas para aumentar tus ganancias potenciales. Cada acuerdo exitoso te paga $36.000 de comisión fija.
+                    Registra más deudas morosas para aumentar tus ganancias potenciales. Cada acuerdo exitoso te paga ${formatCurrency(calculateCommission(60000))} de comisión fija.
                   </p>
                 </div>
               </div>
@@ -936,7 +957,7 @@ const DebtsPage = () => {
 
                   <div className="text-center p-4 bg-white/60 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600 mb-1">
-                      {formatCurrency(36000)}
+                      {formatCurrency(calculateCommission(parseFloat(debtForm.totalDebt) || 60000))}
                     </div>
                     <div className="text-sm text-secondary-600">Comisión Potencial</div>
                   </div>
@@ -952,7 +973,7 @@ const DebtsPage = () => {
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800">
                     💡 <strong>¿Cómo funciona?</strong> Cuando negocies un acuerdo exitoso con esta deuda morosa,
-                    recibirás $36.000 de comisión (60% del total de $60.000 por cierre de negocio).
+                    recibirás ${formatCurrency(calculateCommission(parseFloat(debtForm.totalDebt) || 60000))} de comisión (60% del total de $60.000 por cierre de negocio).
                   </p>
                 </div>
               </Card>

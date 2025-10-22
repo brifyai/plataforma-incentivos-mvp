@@ -4,11 +4,13 @@
  * Página para mostrar mensajes y conversaciones del deudor
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, Badge, Button, EmptyState, Modal, Input } from '../../components/common';
 import { useMessages } from '../../hooks';
 import { formatCurrency } from '../../utils/formatters';
 import Swal from 'sweetalert2';
+import { calculateCommissions } from '../../services/paymentService';
+import { supabase } from '../../config/supabase';
 import {
   MessageSquare,
   Send,
@@ -54,8 +56,42 @@ const MessagesPage = () => {
   const conversationFileInputRef = useRef(null);
   const paymentProofInputRef = useRef(null);
 
-  // Lista de empresas disponibles - TODO: Obtener de BD
-  const companies = [];
+  // Lista de empresas disponibles - obtenidas directamente de la base de datos
+  const [companies, setCompanies] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
+
+  // Cargar empresas desde la base de datos
+  useEffect(() => {
+    const loadCompanies = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('companies')
+          .select('id, business_name, name')
+          .eq('verification_status', 'verified')
+          .order('business_name');
+
+        if (error) {
+          console.error('Error loading companies:', error);
+          setCompanies([]);
+        } else {
+          setCompanies(data || []);
+        }
+      } catch (error) {
+        console.error('Error loading companies:', error);
+        setCompanies([]);
+      } finally {
+        setLoadingCompanies(false);
+      }
+    };
+
+    loadCompanies();
+  }, []);
+
+  // Función para calcular comisión simple (compatibilidad)
+  const calculateCommission = (amount) => {
+    const commissionData = calculateCommissions(amount);
+    return commissionData.userIncentive; // $30.000 fijo por acuerdo exitoso
+  };
 
   const handleViewConversation = async (conversation) => {
     try {
@@ -182,7 +218,13 @@ const MessagesPage = () => {
       return;
     }
 
-    // Simular envío del comprobante
+    // En producción, esto sería una llamada a la API para subir el comprobante
+    console.log('Subiendo comprobante de pago:', {
+      amount: numAmount,
+      method: paymentMethod,
+      files: paymentProofFiles
+    });
+
     Swal.fire('¡Comprobante Enviado!', `Comprobante de pago por ${formatCurrency(numAmount)} enviado exitosamente. La empresa lo validará en las próximas 24-48 horas.`, 'success');
 
     setShowPaymentProofModal(false);
@@ -690,7 +732,7 @@ const MessagesPage = () => {
                 className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-lg disabled:bg-secondary-100 disabled:cursor-not-allowed"
                 value={selectedCompany}
                 onChange={(e) => setSelectedCompany(e.target.value)}
-                disabled={companies.length === 0}
+                disabled={loadingCompanies || companies.length === 0}
               >
                 <option value="">
                   {companies.length === 0 ? 'No hay empresas disponibles' : 'Seleccionar empresa...'}

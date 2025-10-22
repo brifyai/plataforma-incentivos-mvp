@@ -603,6 +603,95 @@ export const getPendingVerifications = async (filters = {}) => {
 };
 
 /**
+ * Obtiene todas las verificaciones (para administradores)
+ * @param {Object} filters - Filtros opcionales
+ * @returns {Promise<{verifications, error}>}
+ */
+export const getAllVerifications = async (filters = {}) => {
+  try {
+    // Primero obtener las verificaciones sin relaciones
+    let query = supabase
+      .from('company_verifications')
+      .select('*')
+      .order('submitted_at', { ascending: false });
+
+    // Aplicar filtros
+    if (filters.assignedTo) {
+      query = query.eq('assigned_to', filters.assignedTo);
+    }
+
+    if (filters.status) {
+      query = query.eq('status', filters.status);
+    }
+
+    // Filtros de fecha
+    if (filters.startDate) {
+      query = query.gte('submitted_at', filters.startDate);
+    }
+
+    if (filters.endDate) {
+      query = query.lte('submitted_at', filters.endDate + 'T23:59:59.999Z');
+    }
+
+    const { data: verifications, error: verificationError } = await query;
+
+    if (verificationError) {
+      return { verifications: [], error: verificationError.message };
+    }
+
+    // Si no hay verificaciones, retornar vacío
+    if (!verifications || verifications.length === 0) {
+      return { verifications: [], error: null };
+    }
+
+    // Obtener información de empresas por separado
+    const companyIds = [...new Set(verifications.map(v => v.company_id))];
+    const { data: companies, error: companiesError } = await supabase
+      .from('companies')
+      .select('id, company_name, rut, contact_email, user_id')
+      .in('id', companyIds);
+
+    if (companiesError) {
+      console.warn('Error obteniendo información de empresas:', companiesError.message);
+    }
+
+    // Obtener información de usuarios asignados por separado
+    const assignedToIds = [...new Set(verifications.map(v => v.assigned_to).filter(Boolean))];
+    let assignedUsers = [];
+    
+    if (assignedToIds.length > 0) {
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, full_name, email')
+        .in('id', assignedToIds);
+      
+      if (!usersError) {
+        assignedUsers = users || [];
+      } else {
+        console.warn('Error obteniendo información de usuarios:', usersError.message);
+      }
+    }
+
+    // Combinar la información
+    const verificationsWithDetails = verifications.map(verification => {
+      const company = companies?.find(c => c.id === verification.company_id);
+      const assignedUser = assignedUsers?.find(u => u.id === verification.assigned_to);
+      
+      return {
+        ...verification,
+        company: company || null,
+        assigned_to_user: assignedUser || null
+      };
+    });
+
+    return { verifications: verificationsWithDetails, error: null };
+  } catch (error) {
+    console.error('Error getting all verifications:', error);
+    return { verifications: [], error: 'Error al obtener verificaciones' };
+  }
+};
+
+/**
  * Toma una decisión sobre una verificación
  * @param {string} verificationId - ID de la verificación
  * @param {Object} decision - Decisión tomada
@@ -611,7 +700,23 @@ export const getPendingVerifications = async (filters = {}) => {
  */
 export const makeVerificationDecision = async (verificationId, decision, adminId) => {
   try {
+    console.log('🔍 makeVerificationDecision - Iniciando:', { verificationId, decision, adminId });
+    
     const { type, notes, rejectionReason, correctionRequests, correctionDeadline } = decision;
+
+    // Primero obtener la verificación para saber qué empresa afecta
+    const { data: verificationData, error: getError } = await supabase
+      .from('company_verifications')
+      .select('company_id, status')
+      .eq('id', verificationId)
+      .single();
+
+    if (getError) {
+      console.error('❌ Error obteniendo verificación:', getError);
+      return { success: false, error: getError.message };
+    }
+
+    console.log('📋 Verificación encontrada:', verificationData);
 
     let updateData = {
       reviewed_by: adminId,
@@ -650,36 +755,99 @@ export const makeVerificationDecision = async (verificationId, decision, adminId
     updateData.status = newStatus;
 
     // Actualizar verificación
-    const { error } = await supabase
+    console.log('📝 Actualizando verificación...');
+    const { error: updateError } = await supabase
       .from('company_verifications')
       .update(updateData)
       .eq('id', verificationId);
 
-    if (error) {
-      return { success: false, error: error.message };
+    if (updateError) {
+      console.error('❌ Error actualizando verificación:', updateError);
+      return { success: false, error: updateError.message };
     }
 
-    // Registrar en historial (esto se hace automáticamente con el trigger)
-    // Pero podemos agregar metadata adicional
-    await supabase
-      .from('verification_history')
-      .insert({
-        verification_id: verificationId,
-        previous_status: decision.previousStatus,
-        new_status: newStatus,
-        changed_by: adminId,
-        change_reason: reason,
-        metadata: {
-          decision_type: type,
-          notes: notes,
-          rejection_reason: rejectionReason,
-          correction_requests: correctionRequests
-        }
-      });
+    console.log('✅ Verificación actualizada correctamente');
 
+    // Si es rechazo, también actualizar el estado del usuario y empresa
+    if (type === 'reject') {
+      console.log('🚫 Rechazo detectado, actualizando estado de usuario y empresa...');
+      
+      try {
+        // Obtener el user_id desde la tabla companies
+        const { data: companyData, error: companyError } = await supabase
+          .from('companies')
+          .select('user_id')
+          .eq('id', verificationData.company_id)
+          .single();
+
+        if (companyError) {
+          console.error('❌ Error obteniendo company:', companyError);
+        } else {
+          console.log('🏢 Empresa encontrada:', companyData);
+
+          // Actualizar tabla users
+          const { error: userUpdateError } = await supabase
+            .from('users')
+            .update({
+              validation_status: 'rejected',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', companyData.user_id);
+
+          if (userUpdateError) {
+            console.error('❌ Error actualizando usuario:', userUpdateError);
+          } else {
+            console.log('✅ Usuario actualizado a rejected');
+          }
+
+          // Actualizar tabla companies
+          const { error: companyUpdateError } = await supabase
+            .from('companies')
+            .update({
+              validation_status: 'rejected',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', verificationData.company_id);
+
+          if (companyUpdateError) {
+            console.error('❌ Error actualizando companies:', companyUpdateError);
+          } else {
+            console.log('✅ Empresa actualizada a rejected');
+          }
+        }
+      } catch (syncError) {
+        console.error('❌ Error en sincronización de rechazo:', syncError);
+        // No fallar la operación principal por error en sincronización
+      }
+    }
+
+    // Registrar en historial
+    console.log('📝 Registrando en historial...');
+    try {
+      await supabase
+        .from('verification_history')
+        .insert({
+          verification_id: verificationId,
+          previous_status: decision.previousStatus,
+          new_status: newStatus,
+          changed_by: adminId,
+          change_reason: reason,
+          metadata: {
+            decision_type: type,
+            notes: notes,
+            rejection_reason: rejectionReason,
+            correction_requests: correctionRequests
+          }
+        });
+      console.log('✅ Historial registrado');
+    } catch (historyError) {
+      console.warn('⚠️ Error registrando historial:', historyError);
+    }
+
+    console.log('✅ makeVerificationDecision completado exitosamente');
     return { success: true, error: null };
   } catch (error) {
-    console.error('Error making verification decision:', error);
+    console.error('💥 Error general en makeVerificationDecision:', error);
     return { success: false, error: 'Error al procesar decisión' };
   }
 };
@@ -788,6 +956,7 @@ export default {
   uploadVerificationDocument,
   submitVerificationForReview,
   getPendingVerifications,
+  getAllVerifications,
   makeVerificationDecision,
   getVerificationStats,
   getVerificationHistory,

@@ -147,7 +147,7 @@ const OffersPage = () => {
       ...proposalData,
       status: 'pending',
       submittedAt: new Date().toISOString(),
-      companyName: 'Empresa Demo', // In real app, get from selected company
+      companyName: 'company?.business_name || "Empresa"', // In real app, get from selected company
     };
 
     setSubmittedProposals(prev => [...prev, newProposal]);
@@ -776,9 +776,9 @@ const OffersPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
-                    { id: 'empresa1', name: 'Banco Ejemplo S.A.', type: 'Bancaria' },
-                    { id: 'empresa2', name: 'Financiera ABC', type: 'Financiera' },
-                    { id: 'empresa3', name: 'Créditos Rápidos Ltda.', type: 'Créditos' }
+                    { id: company.id, name: company.business_name, type: company.category },
+                    { id: company.id, name: company.business_name, type: company.category },
+                    { id: company.id, name: company.business_name, type: company.category }
                   ].map((company) => (
                     <div
                       key={company.id}

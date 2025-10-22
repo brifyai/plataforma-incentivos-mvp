@@ -117,24 +117,7 @@ const DebtorDashboard = () => {
     try {
       setLoading(true);
 
-      // Skip loading stats for god mode user (mock user not in database)
-      if (user.id === 'god-mode-user') {
-        setStats({
-          totalDebts: 0,
-          totalDebtAmount: 0,
-          activeAgreements: 0,
-          completedPayments: 0,
-          totalPaid: 0,
-          walletBalance: 0,
-        });
-        setCommissionStats({
-          earnedCommissions: 0,
-          nextCommission: 0,
-          monthlyPotential: 0,
-        });
-        setLoading(false);
-        return;
-      }
+      // Cargar estadísticas del dashboard y comisiones en paralelo con timeout
 
       // Cargar estadísticas del dashboard y comisiones en paralelo con timeout
       const [dashboardResult, commissionResult] = await Promise.allSettled([

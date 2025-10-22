@@ -27,10 +27,16 @@ export const getUserProfile = async (userId) => {
       .from('users')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle(); // Cambiado a maybeSingle para manejar usuarios que no existen
 
     if (error) {
+      console.error('❌ Error en getUserProfile:', error);
       return { profile: null, error: handleSupabaseError(error) };
+    }
+
+    if (!data) {
+      console.warn(`⚠️ Usuario no encontrado: ${userId}`);
+      return { profile: null, error: null }; // No hay error, solo no existe el usuario
     }
 
     return { profile: data, error: null };
@@ -179,17 +185,8 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
   try {
     console.log('🔍 getCompanyDebts called with:', { companyId, clientId });
     
-    // First check if client_id column exists
-    const { data: columnCheck, error: columnError } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_name', 'debts')
-      .eq('column_name', 'client_id')
-      .eq('table_schema', 'public')
-      .single();
-
-    const hasClientIdColumn = !columnError && columnCheck;
-    console.log('🔍 client_id column exists:', hasClientIdColumn);
+    // La columna client_id existe (verificado), no necesitamos verificar information_schema
+    // que causa problemas de permisos
 
     let query = supabase
       .from('debts')
@@ -198,37 +195,31 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
         user:users(id, full_name, email, rut)
       `);
 
-    if (hasClientIdColumn) {
-      if (clientId) {
-        // Si hay clientId específico, filtrar por ese cliente
-        query = query.eq('client_id', clientId);
-      } else {
-        // Si no hay clientId específico, obtener deudas de dos maneras:
-        // 1. Deudas asociadas a clientes de la empresa
-        // 2. Deudas directas de la empresa (sin client_id)
-        const { data: clients, error: clientsError } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('company_id', companyId);
-
-        if (clientsError) {
-          console.warn('Error getting clients for company:', clientsError);
-        }
-
-        const clientIds = clients?.map(c => c.id) || [];
-        
-        if (clientIds.length > 0) {
-          // Si hay clientes, obtener deudas de clientes Y deudas directas de la empresa
-          query = query.or(`client_id.in.(${clientIds.join(',')}),company_id.eq.${companyId}`);
-        } else {
-          // Si no hay clientes, obtener solo deudas directas de la empresa
-          query = query.eq('company_id', companyId);
-        }
-      }
+    if (clientId) {
+      // Si hay clientId específico, filtrar por ese cliente
+      query = query.eq('client_id', clientId);
     } else {
-      // Si no existe la columna client_id, filtrar solo por company_id
-      console.log('⚠️ client_id column does not exist, filtering only by company_id');
-      query = query.eq('company_id', companyId);
+      // Si no hay clientId específico, obtener deudas de dos maneras:
+      // 1. Deudas asociadas a clientes de la empresa
+      // 2. Deudas directas de la empresa (sin client_id)
+      const { data: clients, error: clientsError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('company_id', companyId);
+
+      if (clientsError) {
+        console.warn('Error getting clients for company:', clientsError);
+      }
+
+      const clientIds = clients?.map(c => c.id) || [];
+      
+      if (clientIds.length > 0) {
+        // Si hay clientes, obtener deudas de clientes Y deudas directas de la empresa
+        query = query.or(`client_id.in.(${clientIds.join(',')}),company_id.eq.${companyId}`);
+      } else {
+        // Si no hay clientes, obtener solo deudas directas de la empresa
+        query = query.eq('company_id', companyId);
+      }
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -246,9 +237,8 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
         id: d.id,
         user_id: d.user_id,
         company_id: d.company_id,
-        client_id: hasClientIdColumn ? d.client_id : 'N/A (column not exists)',
+        client_id: d.client_id || 'N/A',
         user_name: d.user?.full_name,
-        client_name: hasClientIdColumn && d.client ? d.client.business_name : 'N/A',
         amount: d.current_amount || d.original_amount
       })));
     }
@@ -1493,19 +1483,50 @@ export const createCompany = async (companyData) => {
       return { company: null, error: handleSupabaseError(error) };
     }
 
+    // AUTOMATIZACIÓN: Crear automáticamente el cliente corporativo
+    if (data && data.id) {
+      try {
+        console.log('🏢 Creando automáticamente cliente corporativo para la empresa...');
+        
+        // Usar solo los campos que existen en la tabla corporate_clients
+        const corporateClientData = {
+          company_id: data.id,
+          contact_email: data.contact_email,
+          contact_phone: data.contact_phone || null,
+          rut: data.rut || null,
+          industry: 'Corporativo'
+        };
+
+        const { data: corporateClient, error: corporateError } = await supabase
+          .from('corporate_clients')
+          .insert(corporateClientData)
+          .select()
+          .single();
+
+        if (corporateError) {
+          console.warn('⚠️ Error creando cliente corporativo:', corporateError);
+        } else {
+          console.log(`✅ Cliente corporativo creado: ID ${corporateClient.id}`);
+        }
+      } catch (corporateError) {
+        console.error('Error creating corporate client:', corporateError);
+        // No fallar la creación de empresa por esto
+      }
+    }
+
     // AUTOMATIZACIÓN: Registrar como beneficiario en MP si tiene datos bancarios
     if (data && data.bank_account_info) {
       try {
         const registerResult = await registerCompanyBeneficiary({
           companyId: data.id,
-          businessName: data.business_name,
+          businessName: data.company_name,
           bankAccountInfo: data.bank_account_info,
         });
 
         if (registerResult.success) {
-          console.log(`✅ Empresa ${data.business_name} registrada como beneficiario en MP`);
+          console.log(`✅ Empresa ${data.company_name} registrada como beneficiario en MP`);
         } else {
-          console.warn(`⚠️ No se pudo registrar beneficiario para ${data.business_name}: ${registerResult.error}`);
+          console.warn(`⚠️ No se pudo registrar beneficiario para ${data.company_name}: ${registerResult.error}`);
         }
       } catch (registerError) {
         console.error('Error registering company beneficiary:', registerError);
@@ -1852,6 +1873,28 @@ export const createClient = async (clientData) => {
       throw new Error('El email del cliente es obligatorio');
     }
 
+    // OBTENER AUTOMÁTICAMENTE el corporate_client_id si no se proporciona
+    let corporateClientId = clientData.corporate_client_id;
+    
+    if (!corporateClientId) {
+      console.log('🔍 Obteniendo corporate_client_id automáticamente...');
+      const { data: corporateClient, error: corporateError } = await supabase
+        .from('corporate_clients')
+        .select('id')
+        .eq('company_id', clientData.company_id)
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      if (corporateError || !corporateClient) {
+        console.error('❌ No se encontró cliente corporativo para esta empresa:', corporateError);
+        throw new Error('Esta empresa no tiene un cliente corporativo activo. Contacte al administrador.');
+      }
+
+      corporateClientId = corporateClient.id;
+      console.log('✅ Corporate client ID asignado automáticamente:', corporateClientId);
+    }
+
     // Validación para evitar duplicados: verificar si ya existe un cliente con el mismo email o RUT para esta empresa
     console.log('🔍 Verificando duplicados para empresa:', clientData.company_id);
     const { data: existingClients, error: checkError } = await supabase
@@ -1886,7 +1929,7 @@ export const createClient = async (clientData) => {
       contact_email: clientData.contact_email,
       contact_phone: clientData.contact_phone || null,
       rut: clientData.rut || null,
-      corporate_client_id: clientData.corporate_client_id || null,
+      corporate_client_id: corporateClientId, // SIEMPRE asignado
       created_at: clientData.created_at || new Date().toISOString(),
       updated_at: clientData.updated_at || new Date().toISOString()
     };
