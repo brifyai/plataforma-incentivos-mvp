@@ -1737,25 +1737,54 @@ export const updateCompany = async (companyId, updates) => {
 // ==================== CLIENTES ====================
 
 /**
- * Obtiene todos los clientes de una empresa de cobranza
+ * Obtiene todos los clientes individuales de una empresa de cobranza
+ *
+ * IMPORTANTE: Los clientes individuales están asociados a corporate_clients,
+ * no directamente a companies. Esta función obtiene los clientes individuales
+ * que pertenecen a los clientes corporativos de la empresa especificada.
+ *
  * @param {string} companyId - ID de la empresa de cobranza
  * @returns {Promise<{clients, error}>}
  */
 export const getCompanyClients = async (companyId) => {
   try {
+    console.log('🔍 getCompanyClients: Obteniendo clientes individuales para empresa:', companyId);
+    
+    // PRIMERO: Obtener todos los clientes corporativos de esta empresa
+    const { data: corporateClients, error: corporateError } = await supabase
+      .from('corporate_clients')
+      .select('id')
+      .eq('company_id', companyId);
+
+    if (corporateError) {
+      console.error('❌ Error obteniendo clientes corporativos:', corporateError);
+      return { clients: [], error: handleSupabaseError(corporateError) };
+    }
+
+    if (!corporateClients || corporateClients.length === 0) {
+      console.log('⚠️ No hay clientes corporativos para esta empresa, no hay clientes individuales');
+      return { clients: [], error: null };
+    }
+
+    // SEGUNDO: Obtener todos los clientes individuales asociados a esos clientes corporativos
+    const corporateClientIds = corporateClients.map(cc => cc.id);
+    
     const { data, error } = await supabase
       .from('clients')
       .select('*')
-      .eq('company_id', companyId)
+      .in('corporate_client_id', corporateClientIds)
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error('❌ Error obteniendo clientes individuales:', error);
       return { clients: [], error: handleSupabaseError(error) };
     }
 
+    console.log(`✅ Encontrados ${data?.length || 0} clientes individuales para ${corporateClientIds.length} clientes corporativos`);
+    
     return { clients: data || [], error: null };
   } catch (error) {
-    console.error('Error in getCompanyClients:', error);
+    console.error('💥 Error in getCompanyClients:', error);
     return { clients: [], error: 'Error al obtener clientes de la empresa.' };
   }
 };
