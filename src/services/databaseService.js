@@ -2703,6 +2703,109 @@ export const getAllCompanies = async () => {
 };
 
 /**
+ * Obtiene todas las empresas con sus empresas corporativas correspondientes
+ * @returns {Promise<{companiesWithCorporates, error}>}
+ */
+export const getAllCompaniesWithCorporates = async () => {
+  try {
+    console.log('🔍 getAllCompaniesWithCorporates: Obteniendo empresas y sus corporativas');
+    
+    // Obtener todas las empresas
+    const { data: companies, error: companiesError } = await supabase
+      .from('companies')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (companiesError) {
+      console.error('❌ Error obteniendo empresas:', companiesError);
+      return { companiesWithCorporates: [], error: handleSupabaseError(companiesError) };
+    }
+
+    console.log(`📊 Found ${companies?.length || 0} companies`);
+
+    // Para cada empresa, obtener sus empresas corporativas
+    const companiesWithCorporates = await Promise.all(
+      (companies || []).map(async (company) => {
+        try {
+          // Obtener empresas corporativas de esta empresa
+          const { data: corporates, error: corporatesError } = await supabase
+            .from('corporate_clients')
+            .select('*')
+            .eq('company_id', company.id)
+            .order('created_at', { ascending: false });
+
+          if (corporatesError) {
+            console.warn(`⚠️ Error obteniendo corporativas para empresa ${company.id}:`, corporatesError);
+            return {
+              ...company,
+              corporate_clients: []
+            };
+          }
+
+          // Obtener estadísticas adicionales para cada empresa corporativa
+          const corporatesWithStats = await Promise.all(
+            (corporates || []).map(async (corporate) => {
+              try {
+                // Contar clientes asociados a esta empresa corporativa
+                const { count: clientCount, error: clientCountError } = await supabase
+                  .from('clients')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('corporate_client_id', corporate.id);
+
+                // Contar deudas asociadas a esta empresa corporativa
+                const { count: debtCount, error: debtCountError } = await supabase
+                  .from('debts')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('client_id', corporate.id);
+
+                return {
+                  ...corporate,
+                  client_count: clientCountError ? 0 : clientCount || 0,
+                  debt_count: debtCountError ? 0 : debtCount || 0,
+                  total_debt_amount: 0 // Se puede calcular si se necesita
+                };
+              } catch (statsError) {
+                console.warn(`⚠️ Error obteniendo estadísticas para corporate ${corporate.id}:`, statsError);
+                return {
+                  ...corporate,
+                  client_count: 0,
+                  debt_count: 0,
+                  total_debt_amount: 0
+                };
+              }
+            })
+          );
+
+          return {
+            ...company,
+            corporate_clients: corporatesWithStats,
+            total_corporate_clients: corporatesWithStats.length,
+            total_clients: corporatesWithStats.reduce((sum, corp) => sum + corp.client_count, 0),
+            total_debts: corporatesWithStats.reduce((sum, corp) => sum + corp.debt_count, 0)
+          };
+        } catch (corporateError) {
+          console.error(`💥 Error procesando corporativas para empresa ${company.id}:`, corporateError);
+          return {
+            ...company,
+            corporate_clients: [],
+            total_corporate_clients: 0,
+            total_clients: 0,
+            total_debts: 0
+          };
+        }
+      })
+    );
+
+    console.log(`✅ Procesadas ${companiesWithCorporates.length} empresas con sus corporativas`);
+    
+    return { companiesWithCorporates, error: null };
+  } catch (error) {
+    console.error('💥 Error in getAllCompaniesWithCorporates:', error);
+    return { companiesWithCorporates: [], error: 'Error al obtener empresas con sus corporativas.' };
+  }
+};
+
+/**
  * Obtiene estadísticas reales de comisiones desde la base de datos
  * @returns {Promise<{commissionStats, error}>}
  */
@@ -4987,6 +5090,7 @@ export default {
 
   // Funciones para admin
   getAllCompanies,
+  getAllCompaniesWithCorporates,
 
   // Sistema y configuración
   getDatabaseSystemInfo,
