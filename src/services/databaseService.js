@@ -219,9 +219,9 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
   try {
     console.log('🔍 getCompanyDebts called with:', { companyId, clientId });
     
-    // SIMPLIFICACIÓN: Obtener deudas directamente por company_id
-    // La columna client_id existe pero no necesitamos verificar information_schema
-    // que causa problemas de permisos en producción
+    // CORRECCIÓN: Eliminar verificación de information_schema que causa errores 404
+    // La columna client_id existe según las migraciones aplicadas
+    // Nos basamos en la estructura real de la base de datos
 
     let query = supabase
       .from('debts')

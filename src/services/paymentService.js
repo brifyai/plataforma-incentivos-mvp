@@ -137,17 +137,15 @@ export const initializeMercadoPagoPayment = async (paymentData) => {
     // const mp = new MercadoPago(MERCADOPAGO_PUBLIC_KEY);
     // const response = await mp.preferences.create(preference);
     
-    // Simulación para desarrollo
-    const mockResponse = {
-      id: `pref_${Date.now()}`,
-      init_point: `https://www.mercadopago.cl/checkout/v1/redirect?pref_id=mock_${Date.now()}`,
-      sandbox_init_point: `https://sandbox.mercadopago.cl/checkout/v1/redirect?pref_id=mock_${Date.now()}`,
-    };
-
+    // En producción, aquí llamarías al SDK o API de Mercado Pago
+    // const mp = new MercadoPago(MERCADOPAGO_PUBLIC_KEY);
+    // const response = await mp.preferences.create(preference);
+    
+    // Por ahora, retornar error hasta tener configuración real de Mercado Pago
     return {
-      preferenceId: mockResponse.id,
-      initPoint: mockResponse.init_point,
-      error: null,
+      preferenceId: null,
+      initPoint: null,
+      error: 'Mercado Pago no está configurado. Contacta al administrador.',
     };
   } catch (error) {
     console.error('Error initializing Mercado Pago payment:', error);
@@ -515,7 +513,8 @@ export const redeemGiftCard = async (redemptionData) => {
     }
 
     // En producción, aquí se generaría el código real del gift card
-    const mockGiftCard = {
+    // Por ahora, retornar estructura básica hasta tener integración real
+    const giftCard = {
       code: `GC-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
       merchant,
       amount: denomination,
@@ -533,7 +532,7 @@ export const redeemGiftCard = async (redemptionData) => {
       action_url: '/debtor/wallet',
     });
 
-    return { success: true, giftCard: mockGiftCard, error: null };
+    return { success: true, giftCard, error: null };
   } catch (error) {
     console.error('Error redeeming gift card:', error);
     return { success: false, giftCard: null, error: 'Error al canjear gift card.' };
@@ -799,17 +798,15 @@ export const initializeMercadoPagoSplitPayment = async (paymentData) => {
       // ],
     };
 
-    // Simulación para desarrollo
-    const mockResponse = {
-      id: `split_pref_${Date.now()}`,
-      init_point: `https://www.mercadopago.cl/checkout/v1/redirect?pref_id=split_mock_${Date.now()}`,
-      sandbox_init_point: `https://sandbox.mercadopago.cl/checkout/v1/redirect?pref_id=split_mock_${Date.now()}`,
-    };
-
+    // En producción, aquí llamarías al SDK o API de Mercado Pago con split
+    // const mp = new MercadoPago(MERCADOPAGO_PUBLIC_KEY);
+    // const response = await mp.preferences.create(preference);
+    
+    // Por ahora, retornar error hasta tener configuración real de Mercado Pago
     return {
-      preferenceId: mockResponse.id,
-      initPoint: mockResponse.init_point,
-      error: null,
+      preferenceId: null,
+      initPoint: null,
+      error: 'Mercado Pago split no está configurado. Contacta al administrador.',
     };
   } catch (error) {
     console.error('Error initializing Mercado Pago split payment:', error);

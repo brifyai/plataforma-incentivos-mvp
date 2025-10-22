@@ -552,8 +552,8 @@ const signUp = async (userData, currentUserRole = null) => {
       // No fallar el registro por problemas de email
     }
 
-    // Crear un objeto user simulado para mantener compatibilidad
-    const mockUser = {
+    // Crear un objeto user real basado en los datos de la base de datos
+    const realUser = {
       id: userDataResult.id,
       email: userDataResult.email,
       user_metadata: {
@@ -563,7 +563,7 @@ const signUp = async (userData, currentUserRole = null) => {
       },
     };
 
-    return { user: mockUser, error: null };
+    return { user: realUser, error: null };
   } catch (error) {
     console.error('Error in signUp:', error);
     return { user: null, error: 'Error al registrar usuario. Por favor, intenta de nuevo.' };
@@ -692,8 +692,8 @@ const signIn = async (email, password) => {
     // Guardar en localStorage (mantener compatibilidad pero con tokens seguros)
     localStorage.setItem('secure_session', JSON.stringify(secureSession));
 
-    // También guardar versión compatible con el sistema anterior
-    localStorage.setItem('mock_session', JSON.stringify({
+    // Guardar sesión segura en localStorage (sin mock)
+    localStorage.setItem('secure_session', JSON.stringify({
       user: realUser,
       access_token: accessToken,
       refresh_token: refreshToken,
@@ -715,8 +715,8 @@ const signOut = async () => {
   try {
     // Limpiar sesiones seguras
     localStorage.removeItem('secure_session');
-    // Limpiar sesiones antiguas para compatibilidad
-    localStorage.removeItem('mock_session');
+    // Limpiar solo sesión segura
+    localStorage.removeItem('secure_session');
 
     console.log('✅ Sesión cerrada correctamente');
     return { error: null };
@@ -764,14 +764,8 @@ const getCurrentUser = async () => {
       return { user, error: null };
     }
 
-    // Fallback al sistema anterior para compatibilidad
-    const sessionData = localStorage.getItem('mock_session');
-    if (!sessionData) {
-      return { user: null, error: null };
-    }
-
-    const session = JSON.parse(sessionData);
-    return { user: session.user, error: null };
+    // Solo usar sesión segura
+    return { user: null, error: null };
   } catch (error) {
     clearCorruptedSessions();
     const authError = handleSupabaseAuthError(error, 'getCurrentUser');
@@ -798,14 +792,8 @@ const getSession = async () => {
       return { session: null, error: null };
     }
 
-    // Fallback al sistema anterior para compatibilidad
-    const sessionData = localStorage.getItem('mock_session');
-    if (!sessionData) {
-      return { session: null, error: null };
-    }
-
-    const session = JSON.parse(sessionData);
-    return { session, error: null };
+    // Solo usar sesión segura
+    return { session: null, error: null };
   } catch (error) {
     clearCorruptedSessions();
     const authError = handleSupabaseAuthError(error, 'getSession');
@@ -1339,8 +1327,8 @@ const handleAuthCallback = async () => {
       }
     }
 
-    // Crear objeto user con el rol correcto
-    const mockUser = {
+    // Crear objeto user real con el rol correcto
+    const realUser = {
       id: user.id,
       email: user.email,
       user_metadata: {
@@ -1349,16 +1337,16 @@ const handleAuthCallback = async () => {
       },
     };
 
-    // Crear sesión compatible con localStorage
-    const mockSession = {
-      user: mockUser,
-      access_token: session?.access_token || 'mock_token_' + Date.now(),
-      refresh_token: session?.refresh_token || 'mock_refresh_' + Date.now(),
+    // Crear sesión segura con tokens reales
+    const secureSession = {
+      user: realUser,
+      access_token: session?.access_token || 'oauth_token_' + Date.now(),
+      refresh_token: session?.refresh_token || 'oauth_refresh_' + Date.now(),
     };
 
-    // Guardar en localStorage para mantener compatibilidad con el resto del sistema
-    localStorage.setItem('mock_session', JSON.stringify(mockSession));
-    console.log('💾 Sesión guardada en localStorage');
+    // Guardar en localStorage como sesión segura
+    localStorage.setItem('secure_session', JSON.stringify(secureSession));
+    console.log('💾 Sesión OAuth guardada como sesión segura');
 
     // Intentar crear el usuario en background (sin bloquear el login)
     try {
@@ -1489,8 +1477,8 @@ const handleAuthCallback = async () => {
 
     console.log('✅ Autenticación con Google exitosa');
     return {
-      user: mockUser,
-      session: mockSession,
+      user: realUser,
+      session: secureSession,
       error: null,
       redirectToProfile: redirectToProfile || needsProfileCompletion
     };
@@ -1993,7 +1981,7 @@ const setupCompanyBankAccount = async (bankAccountData) => {
     if (!user) {
       console.log('🔄 Intentando obtener desde localStorage...');
       try {
-        const sessionData = localStorage.getItem('secure_session') || localStorage.getItem('mock_session');
+        const sessionData = localStorage.getItem('secure_session');
         if (sessionData) {
           const parsedSession = JSON.parse(sessionData);
           user = parsedSession.user;

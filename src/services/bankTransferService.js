@@ -60,26 +60,20 @@ export const registerCompanyBeneficiary = async (companyData) => {
     //   body: JSON.stringify(beneficiaryData),
     // });
 
-    // Simulación para desarrollo
-    const mockBeneficiaryId = `benef_${companyId}_${Date.now()}`;
-
-    // Actualizar empresa con ID de beneficiario
-    const { error: updateError } = await supabase
-      .from('companies')
-      .update({
-        mercadopago_beneficiary_id: mockBeneficiaryId,
-        beneficiary_registered_at: new Date().toISOString(),
-      })
-      .eq('id', companyId);
-
-    if (updateError) {
-      return { success: false, error: handleSupabaseError(updateError) };
-    }
-
+    // En producción, aquí iría la llamada real a MP
+    // const response = await fetch(`${MP_CONFIG.baseURL}/v1/beneficiaries`, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Authorization': `Bearer ${MP_CONFIG.accessToken}`,
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(beneficiaryData),
+    // });
+    
+    // Por ahora, retornar error hasta tener configuración real de Mercado Pago
     return {
-      success: true,
-      beneficiaryId: mockBeneficiaryId,
-      error: null
+      success: false,
+      error: 'Mercado Pago no está configurado para registrar beneficiarios. Contacta al administrador.'
     };
 
   } catch (error) {
@@ -209,26 +203,28 @@ export const processBankTransfer = async (transferId) => {
     //   body: JSON.stringify(transferPayload),
     // });
 
-    // Simulación para desarrollo
-    const mockTransferId = `mp_transfer_${Date.now()}`;
-
-    // Actualizar transferencia como completada
-    const { error: updateError } = await supabase
+    // En producción, aquí iría la llamada real a MP
+    // const response = await fetch(`${MP_CONFIG.baseURL}/v1/transfers`, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Authorization': `Bearer ${MP_CONFIG.accessToken}`,
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(transferPayload),
+    // });
+    
+    // Por ahora, retornar error hasta tener configuración real de Mercado Pago
+    // Marcar transferencia como fallida
+    await supabase
       .from('bank_transfers')
       .update({
-        status: 'completed',
-        transfer_date: new Date().toISOString(),
-        completion_date: new Date().toISOString(),
-        mercado_pago_transfer_id: mockTransferId,
+        status: 'failed',
+        failure_reason: 'Mercado Pago no está configurado para procesar transferencias. Contacta al administrador.',
         updated_at: new Date().toISOString()
       })
       .eq('id', transferId);
 
-    if (updateError) {
-      return { success: false, error: handleSupabaseError(updateError) };
-    }
-
-    return { success: true, transferId: mockTransferId, error: null };
+    return { success: false, error: 'Mercado Pago no está configurado para procesar transferencias. Contacta al administrador.' };
 
   } catch (error) {
     console.error('Error processing bank transfer:', error);
