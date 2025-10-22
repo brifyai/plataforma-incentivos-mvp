@@ -281,25 +281,29 @@ const ClientsPage = () => {
 
       const companyId = profile.company.id;
 
-      // Cargar datos en paralelo: deudas, pagos y clientes corporativos
-      const [debtsRes, paymentsRes, corporateClientsRes] = await Promise.all([
+      // Cargar datos en paralelo: deudas, pagos, clientes corporativos y clientes individuales
+      const [debtsRes, paymentsRes, corporateClientsRes, companyClientsRes] = await Promise.all([
         getCompanyDebts(companyId),
         getCompanyPayments(companyId),
-        getCorporateClients(companyId) // ← CORREGIDO: Cargar clientes corporativos reales
+        getCorporateClients(companyId), // ← Clientes corporativos reales
+        getCompanyClients(companyId) // ← Clientes individuales de la tabla clients
       ]);
 
       if (debtsRes.error) console.error('Error fetching company debts:', debtsRes.error);
       if (paymentsRes.error) console.error('Error fetching company payments:', paymentsRes.error);
       if (corporateClientsRes.error) console.error('Error fetching corporate clients:', corporateClientsRes.error);
+      if (companyClientsRes.error) console.error('Error fetching company clients:', companyClientsRes.error);
 
       const debts = debtsRes.debts || [];
       const payments = (paymentsRes.payments || []).filter(p => p.status === 'completed');
       const corporateClients = corporateClientsRes || []; // ← Clientes corporativos reales de la tabla corporate_clients
+      const companyClients = companyClientsRes || []; // ← Clientes individuales de la tabla clients
 
       console.log('📊 ClientsPage - Datos cargados:', {
         debts: debts.length,
         payments: payments.length,
-        corporateClients: corporateClients.length
+        corporateClients: corporateClients.length,
+        companyClients: companyClients.length
       });
 
       // Agrupar pagos por usuario
@@ -386,22 +390,51 @@ const ClientsPage = () => {
         corporate_client_id: null // ← Los clientes corporativos no tienen padre
       }));
 
-      // 3. TERCERO: Combinar deudores y clientes corporativos
+      // 3. TERCERO: Agregar clientes individuales de la tabla clients
+      const individualClientSummaries = companyClients.map(client => {
+        // Buscar el cliente corporativo asociado
+        const associatedCorporate = corporateClients.find(corp => corp.id === client.corporate_client_id);
+        
+        return {
+          id: client.id,
+          name: client.business_name || 'Cliente Individual',
+          email: client.contact_email || '',
+          phone: client.contact_phone || '',
+          rut: client.rut || '',
+          totalDebt: 0, // Los clientes individuales no tienen deudas directas en este contexto
+          paidAmount: 0,
+          pendingAmount: 0,
+          lastPayment: null,
+          status: 'active', // ← Estado para clientes individuales
+          companyName: profile?.company?.business_name || profile?.company?.name || 'Empresa',
+          corporateClientName: associatedCorporate?.contact_email || 'Sin cliente corporativo',
+          corporateClientId: client.corporate_client_id,
+          firstDebtDate: client.created_at,
+          type: 'individual', // ← Tipo: cliente individual
+          corporate_client_id: client.corporate_client_id
+        };
+      });
+
+      // 4. CUARTO: Combinar deudores, clientes corporativos y clientes individuales
       const allClientSummaries = [
         ...Array.from(mapByUser.values()), // Deudores con deudas
-        ...corporateClientSummaries // Clientes corporativos reales
+        ...corporateClientSummaries, // Clientes corporativos reales
+        ...individualClientSummaries // Clientes individuales de la tabla clients
       ].sort((a, b) => {
-        // Ordenar por: pendientes > deudores > corporativos > completados
+        // Ordenar por: pendientes > deudores > individuales > corporativos > completados
         if (a.pendingAmount > 0 && b.pendingAmount === 0) return -1;
         if (a.pendingAmount === 0 && b.pendingAmount > 0) return 1;
-        if (a.type === 'corporate' && b.type === 'debtor') return 1;
-        if (a.type === 'debtor' && b.type === 'corporate') return -1;
+        if (a.type === 'corporate' && b.type !== 'corporate') return 1;
+        if (a.type !== 'corporate' && b.type === 'corporate') return -1;
+        if (a.type === 'individual' && b.type === 'debtor') return 1;
+        if (a.type === 'debtor' && b.type === 'individual') return -1;
         return b.pendingAmount - a.pendingAmount;
       });
 
       console.log('✅ ClientsPage - Clientes combinados:', {
         debtors: mapByUser.size,
         corporate: corporateClientSummaries.length,
+        individual: individualClientSummaries.length,
         total: allClientSummaries.length
       });
 
