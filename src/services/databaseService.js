@@ -219,8 +219,9 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
   try {
     console.log('🔍 getCompanyDebts called with:', { companyId, clientId });
     
-    // La columna client_id existe (verificado), no necesitamos verificar information_schema
-    // que causa problemas de permisos
+    // SIMPLIFICACIÓN: Obtener deudas directamente por company_id
+    // La columna client_id existe pero no necesitamos verificar information_schema
+    // que causa problemas de permisos en producción
 
     let query = supabase
       .from('debts')
@@ -229,31 +230,12 @@ export const getCompanyDebts = async (companyId, clientId = null) => {
         user:users(id, full_name, email, rut)
       `);
 
+    // Filtrar siempre por company_id
+    query = query.eq('company_id', companyId);
+
+    // Si hay clientId específico, filtrar también por client_id
     if (clientId) {
-      // Si hay clientId específico, filtrar por ese cliente
       query = query.eq('client_id', clientId);
-    } else {
-      // Si no hay clientId específico, obtener deudas de dos maneras:
-      // 1. Deudas asociadas a clientes de la empresa
-      // 2. Deudas directas de la empresa (sin client_id)
-      const { data: clients, error: clientsError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('company_id', companyId);
-
-      if (clientsError) {
-        console.warn('Error getting clients for company:', clientsError);
-      }
-
-      const clientIds = clients?.map(c => c.id) || [];
-      
-      if (clientIds.length > 0) {
-        // Si hay clientes, obtener deudas de clientes Y deudas directas de la empresa
-        query = query.or(`client_id.in.(${clientIds.join(',')}),company_id.eq.${companyId}`);
-      } else {
-        // Si no hay clientes, obtener solo deudas directas de la empresa
-        query = query.eq('company_id', companyId);
-      }
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -3225,12 +3207,12 @@ export const getCorporateClients = async (companyId) => {
     console.log('🔍 getCorporateClients: Buscando Empresas Corporativas (Nivel 3) de la Empresa (Nivel 2):', companyId);
     console.log('📋 Jerarquía: Empresa → Empresa Corporativa');
 
-    // Intentar primero obtener de la tabla 'corporate_clients' con campos correctos
+    // Obtener de la tabla 'corporate_clients' con campos correctos
     let { data, error } = await supabase
       .from('corporate_clients')
       .select('*')
       .eq('company_id', companyId)
-      .order('contact_info->>name'); // Ordenar por nombre dentro de JSONB
+      .order('created_at', { ascending: false }); // Ordenar por fecha de creación
 
     // Si no hay datos o hay error, intentar con la tabla 'clients' como fallback
     if (error || !data || data.length === 0) {
@@ -3253,20 +3235,18 @@ export const getCorporateClients = async (companyId) => {
 
     // Transformar los datos para mantener compatibilidad con el formato esperado
     const transformedClients = (data || []).map(client => {
-      // Para corporate_clients, los campos están en contact_info (JSONB)
-      // Para clients, los campos están directamente disponibles
-      const contactInfo = client.contact_info || {};
-      
+      // Para corporate_clients, los campos están directamente disponibles
+      // Para clients, los campos están directamente disponibles también
       return {
         id: client.id,
-        name: client.name || client.business_name || 'Cliente sin nombre',
+        name: client.name || client.business_name || client.contact_email || 'Cliente sin nombre',
         display_category: client.display_category || 'Corporativo',
-        contact_email: contactInfo.email || client.contact_email,
-        contact_phone: contactInfo.phone || client.contact_phone,
-        company_rut: contactInfo.rut || client.rut || client.company_rut,
-        industry: contactInfo.industry || client.industry || 'General',
-        contract_value: contactInfo.contract_value || client.contract_value || 0,
-        is_active: true, // Por defecto activos ya que el campo no existe
+        contact_email: client.contact_email,
+        contact_phone: client.contact_phone,
+        company_rut: client.rut || client.company_rut,
+        industry: client.industry || 'General',
+        contract_value: client.contract_value || 0,
+        is_active: true, // Por defecto activos ya que el campo no existe en corporate_clients
         segment_count: client.segment_count || 0,
         debtor_count: client.debtor_count || 0,
         total_debt_amount: client.total_debt_amount || 0,
