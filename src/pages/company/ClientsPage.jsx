@@ -285,7 +285,7 @@ const ClientsPage = () => {
       const [debtsRes, paymentsRes, corporateClientsRes] = await Promise.all([
         getCompanyDebts(companyId),
         getCompanyPayments(companyId),
-        getCompanyClients(companyId) // ← NUEVO: Cargar clientes corporativos
+        getCorporateClients(companyId) // ← CORREGIDO: Cargar clientes corporativos reales
       ]);
 
       if (debtsRes.error) console.error('Error fetching company debts:', debtsRes.error);
@@ -294,7 +294,7 @@ const ClientsPage = () => {
 
       const debts = debtsRes.debts || [];
       const payments = (paymentsRes.payments || []).filter(p => p.status === 'completed');
-      const corporateClients = corporateClientsRes.clients || [];
+      const corporateClients = corporateClientsRes || []; // ← Clientes corporativos reales de la tabla corporate_clients
 
       console.log('📊 ClientsPage - Datos cargados:', {
         debts: debts.length,
@@ -366,32 +366,32 @@ const ClientsPage = () => {
         }
       });
 
-      // 2. SEGUNDO: Agregar clientes corporativos (sin deudas aún)
+      // 2. SEGUNDO: Agregar clientes corporativos reales de la tabla corporate_clients
       const corporateClientSummaries = corporateClients.map(client => ({
         id: client.id,
-        name: client.business_name || 'Cliente Corporativo',
+        name: client.contact_email || 'Cliente Corporativo', // ← Usar contact_email como nombre
         email: client.contact_email || '',
         phone: client.contact_phone || '',
         rut: client.rut || '',
-        totalDebt: 0, // No tienen deudas directas
+        totalDebt: 0, // Los clientes corporativos no tienen deudas directas
         paidAmount: 0,
         pendingAmount: 0,
         lastPayment: null,
         status: 'corporate', // ← Estado especial para clientes corporativos
         companyName: profile?.company?.business_name || profile?.company?.name || 'Empresa',
-        corporateClientName: client.business_name,
+        corporateClientName: client.contact_email, // ← Usar contact_email como nombre
         corporateClientId: client.id,
         firstDebtDate: client.created_at,
         type: 'corporate', // ← Tipo: cliente corporativo
-        corporate_client_id: client.corporate_client_id // ← Referencia al cliente corporativo padre
+        corporate_client_id: null // ← Los clientes corporativos no tienen padre
       }));
 
       // 3. TERCERO: Combinar deudores y clientes corporativos
       const allClientSummaries = [
         ...Array.from(mapByUser.values()), // Deudores con deudas
-        ...corporateClientSummaries // Clientes corporativos
+        ...corporateClientSummaries // Clientes corporativos reales
       ].sort((a, b) => {
-        // Ordenar por: pendientes > corporativos > completados
+        // Ordenar por: pendientes > deudores > corporativos > completados
         if (a.pendingAmount > 0 && b.pendingAmount === 0) return -1;
         if (a.pendingAmount === 0 && b.pendingAmount > 0) return 1;
         if (a.type === 'corporate' && b.type === 'debtor') return 1;

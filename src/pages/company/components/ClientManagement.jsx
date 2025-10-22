@@ -761,9 +761,33 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                   <h4 className="font-semibold text-gray-900">{client.name}</h4>
                   <p className="text-sm text-gray-600">{client.rut}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-blue-600 font-medium">{client.companyName}</span>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-blue-600 font-medium">{client.corporateClientName}</span>
+                    {client.type === 'corporate' ? (
+                      <>
+                        <span className="text-xs text-blue-600 font-medium">{client.companyName}</span>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs text-blue-600 font-medium">{client.corporateClientName}</span>
+                      </>
+                    ) : client.type === 'individual' ? (
+                      <>
+                        {client.corporateClientName && (
+                          <>
+                            <span className="text-xs text-blue-600 font-medium">{client.corporateClientName}</span>
+                            <span className="text-xs text-gray-400">•</span>
+                          </>
+                        )}
+                        <span className="text-xs text-gray-600">Cliente Individual</span>
+                      </>
+                    ) : (
+                      <>
+                        {client.corporateClientName && (
+                          <>
+                            <span className="text-xs text-blue-600 font-medium">{client.corporateClientName}</span>
+                            <span className="text-xs text-gray-400">•</span>
+                          </>
+                        )}
+                        <span className="text-xs text-gray-600">Deudor</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

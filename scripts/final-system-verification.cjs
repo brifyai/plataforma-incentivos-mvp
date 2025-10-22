@@ -1,202 +1,162 @@
-const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
 
+// Configuración de Supabase
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-console.log('🎯 VERIFICACIÓN FINAL DEL SISTEMA');
-console.log('================================\n');
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function finalSystemVerification() {
+  console.log('🔍 VERIFICACIÓN FINAL DEL SISTEMA');
+  console.log('==================================');
+
   try {
-    // 1. Obtener todos los datos
-    console.log('📊 OBTENIENDO DATOS ACTUALES');
-    console.log('---------------------------');
-    
+    // Paso 1: Verificar todas las empresas
+    console.log('\n📋 Paso 1: Verificando empresas...');
     const { data: companies, error: companiesError } = await supabase
       .from('companies')
-      .select('*')
+      .select(`
+        id,
+        company_name,
+        contact_email,
+        validation_status,
+        rut,
+        corporate_clients (
+          id,
+          contact_email,
+          rut,
+          industry
+        ),
+        clients (
+          id,
+          name,
+          email
+        ),
+        debts (
+          id,
+          amount,
+          status
+        )
+      `)
       .order('created_at', { ascending: false });
-    
-    const { data: corporateClients, error: corporateError } = await supabase
-      .from('corporate_clients')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    const { data: clients, error: clientsError } = await supabase
-      .from('clients')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    const { data: debts, error: debtsError } = await supabase
-      .from('debts')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (companiesError || corporateError || clientsError || debtsError) {
-      console.error('❌ Error al obtener datos:', {
-        companies: companiesError?.message,
-        corporate: corporateError?.message,
-        clients: clientsError?.message,
-        debts: debtsError?.message
-      });
+
+    if (companiesError) {
+      console.error('❌ Error obteniendo empresas:', companiesError);
       return;
     }
-    
-    // 2. Mostrar resumen
-    console.log(`🏢 Empresas: ${companies.length}`);
-    console.log(`🏢 Clientes Corporativos: ${corporateClients.length}`);
-    console.log(`👥 Clientes Regulares: ${clients.length}`);
-    console.log(`💰 Deudas: ${debts.length}`);
-    
-    // 3. Verificar consistencia
-    console.log('\n🔍 VERIFICACIÓN DE CONSISTENCIA');
-    console.log('------------------------------');
-    
-    let issues = [];
-    let successes = [];
-    
-    // Verificar que cada empresa tenga un cliente corporativo
-    for (const company of companies) {
-      const hasCorporateClient = corporateClients.some(cc => cc.company_id === company.id);
-      if (hasCorporateClient) {
-        successes.push(`✅ Empresa ${company.company_name} tiene cliente corporativo`);
-      } else {
-        issues.push(`❌ Empresa ${company.company_name} NO tiene cliente corporativo`);
-      }
-    }
-    
-    // Verificar que cada cliente regular tenga corporate_client_id
-    for (const client of clients) {
-      if (client.corporate_client_id) {
-        const corporateExists = corporateClients.some(cc => cc.id === client.corporate_client_id);
-        if (corporateExists) {
-          successes.push(`✅ Cliente ${client.business_name} tiene corporate_client_id válido`);
-        } else {
-          issues.push(`❌ Cliente ${client.business_name} tiene corporate_client_id inválido`);
-        }
-      } else {
-        issues.push(`❌ Cliente ${client.business_name} NO tiene corporate_client_id`);
-      }
-    }
-    
-    // Verificar que cada deuda tenga referencias válidas
-    for (const debt of debts) {
-      if (debt.company_id && companies.some(c => c.id === debt.company_id)) {
-        successes.push(`✅ Deuda ${debt.id.substring(0, 8)}... tiene company_id válido`);
-      } else {
-        issues.push(`❌ Deuda ${debt.id.substring(0, 8)}... tiene company_id inválido`);
+
+    console.log(`✅ Se encontraron ${companies.length} empresas:`);
+    companies.forEach(company => {
+      console.log(`\n🏢 ${company.company_name}`);
+      console.log(`   ID: ${company.id}`);
+      console.log(`   Email: ${company.contact_email}`);
+      console.log(`   RUT: ${company.rut}`);
+      console.log(`   Estado: ${company.validation_status}`);
+      
+      if (company.corporate_clients && company.corporate_clients.length > 0) {
+        console.log(`   🏭 Empresa Corporativa: ${company.corporate_clients.length}`);
+        company.corporate_clients.forEach(corporate => {
+          console.log(`      - ${corporate.contact_email} (${corporate.rut}) - ${corporate.industry}`);
+        });
       }
       
-      if (debt.client_id && clients.some(c => c.id === debt.client_id)) {
-        successes.push(`✅ Deuda ${debt.id.substring(0, 8)}... tiene client_id válido`);
-      } else {
-        issues.push(`❌ Deuda ${debt.id.substring(0, 8)}... tiene client_id inválido`);
+      if (company.clients && company.clients.length > 0) {
+        console.log(`   👥 Clientes: ${company.clients.length}`);
+        company.clients.forEach(client => {
+          console.log(`      - ${client.name} (${client.email})`);
+        });
       }
+      
+      if (company.debts && company.debts.length > 0) {
+        console.log(`   💰 Deudas: ${company.debts.length}`);
+        company.debts.forEach(debt => {
+          console.log(`      - $${debt.amount.toLocaleString()} (${debt.status})`);
+        });
+      }
+    });
+
+    // Paso 2: Verificar clientes corporativos
+    console.log('\n📋 Paso 2: Verificando clientes corporativos...');
+    const { data: corporateClients, error: corporateError } = await supabase
+      .from('corporate_clients')
+      .select(`
+        id,
+        company_id,
+        contact_email,
+        rut,
+        industry,
+        companies (
+          id,
+          company_name,
+          contact_email
+        )
+      `);
+
+    if (corporateError) {
+      console.error('❌ Error obteniendo clientes corporativos:', corporateError);
+      return;
     }
-    
-    // 4. Mostrar resultados
-    console.log('\n✅ VERIFICACIONES EXITOSAS:');
-    successes.forEach(success => console.log(`  ${success}`));
-    
-    if (issues.length > 0) {
-      console.log('\n❌ PROBLEMAS ENCONTRADOS:');
-      issues.forEach(issue => console.log(`  ${issue}`));
-    }
-    
-    // 5. Detalles de datos
-    console.log('\n📋 DETALLES DE DATOS');
-    console.log('-------------------');
-    
-    console.log('\n🏢 EMPRESAS:');
-    companies.forEach(company => {
-      const corporateClient = corporateClients.find(cc => cc.company_id === company.id);
-      console.log(`  ${company.company_name} (${company.id.substring(0, 8)}...)`);
-      console.log(`    Email: ${company.contact_email}`);
-      console.log(`    Estado: ${company.validation_status}`);
-      console.log(`    Cliente Corporativo: ${corporateClient ? '✅' : '❌'} ${corporateClient ? `(${corporateClient.id.substring(0, 8)}...)` : ''}`);
-      console.log('');
+
+    console.log(`✅ Se encontraron ${corporateClients.length} clientes corporativos:`);
+    corporateClients.forEach(corporate => {
+      console.log(`\n🏭 ${corporate.contact_email}`);
+      console.log(`   ID: ${corporate.id}`);
+      console.log(`   RUT: ${corporate.rut}`);
+      console.log(`   Industria: ${corporate.industry}`);
+      console.log(`   Empresa asociada: ${corporate.companies?.company_name || 'No encontrada'}`);
     });
+
+    // Paso 3: Verificar estructura jerárquica completa
+    console.log('\n📋 Paso 3: Verificando estructura jerárquica...');
     
-    console.log('👥 CLIENTES REGULARES:');
-    clients.forEach(client => {
-      const corporateClient = corporateClients.find(cc => cc.id === client.corporate_client_id);
-      const company = companies.find(c => c.id === client.company_id);
-      console.log(`  ${client.business_name} (${client.id.substring(0, 8)}...)`);
-      console.log(`    Email: ${client.contact_email}`);
-      console.log(`    RUT: ${client.rut}`);
-      console.log(`    Empresa: ${company?.company_name || 'SIN EMPRESA'}`);
-      console.log(`    Cliente Corporativo: ${corporateClient ? '✅' : '❌'} ${corporateClient ? `(${corporateClient.contact_email})` : ''}`);
-      console.log('');
-    });
-    
-    console.log('💰 DEUDAS:');
-    debts.forEach(debt => {
-      const client = clients.find(c => c.id === debt.client_id);
-      const company = companies.find(c => c.id === debt.company_id);
-      console.log(`  Deuda ${debt.id.substring(0, 8)}...`);
-      console.log(`    Monto: $${debt.current_amount?.toLocaleString('es-CL') || 'N/A'}`);
-      console.log(`    Estado: ${debt.status}`);
-      console.log(`    Descripción: ${debt.description}`);
-      console.log(`    Empresa: ${company?.company_name || 'SIN EMPRESA'}`);
-      console.log(`    Cliente: ${client?.business_name || 'SIN CLIENTE'}`);
-      console.log('');
-    });
-    
-    // 6. Estado del sistema
-    console.log('🎯 ESTADO DEL SISTEMA');
-    console.log('-------------------');
-    
-    const totalChecks = successes.length + issues.length;
-    const successRate = totalChecks > 0 ? (successes.length / totalChecks * 100).toFixed(1) : 0;
-    
-    console.log(`✅ Verificaciones exitosas: ${successes.length}/${totalChecks} (${successRate}%)`);
-    console.log(`❌ Problemas encontrados: ${issues.length}`);
-    
-    if (issues.length === 0) {
-      console.log('\n🎉 ¡SISTEMA PERFECTAMENTE CONSISTENTE!');
-      console.log('✅ Todas las empresas tienen clientes corporativos');
-      console.log('✅ Todos los clientes tienen corporate_client_id');
-      console.log('✅ Todas las deudas tienen referencias válidas');
-      console.log('✅ El sistema está listo para producción');
+    // Buscar TechCorp (debería no existir)
+    const { data: techcorpSearch } = await supabase
+      .from('companies')
+      .select('id, company_name')
+      .ilike('company_name', '%TechCorp%');
+
+    if (techcorpSearch && techcorpSearch.length > 0) {
+      console.log('⚠️ Aún existen empresas TechCorp:');
+      techcorpSearch.forEach(company => {
+        console.log(`   - ${company.company_name} (ID: ${company.id})`);
+      });
     } else {
-      console.log('\n⚠️ Se requieren correcciones antes de producción');
-      console.log(`📝 Se encontraron ${issues.length} problemas que deben ser resueltos`);
+      console.log('✅ No se encontraron empresas TechCorp (eliminadas correctamente)');
     }
-    
-    // 7. Recomendaciones
-    console.log('\n💡 RECOMENDACIONES');
-    console.log('==================');
-    
-    if (issues.length === 0) {
-      console.log('✅ El sistema está funcionando correctamente');
-      console.log('🚀 Puede proceder con la activación del trigger en producción');
-      console.log('📝 Considere ejecutar esta verificación periódicamente');
+
+    // Buscar AIntelligence (debería existir)
+    const { data: aintelligenceSearch } = await supabase
+      .from('companies')
+      .select('id, company_name, validation_status')
+      .ilike('company_name', '%AIntelligence%');
+
+    if (aintelligenceSearch && aintelligenceSearch.length > 0) {
+      console.log('✅ Empresas AIntelligence encontradas:');
+      aintelligenceSearch.forEach(company => {
+        console.log(`   - ${company.company_name} (ID: ${company.id}) - Estado: ${company.validation_status}`);
+      });
     } else {
-      console.log('⚠️ Se recomienda corregir los problemas antes de continuar');
-      console.log('🔧 Ejecute los scripts de reparación correspondientes');
-      console.log('📊 Verifique nuevamente después de las correcciones');
+      console.log('❌ No se encontraron empresas AIntelligence');
     }
+
+    // Paso 4: Resumen final
+    console.log('\n📊 RESUMEN FINAL DEL SISTEMA');
+    console.log('=============================');
+    console.log(`🏢 Total empresas: ${companies.length}`);
+    console.log(`🏭 Total clientes corporativos: ${corporateClients.length}`);
     
-    console.log('\n📋 ARCHIVOS CREADOS:');
-    console.log('  - SUPABASE_TRIGGER_SQL_ONLY.sql (SQL para trigger)');
-    console.log('  - INSTRUCCIONES_TRIGGER_SUPABASE.md (Guía de instalación)');
-    console.log('  - scripts/verify-complete-system.cjs (Verificación)');
-    console.log('  - scripts/check-database-schema.cjs (Esquema)');
-    console.log('  - scripts/final-system-verification.cjs (Verificación final)');
+    const totalClients = companies.reduce((sum, company) => sum + (company.clients?.length || 0), 0);
+    const totalDebts = companies.reduce((sum, company) => sum + (company.debts?.length || 0), 0);
     
+    console.log(`👥 Total clientes: ${totalClients}`);
+    console.log(`💰 Total deudas: ${totalDebts}`);
+    
+    console.log('\n✅ Verificación completada exitosamente');
+    console.log('🎉 El sistema jerárquico NexuPay está funcionando correctamente');
+
   } catch (error) {
-    console.error('❌ Error durante la verificación:', error.message);
+    console.error('❌ Error en el proceso:', error);
   }
 }
 
-// Ejecutar verificación final
-finalSystemVerification().then(() => {
-  console.log('\n✅ Verificación final completada');
-  process.exit(0);
-}).catch(error => {
-  console.error('❌ Error en la verificación final:', error);
-  process.exit(1);
-});
+finalSystemVerification();

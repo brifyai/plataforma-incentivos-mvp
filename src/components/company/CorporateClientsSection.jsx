@@ -68,7 +68,7 @@ const CorporateClientsSection = ({ profile, onUpdate }) => {
         .select('*')
         .eq('company_id', profile.company.id)
         .eq('is_active', true)
-        .order('name');
+        .order('contact_email');
 
       if (error) {
         console.error('Error loading corporate clients:', error);
