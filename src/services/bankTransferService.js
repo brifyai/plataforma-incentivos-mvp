@@ -107,7 +107,7 @@ export const createBankTransfer = async (transferData) => {
     // Obtener datos de la empresa
     const { data: company, error: companyError } = await supabase
       .from('companies')
-      .select('business_name, bank_account_info, mercadopago_beneficiary_id')
+      .select('company_name, bank_account_info, mercadopago_beneficiary_id')
       .eq('id', companyId)
       .single();
 
@@ -163,7 +163,7 @@ export const processBankTransfer = async (transferId) => {
       .from('bank_transfers')
       .select(`
         *,
-        company:companies(business_name, mercadopago_beneficiary_id)
+        company:companies(company_name, mercadopago_beneficiary_id)
       `)
       .eq('id', transferId)
       .single();
@@ -195,7 +195,7 @@ export const processBankTransfer = async (transferId) => {
       metadata: {
         company_id: transfer.company_id,
         transfer_id: transferId,
-        company_name: transfer.company.business_name,
+        company_name: transfer.company.company_name,
       }
     };
 
@@ -470,7 +470,7 @@ export const getTransferBatches = async (filters = {}) => {
         *,
         batch_transfers(
           transfer:bank_transfers(
-            company:companies(business_name)
+            company:companies(company_name)
           )
         )
       `)

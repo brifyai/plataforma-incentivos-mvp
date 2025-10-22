@@ -11,13 +11,13 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-async function checkCorporateClientsStructure() {
+async function checkCompaniesColumns() {
   try {
-    console.log('🔍 Verificando estructura de corporate_clients...');
+    console.log('🔍 Verificando estructura de la tabla companies...');
 
     // Verificar si hay datos directamente
-    const { data: corporateClients, error: dataError } = await supabase
-      .from('corporate_clients')
+    const { data: companies, error: dataError } = await supabase
+      .from('companies')
       .select('*')
       .limit(5);
 
@@ -26,18 +26,18 @@ async function checkCorporateClientsStructure() {
       return;
     }
 
-    if (corporateClients.length > 0) {
-      console.log('✅ Estructura de la tabla corporate_clients (basado en registros existentes):');
-      console.log('   Campos disponibles:', Object.keys(corporateClients[0]));
+    if (companies.length > 0) {
+      console.log('✅ Estructura de la tabla companies (basado en registros existentes):');
+      console.log('   Campos disponibles:', Object.keys(companies[0]));
       
-      corporateClients.forEach((corporate, index) => {
+      companies.forEach((company, index) => {
         console.log(`\n📋 Registro ${index + 1}:`);
-        Object.entries(corporate).forEach(([key, value]) => {
+        Object.entries(company).forEach(([key, value]) => {
           console.log(`   ${key}: ${value}`);
         });
       });
     } else {
-      console.log('📋 No hay registros en la tabla corporate_clients');
+      console.log('📋 No hay registros en la tabla companies');
     }
 
   } catch (error) {
@@ -45,4 +45,4 @@ async function checkCorporateClientsStructure() {
   }
 }
 
-checkCorporateClientsStructure();
+checkCompaniesColumns();

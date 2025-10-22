@@ -296,7 +296,7 @@ Tu propuesta actual es:
           *,
           companies:company_id (
             name,
-            business_name
+            company_name
           ),
           debts:debt_id (
             amount,
@@ -312,7 +312,7 @@ Tu propuesta actual es:
 
       return {
         id: proposal.id,
-        companyName: proposal.companies?.business_name || proposal.companies?.name || 'Empresa',
+        companyName: proposal.companies?.company_name || proposal.companies?.name || 'Empresa',
         totalAmount: proposal.total_amount || proposal.debts?.amount || 0,
         installments: proposal.installments || 6,
         installmentAmount: proposal.installment_amount || 0,

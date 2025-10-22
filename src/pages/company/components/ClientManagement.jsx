@@ -262,6 +262,13 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
   useEffect(() => {
     // Usar SIEMPRE datos reales recibidos por props; no hacer fallback a mocks
     let filtered = Array.isArray(clients) ? clients : [];
+    
+    // Debug: Mostrar qué datos están llegando
+    console.log('🔍 ClientManagement - Datos recibidos:', {
+      totalClients: clients.length,
+      clientTypes: clients.map(c => ({ id: c.id, name: c.name, type: c.type, status: c.status, totalDebt: c.totalDebt })),
+      loading: loading
+    });
 
     // Calcular nivel de riesgo y días de atraso para cada cliente si no lo tiene
     filtered = filtered.map(client => ({
@@ -272,8 +279,24 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
     // Filter by corporate client
     if (selectedCorporateClient) {
-      filtered = filtered.filter(client => client.corporateClientId === selectedCorporateClient);
+      filtered = filtered.filter(client =>
+        client.corporateClientId === selectedCorporateClient ||
+        client.corporate_client_id === selectedCorporateClient
+      );
     }
+
+    // Debug: Mostrar clientes antes del filtrado de búsqueda y estado
+    console.log('🔍 ClientManagement - Clientes antes de filtros:', {
+      total: filtered.length,
+      clientes: filtered.map(c => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        status: c.status,
+        totalDebt: c.totalDebt,
+        corporateClientId: c.corporateClientId
+      }))
+    });
 
     // Filter by search term
     if (searchTerm) {
@@ -288,6 +311,18 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
     if (filterStatus !== 'all') {
       filtered = filtered.filter(client => client.status === filterStatus);
     }
+
+    // Debug: Mostrar clientes finales después de todos los filtros
+    console.log('🔍 ClientManagement - Clientes finales:', {
+      total: filtered.length,
+      clientes: filtered.map(c => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        status: c.status,
+        totalDebt: c.totalDebt
+      }))
+    });
 
     setFilteredClients(filtered);
     setCurrentPage(1); // Reset to first page when filters change

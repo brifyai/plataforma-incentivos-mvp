@@ -7,66 +7,80 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function checkVerificationStatus() {
+  console.log('🔍 Verificando estado de verificación de empresa@nexupay.cl...\n');
+
   try {
-    console.log('🔍 Verificando estado de company_verifications...');
-    
-    const companyId = '7c834069-d92e-44b1-b0c0-474310fad1ff';
-    
-    // Verificar company_verifications
-    const { data: verifications, error: verificationError } = await supabase
-      .from('company_verifications')
-      .select('*')
-      .eq('company_id', companyId)
-      .order('updated_at', { ascending: false });
-    
-    if (verificationError) {
-      console.error('❌ Error en company_verifications:', verificationError);
-    } else {
-      console.log('📋 Company_verifications:');
-      console.log(JSON.stringify(verifications, null, 2));
+    // 1. Obtener usuario
+    console.log('📋 Paso 1: Obteniendo usuario...');
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, email, role')
+      .eq('email', 'empresa@nexupay.cl')
+      .single();
+
+    if (userError || !user) {
+      console.error('❌ Error obteniendo usuario:', userError);
+      return;
     }
-    
-    // Verificar companies
-    const { data: companies, error: companyError } = await supabase
+
+    console.log('✅ Usuario encontrado:', { id: user.id, email: user.email, role: user.role });
+
+    // 2. Obtener empresa
+    console.log('\n📋 Paso 2: Obteniendo empresa...');
+    const { data: company, error: companyError } = await supabase
       .from('companies')
-      .select('id, company_name, validation_status, updated_at')
-      .eq('id', companyId);
-    
-    if (companyError) {
-      console.error('❌ Error en companies:', companyError);
-    } else {
-      console.log('🏢 Companies:');
-      console.log(JSON.stringify(companies, null, 2));
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (companyError || !company) {
+      console.error('❌ Error obteniendo empresa:', companyError);
+      return;
     }
-    
-    // Verificar todas las verificaciones
-    const { data: allVerifications, error: allError } = await supabase
-      .from('company_verifications')
-      .select(`
-        id,
-        company_id,
-        status,
-        submitted_at,
-        updated_at,
-        company:companies (
-          company_name,
-          validation_status
-        )
-      `)
-      .order('updated_at', { ascending: false })
-      .limit(10);
-    
-    if (allError) {
-      console.error('❌ Error obteniendo todas las verificaciones:', allError);
+
+    console.log('✅ Empresa encontrada:', { 
+      id: company.id, 
+      name: company.business_name,
+      verification_status: company.verification_status 
+    });
+
+    // 3. Verificar si hay registro en verification_requests
+    console.log('\n📋 Paso 3: Verificando solicitudes de verificación...');
+    const { data: verificationRequests, error: verificationError } = await supabase
+      .from('verification_requests')
+      .select('*')
+      .eq('company_id', company.id);
+
+    if (verificationError) {
+      console.error('❌ Error obteniendo solicitudes de verificación:', verificationError);
     } else {
-      console.log('📊 Todas las verificaciones (últimas 10):');
-      allVerifications.forEach(v => {
-        console.log(`- ${v.company?.company_name}: ${v.status} (company validation_status: ${v.company?.validation_status})`);
-      });
+      console.log('✅ Solicitudes de verificación encontradas:', verificationRequests?.length || 0);
+      if (verificationRequests && verificationRequests.length > 0) {
+        verificationRequests.forEach((req, index) => {
+          console.log(`  ${index + 1}. Estado: ${req.status}, Creada: ${req.created_at}`);
+        });
+      }
     }
+
+    // 4. Verificar estado final
+    console.log('\n📋 Paso 4: Estado final de verificación:');
+    const verificationStatus = company.verification_status;
     
+    if (!verificationStatus) {
+      console.log('⚠️  La empresa NO ha iniciado el proceso de verificación');
+      console.log('   🔒 La página de clientes debería estar BLOQUEADA');
+    } else if (verificationStatus === 'pending') {
+      console.log('⚠️  La empresa está PENDIENTE de verificación');
+      console.log('   🔒 La página de clientes debería estar BLOQUEADA');
+    } else if (verificationStatus === 'approved') {
+      console.log('✅ La empresa está VERIFICADA');
+      console.log('   🔓 La página de clientes debería estar DESBLOQUEADA');
+    } else {
+      console.log(`❓ Estado desconocido: ${verificationStatus}`);
+    }
+
   } catch (error) {
-    console.error('💥 Error general:', error);
+    console.error('💥 Error en la verificación:', error);
   }
 }
 

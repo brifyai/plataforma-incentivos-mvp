@@ -63,11 +63,11 @@ const CorporateClientsSection = ({ profile, onUpdate }) => {
       }
 
       // Consultar la tabla real de clientes corporativos
+      // La columna is_active no existe en corporate_clients, eliminar el filtro
       const { data, error } = await supabase
         .from('corporate_clients')
         .select('*')
         .eq('company_id', profile.company.id)
-        .eq('is_active', true)
         .order('contact_email');
 
       if (error) {
@@ -94,7 +94,7 @@ const CorporateClientsSection = ({ profile, onUpdate }) => {
         industry: client.industry || 'Sin especificar',
         contract_value: client.contract_value || 0,
         contract_start_date: client.contract_start_date || null,
-        status: client.is_active ? 'active' : 'inactive',
+        status: 'active', // Todos los clientes corporativos están activos por defecto
         created_at: client.created_at,
         notes: client.notes || '',
         display_category: client.display_category || 'Cliente'
@@ -258,9 +258,9 @@ const CorporateClientsSection = ({ profile, onUpdate }) => {
   };
 
   const filteredClients = clients.filter(client =>
-    client.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.contact_email.toLowerCase().includes(searchTerm.toLowerCase())
+    (client.company_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.contact_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.contact_email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleInputChange = (field, value) => {
