@@ -220,16 +220,22 @@ const ClientsPage = () => {
         }
         corporateClients = allClients;
       } else {
-        // Para usuarios normales, usar su company_id
+        // Para usuarios normales, usar su company_id - FILTRAR POR EMPRESA CORRECTA
         if (!profile?.company?.id) {
           console.warn('No company ID found for normal user');
           setCorporateClients([]);
           return;
         }
 
-        const { corporateClients: companyClients, error } = await getCorporateClients(profile.company.id);
+        console.log(`🏢 Cargando clientes corporativos para empresa: ${profile.company.id}`);
+        const { data: companyClients, error } = await supabase
+          .from('corporate_clients')
+          .select('*')
+          .eq('company_id', profile.company.id)
+          .order('contact_email');
+        
         if (error) {
-          console.error('Error loading corporate clients:', error);
+          console.error('Error loading company corporate clients:', error);
           setCorporateClients([]);
           return;
         }
@@ -248,6 +254,7 @@ const ClientsPage = () => {
       }));
 
       console.log(`📊 Clientes corporativos cargados en ClientsPage: ${normalized.length}`);
+      console.log('📋 Clientes corporativos:', normalized.map(c => `${c.company_name} (${c.company_rut})`));
       setCorporateClients(normalized);
     } catch (error) {
       console.error('Error loading corporate clients:', error);
