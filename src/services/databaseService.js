@@ -71,25 +71,59 @@ export const updateUserProfile = async (userId, updates) => {
 };
 
 /**
- * Obtiene los datos de una empresa
+ * Obtiene los datos de una empresa (Nivel 2 de la jerarquía)
+ *
+ * ESTRUCTURA JERÁRQUICA:
+ * Usuario (Nivel 1) → Empresa (Nivel 2) → Empresa Corporativa (Nivel 3) → Clientes (Nivel 4) → Deudas (Nivel 5)
+ *
  * @param {string} userId - ID del usuario empresa
  * @returns {Promise<{company, error}>}
  */
 export const getCompanyProfile = async (userId) => {
   try {
-    const { data, error } = await supabase
+    console.log('🔍 getCompanyProfile called for userId:', userId);
+    console.log('📋 Nivel 2: Buscando Empresa del usuario');
+    
+    // Obtener todas las empresas del usuario (Nivel 2)
+    const { data: companies, error } = await supabase
       .from('companies')
       .select('*')
       .eq('user_id', userId)
-      .maybeSingle(); // Cambiado de .single() a .maybeSingle() para manejar 0 resultados
+      .order('created_at', { ascending: false }); // Más reciente primero
 
     if (error) {
+      console.error('❌ Error in getCompanyProfile:', error);
       return { company: null, error: handleSupabaseError(error) };
     }
 
-    return { company: data, error: null };
+    console.log(`📊 Found ${companies?.length || 0} companies for user ${userId}`);
+
+    if (!companies || companies.length === 0) {
+      console.log('⚠️ No companies found for user');
+      return { company: null, error: null };
+    }
+
+    // Priorizar empresas validadas
+    let selectedCompany = companies.find(c => c.validation_status === 'validated');
+    
+    // Si no hay validadas, tomar la primera
+    if (!selectedCompany) {
+      selectedCompany = companies[0];
+      console.log('⚠️ No validated companies found, using first available');
+    } else {
+      console.log('✅ Using validated company:', selectedCompany.business_name);
+    }
+
+    console.log('📋 Selected company (Nivel 2):', {
+      id: selectedCompany.id,
+      business_name: selectedCompany.business_name,
+      contact_email: selectedCompany.contact_email,
+      validation_status: selectedCompany.validation_status
+    });
+
+    return { company: selectedCompany, error: null };
   } catch (error) {
-    console.error('Error in getCompanyProfile:', error);
+    console.error('💥 Error in getCompanyProfile:', error);
     return { company: null, error: 'Error al obtener datos de empresa.' };
   }
 };
@@ -1467,12 +1501,18 @@ export const updatePaymentReceiptValidation = async (receiptId, validationData) 
 };
 
 /**
- * Crea una nueva empresa
- * @param {Object} companyData - Datos de la empresa
+ * Crea una nueva empresa (Nivel 2) y automáticamente su empresa corporativa (Nivel 3)
+ *
+ * ESTRUCTURA JERÁRQUICA:
+ * Usuario (Nivel 1) → Empresa (Nivel 2) → Empresa Corporativa (Nivel 3) → Clientes (Nivel 4) → Deudas (Nivel 5)
+ *
+ * @param {Object} companyData - Datos de la empresa (Nivel 2)
  * @returns {Promise<{company, error}>}
  */
 export const createCompany = async (companyData) => {
   try {
+    console.log('🏢 Creando Empresa (Nivel 2)...');
+    
     const { data, error } = await supabase
       .from('companies')
       .insert(companyData)
@@ -1483,10 +1523,12 @@ export const createCompany = async (companyData) => {
       return { company: null, error: handleSupabaseError(error) };
     }
 
-    // AUTOMATIZACIÓN: Crear automáticamente el cliente corporativo
+    console.log('✅ Empresa (Nivel 2) creada:', data.business_name);
+
+    // AUTOMATIZACIÓN: Crear automáticamente la empresa corporativa (Nivel 3)
     if (data && data.id) {
       try {
-        console.log('🏢 Creando automáticamente cliente corporativo para la empresa...');
+        console.log('🏢 Creando automáticamente Empresa Corporativa (Nivel 3) para la Empresa...');
         
         // Usar solo los campos que existen en la tabla corporate_clients
         const corporateClientData = {
@@ -1506,7 +1548,8 @@ export const createCompany = async (companyData) => {
         if (corporateError) {
           console.warn('⚠️ Error creando cliente corporativo:', corporateError);
         } else {
-          console.log(`✅ Cliente corporativo creado: ID ${corporateClient.id}`);
+          console.log(`✅ Empresa Corporativa (Nivel 3) creada: ID ${corporateClient.id}`);
+          console.log('📋 Jerarquía establecida: Empresa → Empresa Corporativa');
         }
       } catch (corporateError) {
         console.error('Error creating corporate client:', corporateError);
@@ -3066,21 +3109,25 @@ export const updateUnifiedCampaign = async (campaignId, updates) => {
 };
 
 /**
- * Obtiene clientes corporativos de una empresa
- * @param {string} companyId - ID de la empresa
+ * Obtiene empresas corporativas de una empresa (Nivel 3)
+ *
+ * ESTRUCTURA JERÁRQUICA:
+ * Usuario (Nivel 1) → Empresa (Nivel 2) → Empresa Corporativa (Nivel 3) → Clientes (Nivel 4) → Deudas (Nivel 5)
+ *
+ * @param {string} companyId - ID de la empresa (Nivel 2)
  * @returns {Promise<{corporateClients, error}>}
  */
 export const getCorporateClients = async (companyId) => {
   try {
-    console.log('🔍 getCorporateClients called for company:', companyId);
+    console.log('🔍 getCorporateClients: Buscando Empresas Corporativas (Nivel 3) de la Empresa (Nivel 2):', companyId);
+    console.log('📋 Jerarquía: Empresa → Empresa Corporativa');
 
     // Intentar primero obtener de la tabla 'corporate_clients' con campos correctos
     let { data, error } = await supabase
       .from('corporate_clients')
       .select('*')
       .eq('company_id', companyId)
-      .eq('is_active', true)
-      .order('name');
+      .order('contact_info->>name'); // Ordenar por nombre dentro de JSONB
 
     // Si no hay datos o hay error, intentar con la tabla 'clients' como fallback
     if (error || !data || data.length === 0) {
@@ -3116,7 +3163,7 @@ export const getCorporateClients = async (companyId) => {
         company_rut: contactInfo.rut || client.rut || client.company_rut,
         industry: contactInfo.industry || client.industry || 'General',
         contract_value: contactInfo.contract_value || client.contract_value || 0,
-        is_active: client.is_active !== false,
+        is_active: true, // Por defecto activos ya que el campo no existe
         segment_count: client.segment_count || 0,
         debtor_count: client.debtor_count || 0,
         total_debt_amount: client.total_debt_amount || 0,
@@ -3128,9 +3175,9 @@ export const getCorporateClients = async (companyId) => {
       };
     });
 
-    console.log(`✅ Corporate clients found: ${transformedClients.length}`);
+    console.log(`✅ Empresas Corporativas (Nivel 3) encontradas: ${transformedClients.length}`);
     if (transformedClients.length > 0) {
-      console.log('📋 Client details:', transformedClients.map(c => ({
+      console.log('📋 Corporate Client details:', transformedClients.map(c => ({
         id: c.id,
         name: c.name,
         email: c.contact_email,
@@ -3141,7 +3188,7 @@ export const getCorporateClients = async (companyId) => {
     return { corporateClients: transformedClients, error: null };
   } catch (error) {
     console.error('💥 Error in getCorporateClients:', error);
-    return { corporateClients: [], error: 'Error al obtener clientes corporativos.' };
+    return { corporateClients: [], error: 'Error al obtener empresas corporativas.' };
   }
 };
 

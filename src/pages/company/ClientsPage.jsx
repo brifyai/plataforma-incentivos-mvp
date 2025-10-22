@@ -30,7 +30,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../config/supabase';
-import { getCompanyDebts, getCompanyPayments, getCorporateClients } from '../../services/databaseService';
+import { getCompanyDebts, getCompanyPayments, getCorporateClients, getCompanyClients } from '../../services/databaseService';
 import { getCompanyVerification, VERIFICATION_STATUS } from '../../services/verificationService';
 
 const ClientsPage = () => {
@@ -211,8 +211,7 @@ const ClientsPage = () => {
         const { data: allClients, error } = await supabase
           .from('corporate_clients')
           .select('*')
-          .eq('is_active', true)
-          .order('name');
+          .order('contact_email');
         
         if (error) {
           console.error('Error loading all corporate clients:', error);
@@ -240,11 +239,11 @@ const ClientsPage = () => {
       // Normalizar a estructura usada por el filtro local
       const normalized = (corporateClients || []).map((c) => ({
         id: c.id,
-        company_name: c.name || c.business_name || 'Cliente',
-        company_rut: c.rut || c.company_rut || '',
+        company_name: c.contact_email || 'Cliente',
+        company_rut: c.rut || '',
         industry: c.industry || '',
-        contract_value: c.contract_value || null,
-        status: c.is_active ? 'active' : 'inactive',
+        contract_value: null,
+        status: 'active',
         created_at: c.created_at || null
       }));
 
