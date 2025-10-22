@@ -393,9 +393,8 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           </div>
           ${corporateClients && corporateClients.length > 0 ? `
             <div class="mb-3">
-              <label>Cliente Corporativo Asociado</label>
-              <select id="swal-input6">
-                <option value="">Sin cliente corporativo</option>
+              <label>Cliente Corporativo Asociado *</label>
+              <select id="swal-input6" required>
                 ${corporateClients.map(client => `<option value="${client.id}">${client.company_name}</option>`).join('')}
               </select>
             </div>
@@ -464,6 +463,11 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
         if (!name || !email || !rut) {
           Swal.showValidationMessage('Por favor, completa los campos obligatorios: nombre, email y RUT');
+          return false;
+        }
+
+        if (corporateClients && corporateClients.length > 0 && !corporateClientId) {
+          Swal.showValidationMessage('Por favor, selecciona un cliente corporativo asociado');
           return false;
         }
 
@@ -542,7 +546,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           contact_email: formValues.email,
           contact_phone: formValues.phone || null,
           rut: formValues.rut || null,
-          corporate_client_id: formValues.corporateClientId && formValues.corporateClientId !== '' ? formValues.corporateClientId : null, // Permitir null si no se selecciona
+          corporate_client_id: formValues.corporateClientId || null, // Ahora es obligatorio si hay clientes corporativos disponibles
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
