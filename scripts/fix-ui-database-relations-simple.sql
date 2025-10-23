@@ -97,18 +97,42 @@ BEGIN
     END;
 END $$;
 
--- Paso 9: Agregar foreign key constraints mejorados
-ALTER TABLE debts 
-ADD CONSTRAINT debts_company_id_fkey 
-FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE;
-
-ALTER TABLE debts 
-ADD CONSTRAINT debts_client_id_fkey 
-FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL;
-
-ALTER TABLE clients 
-ADD CONSTRAINT clients_company_id_fkey 
-FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE;
+-- Paso 9: Agregar foreign key constraints mejorados con manejo de errores
+DO $$
+BEGIN
+    -- Agregar constraint debts_company_id_fkey
+    BEGIN
+        ALTER TABLE debts
+        ADD CONSTRAINT debts_company_id_fkey
+        FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE;
+        RAISE NOTICE 'Constraint debts_company_id_fkey agregado exitosamente';
+    EXCEPTION
+        WHEN duplicate_object THEN
+            RAISE NOTICE 'Constraint debts_company_id_fkey ya existe, continuando...';
+    END;
+    
+    -- Agregar constraint debts_client_id_fkey
+    BEGIN
+        ALTER TABLE debts
+        ADD CONSTRAINT debts_client_id_fkey
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL;
+        RAISE NOTICE 'Constraint debts_client_id_fkey agregado exitosamente';
+    EXCEPTION
+        WHEN duplicate_object THEN
+            RAISE NOTICE 'Constraint debts_client_id_fkey ya existe, continuando...';
+    END;
+    
+    -- Agregar constraint clients_company_id_fkey
+    BEGIN
+        ALTER TABLE clients
+        ADD CONSTRAINT clients_company_id_fkey
+        FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE;
+        RAISE NOTICE 'Constraint clients_company_id_fkey agregado exitosamente';
+    EXCEPTION
+        WHEN duplicate_object THEN
+            RAISE NOTICE 'Constraint clients_company_id_fkey ya existe, continuando...';
+    END;
+END $$;
 
 -- Paso 10: Intentar agregar constraint para corporate_client_id (puede fallar si no existe)
 DO $$
