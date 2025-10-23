@@ -468,13 +468,8 @@ const LandingPage = () => {
                   {/* Glow Background */}
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
-                  {/* Floating Icon */}
+                  {/* Main Icon */}
                   <div className="relative mb-8">
-                    <div className={`absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-r ${feature.gradient} rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
-                      <feature.icon className="w-6 h-6 text-white" />
-                    </div>
-                    
-                    {/* Main Icon */}
                     <div className={`w-20 h-20 mx-auto bg-gradient-to-r ${feature.gradient} rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
                       <feature.icon className="w-10 h-10 text-white" />
                     </div>
