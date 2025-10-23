@@ -49,32 +49,82 @@ SELECT '🔧 Inconsistencias de compañía corregidas' as correction_step,
 -- 🚨 PROBLEMA CRÍTICO #2: CORPORATE_CLIENT_ID EN CLIENTS
 -- =====================================================
 
--- Paso 4: Crear tabla de respaldo para corporate_client_id
-CREATE TABLE IF NOT EXISTS clients_corporate_backup AS
-SELECT 
-    c.id as client_id,
-    c.business_name as client_name,
-    c.corporate_client_id as original_corporate_client_id,
-    cc.name as corporate_client_name,
-    CASE 
-        WHEN cc.id IS NULL THEN 'CORPORATE_CLIENT_NOT_FOUND'
-        ELSE 'VALID'
-    END as issue_type,
-    NOW() as backup_timestamp
-FROM clients c
-LEFT JOIN corporate_clients cc ON c.corporate_client_id = cc.id
-WHERE c.corporate_client_id IS NOT NULL AND cc.id IS NULL;
+-- Paso 4: Crear tabla de respaldo para corporate_client_id (solo si existe la tabla corporate_clients)
+DO $$
+BEGIN
+    -- Verificar si existe la tabla corporate_clients y el campo corporate_client_id en clients
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_name = 'corporate_clients' AND table_schema = 'public'
+    ) AND EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'clients' AND column_name = 'corporate_client_id' AND table_schema = 'public'
+    ) THEN
+        -- Ejecutar el backup solo si ambas tablas existen
+        EXECUTE '
+            CREATE TABLE IF NOT EXISTS clients_corporate_backup AS
+            SELECT
+                c.id as client_id,
+                c.business_name as client_name,
+                c.corporate_client_id as original_corporate_client_id,
+                cc.name as corporate_client_name,
+                CASE
+                    WHEN cc.id IS NULL THEN ''CORPORATE_CLIENT_NOT_FOUND''
+                    ELSE ''VALID''
+                END as issue_type,
+                NOW() as backup_timestamp
+            FROM clients c
+            LEFT JOIN corporate_clients cc ON c.corporate_client_id = cc.id
+            WHERE c.corporate_client_id IS NOT NULL AND cc.id IS NULL';
+        
+        RAISE NOTICE 'Tabla de respaldo corporate creada';
+    ELSE
+        RAISE NOTICE 'Omitiendo backup de corporate_clients - tabla o campo no existe';
+    END IF;
+END $$;
 
-SELECT '💾 Tabla de respaldo corporate creada' as backup_step, 'clients_corporate_backup' as table_name, COUNT(*) as record_count
-FROM clients_corporate_backup;
+-- Mostrar resultados del backup solo si la tabla existe
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_name = 'clients_corporate_backup' AND table_schema = 'public'
+    ) THEN
+        EXECUTE '
+            SELECT ''💾 Tabla de respaldo corporate creada'' as backup_step, ''clients_corporate_backup'' as table_name, COUNT(*) as record_count
+            FROM clients_corporate_backup';
+    END IF;
+END $$;
 
--- Paso 5: Corregir corporate_client_id inválidos
-UPDATE clients 
-SET corporate_client_id = NULL 
-WHERE corporate_client_id NOT IN (SELECT id FROM corporate_clients);
+-- Paso 5: Corregir corporate_client_id inválidos (solo si existen las tablas)
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_name = 'corporate_clients' AND table_schema = 'public'
+    ) AND EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'clients' AND column_name = 'corporate_client_id' AND table_schema = 'public'
+    ) THEN
+        -- Corregir corporate_client_id inválidos
+        EXECUTE 'UPDATE clients SET corporate_client_id = NULL WHERE corporate_client_id NOT IN (SELECT id FROM corporate_clients)';
+        
+        RAISE NOTICE 'Corporate_client_id inválidos corregidos';
+    ELSE
+        RAISE NOTICE 'Omitiendo corrección de corporate_client_id - tabla o campo no existe';
+    END IF;
+END $$;
 
-SELECT '🔧 Corporate_client_id inválidos corregidos' as correction_step,
-    (SELECT COUNT(*) FROM clients_corporate_backup) as records_corrected;
+-- Mostrar resultados de la corrección solo si la tabla de backup existe
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_name = 'clients_corporate_backup' AND table_schema = 'public'
+    ) THEN
+        EXECUTE 'SELECT ''🔧 Corporate_client_id inválidos corregidos'' as correction_step, COUNT(*) as records_corrected FROM clients_corporate_backup';
+    END IF;
+END $$;
 
 -- =====================================================
 -- 🔒 AGREGAR CONSTRAINTS FALTANTES
