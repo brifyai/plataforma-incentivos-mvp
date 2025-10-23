@@ -31,7 +31,7 @@ export const AuthStatsCard = () => (
 export const AuthBenefitsList = () => (
   <div className="space-y-6">
     <h2 className="text-2xl font-semibold mb-4">
-      ¡Bienvenido de vuelta!
+      Facilita tus Pagos
     </h2>
 
     <div className="space-y-4">
@@ -40,9 +40,9 @@ export const AuthBenefitsList = () => (
           <Shield className="w-5 h-5 text-blue-200" />
         </div>
         <div>
-          <h3 className="font-semibold text-lg mb-1">100% Seguro</h3>
+          <h3 className="font-semibold text-lg mb-1">Plataforma Segura</h3>
           <p className="text-blue-100 text-sm">
-            Tus datos personales nunca se comparten con empresas de cobranza
+            Tu información está protegida y solo se comparte con empresas certificadas
           </p>
         </div>
       </div>
@@ -52,9 +52,9 @@ export const AuthBenefitsList = () => (
           <Zap className="w-5 h-5 text-blue-200" />
         </div>
         <div>
-          <h3 className="font-semibold text-lg mb-1">Proceso Rápido</h3>
+          <h3 className="font-semibold text-lg mb-1">Negociación Simple</h3>
           <p className="text-blue-100 text-sm">
-            Acuerdos en minutos, pagos en tiempo real
+            Proceso fácil para llegar a acuerdos que puedas cumplir
           </p>
         </div>
       </div>
@@ -64,9 +64,9 @@ export const AuthBenefitsList = () => (
           <Heart className="w-5 h-5 text-blue-200" />
         </div>
         <div>
-          <h3 className="font-semibold text-lg mb-1">50% de Comisión</h3>
+          <h3 className="font-semibold text-lg mb-1">Gana Extra</h3>
           <p className="text-blue-100 text-sm">
-            Recibe el 50% del valor acordado cuando completes un pago
+            Recibe hasta el 50% de comisión por facilitar tus pagos
           </p>
         </div>
       </div>

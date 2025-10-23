@@ -23,10 +23,10 @@ const LoginForm = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-10 transition-opacity duration-500"></div>
         <div className="relative z-10">
           <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-            ¡Bienvenido!
+            Facilita tus Pagos
           </h2>
           <p className="text-blue-100 text-lg">
-            Ingresa a tu cuenta para continuar
+            Negocia tus deudas de forma segura
           </p>
         </div>
       </div>
@@ -169,12 +169,12 @@ const LoginForm = () => {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-400">
-            ¿No tienes una cuenta?{' '}
+            ¿Listo para facilitar tus pagos?{' '}
             <Link
               to="/registro"
               className="font-semibold text-blue-400 hover:text-blue-300 hover:underline transition-colors"
             >
-              Regístrate aquí
+              Comienza aquí
             </Link>
           </p>
         </div>
