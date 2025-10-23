@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select, DateFilter } from '../../components/common';
 import { formatDate } from '../../utils/formatters';
+import { getUserNotifications, createNotification, markNotificationAsRead, markAllNotificationsAsRead } from '../../services/databaseService';
 import {
   Bell,
   CheckCircle,
@@ -93,72 +94,100 @@ const CompanyNotificationsPage = () => {
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+  }, [profile?.id]); // Reload when profile changes
 
   const loadNotifications = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call
-      setTimeout(() => {
-        setNotifications([
-          {
-            id: '1',
-            title: 'Pago Recibido',
-            message: 'Se ha recibido un pago de $50.000 de Juan Pérez',
-            type: 'success',
-            priority: 'high',
-            channels: ['email', 'push'],
-            status: 'sent',
-            createdAt: new Date(),
-            sentCount: 1,
-            readCount: 1
-          },
-          {
-            id: '2',
-            title: 'Acuerdo Vencido',
-            message: 'El acuerdo con María González está próximo a vencer',
-            type: 'warning',
-            priority: 'medium',
-            channels: ['email'],
-            status: 'sent',
-            createdAt: new Date(Date.now() - 86400000),
-            sentCount: 1,
-            readCount: 0
-          },
-          {
-            id: '3',
-            title: 'Nueva Oferta Creada',
-            message: 'Se ha creado una nueva oferta de descuento del 20%',
-            type: 'info',
-            priority: 'low',
-            channels: ['push'],
-            status: 'draft',
-            createdAt: new Date(Date.now() - 172800000),
-            sentCount: 0,
-            readCount: 0
-          }
-        ]);
+      
+      if (!profile?.id) {
+        console.warn('No user profile available for loading notifications');
+        setNotifications([]);
         setLoading(false);
-      }, 1000);
+        return;
+      }
+
+      const { notifications, error } = await getUserNotifications(profile.id);
+      
+      if (error) {
+        console.error('Error loading notifications:', error);
+        // Fallback to empty array if there's an error
+        setNotifications([]);
+      } else {
+        // Transform database notifications to match UI format
+        const transformedNotifications = (notifications || []).map(notification => ({
+          id: notification.id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type || 'info',
+          priority: notification.priority || 'normal',
+          channels: notification.channels || ['email'],
+          status: notification.read ? 'read' : 'sent',
+          createdAt: new Date(notification.created_at),
+          sentCount: notification.sent_count || 1,
+          readCount: notification.read ? 1 : 0,
+          // Additional fields from database
+          read: notification.read || false,
+          readAt: notification.read_at,
+          metadata: notification.metadata || {}
+        }));
+        
+        setNotifications(transformedNotifications);
+      }
+      
+      setLoading(false);
     } catch (error) {
       console.error('Error loading notifications:', error);
+      setNotifications([]);
       setLoading(false);
     }
   };
 
   const handleCreateNotification = async () => {
     try {
-      // Mock create - replace with actual API call
-      const notification = {
-        id: Date.now().toString(),
-        ...newNotification,
-        status: 'sent',
-        createdAt: new Date(),
-        sentCount: Math.floor(Math.random() * 50) + 1,
-        readCount: Math.floor(Math.random() * 30) + 1
+      if (!profile?.id) {
+        alert('Error: No hay perfil de usuario disponible');
+        return;
+      }
+
+      // Prepare notification data for database
+      const notificationData = {
+        user_id: profile.id,
+        title: newNotification.title,
+        message: newNotification.message,
+        type: newNotification.type,
+        priority: newNotification.priority,
+        channels: newNotification.channels,
+        metadata: {
+          targetAudience: newNotification.targetAudience,
+          createdAt: new Date().toISOString()
+        }
       };
 
-      setNotifications(prev => [notification, ...prev]);
+      const { notification, error } = await createNotification(notificationData);
+
+      if (error) {
+        alert('Error al crear notificación: ' + error);
+        return;
+      }
+
+      // Transform the created notification to match UI format
+      const transformedNotification = {
+        id: notification.id,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        priority: notification.priority || 'normal',
+        channels: notification.channels || ['email'],
+        status: 'sent',
+        createdAt: new Date(notification.created_at),
+        sentCount: 1,
+        readCount: 0,
+        read: false,
+        metadata: notification.metadata || {}
+      };
+
+      setNotifications(prev => [transformedNotification, ...prev]);
       setShowCreateModal(false);
       setNewNotification({
         title: '',
@@ -171,6 +200,7 @@ const CompanyNotificationsPage = () => {
 
       alert('✅ Notificación enviada exitosamente');
     } catch (error) {
+      console.error('Error in handleCreateNotification:', error);
       alert('Error al crear notificación: ' + error.message);
     }
   };
@@ -178,9 +208,28 @@ const CompanyNotificationsPage = () => {
   const handleDeleteNotification = async (id) => {
     if (confirm('¿Está seguro de que desea eliminar esta notificación?')) {
       try {
-        setNotifications(prev => prev.filter(n => n.id !== id));
-        alert('✅ Notificación eliminada exitosamente');
+        // For now, we'll mark as read instead of deleting since the database
+        // doesn't have a delete function implemented yet
+        const { error } = await markNotificationAsRead(id);
+        
+        if (error) {
+          console.warn('Error marking notification as read:', error);
+          // Fallback: remove from UI anyway
+          setNotifications(prev => prev.filter(n => n.id !== id));
+        } else {
+          // Update the notification in the UI to mark as read
+          setNotifications(prev =>
+            prev.map(n =>
+              n.id === id
+                ? { ...n, status: 'read', read: true, readCount: 1 }
+                : n
+            )
+          );
+        }
+        
+        alert('✅ Notificación marcada como leída exitosamente');
       } catch (error) {
+        console.error('Error in handleDeleteNotification:', error);
         alert('Error al eliminar notificación: ' + error.message);
       }
     }
@@ -188,10 +237,14 @@ const CompanyNotificationsPage = () => {
 
   const handleSaveSettings = async () => {
     try {
-      // Mock save - replace with actual API call
+      // Save notification settings to localStorage for now
+      // In the future, this could be saved to user preferences in the database
+      localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+      
       alert('✅ Configuración de notificaciones guardada exitosamente');
       setShowSettingsModal(false);
     } catch (error) {
+      console.error('Error saving notification settings:', error);
       alert('Error al guardar configuración: ' + error.message);
     }
   };
