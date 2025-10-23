@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Badge, LoadingSpinner } from '../common';
+import { Brain } from 'lucide-react';
 
 const AIModuleControl = () => {
   const [status, setStatus] = useState({
@@ -201,16 +202,26 @@ const AIModuleControl = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            🤖 Control del Módulo de IA
-          </h2>
-          <Badge 
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl text-white">
+              <Brain className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                🤖 Control del Módulo de IA Conversacional
+              </h2>
+              <p className="text-sm text-gray-600">
+                Activación y configuración del sistema de IA para negociación automática
+              </p>
+            </div>
+          </div>
+          <Badge
             variant={status.moduleEnabled ? "success" : "secondary"}
-            className="text-sm"
+            className="text-sm px-3 py-1"
           >
-            {status.moduleEnabled ? "ACTIVADO" : "DESACTIVADO"}
+            {status.moduleEnabled ? "✅ ACTIVADO" : "⚪ DESACTIVADO"}
           </Badge>
         </div>
 

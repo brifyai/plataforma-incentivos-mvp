@@ -10,7 +10,7 @@ import { Card, Badge, Button, LoadingSpinner } from '../../components/common';
 import { Settings, Shield, Database, Mail, Key, CreditCard, BarChart3, Bell, Brain, ArrowRight, CheckCircle, XCircle, AlertCircle, MessageCircle, Archive, FileText, Lock, Activity, Users } from 'lucide-react';
 import { getSystemConfig, getIntegrationStats } from '../../services/databaseService';
 import { getDefaultConfig } from '../../config/systemConfig';
-import AIModuleControl from '../../components/admin/AIModuleControl'; // Reactivado
+// import AIModuleControl from '../../components/admin/AIModuleControl'; // Movido a /admin/ia
 
 const AdminConfigPage = () => {
   const navigate = useNavigate();
@@ -90,24 +90,29 @@ const AdminConfigPage = () => {
     {
       id: 'ai',
       title: 'Inteligencia Artificial',
-      description: 'Configuración de servicios de IA y modelos',
+      description: 'Configuración completa de IA: modelos, conversacional y control del sistema',
       icon: Brain,
       path: '/admin/ia',
-      color: 'from-indigo-500 to-indigo-600',
+      color: 'from-indigo-500 to-purple-600',
       status: (config.chutesApiActive || config.groqApiActive) ? 'success' : 'warning',
       statusText: (config.chutesApiActive || config.groqApiActive) ? 'Configurada' : 'Sin configurar',
-      category: 'principal'
-    },
-    {
-      id: 'ai-module',
-      title: 'Módulo de IA Conversacional',
-      description: 'Control del módulo de negociación con IA',
-      icon: Brain,
-      path: '/admin/ai-module',
-      color: 'from-purple-500 to-purple-600',
-      status: 'info',
-      statusText: 'Nuevo',
-      category: 'principal'
+      category: 'principal',
+      subSections: [
+        {
+          id: 'ai-dashboard',
+          title: 'Dashboard de IA',
+          description: 'Configuración de proveedores y modelos',
+          icon: Brain,
+          path: '/admin/ia'
+        },
+        {
+          id: 'ai-module-control',
+          title: 'Control del Módulo',
+          description: 'Activar/desactivar módulo conversacional',
+          icon: Settings,
+          path: '/admin/ia?tab=module-control'
+        }
+      ]
     },
     
     // Comunicaciones
@@ -350,6 +355,8 @@ const AdminConfigPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {configSections.filter(section => section.category === 'principal').map((section) => {
               const Icon = section.icon;
+              const hasSubSections = section.subSections && section.subSections.length > 0;
+              
               return (
                 <Card
                   key={section.id}
@@ -357,12 +364,9 @@ const AdminConfigPage = () => {
                     location.pathname === section.path ? 'ring-2 ring-primary-500 bg-primary-50' : ''
                   }`}
                   onClick={() => {
-                    if (section.id === 'ai-module') {
-                      // Scroll to AI Module Control section
-                      const aiModuleElement = document.getElementById('ai-module-control');
-                      if (aiModuleElement) {
-                        aiModuleElement.scrollIntoView({ behavior: 'smooth' });
-                      }
+                    if (section.id === 'ai') {
+                      // Para IA, navegar al dashboard principal
+                      navigate(section.path);
                     } else {
                       navigate(section.path);
                     }
@@ -383,6 +387,30 @@ const AdminConfigPage = () => {
                     <p className="text-secondary-600 mb-3 leading-relaxed text-xs">
                       {section.description}
                     </p>
+
+                    {hasSubSections && (
+                      <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+                        <p className="text-xs font-medium text-gray-700 mb-2">Subsecciones:</p>
+                        <div className="space-y-1">
+                          {section.subSections.map((subSection) => {
+                            const SubIcon = subSection.icon;
+                            return (
+                              <div
+                                key={subSection.id}
+                                className="flex items-center gap-2 text-xs text-gray-600 hover:text-primary-600 transition-colors cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(subSection.path);
+                                }}
+                              >
+                                <SubIcon className="w-3 h-3" />
+                                <span>{subSection.title}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-secondary-500">
@@ -645,10 +673,7 @@ const AdminConfigPage = () => {
         </div>
       </Card>
 
-      {/* AI Module Control Section */}
-      <div id="ai-module-control">
-        <AIModuleControl />
-      </div>
+      {/* AI Module Control movido a /admin/ia */}
     </div>
   );
 };

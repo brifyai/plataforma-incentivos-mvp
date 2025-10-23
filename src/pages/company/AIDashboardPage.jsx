@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../config/supabase';
 import { ragService } from '../../services/ragService';
 import { aiProvidersService } from '../../services/aiProvidersService';
+import AIModuleControl from '../../components/admin/AIModuleControl';
 import {
   Brain,
   MessageSquare,
@@ -211,6 +212,13 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     const pathParts = location.pathname.split('/');
     const lastPart = pathParts[pathParts.length - 1];
 
+    // Primero verificar si hay un parámetro tab en la URL
+    const urlParams = new URLSearchParams(location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+      return tabParam;
+    }
+
     // Mapear URLs en español a IDs internos en inglés
     const urlToTabMap = {
       'proveedores': 'providers',
@@ -218,7 +226,8 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
       'personalizacion': 'personalization',
       'conocimiento': 'knowledge',
       'prompts': 'prompts',
-      'analytics': 'analytics'
+      'analytics': 'analytics',
+      'control-modulo': 'module-control'
     };
 
     // Si la última parte está en el mapa, usar el ID correspondiente
@@ -439,7 +448,8 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     { id: 'personalization', label: 'Personalización', icon: Users },
     { id: 'knowledge', label: 'Base Conocimiento', icon: Database },
     { id: 'prompts', label: 'Prompts', icon: FileText },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'module-control', label: 'Control Módulo', icon: Settings }
   ];
 
   useEffect(() => {
@@ -1697,7 +1707,8 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                         'personalization': 'personalizacion',
                         'knowledge': 'conocimiento',
                         'prompts': 'prompts',
-                        'analytics': 'analytics'
+                        'analytics': 'analytics',
+                        'module-control': 'control-modulo'
                       };
 
                       return (
@@ -3181,6 +3192,102 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                       </div>
                     </Card>
 
+                    {/* Nuevas Cajas Solicitadas */}
+                    <Card>
+                      <h3 className="text-xl font-bold mb-4">Métricas Avanzadas</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Mensajes Inteligentes */}
+                        <div className="p-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg border border-indigo-200 hover:shadow-lg transition-shadow cursor-pointer">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-indigo-500 rounded-lg">
+                              <MessageSquare className="w-8 h-8 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-indigo-900 text-lg">Mensajes Inteligentes</h4>
+                              <p className="text-3xl font-bold text-indigo-600 mt-1">856</p>
+                              <p className="text-sm text-indigo-700 mt-2">Generados automáticamente</p>
+                              <div className="flex items-center gap-2 mt-3">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-600 font-medium">Activo</span>
+                                <span className="text-xs text-gray-500">• 95% efectividad</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-indigo-200">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-indigo-600">Última hora</span>
+                              <span className="text-xs font-semibold text-indigo-700">+42 mensajes</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Análisis de Propuestas */}
+                        <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-200 hover:shadow-lg transition-shadow cursor-pointer">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-emerald-500 rounded-lg">
+                              <FileText className="w-8 h-8 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-emerald-900 text-lg">Análisis de Propuestas</h4>
+                              <p className="text-3xl font-bold text-emerald-600 mt-1">324</p>
+                              <p className="text-sm text-emerald-700 mt-2">Propuestas analizadas</p>
+                              <div className="flex items-center gap-2 mt-3">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-600 font-medium">Optimizado</span>
+                                <span className="text-xs text-gray-500">• 89% aceptación</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-emerald-200">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-emerald-600">Hoy</span>
+                              <span className="text-xs font-semibold text-emerald-700">+18 propuestas</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Recomendaciones */}
+                        <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200 hover:shadow-lg transition-shadow cursor-pointer">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-purple-500 rounded-lg">
+                              <Brain className="w-8 h-8 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-purple-900 text-lg">Recomendaciones</h4>
+                              <p className="text-3xl font-bold text-purple-600 mt-1">156</p>
+                              <p className="text-sm text-purple-700 mt-2">Sugerencias IA activas</p>
+                              <div className="flex items-center gap-2 mt-3">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-600 font-medium">Actualizado</span>
+                                <span className="text-xs text-gray-500">• 92% precisión</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-purple-200">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-purple-600">Esta semana</span>
+                              <span className="text-xs font-semibold text-purple-700">+27 recomendaciones</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Resumen adicional */}
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-medium text-gray-700">Sistema IA funcionando correctamente</span>
+                          </div>
+                          <div className="flex items-center gap-6 text-sm text-gray-600">
+                            <span>Última actualización: <strong className="text-gray-900">hace 2 min</strong></span>
+                            <span>Rendimiento: <strong className="text-green-600">98.5%</strong></span>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+
                     <Card>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Rendimiento por Cliente</h3>
                       
@@ -3215,6 +3322,13 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                         ))}
                       </div>
                     </Card>
+                  </div>
+                )}
+
+                {/* Control Módulo Tab */}
+                {activeTab === 'module-control' && (
+                  <div className="space-y-6">
+                    <AIModuleControl />
                   </div>
                 )}
               </div>
