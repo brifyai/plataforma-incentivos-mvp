@@ -68,38 +68,38 @@ const LandingPage = () => {
   const features = [
     {
       icon: DollarSign,
-      title: "50% de Comisión",
-      description: "Recibe el 50% del valor acordado cuando completes un pago exitoso",
+      title: "Gana Money Extra",
+      description: "Recibe hasta el 50% de comisión solo por facilitar tu pago de deuda",
       gradient: "from-emerald-400 to-green-600"
     },
     {
       icon: Shield,
-      title: "100% Seguro",
-      description: "Tus datos personales nunca se comparten con las empresas de cobranza",
+      title: "Protección Total",
+      description: "Tu información personal está siempre segura y protegida",
       gradient: "from-blue-400 to-indigo-600"
     },
     {
       icon: MessageSquare,
-      title: "Comunicación Directa",
-      description: "Negocia directamente con empresas certificadas a través de nuestra plataforma",
+      title: "Diálogo Fácil",
+      description: "Conversa directamente con las empresas sin intermediarios",
       gradient: "from-purple-400 to-pink-600"
     },
     {
       icon: Zap,
-      title: "Proceso Rápido",
-      description: "Acuerdos en minutos, pagos en tiempo real",
+      title: "Ahorra Tiempo",
+      description: "Resuelve todo desde tu casa, sin traslados ni esperas",
       gradient: "from-yellow-400 to-orange-600"
     },
     {
       icon: Award,
-      title: "Empresas Certificadas",
-      description: "Solo trabajamos con empresas de cobranza reguladas y confiables",
+      title: "Empresas Confiables",
+      description: "Trabajamos solo con empresas reguladas y serias",
       gradient: "from-cyan-400 to-blue-600"
     },
     {
       icon: TrendingUp,
-      title: "Sin Riesgo",
-      description: "Si no llegas a un acuerdo, no pagas nada",
+      title: "Sin Costos Ocultos",
+      description: "Si no hay acuerdo, no pagas absolutamente nada",
       gradient: "from-rose-400 to-red-600"
     }
   ];
@@ -107,26 +107,26 @@ const LandingPage = () => {
   const steps = [
     {
       number: "01",
-      title: "Regístrate Gratis",
-      description: "Crea tu cuenta en menos de 2 minutos y conviértete en el único punto de contacto",
+      title: "Crea tu Cuenta",
+      description: "Regístrate gratis en 2 minutos y empieza a negociar de forma segura",
       icon: Users
     },
     {
       number: "02",
-      title: "Las Empresas te Buscan",
-      description: "Las cobranzas te contactan a través de NexuPay (no más llamadas del 600)",
+      title: "Empresas te Contactan",
+      description: "Las empresas te escriben directamente aquí (adiós a las llamadas molestas)",
       icon: Target
     },
     {
       number: "03",
-      title: "Negocia tu Acuerdo",
-      description: "Comunícate directamente y llega al mejor acuerdo posible",
+      title: "Facilita tu Pago",
+      description: "Conversa y llega a un acuerdo que funcione para tus posibilidades",
       icon: MessageSquare
     },
     {
       number: "04",
-      title: "Recibe tu Comisión",
-      description: "Al completar el pago, recibes el 50% de la comisión automáticamente",
+      title: "Recibe tu Recompensa",
+      description: "Gana una comisión por elegir resolver tu deuda por esta vía",
       icon: DollarSign
     }
   ];
@@ -134,22 +134,22 @@ const LandingPage = () => {
   const testimonials = [
     {
       name: "María González",
-      role: "Deudora Satisfecha",
-      content: "Gracias a Nexu Pay pude renegociar mi deuda y recibir una comisión que nunca imaginé. ¡Es increíble!",
+      role: "Usuario Satisfecha",
+      content: "Pude resolver mi deuda fácilmente y gané dinero extra. ¡No podía creerlo! La plataforma es muy segura.",
       rating: 5,
       avatar: "👩‍💼"
     },
     {
       name: "Carlos Rodríguez",
-      role: "Usuario Activo",
-      content: "La plataforma es súper fácil de usar y las empresas responden rápido. Ya recuperé más de $500.000 en comisiones.",
+      role: "Profesional",
+      content: "Facilitó todo el proceso. Ahorré tiempo y gané una comisión por resolver mi deuda de forma inteligente.",
       rating: 5,
       avatar: "👨‍💻"
     },
     {
       name: "Ana López",
-      role: "Madre Soltera",
-      content: "Me ayudó mucho con mis deudas. Ahora tengo dinero extra para mis hijos. ¡Recomiendo Nexu Pay al 100%!",
+      role: "Madre de Familia",
+      content: "Me ayudó a organizar mis pagos y gané dinero extra para mis hijos. Es una herramienta muy útil y confiable.",
       rating: 5,
       avatar: "👩‍👧‍👦"
     }
@@ -249,7 +249,7 @@ const LandingPage = () => {
 
           <div className="inline-flex items-center px-6 py-3 bg-gray-800/50/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-sm font-medium mb-8 hover:bg-gray-800/50/15 transition-all duration-300 cursor-default">
             <Sparkles className="w-5 h-5 mr-2 animate-spin" />
-            Sistema Operativo Financiero
+            Facilita tus Pagos
           </div>
 
           <div className="relative">
@@ -257,17 +257,17 @@ const LandingPage = () => {
               NexuPay
             </h1>
             <div className="absolute -top-2 -right-2">
-              <Rocket className="w-8 h-8 text-blue-400 animate-bounce" />
+              <Heart className="w-8 h-8 text-blue-400 animate-bounce" />
             </div>
           </div>
           
           <h2 className="text-3xl md:text-4xl font-semibold bg-gradient-to-r from-gray-300 to-gray-400 bg-clip-text text-transparent mb-8">
-            Future Finance
+            Negociación Inteligente
           </h2>
 
           <p className="text-xl text-white mb-12 max-w-3xl mx-auto leading-relaxed">
-            La primera plataforma que <span className="font-semibold text-blue-400">convierte deudas en activos digitales</span>.
-            Tecnología <span className="font-semibold text-purple-400">blockchain</span> aplicada a las cobranzas tradicionales.
+            La plataforma que <span className="font-semibold text-blue-400">facilita tus negociaciones de deuda</span> y te permite
+            <span className="font-semibold text-purple-400"> ganar dinero extra</span> por resolver tus compromisos.
           </p>
 
           {/* Enhanced Stats */}
@@ -278,13 +278,13 @@ const LandingPage = () => {
               <div className="absolute inset-0 bg-blue-400 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
             </div>
             <div className="group relative">
-              <div className="text-4xl font-bold text-green-400 group-hover:scale-110 transition-transform duration-300">24/7</div>
-              <div className="text-gray-400 text-sm mt-1">Disponible</div>
+              <div className="text-4xl font-bold text-green-400 group-hover:scale-110 transition-transform duration-300">100%</div>
+              <div className="text-gray-400 text-sm mt-1">Seguro</div>
               <div className="absolute inset-0 bg-green-400 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
             </div>
             <div className="group relative">
-              <div className="text-4xl font-bold text-purple-400 group-hover:scale-110 transition-transform duration-300">∞</div>
-              <div className="text-gray-400 text-sm mt-1">Potencial</div>
+              <div className="text-4xl font-bold text-purple-400 group-hover:scale-110 transition-transform duration-300">0</div>
+              <div className="text-gray-400 text-sm mt-1">Costos Ocultos</div>
               <div className="absolute inset-0 bg-purple-400 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
             </div>
           </div>
@@ -340,14 +340,14 @@ const LandingPage = () => {
           <div className="text-center mb-16">
             <div className="inline-flex items-center px-6 py-3 bg-gray-800/50/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-sm font-medium mb-6">
               <Zap className="w-5 h-5 mr-2 animate-pulse" />
-              Proceso Simplificado
+              Proceso Simple y Seguro
             </div>
             <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-6">
               ¿Cómo Funciona?
             </h2>
             <p className="text-xl text-white max-w-3xl mx-auto leading-relaxed">
-              Transforma tus deudas en ingresos en <span className="font-semibold text-blue-400">4 simples pasos</span>.
-              Nuestra plataforma blockchain garantiza transparencia y seguridad en cada etapa.
+              Facilita tus pagos de deuda en <span className="font-semibold text-blue-400">4 pasos sencillos</span>.
+              Nuestra tecnología garantiza seguridad y transparencia en todo momento.
             </p>
           </div>
 
@@ -445,14 +445,14 @@ const LandingPage = () => {
           <div className="text-center mb-20">
             <div className="inline-flex items-center px-6 py-3 bg-gray-800/50/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-sm font-medium mb-8">
               <Sparkles className="w-5 h-5 mr-2 animate-spin" />
-              Ventaja Competitiva
+              Beneficios Reales
             </div>
             <h2 className="text-5xl md:text-7xl font-bold text-white mb-6">
               Por qué elegir <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">NexuPay</span>
             </h2>
             <p className="text-xl text-white max-w-3xl mx-auto leading-relaxed">
-              La revolucionaria plataforma que <span className="text-blue-400 font-semibold">transforma deudas</span> en
-              <span className="text-purple-400 font-semibold">oportunidades reales</span>
+              La plataforma que <span className="text-blue-400 font-semibold">facilita tus pagos</span> y te da
+              <span className="text-purple-400 font-semibold">recompensas reales</span>
             </p>
           </div>
 
@@ -542,117 +542,137 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Technology Section */}
-      <section id="technology" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-black to-gray-900">
-        <div className="max-w-6xl mx-auto">
+      {/* How It Works Section - Simplified */}
+      <section id="how-it-works-explained" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-blue-500 rounded-full opacity-10 blur-xl animate-float"></div>
+          <div className="absolute bottom-10 right-10 w-24 h-24 bg-purple-500 rounded-full opacity-10 blur-xl animate-float animation-delay-2000"></div>
+          <div className="absolute top-1/2 left-1/4 w-20 h-20 bg-indigo-500 rounded-full opacity-10 blur-xl animate-float animation-delay-4000"></div>
+        </div>
+
+        <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Tecnología de Vanguardia
+              ¿Por qué Funciona?
             </h2>
             <p className="text-xl text-white max-w-3xl mx-auto">
-              Arquitectura empresarial con IA, blockchain revolucionario y machine learning avanzado
+              Las empresas prefieren negociar contigo directamente porque ahorran costos y tú ganas una recompensa
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {/* AI Quantum Card */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-600/30 rounded-xl p-8 hover:bg-gray-800/50/10 transition-all duration-300 hover:scale-105">
-              <div className="text-5xl mb-4">🧠</div>
-              <h3 className="text-2xl font-bold text-cyan-400 mb-4">IA Predictiva Avanzada</h3>
-              <p className="text-white mb-4 leading-relaxed">
-                Procesamiento paralelo que analiza <strong>millones de escenarios</strong> de negociación simultáneamente.
-              </p>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-cyan-600">Precisión:</span>
-                  <span className="text-white font-bold">99.7%</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            {/* For You Card */}
+            <div className="group relative">
+              <div className="relative bg-gray-800/50 backdrop-blur-xl border border-gray-600/30 rounded-2xl p-8 hover:border-blue-400/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden h-full">
+                {/* Background Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                
+                {/* Content Container */}
+                <div className="relative z-10">
+                  <div className="text-5xl mb-4">👤</div>
+                  <h3 className="text-2xl font-bold text-blue-400 mb-4 group-hover:text-blue-300 transition-colors duration-300">Para Ti</h3>
+                  <p className="text-white mb-4 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
+                    <strong>Ahorras tiempo y dinero</strong> al negociar desde tu casa, sin traslados ni esperas.
+                  </p>
+                  <ul className="text-white space-y-2">
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-2" />
+                      Ganas dinero extra por pagar tu deuda
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-2" />
+                      Negocias en tus propios términos
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-2" />
+                      Protegemos tu información personal
+                    </li>
+                  </ul>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-cyan-600">Procesamiento:</span>
-                  <span className="text-white font-bold">&lt; 50ms</span>
-                </div>
-              </div>
-              <div className="mt-4 text-xs text-white">
-                React 18.2 + TensorFlow.js • Tecnología patentada
+
+                {/* Corner Accents */}
+                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-blue-400/30 rounded-tl-xl"></div>
+                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-purple-400/30 rounded-tr-xl"></div>
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-blue-400/30 rounded-bl-xl"></div>
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-purple-400/30 rounded-br-xl"></div>
               </div>
             </div>
 
-            {/* Blockchain Card */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-600/30 rounded-xl p-8 hover:bg-gray-800/50/10 transition-all duration-300 hover:scale-105">
-              <div className="text-5xl mb-4">⛓️</div>
-              <h3 className="text-2xl font-bold text-purple-400 mb-4">Blockchain Revolucionario</h3>
-              <p className="text-white mb-4 leading-relaxed">
-                Arquitectura blockchain única con <strong>contratos inteligentes</strong> que garantizan pagos irreversibles.
-              </p>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-purple-600">Seguridad:</span>
-                  <span className="text-white font-bold">Criptográfica</span>
+            {/* For Companies Card */}
+            <div className="group relative">
+              <div className="relative bg-gray-800/50 backdrop-blur-xl border border-gray-600/30 rounded-2xl p-8 hover:border-purple-400/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden h-full">
+                {/* Background Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                
+                {/* Content Container */}
+                <div className="relative z-10">
+                  <div className="text-5xl mb-4">🏢</div>
+                  <h3 className="text-2xl font-bold text-purple-400 mb-4 group-hover:text-purple-300 transition-colors duration-300">Para las Empresas</h3>
+                  <p className="text-white mb-4 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
+                    <strong>Recuperan sus inversiones</strong> más rápido y con menores costos operativos.
+                  </p>
+                  <ul className="text-white space-y-2">
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-2" />
+                      Evitan costos de llamadas y visitas
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-2" />
+                      Mejoran la relación con los clientes
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-2" />
+                      Aseguran pagos con tecnología segura
+                    </li>
+                  </ul>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-purple-600">Transacciones:</span>
-                  <span className="text-white font-bold">Instantáneas</span>
-                </div>
-              </div>
-              <div className="mt-4 text-xs text-white">
-                Supabase + PostgreSQL 15 • Smart Contracts
-              </div>
-            </div>
 
-            {/* Machine Learning Card */}
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-600/30 rounded-xl p-8 hover:bg-gray-800/50/10 transition-all duration-300 hover:scale-105">
-              <div className="text-5xl mb-4">🎯</div>
-              <h3 className="text-2xl font-bold text-orange-400 mb-4">Machine Learning Automatizado</h3>
-              <p className="text-white mb-4 leading-relaxed">
-                Algoritmos de ML que <strong>aprenden automáticamente</strong> de cada negociación y optimizan estrategias.
-              </p>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-orange-600">Optimización:</span>
-                  <span className="text-white font-bold">Continua</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-orange-600">Precisión:</span>
-                  <span className="text-white font-bold">Auto-ajustable</span>
-                </div>
-              </div>
-              <div className="mt-4 text-xs text-white">
-                Python + Scikit-learn • Auto ML
+                {/* Corner Accents */}
+                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-purple-400/30 rounded-tl-xl"></div>
+                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-blue-400/30 rounded-tr-xl"></div>
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-purple-400/30 rounded-bl-xl"></div>
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-blue-400/30 rounded-br-xl"></div>
               </div>
             </div>
           </div>
 
-          {/* Technical Metrics */}
-          <div className="bg-gray-800/50 border border-gray-200 rounded-xl p-8">
-            <h3 className="text-2xl font-bold text-center mb-8 text-white">
-              Especificaciones Técnicas de Nivel Empresarial
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div>
-                <div className="text-4xl font-bold text-green-600 mb-2">99.9%</div>
-                <div className="text-white text-sm">Uptime Garantizado</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold text-blue-600 mb-2">&lt; 2s</div>
-                <div className="text-white text-sm">Tiempo de Carga</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold text-purple-600 mb-2">&lt; 200ms</div>
-                <div className="text-white text-sm">API Response</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold text-orange-600 mb-2">80%+</div>
-                <div className="text-white text-sm">Cobertura Tests</div>
+          {/* Trust Section */}
+          <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-600/30 rounded-2xl p-8 hover:bg-gray-800/50/10 transition-all duration-500 relative overflow-hidden">
+            {/* Background Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-2xl"></div>
+            
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold text-center mb-8 text-white">
+                ¿Cómo Nos Beneficiamos?
+              </h3>
+              <div className="text-center">
+                <p className="text-white text-lg mb-6">
+                  <strong>Nosotros ganamos una pequeña comisión</strong> solo cuando tú ganas. 
+                  Es una relación donde todos salimos beneficiados.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                  <div className="group">
+                    <div className="text-3xl font-bold text-green-600 mb-2 group-hover:scale-110 transition-transform duration-300">Tú</div>
+                    <div className="text-white text-sm group-hover:text-gray-200 transition-colors duration-300">Ganas comisión + resuelves deuda</div>
+                  </div>
+                  <div className="group">
+                    <div className="text-3xl font-bold text-blue-600 mb-2 group-hover:scale-110 transition-transform duration-300">Empresa</div>
+                    <div className="text-white text-sm group-hover:text-gray-200 transition-colors duration-300">Recupera inversión + ahorra costos</div>
+                  </div>
+                  <div className="group">
+                    <div className="text-3xl font-bold text-purple-600 mb-2 group-hover:scale-110 transition-transform duration-300">NexuPay</div>
+                    <div className="text-white text-sm group-hover:text-gray-200 transition-colors duration-300">Facilitamos la conexión</div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="mt-8 text-center">
-              <div className="text-white text-sm">
-                <strong>Stack Tecnológico:</strong> React 18.2 + TypeScript • Vite 4.0 • Supabase + PostgreSQL 15 • Deno Edge Functions
-              </div>
-              <div className="text-white text-sm mt-2">
-                <strong>Seguridad:</strong> Row Level Security • Encriptación AES-256 • JWT Tokens • Cumplimiento GDPR
-              </div>
-            </div>
+
+            {/* Corner Accents */}
+            <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-green-400/30 rounded-tl-2xl"></div>
+            <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-blue-400/30 rounded-tr-2xl"></div>
+            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-purple-400/30 rounded-bl-2xl"></div>
+            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-green-400/30 rounded-br-2xl"></div>
           </div>
         </div>
       </section>
@@ -770,12 +790,12 @@ const LandingPage = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-10 transition-opacity duration-500"></div>
             <div className="relative z-10">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                ¿Listo para transformar tus deudas en ingresos?
+                ¿Listo para facilitar tus pagos y ganar dinero?
               </h2>
 
               <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-                Únete a miles de usuarios que ya están generando ingresos extra con NexuPay.
-                Es gratis registrarse y comenzar.
+                Únete a miles de personas que ya están resolviendo sus deudas de forma inteligente
+                y recibiendo recompensas por hacerlo.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -784,8 +804,8 @@ const LandingPage = () => {
                   className="group px-8 py-4 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                 >
                   <span className="flex items-center">
-                    Comenzar Gratis
-                    <Rocket className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                    Empezar Ahora
+                    <Heart className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform duration-300" />
                   </span>
                 </button>
               </div>
@@ -793,15 +813,15 @@ const LandingPage = () => {
               <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-blue-100">
                 <div className="flex items-center group">
                   <CheckCircle className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="group-hover:text-white transition-colors duration-300">Sin costo de registro</span>
+                  <span className="group-hover:text-white transition-colors duration-300">Registro completamente gratis</span>
                 </div>
                 <div className="flex items-center group">
                   <CheckCircle className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="group-hover:text-white transition-colors duration-300">Proceso 100% seguro</span>
+                  <span className="group-hover:text-white transition-colors duration-300">Proceso 100% seguro y confiable</span>
                 </div>
                 <div className="flex items-center group">
                   <CheckCircle className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="group-hover:text-white transition-colors duration-300">Soporte 24/7</span>
+                  <span className="group-hover:text-white transition-colors duration-300">Ayuda cuando la necesites</span>
                 </div>
               </div>
             </div>
@@ -821,7 +841,7 @@ const LandingPage = () => {
             </span>
           </div>
           <p className="text-gray-400 text-sm mb-4">
-            © 2025 NexuPay. Tecnología blockchain aplicada a las finanzas tradicionales.
+            © 2025 NexuPay. Facilitamos tus negociaciones de deuda de forma segura y confiable.
           </p>
           <div className="flex justify-center space-x-6 text-xs text-white">
             <Link to="/terminos-servicio" className="hover:text-white transition-colors">
