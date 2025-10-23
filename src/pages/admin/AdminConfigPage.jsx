@@ -95,24 +95,8 @@ const AdminConfigPage = () => {
       path: '/admin/ia',
       color: 'from-indigo-500 to-purple-600',
       status: (config.chutesApiActive || config.groqApiActive) ? 'success' : 'warning',
-      statusText: (config.chutesApiActive || config.groqApiActive) ? 'Configurada' : 'Sin configurar',
-      category: 'principal',
-      subSections: [
-        {
-          id: 'ai-dashboard',
-          title: 'Dashboard de IA',
-          description: 'Configuración de proveedores y modelos',
-          icon: Brain,
-          path: '/admin/ia'
-        },
-        {
-          id: 'ai-module-control',
-          title: 'Control del Módulo',
-          description: 'Activar/desactivar módulo conversacional',
-          icon: Settings,
-          path: '/admin/ia?tab=module-control'
-        }
-      ]
+      statusText: (config.chutesApiActive || config.groqApiActive) ? 'Activa' : 'Inactiva',
+      category: 'principal'
     },
     
     // Comunicaciones

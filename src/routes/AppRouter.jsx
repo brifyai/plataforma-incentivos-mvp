@@ -796,6 +796,36 @@ const AppContent = () => {
           }
         />
         <Route
+          path="/admin/ia/servicios"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <AIConfigPage defaultSection="ai-services" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/ia/conversaciones"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <AIConfigPage defaultSection="conversations-module" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/ia/nuclear"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <AIConfigPage defaultSection="nuclear-module" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/base-conocimiento"
           element={
             <ProtectedRoute allowedRoles={['god_mode']}>

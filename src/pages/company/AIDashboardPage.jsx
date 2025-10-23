@@ -240,6 +240,7 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
   };
 
   const [activeTab, setActiveTab] = useState(getActiveTabFromUrl());
+  const [activeMainMenu, setActiveMainMenu] = useState('ai-services');
   
   // Estados para clientes corporativos
   const [corporateClients, setCorporateClients] = useState([]);
@@ -439,6 +440,31 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     { key: '{plazo_maximo}', description: 'Plazo máximo en meses' },
     { key: '{historial_pagos}', description: 'Historial de pagos previos' },
     { key: '{nivel_riesgo}', description: 'Nivel de riesgo del deudor' }
+  ];
+
+  // Menú principal de IA
+  const mainMenu = [
+    {
+      id: 'ai-services',
+      label: 'Servicios de Inteligencia Artificial',
+      icon: Bot,
+      description: 'Configuración de proveedores y modelos de IA',
+      color: 'from-blue-500 to-purple-600'
+    },
+    {
+      id: 'conversations-module',
+      label: 'Módulo Conversaciones',
+      icon: MessageSquare,
+      description: 'Control del sistema de IA conversacional',
+      color: 'from-green-500 to-teal-600'
+    },
+    {
+      id: 'nuclear-module',
+      label: 'Módulo Nuclear',
+      icon: Zap,
+      description: 'Activación avanzada y control del sistema',
+      color: 'from-red-500 to-orange-600'
+    }
   ];
 
   // Tabs disponibles (actualizados con funciones perdidas)
@@ -1694,97 +1720,165 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
 
           {selectedClient ? (
             <>
-              {/* Tabs - Diseño Mejorado */}
-              <div className="mb-6">
-                {/* Tarjeta de navegación con diseño moderno */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    {tabs.map(tab => {
-                      const isActive = activeTab === tab.id;
-                      const tabToUrlMap = {
-                        'providers': 'proveedores',
-                        'messaging': 'mensajeria',
-                        'personalization': 'personalizacion',
-                        'knowledge': 'conocimiento',
-                        'prompts': 'prompts',
-                        'analytics': 'analytics',
-                        'module-control': 'control-modulo'
-                      };
-
+              {/* Menú Principal de IA - Diseño Mejorado */}
+              <div className="mb-8">
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Panel de Control de Inteligencia Artificial</h2>
+                    <p className="text-gray-600">Selecciona una opción para gestionar el sistema de IA</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {mainMenu.map((item) => {
+                      const isActive = activeMainMenu === item.id;
+                      
                       return (
                         <button
-                          key={tab.id}
-                          onClick={() => {
-                            // Navegar a URL independiente cuando se hace click en un tab
-                            const spanishUrl = tabToUrlMap[tab.id] || tab.id;
-                            const newUrl = `/empresa/ia/${spanishUrl}`;
-                            window.history.pushState({}, '', newUrl);
-                            setActiveTab(tab.id);
-                          }}
+                          key={item.id}
+                          onClick={() => setActiveMainMenu(item.id)}
                           className={`
-                            relative flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 group
+                            relative group p-6 rounded-xl transition-all duration-300 transform hover:scale-105
                             ${isActive
-                              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg transform scale-105'
-                              : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
+                              ? `bg-gradient-to-br ${item.color} text-white shadow-2xl ring-4 ring-white ring-opacity-50`
+                              : 'bg-white border-2 border-gray-200 hover:border-gray-300 hover:shadow-xl'
                             }
                           `}
                         >
                           {/* Indicador activo */}
                           {isActive && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
+                            <div className="absolute -top-3 -right-3 w-8 h-8 bg-green-400 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                              <CheckCircle className="w-4 h-4 text-white" />
+                            </div>
                           )}
                           
-                          {/* Icono con efecto */}
+                          {/* Icono principal */}
                           <div className={`
-                            mb-2 p-2 rounded-lg transition-all duration-200
+                            mb-4 p-4 rounded-xl transition-all duration-300
                             ${isActive
                               ? 'bg-white bg-opacity-20 shadow-inner'
-                              : 'bg-white group-hover:bg-blue-50 group-hover:shadow-sm'
+                              : 'bg-gray-50 group-hover:bg-gray-100'
                             }
                           `}>
-                            <tab.icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-white' : 'text-blue-600 group-hover:text-blue-700'}`} />
+                            <item.icon className={`w-8 h-8 transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-700 group-hover:text-gray-900'}`} />
                           </div>
                           
-                          {/* Texto */}
-                          <span className="text-xs font-medium text-center leading-tight">
-                            {tab.label}
-                          </span>
+                          {/* Contenido */}
+                          <div className="text-center">
+                            <h3 className={`font-bold text-lg mb-2 ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                              {item.label}
+                            </h3>
+                            <p className={`text-sm ${isActive ? 'text-white text-opacity-90' : 'text-gray-600'}`}>
+                              {item.description}
+                            </p>
+                          </div>
                           
-                          {/* Badge de estado para tabs específicos */}
-                          {tab.id === 'providers' && providers.filter(p => p.is_active).length > 0 && (
-                            <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-sm"></div>
-                          )}
-                          
-                          {tab.id === 'knowledge' && selectedClient && (
-                            <div className="absolute bottom-2 right-2 w-2 h-2 bg-purple-400 rounded-full shadow-sm"></div>
+                          {/* Badge de estado */}
+                          {item.id === 'ai-services' && providers.filter(p => p.is_active).length > 0 && (
+                            <div className="absolute top-4 left-4">
+                              <Badge variant="success" size="sm" className="text-xs">
+                                {providers.filter(p => p.is_active).length} activos
+                              </Badge>
+                            </div>
                           )}
                         </button>
                       );
                     })}
                   </div>
                 </div>
-                
-                {/* Indicador visual del tab activo */}
-                <div className="mt-4 flex items-center justify-center">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span>
-                      Actualmente en: <strong className="text-gray-900">
-                        {tabs.find(t => t.id === activeTab)?.label || 'Desconocido'}
-                      </strong>
-                    </span>
-                    {selectedClient && (
-                      <>
-                        <span className="text-gray-400">•</span>
-                        <span className="text-blue-600 font-medium">{selectedClient.name}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
               </div>
 
-              {/* Tab Content */}
-              <div className="space-y-6">
+              {/* Tabs - Diseño Mejorado */}
+              {/* Tarjeta de navegación con diseño moderno */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {tabs.map(tab => {
+                    const isActive = activeTab === tab.id;
+                    const tabToUrlMap = {
+                      'providers': 'proveedores',
+                      'messaging': 'mensajeria',
+                      'personalization': 'personalizacion',
+                      'knowledge': 'conocimiento',
+                      'prompts': 'prompts',
+                      'analytics': 'analytics',
+                      'module-control': 'control-modulo'
+                    };
+
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          // Navegar a URL independiente cuando se hace click en un tab
+                          const spanishUrl = tabToUrlMap[tab.id] || tab.id;
+                          const newUrl = `/empresa/ia/${spanishUrl}`;
+                          window.history.pushState({}, '', newUrl);
+                          setActiveTab(tab.id);
+                        }}
+                        className={`
+                          relative flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 group
+                          ${isActive
+                            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg transform scale-105'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
+                          }
+                        `}
+                      >
+                        {/* Indicador activo */}
+                        {isActive && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
+                        )}
+                        
+                        {/* Icono con efecto */}
+                        <div className={`
+                          mb-2 p-2 rounded-lg transition-all duration-200
+                          ${isActive
+                            ? 'bg-white bg-opacity-20 shadow-inner'
+                            : 'bg-white group-hover:bg-blue-50 group-hover:shadow-sm'
+                          }
+                        `}>
+                          <tab.icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-white' : 'text-blue-600 group-hover:text-blue-700'}`} />
+                        </div>
+                        
+                        {/* Texto */}
+                        <span className="text-xs font-medium text-center leading-tight">
+                          {tab.label}
+                        </span>
+                        
+                        {/* Badge de estado para tabs específicos */}
+                        {tab.id === 'providers' && providers.filter(p => p.is_active).length > 0 && (
+                          <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-sm"></div>
+                        )}
+                        
+                        {tab.id === 'knowledge' && selectedClient && (
+                          <div className="absolute bottom-2 right-2 w-2 h-2 bg-purple-400 rounded-full shadow-sm"></div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Indicador visual del tab activo */}
+              <div className="mt-4 flex items-center justify-center">
+                <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>
+                    Actualmente en: <strong className="text-gray-900">
+                      {tabs.find(t => t.id === activeTab)?.label || 'Desconocido'}
+                    </strong>
+                  </span>
+                  {selectedClient && (
+                    <>
+                      <span className="text-gray-400">•</span>
+                      <span className="text-blue-600 font-medium">{selectedClient.name}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : null}
+
+          {/* Tab Content - Solo mostrar si hay cliente seleccionado */}
+          {selectedClient && (
+          <div className="space-y-6">
                 {/* Proveedores IA Tab */}
                 {activeTab === 'providers' && (
                   <div className="space-y-6">
@@ -3566,13 +3660,6 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                   </div>
                 )}
               </div>
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona un cliente corporativo</h3>
-              <p className="text-gray-600">Para comenzar a configurar la IA, selecciona un cliente corporativo del panel izquierdo</p>
-            </div>
           )}
         </div>
       </div>
