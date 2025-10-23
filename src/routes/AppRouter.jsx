@@ -99,6 +99,11 @@ import AIConfigPage from '../pages/admin/AIConfigPage';
 import KnowledgeBaseManagementPage from '../pages/admin/KnowledgeBaseManagementPage';
 import MatchingManagementPage from '../pages/admin/MatchingManagementPage';
 import AIDashboardPage from '../pages/company/AIDashboardPage';
+import SecurityConfigPage from '../pages/admin/SecurityConfigPage';
+import LogsPage from '../pages/admin/LogsPage';
+import BackupPage from '../pages/admin/BackupPage';
+import EmailConfigPage from '../pages/admin/EmailConfigPage';
+import WhatsAppConfigPage from '../pages/admin/WhatsAppConfigPage';
 
 // Componente de ruta protegida
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -796,6 +801,56 @@ const AppContent = () => {
             <ProtectedRoute allowedRoles={['god_mode']}>
               <DashboardLayout>
                 <KnowledgeBaseManagementPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/security"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <SecurityConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/logs"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <LogsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/backup"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <BackupPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/email"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <EmailConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/whatsapp"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <WhatsAppConfigPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

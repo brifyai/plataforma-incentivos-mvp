@@ -333,7 +333,7 @@ const ClientsPage = () => {
             pendingAmount: 0,
             lastPayment: null,
             status: 'active',
-            companyName: profile?.company?.business_name || profile?.company?.name || 'Empresa',
+            companyName: profile?.company?.company_name || profile?.company?.name || 'Empresa',
             corporateClientName: d.client?.business_name || null,
             corporateClientId: d.client?.id || null,
             firstDebtDate: d.created_at,
@@ -383,7 +383,7 @@ const ClientsPage = () => {
         pendingAmount: 0,
         lastPayment: null,
         status: 'corporate', // ← Estado especial para clientes corporativos
-        companyName: profile?.company?.business_name || profile?.company?.name || 'Empresa',
+        companyName: profile?.company?.company_name || profile?.company?.name || 'Empresa',
         corporateClientName: client.contact_email, // ← Usar contact_email como nombre
         corporateClientId: client.id,
         corporate_client_id: null, // ← Los clientes corporativos no tienen padre
@@ -407,7 +407,7 @@ const ClientsPage = () => {
           pendingAmount: 0,
           lastPayment: null,
           status: 'active', // ← Estado para clientes individuales
-          companyName: profile?.company?.business_name || profile?.company?.name || 'Empresa',
+          companyName: profile?.company?.company_name || profile?.company?.name || 'Empresa',
           corporateClientName: associatedCorporate?.contact_email || 'Sin cliente corporativo',
           corporateClientId: client.corporate_client_id,
           corporate_client_id: client.corporate_client_id, // ← Agregar ambos formatos

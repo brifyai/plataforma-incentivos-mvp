@@ -11,7 +11,7 @@
 import { supabase } from '../config/supabase';
 import { createPayment, updatePayment, createWalletTransaction, getWalletBalance } from './databaseService';
 import { createNotification } from './databaseService';
-import { COMMISSION_CONFIG, PAYMENT_METHODS, NOTIFICATION_TYPES } from '../config/constants';
+import { NOTIFICATION_TYPES } from '../config/constants';
 import { createBankTransfer } from './bankTransferService';
 
 /**
@@ -81,20 +81,6 @@ export const calculateCommissions = (amount, paymentMethod = 'mercadopago') => {
   };
 };
 
-/**
- * Calcula la comisión e incentivo para un pago (MANTENIDO POR COMPATIBILIDAD)
- *
- * @deprecated Use calculateCommissions() instead for more detailed breakdown
- */
-export const calculateCommissionAndIncentive = (amount) => {
-  const result = calculateCommissions(amount, 'mercadopago');
-  return {
-    businessClosureFee: result.businessClosureFee,
-    userIncentive: result.userIncentive,
-    platformCommission: result.mercadopagoCommission,
-    totalPlatformRevenue: result.totalPlatformRevenue,
-  };
-};
 
 /**
  * Inicializa un pago en Mercado Pago
@@ -365,7 +351,7 @@ export const processWalletPayment = async (walletPaymentData) => {
       debtId,
       companyId,
       amount,
-      paymentMethod: PAYMENT_METHODS.WALLET,
+      paymentMethod: 'wallet',
       installmentNumber,
       commissionPercentage: 0, // No hay comisión en pagos con wallet
       userIncentivePercentage: 0, // No hay incentivo adicional
@@ -881,7 +867,6 @@ export const processMercadoPagoSplitPayment = async (mercadopagoPaymentData) => 
 };
 
 export default {
-  calculateCommissionAndIncentive,
   initializeMercadoPagoPayment,
   initializeMercadoPagoSplitPayment,
   processPayment,

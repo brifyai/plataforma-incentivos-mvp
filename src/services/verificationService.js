@@ -9,8 +9,6 @@
  */
 
 import { supabase } from '../config/supabase';
-import { getSupabaseInstance } from './supabaseInstances';
-import { getVerificationSubmittedTemplate } from './emailTemplates';
 
 /**
  * Tipos de estado de verificación
@@ -386,33 +384,26 @@ const sendVerificationNotificationEmail = async (companyData, verificationData, 
   try {
     console.log('📧 Enviando email de notificación a soporte@aintelligence.cl');
     
-    // Obtener plantilla de email
-    const emailTemplate = getVerificationSubmittedTemplate(companyData, verificationData, representativeData);
+    // Crear plantilla de email simple inline
+    const subject = `Nueva Verificación de Empresa: ${companyData?.company_name || 'Empresa Desconocida'}`;
+    const html = `
+      <h2>Nueva Solicitud de Verificación</h2>
+      <p><strong>Empresa:</strong> ${companyData?.company_name || 'N/A'}</p>
+      <p><strong>RUT:</strong> ${companyData?.rut || 'N/A'}</p>
+      <p><strong>Email:</strong> ${companyData?.contact_email || representativeData?.email || 'N/A'}</p>
+      <p><strong>Representante:</strong> ${representativeData?.full_name || 'N/A'}</p>
+      <p><strong>ID Verificación:</strong> ${verificationData?.id || 'N/A'}</p>
+      <p><strong>Fecha:</strong> ${new Date().toLocaleString('es-CL')}</p>
+      <hr>
+      <p>Por favor revisa la documentación subida en el panel de administración.</p>
+    `;
     
     // En desarrollo, simular el envío de email
     if (import.meta.env.DEV) {
       console.log('📧 MODO DESARROLLO: Simulando envío de email');
       console.log('📧 Para:', 'soporte@aintelligence.cl');
-      console.log('📧 Subject:', emailTemplate.subject);
-      console.log('📧 HTML length:', emailTemplate.html.length);
-      
-      // Guardar el email en una tabla de logs para desarrollo (opcional)
-      try {
-        await supabase
-          .from('email_logs')
-          .insert({
-            to_email: 'soporte@aintelligence.cl',
-            subject: emailTemplate.subject,
-            html_content: emailTemplate.html,
-            email_type: 'verification_submitted',
-            company_id: companyData.id,
-            verification_id: verificationData.id,
-            sent_at: new Date().toISOString(),
-            simulated: true
-          });
-      } catch (logError) {
-        console.warn('⚠️ No se pudo guardar log de email (tabla email_logs puede no existir):', logError.message);
-      }
+      console.log('📧 Subject:', subject);
+      console.log('📧 HTML length:', html.length);
       
       return { success: true, simulated: true };
     }
@@ -420,8 +411,8 @@ const sendVerificationNotificationEmail = async (companyData, verificationData, 
     // En producción, enviar email real usando el servicio de email
     const emailData = {
       to: 'soporte@aintelligence.cl',
-      subject: emailTemplate.subject,
-      html: emailTemplate.html
+      subject: subject,
+      html: html
     };
     
     // Usar el servicio de email existente

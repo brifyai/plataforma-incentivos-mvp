@@ -266,61 +266,16 @@ const OffersPage = () => {
 
       if (clientsResult.error) {
         console.error('Error loading clients:', clientsResult.error);
-        // Fallback con datos mock si no hay clientes en la BD
-        setClients([
-          {
-            id: '1',
-            business_name: 'TechCorp S.A.',
-            rut: '76.543.210-1',
-            contact_email: 'cobranzas@techcorp.cl',
-            contact_phone: '+56912345678'
-          },
-          {
-            id: '2',
-            business_name: 'RetailMax Ltda.',
-            rut: '87.654.321-2',
-            contact_email: 'pagos@retailmax.cl',
-            contact_phone: '+56987654321'
-          }
-        ]);
+        // Usar solo datos reales, sin fallbacks mock
+        setClients([]);
       } else {
-        // Si hay clientes en la BD, úsalos; si no, usa los mock
-        setClients(clientsResult.clients && clientsResult.clients.length > 0 ? clientsResult.clients : [
-          {
-            id: '1',
-            business_name: 'TechCorp S.A.',
-            rut: '76.543.210-1',
-            contact_email: 'cobranzas@techcorp.cl',
-            contact_phone: '+56912345678'
-          },
-          {
-            id: '2',
-            business_name: 'RetailMax Ltda.',
-            rut: '87.654.321-2',
-            contact_email: 'pagos@retailmax.cl',
-            contact_phone: '+56987654321'
-          }
-        ]);
+        // Usar solo datos reales de la base de datos
+        setClients(clientsResult.clients || []);
       }
     } catch (error) {
       console.error('Error loading data:', error);
-      // Fallback con datos mock en caso de error
-      setClients([
-        {
-          id: '1',
-          business_name: 'TechCorp S.A.',
-          rut: '76.543.210-1',
-          contact_email: 'cobranzas@techcorp.cl',
-          contact_phone: '+56912345678'
-        },
-        {
-          id: '2',
-          business_name: 'RetailMax Ltda.',
-          rut: '87.654.321-2',
-          contact_email: 'pagos@retailmax.cl',
-          contact_phone: '+56987654321'
-        }
-      ]);
+      // Usar solo datos reales, sin fallbacks mock
+      setClients([]);
     } finally {
       setLoading(false);
     }

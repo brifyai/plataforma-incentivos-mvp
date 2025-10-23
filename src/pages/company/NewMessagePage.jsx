@@ -214,28 +214,7 @@ const NewMessagePage = () => {
 
       if (result.error) {
         console.error('Error loading offers:', result.error);
-        // Fallback con ofertas de ejemplo
-        setOffers([
-          {
-            id: 'offer_demo_1',
-            title: 'Descuento Especial 15%',
-            description: 'Oferta especial de descuento del 15% para pagos al contado',
-            offer_type: 'discount',
-            discount_percentage: 15,
-            user_incentive_percentage: 5,
-            status: 'active',
-            created_at: new Date().toISOString()
-          },
-          {
-            id: 'offer_demo_2',
-            title: 'Plan de 3 Cuotas',
-            description: 'Divide tu pago en 3 cuotas cómodas sin intereses',
-            offer_type: 'installment_plan',
-            user_incentive_percentage: 7,
-            status: 'active',
-            created_at: new Date().toISOString()
-          }
-        ]);
+        setOffers([]);
       } else {
         setOffers(result.offers || []);
       }
@@ -248,27 +227,9 @@ const NewMessagePage = () => {
   };
 
   const loadCorporateClients = async () => {
-    // Fallback local con 2 clientes corporativos para avanzar de inmediato
-    const fallbackClients = [
-      {
-        id: 'corp1',
-        name: 'Empresa XYZ S.A.',
-        display_category: 'Corporativo',
-        contact_email: 'contacto@empresa-xyz.cl',
-        contact_phone: '+56912345678'
-      },
-      {
-        id: 'corp2',
-        name: 'Corporación ABC Ltda.',
-        display_category: 'Corporativo',
-        contact_email: 'info@corporacion-abc.cl',
-        contact_phone: '+56987654321'
-      }
-    ];
-
-    // Si aún no hay company.id disponible, usar fallback para no bloquear el flujo
+    // Si no hay company.id disponible, no cargar nada
     if (!profile?.company?.id) {
-      setCorporateClients(fallbackClients);
+      setCorporateClients([]);
       return;
     }
 
@@ -282,12 +243,11 @@ const NewMessagePage = () => {
         const { data: allClients, error } = await supabase
           .from('corporate_clients')
           .select('*')
-          .eq('is_active', true)
-          .order('name');
+          .order('contact_email');
         
         if (error) {
           console.error('Error loading all corporate clients:', error);
-          setCorporateClients(fallbackClients);
+          setCorporateClients([]);
         } else {
           corporateClientsData = { corporateClients: allClients };
         }
@@ -296,14 +256,14 @@ const NewMessagePage = () => {
       }
 
       if (corporateClientsData?.error || !corporateClientsData?.corporateClients || corporateClientsData.corporateClients.length === 0) {
-        console.warn('Usando fallback de clientes corporativos (sin datos o error).');
-        setCorporateClients(fallbackClients);
+        console.warn('No se encontraron clientes corporativos.');
+        setCorporateClients([]);
       } else {
         setCorporateClients(corporateClientsData.corporateClients);
       }
     } catch (error) {
       console.error('Error loading corporate clients:', error);
-      setCorporateClients(fallbackClients);
+      setCorporateClients([]);
     } finally {
       setLoadingCorporateClients(false);
     }
@@ -315,15 +275,12 @@ const NewMessagePage = () => {
     try {
       setLoadingDebtors(true);
 
-      // Usar la misma lógica que ClientDetailsPage para consistencia
-      // Primero intentar con datos reales, luego fallback a mock
+      // Cargar solo datos reales
       const result = await getCompanyDebts(profile.company.id);
 
       if (result.error || !result.debts || result.debts.length === 0) {
-        console.warn('Sin deudas reales o error al cargar; usando deudores de ejemplo para continuar el flujo.');
-        // Usar datos mock consistentes con ClientDetailsPage
-        const mockDebtors = getAllMockDebtors();
-        setDebtors(mockDebtors);
+        console.warn('No se encontraron deudas reales.');
+        setDebtors([]);
       } else {
         // Extraer deudores únicos de las deudas
         const debtorsMap = new Map();
@@ -360,100 +317,12 @@ const NewMessagePage = () => {
       }
     } catch (error) {
       console.error('Error loading debtors:', error);
-      // Fallback a datos mock en caso de error
-      const mockDebtors = getAllMockDebtors();
-      setDebtors(mockDebtors);
+      setDebtors([]);
     } finally {
       setLoadingDebtors(false);
     }
   };
 
-  // Función para obtener todos los deudores mock (igual que en ClientDetailsPage)
-  const getAllMockDebtors = () => {
-    const mockDebts = {
-      '1': [
-        {
-          id: 'd1',
-          debt_reference: 'DEBT-001',
-          current_amount: 2500000,
-          status: 'active',
-          created_at: '2024-10-01T00:00:00Z',
-          user: { full_name: 'María González', rut: '12.345.678-9' }
-        }
-      ],
-      '2': [
-        {
-          id: 'd2',
-          debt_reference: 'DEBT-002',
-          current_amount: 1800000,
-          status: 'active',
-          created_at: '2024-09-15T00:00:00Z',
-          user: { full_name: 'Carlos Rodríguez', rut: '15.234.567-8' }
-        }
-      ],
-      '3': [
-        {
-          id: 'd3',
-          debt_reference: 'DEBT-003',
-          current_amount: 3200000,
-          status: 'in_negotiation',
-          created_at: '2024-08-20T00:00:00Z',
-          user: { full_name: 'Ana López', rut: '18.345.678-1' }
-        }
-      ],
-      '4': [
-        {
-          id: 'd4',
-          debt_reference: 'DEBT-004',
-          current_amount: 950000,
-          status: 'paid',
-          created_at: '2024-07-10T00:00:00Z',
-          user: { full_name: 'Pedro Martínez', rut: '11.456.789-2' }
-        }
-      ]
-    };
-
-    // Convertir las deudas mock en formato de deudores
-    const debtors = [];
-    Object.entries(mockDebts).forEach(([clientId, debts]) => {
-      // Mapear clientId a corporateClientId correcto
-      const corporateClientId = clientId === '1' ? 'corp1' : clientId === '2' ? 'corp2' : clientId;
-
-      debts.forEach(debt => {
-        const debtorId = `debtor_${clientId}`;
-        const existingDebtor = debtors.find(d => d.id === debtorId);
-
-        if (!existingDebtor) {
-          debtors.push({
-            id: debtorId,
-            name: debt.user.full_name,
-            rut: debt.user.rut,
-            clientType: 'corporate',
-            clientId: corporateClientId, // Usar el ID correcto del cliente corporativo
-            debts: [{
-              id: debt.id,
-              type: 'credit_card', // Default type
-              amount: debt.current_amount,
-              status: debt.status,
-              dueDate: new Date(debt.created_at),
-              daysOverdue: 0 // Default
-            }]
-          });
-        } else {
-          existingDebtor.debts.push({
-            id: debt.id,
-            type: 'credit_card',
-            amount: debt.current_amount,
-            status: debt.status,
-            dueDate: new Date(debt.created_at),
-            daysOverdue: 0
-          });
-        }
-      });
-    });
-
-    return debtors;
-  };
 
   // Determine which list to show based on client type filter
   const availableRecipients = debtorFilters.clientType === 'corporate' ? corporateClients : debtors;

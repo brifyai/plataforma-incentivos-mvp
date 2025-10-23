@@ -11,7 +11,7 @@
  * Última actualización: 2025-10-08 - Agregada exportación de hashPassword
  */
 
-import { supabase, handleSupabaseError } from '../config/supabase';
+import { supabase } from '../config/supabase';
 import { USER_ROLES } from '../config/constants';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
@@ -691,13 +691,6 @@ const signIn = async (email, password) => {
 
     // Guardar en localStorage (mantener compatibilidad pero con tokens seguros)
     localStorage.setItem('secure_session', JSON.stringify(secureSession));
-
-    // Guardar sesión segura en localStorage (sin mock)
-    localStorage.setItem('secure_session', JSON.stringify({
-      user: realUser,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    }));
 
     console.log('✅ Sesión segura creada con JWT');
     return { user: realUser, session: secureSession, error: null };
