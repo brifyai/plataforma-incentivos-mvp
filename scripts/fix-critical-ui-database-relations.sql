@@ -9,32 +9,12 @@
 -- =====================================================
 
 -- Paso 1: Diagnosticar el estado actual
-DO $$
-DECLARE
-    orphaned_count INTEGER;
-    mismatch_count INTEGER;
-    total_debts INTEGER;
-BEGIN
-    -- Contar deudas con client_id inválido
-    SELECT COUNT(*) INTO orphaned_count
-    FROM debts d
-    LEFT JOIN clients c ON d.client_id = c.id
-    WHERE d.client_id IS NOT NULL AND c.id IS NULL;
-    
-    -- Contar deudas con client_id de diferente compañía
-    SELECT COUNT(*) INTO mismatch_count
-    FROM debts d
-    JOIN clients c ON d.client_id = c.id
-    WHERE d.company_id != c.company_id;
-    
-    -- Contar total de deudas
-    SELECT COUNT(*) INTO total_debts FROM debts;
-    
-    RAISE NOTICE '📊 DIAGNÓSTICO INICIAL:';
-    RAISE NOTICE '   Total de deudas: %', total_debts;
-    RAISE NOTICE '   Deudas con client_id inválido: %', orphaned_count;
-    RAISE NOTICE '   Deudas con client_id de diferente compañía: %', mismatch_count;
-END $$;
+-- Nota: Los RAISE NOTICE han sido reemplazados con SELECT para compatibilidad
+SELECT
+    '📊 DIAGNÓSTICO INICIAL' as diagnostic_step,
+    (SELECT COUNT(*) FROM debts) as total_debts,
+    (SELECT COUNT(*) FROM debts d LEFT JOIN clients c ON d.client_id = c.id WHERE d.client_id IS NOT NULL AND c.id IS NULL) as orphaned_client_count,
+    (SELECT COUNT(*) FROM debts d JOIN clients c ON d.client_id = c.id WHERE d.company_id != c.company_id) as mismatched_client_count;
 
 -- Paso 2: Crear tabla de respaldo de las relaciones problemáticas
 CREATE TABLE IF NOT EXISTS debts_client_backup AS
@@ -54,8 +34,11 @@ FROM debts d
 LEFT JOIN clients c ON d.client_id = c.id
 WHERE d.client_id IS NOT NULL AND (c.id IS NULL OR c.company_id != d.company_id);
 
-RAISE NOTICE '💾 Tabla de respaldo creada: debts_client_backup con % registros', 
-    (SELECT COUNT(*) FROM debts_client_backup);
+SELECT
+    '💾 Tabla de respaldo creada' as backup_step,
+    'debts_client_backup' as table_name,
+    COUNT(*) as record_count
+FROM debts_client_backup;
 
 -- Paso 3: Corregir datos huérfanos (client_id que no existe)
 UPDATE debts 
@@ -79,24 +62,10 @@ RAISE NOTICE '🔧 Inconsistencias de compañía corregidas: % registros',
 -- =====================================================
 
 -- Paso 5: Diagnosticar corporate_client_id
-DO $$
-DECLARE
-    orphaned_corporate_count INTEGER;
-    total_clients INTEGER;
-BEGIN
-    -- Contar clientes con corporate_client_id inválido
-    SELECT COUNT(*) INTO orphaned_corporate_count
-    FROM clients c
-    LEFT JOIN corporate_clients cc ON c.corporate_client_id = cc.id
-    WHERE c.corporate_client_id IS NOT NULL AND cc.id IS NULL;
-    
-    -- Contar total de clientes
-    SELECT COUNT(*) INTO total_clients FROM clients;
-    
-    RAISE NOTICE '📊 DIAGNÓSTICO CORPORATE_CLIENT:';
-    RAISE NOTICE '   Total de clientes: %', total_clients;
-    RAISE NOTICE '   Clientes con corporate_client_id inválido: %', orphaned_corporate_count;
-END $$;
+SELECT
+    '📊 DIAGNÓSTICO CORPORATE_CLIENT' as diagnostic_step,
+    (SELECT COUNT(*) FROM clients) as total_clients,
+    (SELECT COUNT(*) FROM clients c LEFT JOIN corporate_clients cc ON c.corporate_client_id = cc.id WHERE c.corporate_client_id IS NOT NULL AND cc.id IS NULL) as orphaned_corporate_count;
 
 -- Paso 6: Crear tabla de respaldo para corporate_client_id
 CREATE TABLE IF NOT EXISTS clients_corporate_backup AS
@@ -114,8 +83,11 @@ FROM clients c
 LEFT JOIN corporate_clients cc ON c.corporate_client_id = cc.id
 WHERE c.corporate_client_id IS NOT NULL AND cc.id IS NULL;
 
-RAISE NOTICE '💾 Tabla de respaldo corporate creada: clients_corporate_backup con % registros', 
-    (SELECT COUNT(*) FROM clients_corporate_backup);
+SELECT
+    '💾 Tabla de respaldo corporate creada' as backup_step,
+    'clients_corporate_backup' as table_name,
+    COUNT(*) as record_count
+FROM clients_corporate_backup;
 
 -- Paso 7: Corregir corporate_client_id inválidos
 UPDATE clients 
@@ -150,15 +122,15 @@ BEGIN
         WHERE constraint_name = 'debts_company_id_fkey'
     ) THEN
         ALTER TABLE debts DROP CONSTRAINT debts_company_id_fkey;
-        RAISE NOTICE '🗑️ Constraint existente eliminado: debts_company_id_fkey';
+        SELECT '🗑️ Constraint existente eliminado: debts_company_id_fkey' as constraint_status;
     END IF;
     
     IF EXISTS (
-        SELECT 1 FROM information_schema.table_constraints 
+        SELECT 1 FROM information_schema.table_constraints
         WHERE constraint_name = 'debts_client_id_fkey'
     ) THEN
         ALTER TABLE debts DROP CONSTRAINT debts_client_id_fkey;
-        RAISE NOTICE '🗑️ Constraint existente eliminado: debts_client_id_fkey';
+        SELECT '🗑️ Constraint existente eliminado: debts_client_id_fkey' as constraint_status;
     END IF;
 END $$;
 
@@ -179,7 +151,7 @@ ALTER TABLE clients
 ADD CONSTRAINT clients_corporate_client_id_fkey 
 FOREIGN KEY (corporate_client_id) REFERENCES corporate_clients(id) ON DELETE SET NULL;
 
-RAISE NOTICE '🔒 Foreign key constraints agregados exitosamente';
+SELECT '🔒 Foreign key constraints agregados exitosamente' as constraint_status;
 
 -- =====================================================
 -- ✅ CREAR TRIGGERS DE VALIDACIÓN
@@ -219,7 +191,7 @@ CREATE TRIGGER trg_validate_debt_client_consistency
     BEFORE INSERT OR UPDATE ON debts
     FOR EACH ROW EXECUTE FUNCTION validate_debt_client_consistency();
 
-RAISE NOTICE '✅ Trigger de validación creado para debts';
+SELECT '✅ Trigger de validación creado para debts' as trigger_status;
 
 -- =====================================================
 -- 📊 CREAR FUNCIONES DE DIAGNÓSTICO
@@ -354,29 +326,27 @@ BEGIN
     SELECT COUNT(*) INTO total_issues FROM diagnose_ui_database_relations();
     
     RAISE NOTICE '';
-    RAISE NOTICE '🎉 CORRECCIÓN COMPLETADA';
-    RAISE NOTICE '========================';
-    RAISE NOTICE '✅ Client_id en debts: CORREGIDO';
-    RAISE NOTICE '✅ Corporate_client_id en clients: CORREGIDO';
-    RAISE NOTICE '✅ Foreign key constraints: AGREGADOS';
-    RAISE NOTICE '✅ Triggers de validación: CREADOS';
-    RAISE NOTICE '✅ Tablas de configuración: CREADAS';
-    RAISE NOTICE '';
-    RAISE NOTICE '📊 Issues restantes: %', total_issues;
+    SELECT '🎉 CORRECCIÓN COMPLETADA' as completion_status;
+    SELECT '✅ Client_id en debts: CORREGIDO' as fix_status;
+    SELECT '✅ Corporate_client_id en clients: CORREGIDO' as fix_status;
+    SELECT '✅ Foreign key constraints: AGREGADOS' as fix_status;
+    SELECT '✅ Triggers de validación: CREADOS' as fix_status;
+    SELECT '✅ Tablas de configuración: CREADAS' as fix_status;
     
-    IF total_issues = 0 THEN
-        RAISE NOTICE '🎉 Todas las relaciones están correctas';
-    ELSE
-        RAISE NOTICE '⚠️ Quedan % issues por revisar', total_issues;
-        RAISE NOTICE 'Ejecuta: SELECT * FROM diagnose_ui_database_relations();';
-    END IF;
+    SELECT
+        '📊 Issues restantes' as status_type,
+        total_issues as issue_count;
     
-    RAISE NOTICE '';
-    RAISE NOTICE '📋 Respaldo de datos modificado:';
-    RAISE NOTICE '   • debts_client_backup';
-    RAISE NOTICE '   • clients_corporate_backup';
-    RAISE NOTICE '';
-    RAISE NOTICE '🔧 Para revertir cambios, revisa las tablas de respaldo';
+    SELECT
+        CASE
+            WHEN total_issues = 0 THEN '🎉 Todas las relaciones están correctas'
+            ELSE format('⚠️ Quedan %s issues por revisar', total_issues)
+        END as final_status;
+    
+    SELECT '📋 Respaldo de datos modificado:' as backup_info;
+    SELECT '   • debts_client_backup' as backup_table;
+    SELECT '   • clients_corporate_backup' as backup_table;
+    SELECT '🔧 Para revertir cambios, revisa las tablas de respaldo' as revert_info;
 END $$;
 
 -- =====================================================
