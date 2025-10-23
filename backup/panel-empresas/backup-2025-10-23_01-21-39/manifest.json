@@ -1,0 +1,175 @@
+{
+  "timestamp": "2025-10-23_01-21-39",
+  "backupPath": "backup\\panel-empresas\\backup-2025-10-23_01-21-39",
+  "totalFiles": 32,
+  "totalSize": 1057720,
+  "files": [
+    {
+      "relativePath": "AgreementDetailsPage.jsx",
+      "size": 11584,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "AgreementsPage.jsx",
+      "size": 19529,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "AIDashboardPage.jsx",
+      "size": 155124,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "BulkImportPage.jsx",
+      "size": 7542,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "CampaignsPage.jsx",
+      "size": 34484,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "ClientDebtsPage.jsx",
+      "size": 31561,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "ClientDetailsPage.jsx",
+      "size": 17777,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "ClientsPage.jsx",
+      "size": 37661,
+      "modified": "2025-10-22T20:53:01.131Z"
+    },
+    {
+      "relativePath": "CompanyAnalyticsPage.jsx",
+      "size": 14945,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "CompanyDashboard.jsx",
+      "size": 24308,
+      "modified": "2025-10-20T22:59:21.749Z"
+    },
+    {
+      "relativePath": "CompanyMessagesPage.jsx",
+      "size": 68794,
+      "modified": "2025-10-21T23:05:33.733Z"
+    },
+    {
+      "relativePath": "CompanyNotificationsPage.jsx",
+      "size": 27445,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "CompanyVerificationPage.jsx",
+      "size": 32921,
+      "modified": "2025-10-21T19:20:18.884Z"
+    },
+    {
+      "relativePath": "components\\AnalyticsDashboard.jsx",
+      "size": 28243,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "components\\CampaignBuilder.jsx",
+      "size": 28169,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "components\\ClientManagement.jsx",
+      "size": 39422,
+      "modified": "2025-10-22T15:14:03.860Z"
+    },
+    {
+      "relativePath": "components\\CorporateClientManager.jsx",
+      "size": 25387,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "components\\DashboardHero.jsx",
+      "size": 8096,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "components\\DashboardStats.jsx",
+      "size": 4430,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "components\\MobileNavigation.jsx",
+      "size": 5777,
+      "modified": "2025-10-22T19:08:11.135Z"
+    },
+    {
+      "relativePath": "components\\PaymentTools.jsx",
+      "size": 29100,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "components\\QuickActions.jsx",
+      "size": 5415,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "components\\SystemStatus.jsx",
+      "size": 13273,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "CorporatePromptConfigPage.jsx",
+      "size": 25799,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "KnowledgeBasePage.jsx",
+      "size": 36876,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "MessagingAIConfigPage.jsx",
+      "size": 40636,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "NewDebtorPage.jsx",
+      "size": 20123,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "NewMessagePage.jsx",
+      "size": 55000,
+      "modified": "2025-10-22T21:05:29.976Z"
+    },
+    {
+      "relativePath": "OffersPage.jsx",
+      "size": 101721,
+      "modified": "2025-10-22T21:07:22.961Z"
+    },
+    {
+      "relativePath": "ProfilePage.jsx",
+      "size": 36694,
+      "modified": "2025-10-22T18:52:59.969Z"
+    },
+    {
+      "relativePath": "ProposalsPage.jsx",
+      "size": 42795,
+      "modified": "2025-10-17T19:09:36.000Z"
+    },
+    {
+      "relativePath": "TransferDashboard.jsx",
+      "size": 27089,
+      "modified": "2025-10-17T19:09:36.000Z"
+    }
+  ],
+  "metadata": {
+    "nodeVersion": "v20.18.0",
+    "platform": "win32",
+    "arch": "x64",
+    "gitBranch": "refactor-safe",
+    "gitCommit": "871db67a"
+  }
+}

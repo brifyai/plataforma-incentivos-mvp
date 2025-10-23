@@ -7,10 +7,15 @@
 
 // Servicios principales
 export * from '../campaignService.js';
-export * from '../bulkImportService.js';
-export * from '../bulkImportServiceFixed.js';
+export * from '../bulkImportServiceConsolidated.js';
 
 // Exportaciones por defecto
 export { default as campaignService } from '../campaignService.js';
-export { default as bulkImportService } from '../bulkImportService.js';
-export { default as bulkImportServiceFixed } from '../bulkImportServiceFixed.js';
+export { default as bulkImportService } from '../bulkImportServiceConsolidated.js';
+
+// Exportaciones de compatibilidad para versiones anteriores
+export {
+  bulkImportServiceFixed as bulkImportServiceFixed,
+  validateImportFileFixed,
+  validateDebtDataFixed
+} from '../bulkImportServiceConsolidated.js';

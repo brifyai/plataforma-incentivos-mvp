@@ -39,26 +39,68 @@ async function applyClientIdMigration() {
     }
 
     console.log('📝 client_id column does not exist, adding it...');
-    console.log('\n⚠️ Since we cannot directly alter tables via JS API, you need to run this SQL manually:');
-    console.log('\n-- Run this SQL in your Supabase SQL Editor:\n');
 
+    // Apply the migration SQL directly
     const migrationSQL = `
--- Add the client_id column as a foreign key to clients table
-ALTER TABLE public.debts 
-ADD COLUMN client_id UUID REFERENCES public.clients(id) ON DELETE SET NULL;
+      -- Add the client_id column as a foreign key to clients table
+      ALTER TABLE public.debts 
+      ADD COLUMN client_id UUID REFERENCES public.clients(id) ON DELETE SET NULL;
+      
+      -- Add index for better query performance
+      CREATE INDEX IF NOT EXISTS idx_debts_client_id ON public.debts(client_id);
+      
+      -- Optional: Create a composite index for company_id + client_id queries
+      CREATE INDEX IF NOT EXISTS idx_debts_company_client ON public.debts(company_id, client_id) WHERE client_id IS NOT NULL;
+    `;
 
--- Add index for better query performance
-CREATE INDEX IF NOT EXISTS idx_debts_client_id ON public.debts(client_id);
+    // Execute the migration using RPC
+    const { data, error } = await supabase.rpc('exec_sql', { sql: migrationSQL });
 
--- Optional: Create a composite index for company_id + client_id queries
-CREATE INDEX IF NOT EXISTS idx_debts_company_client ON public.debts(company_id, client_id) WHERE client_id IS NOT NULL;
+    if (error) {
+      console.error('❌ Error applying migration:', error);
+      
+      // Try alternative approach using direct SQL if RPC fails
+      console.log('🔄 Trying alternative approach...');
+      
+      try {
+        // Add client_id column
+        const { error: alterError } = await supabase
+          .from('debts')
+          .select('id')
+          .limit(1); // This will fail if column doesn't exist, but we need to try a different approach
+        
+        if (alterError) {
+          console.log('⚠️ Cannot add column directly via JS API. You need to run the SQL manually:');
+          console.log('\n-- Run this SQL in your Supabase SQL Editor:\n');
+          console.log(migrationSQL);
+          console.log('\nOr use the Supabase CLI: supabase db push');
+        }
+      } catch (e) {
+        console.log('⚠️ Cannot add column directly via JS API. You need to run the SQL manually:');
+        console.log('\n-- Run this SQL in your Supabase SQL Editor:\n');
+        console.log(migrationSQL);
+        console.log('\nOr use the Supabase CLI: supabase db push');
+      }
+    } else {
+      console.log('✅ Migration applied successfully!');
+    }
 
--- Add comment for documentation
-COMMENT ON COLUMN public.debts.client_id IS 'Reference to the client this debt belongs to (nullable for backwards compatibility)';
-`;
+    // Verify the column was added
+    console.log('🔍 Verifying the column was added...');
+    const { data: verifyColumns, error: verifyError } = await supabase
+      .from('information_schema.columns')
+      .select('column_name, data_type, is_nullable')
+      .eq('table_name', 'debts')
+      .eq('column_name', 'client_id')
+      .eq('table_schema', 'public');
 
-    console.log(migrationSQL);
-    console.log('\nOr use the Supabase CLI: supabase db push');
+    if (verifyError) {
+      console.error('❌ Error verifying column:', verifyError);
+    } else if (verifyColumns && verifyColumns.length > 0) {
+      console.log('✅ client_id column verified:', verifyColumns[0]);
+    } else {
+      console.log('⚠️ Column verification failed. Please check manually.');
+    }
 
   } catch (error) {
     console.error('💥 Error in applyClientIdMigration:', error);
@@ -104,6 +146,7 @@ async function checkDebtsTableStructure() {
 async function main() {
   await checkDebtsTableStructure();
   await applyClientIdMigration();
+  await checkDebtsTableStructure(); // Check again after migration
 }
 
 main();

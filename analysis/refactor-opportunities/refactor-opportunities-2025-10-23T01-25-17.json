@@ -1,0 +1,4578 @@
+{
+  "timestamp": "2025-10-23T01:25:17.690Z",
+  "summary": {
+    "totalFiles": 32,
+    "totalOpportunities": 112,
+    "riskDistribution": {
+      "NONE": 0,
+      "LOW": 32,
+      "MEDIUM": 0,
+      "HIGH": 0
+    },
+    "opportunityTypes": {
+      "IMPORTS": 13,
+      "CONSTANTS": 32,
+      "COMMENTS": 32,
+      "VARIABLES": 12,
+      "FUNCTIONS": 23
+    }
+  },
+  "files": [
+    {
+      "file": "AgreementDetailsPage.jsx",
+      "path": "src\\pages\\company\\AgreementDetailsPage.jsx",
+      "size": 11559,
+      "lines": 315,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \":\n        return <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \":\n        return \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \";\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n          onClick={() => navigate(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "12 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 25,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 38,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 70,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 85,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "AgreementsPage.jsx",
+      "path": "src\\pages\\company\\AgreementsPage.jsx",
+      "size": 19517,
+      "lines": 530,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 88,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            },
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 118,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "9 funciones encontradas, pueden organizarse por tipo",
+              "line": 28,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" />;\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \":\n        return <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              onClick={() => applyDateRange(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \" />\n                </div>\n                <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n                {agreements.filter(a => a.status === \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "18 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 28,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 83,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 104,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 113,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 143,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 158,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 173,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "AIDashboardPage.jsx",
+      "path": "src\\pages\\company\\AIDashboardPage.jsx",
+      "size": 154823,
+      "lines": 3667,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 13,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 1053,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            },
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 1376,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            },
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 1413,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "28 funciones encontradas, pueden organizarse por tipo",
+              "line": 54,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \" />;\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 11 veces: \":\n        return \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 8 veces: \";\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \";\n      default:\n        return \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"personalization\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 12 veces: \", description: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 11 veces: \" },\n    { key: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \")\n          .select(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \")\n          .eq(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 11 veces: \", error);\n      Swal.fire({\n        icon: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 24 veces: \",\n        title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 17 veces: \",\n        text: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \",\n        confirmButtonText: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 8 veces: \"\n      });\n    } catch (error) {\n      console.error(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" + error.message,\n        confirmButtonText: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \", corporateClientId)\n          .eq(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \",\n        html: `\n          <div class=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \">\n            <p class=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n          html: `\n            <div class=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \">\n              <div class=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"flex items-center justify-between mb-4\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                                min=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                                max=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                              min=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                              max=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n                                  <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n                                <Button size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" />\n                                </Button>\n                                <Button size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \"\n                            min=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \"\n                            max=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                          variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              placeholder=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 8 veces: \" },\n                { value: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \">\n            <Button\n              variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "135 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 62,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 75,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 92,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 109,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 203,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 466,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 514,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 560,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 585,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 609,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 674,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 732,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 748,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 821,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 875,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 924,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1050,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1171,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1217,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1265,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1324,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1399,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1412,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1451,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1462,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 1477,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "BulkImportPage.jsx",
+      "path": "src\\pages\\company\\BulkImportPage.jsx",
+      "size": 7478,
+      "lines": 169,
+      "opportunities": [
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 7 veces: \";\n      statusColor = \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \";\n    } else if (verification.status === \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \") {\n      statusMessage = \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "11 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 6,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 12,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "CampaignsPage.jsx",
+      "path": "src\\pages\\company\\CampaignsPage.jsx",
+      "size": 34422,
+      "lines": 855,
+      "opportunities": [
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \":\n        return <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \":\n        return \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \";\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \" />\n              </div>\n              <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                  placeholder=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                  min=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                  max=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n                      <input\n                        type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "64 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 34,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 93,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 137,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 209,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 228,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "ClientDebtsPage.jsx",
+      "path": "src\\pages\\company\\ClientDebtsPage.jsx",
+      "size": 31512,
+      "lines": 878,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "10 funciones encontradas, pueden organizarse por tipo",
+              "line": 25,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        business_name: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        rut: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        contact_name: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        contact_email: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        contact_phone: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        industry: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        address: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        created_at: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n      },\n      {\n        id: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \": [\n        {\n          id: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          debt_reference: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          debt_type: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          description: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          created_at: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          user: { full_name: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \":\n        return <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \":\n        return \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \";\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \" />\n              </div>\n              <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n        size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              >\n                <option value=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "22 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 25,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 173,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 218,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 261,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 283,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 295,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 342,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 357,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "ClientDetailsPage.jsx",
+      "path": "src\\pages\\company\\ClientDetailsPage.jsx",
+      "size": 17734,
+      "lines": 507,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "7 funciones encontradas, pueden organizarse por tipo",
+              "line": 15,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        business_name: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        rut: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        contact_name: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        contact_email: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        contact_phone: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        industry: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        address: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        created_at: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n      },\n      {\n        id: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \": [\n        {\n          id: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          debt_reference: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          created_at: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          user: { full_name: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \":\n        return <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "12 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 32,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 47,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 227,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "ClientsPage.jsx",
+      "path": "src\\pages\\company\\ClientsPage.jsx",
+      "size": 37538,
+      "lines": 904,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"item\"",
+              "line": 343,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyItem\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "10 funciones encontradas, pueden organizarse por tipo",
+              "line": 36,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\r\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\r\n              onClick={() => applyDateRange(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "69 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 36,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 202,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 263,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "CompanyAnalyticsPage.jsx",
+      "path": "src\\pages\\company\\CompanyAnalyticsPage.jsx",
+      "size": 14911,
+      "lines": 399,
+      "opportunities": [
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              onClick={() => applyDateRange(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \" />\n                </div>\n                <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "19 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 24,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 66,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 73,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "CompanyDashboard.jsx",
+      "path": "src\\pages\\company\\CompanyDashboard.jsx",
+      "size": 24241,
+      "lines": 587,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            },
+            {
+              "type": "DUPLICATE_IMPORTS",
+              "description": "Imports duplicados desde: ../../components/common",
+              "line": 10,
+              "suggestion": "Consolidar imports duplicados en una sola línea"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 74,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            },
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 96,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "7 funciones encontradas, pueden organizarse por tipo",
+              "line": 39,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \"\r\n                icon=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\r\n                required\r\n              />\r\n\r\n              <FormField\r\n                label=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "32 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 39,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 69,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 116,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 121,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 286,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "CompanyMessagesPage.jsx",
+      "path": "src\\pages\\company\\CompanyMessagesPage.jsx",
+      "size": 68556,
+      "lines": 1551,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 166,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "11 funciones encontradas, pueden organizarse por tipo",
+              "line": 34,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        text: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        icon: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \",\n        confirmButtonColor: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        confirmButtonText: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \":\n        return <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \"\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              onClick={() => applyDateRange(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \" />\n                </div>\n                <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"text-green-700\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \"bg-green-500\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \"bg-gray-300\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"flex items-center gap-2\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"text-white\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 7 veces: \"text-gray-500\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "100 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 34,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 137,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 162,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 193,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 266,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 373,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 386,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 399,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "CompanyNotificationsPage.jsx",
+      "path": "src\\pages\\company\\CompanyNotificationsPage.jsx",
+      "size": 27394,
+      "lines": 729,
+      "opportunities": [
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "10 funciones encontradas, pueden organizarse por tipo",
+              "line": 29,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n            title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n            message: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n            type: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n            priority: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n            channels: [\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"],\n            status: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n            <Button\n              variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \"\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              onClick={() => applyDateRange(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" },\n                { value: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "38 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 29,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 98,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 149,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 178,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 189,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 199,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 208,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 217,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "CompanyVerificationPage.jsx",
+      "path": "src\\pages\\company\\CompanyVerificationPage.jsx",
+      "size": 32759,
+      "lines": 804,
+      "opportunities": [
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 207,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "6 funciones encontradas, pueden organizarse por tipo",
+              "line": 31,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \", error);\n      Swal.fire(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                      target=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                      rel=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"text-green-700\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "31 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 31,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 46,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 92,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 198,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 240,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 261,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\AnalyticsDashboard.jsx",
+      "path": "src\\pages\\company\\components\\AnalyticsDashboard.jsx",
+      "size": 28203,
+      "lines": 639,
+      "opportunities": [
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "8 funciones encontradas, pueden organizarse por tipo",
+              "line": 35,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "52 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 35,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 61,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 78,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 90,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 99,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 108,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 117,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 136,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\CampaignBuilder.jsx",
+      "path": "src\\pages\\company\\components\\CampaignBuilder.jsx",
+      "size": 28104,
+      "lines": 775,
+      "opportunities": [
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "15 funciones encontradas, pueden organizarse por tipo",
+              "line": 29,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \">\n                <input\n                  type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                  placeholder=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "31 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 29,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 77,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 93,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 112,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 147,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 157,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 166,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 175,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 192,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 207,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 228,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 287,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 483,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 575,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 722,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\ClientManagement.jsx",
+      "path": "src\\pages\\company\\components\\ClientManagement.jsx",
+      "size": 39291,
+      "lines": 1028,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "14 funciones encontradas, pueden organizarse por tipo",
+              "line": 34,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 12 veces: \",\r\n      email: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 12 veces: \",\r\n      phone: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 12 veces: \",\r\n      rut: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 12 veces: \",\r\n      status: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \" placeholder=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \")) {\r\n              errorMessage = \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \";\r\n            } else if (error.message.includes(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\r\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "34 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 34,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 342,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 343,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 344,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 345,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 455,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 483,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 707,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 723,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\CorporateClientManager.jsx",
+      "path": "src\\pages\\company\\components\\CorporateClientManager.jsx",
+      "size": 25363,
+      "lines": 674,
+      "opportunities": [
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 93,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            },
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 119,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "6 funciones encontradas, pueden organizarse por tipo",
+              "line": 27,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \" />\n              </div>\n              <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                      size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \" },\n                      { value: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "12 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 27,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 62,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 84,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 112,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 137,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 153,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\DashboardHero.jsx",
+      "path": "src\\pages\\company\\components\\DashboardHero.jsx",
+      "size": 8088,
+      "lines": 222,
+      "opportunities": [
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              onClick={() => applyDateRange(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "21 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 20,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\DashboardStats.jsx",
+      "path": "src\\pages\\company\\components\\DashboardStats.jsx",
+      "size": 4428,
+      "lines": 134,
+      "opportunities": [
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "13 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 24,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 79,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 85,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 91,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\MobileNavigation.jsx",
+      "path": "src\\pages\\company\\components\\MobileNavigation.jsx",
+      "size": 5774,
+      "lines": 195,
+      "opportunities": [
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 9 veces: \",\n      href: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \")\n    },\n    {\n      name: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "13 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 25,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 86,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 90,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\PaymentTools.jsx",
+      "path": "src\\pages\\company\\components\\PaymentTools.jsx",
+      "size": 29047,
+      "lines": 692,
+      "opportunities": [
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "9 funciones encontradas, pueden organizarse por tipo",
+              "line": 28,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \",\n          created_at: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n        },\n        {\n          id: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          description: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \" },\n          corporateClientId: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"Mercado Pago\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "40 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 28,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 70,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 121,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 175,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 205,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 224,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 244,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 258,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\QuickActions.jsx",
+      "path": "src\\pages\\company\\components\\QuickActions.jsx",
+      "size": 5412,
+      "lines": 181,
+      "opportunities": [
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 8 veces: \",\n      description: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 8 veces: \",\n      action: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 8 veces: \",\n      link: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n    },\n    {\n      title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "6 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 28,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 99,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 111,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "components\\SystemStatus.jsx",
+      "path": "src\\pages\\company\\components\\SystemStatus.jsx",
+      "size": 13246,
+      "lines": 464,
+      "opportunities": [
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "10 funciones encontradas, pueden organizarse por tipo",
+              "line": 26,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \", message: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \")\n        .select(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \")\n        .limit(1);\n      \n      const responseTime = Date.now() - startTime;\n      \n      if (error) {\n        return {\n          status: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \",\n          message: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" />;\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \" />,\n          title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          bgColor: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          textColor: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \",\n      name: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "22 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 26,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 261,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 276,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 298,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "CorporatePromptConfigPage.jsx",
+      "path": "src\\pages\\company\\CorporatePromptConfigPage.jsx",
+      "size": 25779,
+      "lines": 762,
+      "opportunities": [
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 205,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            },
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 300,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "11 funciones encontradas, pueden organizarse por tipo",
+              "line": 31,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 12 veces: \", description: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 11 veces: \" },\n    { key: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \", error);\n      Swal.fire({\n        icon: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 8 veces: \",\n        title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 8 veces: \",\n        text: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" />;\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \":\n        return \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \";\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                        variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "17 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 31,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 81,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 107,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 132,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 191,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 204,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 243,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 323,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 354,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 365,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 380,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "KnowledgeBasePage.jsx",
+      "path": "src\\pages\\company\\KnowledgeBasePage.jsx",
+      "size": 36834,
+      "lines": 1068,
+      "opportunities": [
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "7 funciones encontradas, pueden organizarse por tipo",
+              "line": 29,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \", error);\n      Swal.fire({\n        icon: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 9 veces: \",\n        title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 9 veces: \",\n        text: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \")\n          .select(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \")\n          .eq(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \", corporateClientId)\n          .eq(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n      });\n    } catch (error) {\n      console.error(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n                        <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n                      <Button size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" />\n                      </Button>\n                      <Button size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 8 veces: \" },\n                { value: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n            <Button\n              variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "25 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 29,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 77,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 113,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 213,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 258,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 304,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 352,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "MessagingAIConfigPage.jsx",
+      "path": "src\\pages\\company\\MessagingAIConfigPage.jsx",
+      "size": 40556,
+      "lines": 1033,
+      "opportunities": [
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "7 funciones encontradas, pueden organizarse por tipo",
+              "line": 34,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n      type: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n      response: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \",\n        title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        text: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                        type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" },\n                            { value: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"font-semibold mb-3\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \"\n                      type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                  type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                  min=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                  max=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "14 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 34,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 137,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 239,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 310,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 342,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 353,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 359,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "NewDebtorPage.jsx",
+      "path": "src\\pages\\company\\NewDebtorPage.jsx",
+      "size": 20102,
+      "lines": 472,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \" />\n                        <input\n                          type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \", e.target.value)}\n                          placeholder=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "59 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 31,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 52,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 56,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 69,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 158,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "NewMessagePage.jsx",
+      "path": "src\\pages\\company\\NewMessagePage.jsx",
+      "size": 54818,
+      "lines": 1229,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 213,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            },
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 279,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "12 funciones encontradas, pueden organizarse por tipo",
+              "line": 30,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n        text: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \",\n        confirmButtonText: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n        customClass: { popup: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \",\n          title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"text-green-700\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \"bg-green-500\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \"bg-gray-300\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"flex items-center gap-2\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"text-white\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \"text-gray-500\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "75 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 30,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 72,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 100,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 109,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 135,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 143,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 193,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 208,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 229,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 272,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 413,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "OffersPage.jsx",
+      "path": "src\\pages\\company\\OffersPage.jsx",
+      "size": 101560,
+      "lines": 2107,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 472,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "12 funciones encontradas, pueden organizarse por tipo",
+              "line": 33,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" && createOfferForm.nexupay_commission_type === \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \":\n        return <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \":\n        return \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \";\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \">{offers.filter(o => o.status === \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              onClick={() => applyDateRange(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                    size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 7 veces: \"\n                        ? \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 9 veces: \"\n                        : \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n                        <input\n                          type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                          value=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                          checked={createOfferForm.payment_method === \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 9 veces: \"\n                      placeholder=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 7 veces: \"\n                      min=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \"\n                      max=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                    }`}>\n                      <input\n                        type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 4 veces: \"\n                        value=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \"\n                          ? \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 5 veces: \"\n                          : \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \">\n                          <input\n                            type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                            value=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n                            checked={editOfferForm.payment_method === \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "231 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 33,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 253,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 284,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 361,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 366,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 411,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 471,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 516,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 529,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "ProfilePage.jsx",
+      "path": "src\\pages\\company\\ProfilePage.jsx",
+      "size": 36585,
+      "lines": 1026,
+      "opportunities": [
+        {
+          "type": "IMPORTS",
+          "description": "Optimización de imports",
+          "items": [
+            {
+              "type": "ORGANIZE_IMPORTS",
+              "description": "Organizar imports por categorías (React, Componentes, Servicios, Utils)",
+              "line": 7,
+              "suggestion": "Agrupar imports por tipo con comentarios separadores"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 197,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            },
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 248,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            },
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 297,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "15 funciones encontradas, pueden organizarse por tipo",
+              "line": 65,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 9 veces: \",\n        title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 7 veces: \",\n        text: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \",\n        confirmButtonText: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 9 veces: \",\n        confirmButtonColor: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 9 veces: \",\n          title: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 7 veces: \",\n          text: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 6 veces: \",\n          confirmButtonText: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 9 veces: \",\n          confirmButtonColor: \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" && currentSection !== \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              type=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "34 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 65,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 109,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 130,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 138,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 147,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 193,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 218,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 244,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 266,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 474,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 640,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 654,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 709,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "ProposalsPage.jsx",
+      "path": "src\\pages\\company\\ProposalsPage.jsx",
+      "size": 42704,
+      "lines": 949,
+      "opportunities": [
+        {
+          "type": "VARIABLES",
+          "description": "Mejora de nomenclatura de variables",
+          "items": [
+            {
+              "type": "GENERIC_VARIABLE",
+              "description": "Variable con nombre genérico: \"result\"",
+              "line": 168,
+              "suggestion": "Usar un nombre más descriptivo, ej: \"companyResult\""
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "9 funciones encontradas, pueden organizarse por tipo",
+              "line": 26,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" />;\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              onClick={() => applyDateRange(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "77 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 26,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 83,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 98,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 116,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 126,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 136,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 141,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    },
+    {
+      "file": "TransferDashboard.jsx",
+      "path": "src\\pages\\company\\TransferDashboard.jsx",
+      "size": 27072,
+      "lines": 685,
+      "opportunities": [
+        {
+          "type": "FUNCTIONS",
+          "description": "Organización de funciones",
+          "items": [
+            {
+              "type": "ORGANIZE_FUNCTIONS",
+              "description": "9 funciones encontradas, pueden organizarse por tipo",
+              "line": 26,
+              "suggestion": "Agrupar funciones por categorías: Event Handlers, Validation, Data Processing, etc."
+            }
+          ],
+          "impact": "LOW",
+          "effort": "MEDIUM"
+        },
+        {
+          "type": "CONSTANTS",
+          "description": "Extracción de constantes",
+          "items": [
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \" />;\n      case \"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 7 veces: \":\n        return <Badge variant=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              size=\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "REPEATED_STRING",
+              "description": "String repetido 3 veces: \"\n              onClick={() => applyDateRange(\"",
+              "suggestion": "Extraer como constante",
+              "impact": "LOW"
+            },
+            {
+              "type": "MAGIC_NUMBERS",
+              "description": "48 números mágicos encontrados",
+              "suggestion": "Extraer números como constantes con nombres descriptivos"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        },
+        {
+          "type": "COMMENTS",
+          "description": "Mejora de documentación",
+          "items": [
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 26,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 77,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 145,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 160,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 175,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 188,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            },
+            {
+              "type": "MISSING_COMMENT",
+              "description": "Función sin comentario descriptivo",
+              "line": 193,
+              "suggestion": "Agregar comentario JSDoc descriptivo"
+            }
+          ],
+          "impact": "LOW",
+          "effort": "LOW"
+        }
+      ],
+      "riskLevel": "LOW"
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "type": "IMPORTS",
+      "title": "Organizar imports primero",
+      "description": "Comenzar por organizar los imports, ya que es un cambio de bajo riesgo y alto impacto",
+      "estimatedTime": "30 minutos",
+      "filesAffected": 13
+    },
+    {
+      "priority": "MEDIUM",
+      "type": "VARIABLES",
+      "title": "Mejorar nomenclatura de variables",
+      "description": "Renombrar variables genéricas por nombres más descriptivos",
+      "estimatedTime": "45 minutos",
+      "filesAffected": 12
+    },
+    {
+      "priority": "MEDIUM",
+      "type": "CONSTANTS",
+      "title": "Extraer constantes",
+      "description": "Extraer strings repetidos y números mágicos como constantes",
+      "estimatedTime": "60 minutos",
+      "filesAffected": 32
+    }
+  ]
+}
