@@ -116,18 +116,40 @@ const CompanyInformationSection = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-0.5">
                 <label className="block text-xs font-medium text-gray-700">Nombre Completo</label>
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  <User className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-900 font-medium">{formData.full_name || 'No especificado'}</span>
-                </div>
+                {isEditing ? (
+                  <Input
+                    type="text"
+                    value={formData.legal_representative_name || ''}
+                    onChange={(e) => onFormDataChange({...formData, legal_representative_name: e.target.value})}
+                    leftIcon={<User className="w-3.5 h-3.5" />}
+                    placeholder="Nombre completo del representante legal"
+                    className="bg-white/50 text-xs py-2"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-xs text-gray-900 font-medium">{formData.legal_representative_name || 'No especificado'}</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-0.5">
                 <label className="block text-xs font-medium text-gray-700">RUT del Representante</label>
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  <User className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-900 font-medium">{formatRut(formData.representative_rut) || 'No especificado'}</span>
-                </div>
+                {isEditing ? (
+                  <Input
+                    type="text"
+                    value={formData.legal_representative_rut || ''}
+                    onChange={(e) => onFormDataChange({...formData, legal_representative_rut: e.target.value})}
+                    leftIcon={<User className="w-3.5 h-3.5" />}
+                    placeholder="Ej: 12.345.678-9"
+                    className="bg-white/50 text-xs py-2"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-xs text-gray-900 font-medium">{formatRut(formData.legal_representative_rut) || 'No especificado'}</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-0.5">

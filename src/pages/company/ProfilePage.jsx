@@ -95,8 +95,9 @@ const ProfilePage = () => {
     contact_email: '',
     contact_phone: '',
     company_rut: '',
-    full_name: '',
-    representative_rut: '',
+    // Campos del representante legal
+    legal_representative_name: '',
+    legal_representative_rut: '',
     company_type: 'direct_creditor',
     // Campos bancarios
     bankName: '',
@@ -154,7 +155,7 @@ const ProfilePage = () => {
           contact_email: user?.email || '',
           contact_phone: profile?.phone || '',
           rut: profile?.rut || 'GOD-MODE',
-          full_name: profile?.full_name || '',
+          legal_representative_name: profile?.company?.legal_representative_name || '',
         });
       } else if (profile?.company) {
         // Para empresas normales, cargar datos de la empresa
@@ -164,8 +165,9 @@ const ProfilePage = () => {
           contact_email: user?.email || '',
           contact_phone: profile.company.contact_phone || '',
           company_rut: profile.company.rut || '',
-          full_name: profile?.full_name || '',
-          representative_rut: profile?.rut || '',
+          // Usar campos correctos del representante legal desde la empresa
+          legal_representative_name: profile.company.legal_representative_name || '',
+          legal_representative_rut: profile.company.legal_representative_rut || '',
           company_type: profile.company.company_type || 'direct_creditor',
           // Cargar datos bancarios si existen
           bankName: bankAccountInfo.bankName || '',
@@ -271,9 +273,9 @@ const ProfilePage = () => {
       if (isGodMode) {
         // Para modo administrador, actualizar perfil de usuario
         const updates = {
-          full_name: formData.full_name,
+          full_name: formData.legal_representative_name,
           phone: formData.contact_phone,
-          rut: formData.rut,
+          rut: formData.legal_representative_rut,
           updated_at: new Date().toISOString(),
         };
 
@@ -298,7 +300,7 @@ const ProfilePage = () => {
               user.id,
               formData.contact_email,
               user.email,
-              formData.full_name || user.user_metadata?.full_name || 'Usuario'
+              formData.legal_representative_name || user.user_metadata?.full_name || 'Usuario'
             );
 
             if (!result.success) {
@@ -350,8 +352,8 @@ const ProfilePage = () => {
 
         // Actualizar datos del usuario (representante) - excluyendo email que ya se actualizó
         const userUpdates = {
-          full_name: formData.full_name,
-          rut: formData.representative_rut,
+          full_name: formData.legal_representative_name,
+          rut: formData.legal_representative_rut,
           phone: formData.contact_phone,
           updated_at: new Date().toISOString(),
         };
@@ -377,6 +379,9 @@ const ProfilePage = () => {
           company_name: formData.company_name,
           contact_phone: formData.contact_phone,
           rut: formData.company_rut,
+          // Agregar campos del representante legal
+          legal_representative_name: formData.legal_representative_name,
+          legal_representative_rut: formData.legal_representative_rut,
           updated_at: new Date().toISOString(),
         };
 
@@ -423,7 +428,7 @@ const ProfilePage = () => {
       if (isGodMode) {
         setFormData(prev => ({
           ...prev,
-          full_name: formData.full_name,
+          legal_representative_name: formData.legal_representative_name,
           contact_phone: formData.contact_phone,
           rut: formData.rut,
         }));
@@ -433,8 +438,8 @@ const ProfilePage = () => {
           company_name: formData.company_name,
           contact_phone: formData.contact_phone,
           company_rut: formData.company_rut,
-          full_name: formData.full_name,
-          representative_rut: formData.representative_rut,
+          legal_representative_name: formData.legal_representative_name,
+          legal_representative_rut: formData.legal_representative_rut,
           company_type: formData.company_type,
           bankName: formData.bankName,
           accountType: formData.accountType,
