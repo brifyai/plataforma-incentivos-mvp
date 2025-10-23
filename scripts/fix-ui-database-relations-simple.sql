@@ -12,7 +12,7 @@ SELECT
     d.id as debt_id,
     d.client_id as original_client_id,
     d.company_id as debt_company_id,
-    c.name as client_name,
+    c.business_name as client_name,
     c.company_id as client_company_id,
     CASE 
         WHEN c.id IS NULL THEN 'CLIENT_NOT_FOUND'
@@ -53,7 +53,7 @@ SELECT '🔧 Inconsistencias de compañía corregidas' as correction_step,
 CREATE TABLE IF NOT EXISTS clients_corporate_backup AS
 SELECT 
     c.id as client_id,
-    c.name as client_name,
+    c.business_name as client_name,
     c.corporate_client_id as original_corporate_client_id,
     cc.name as corporate_client_name,
     CASE 
