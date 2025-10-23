@@ -8,6 +8,7 @@ import { Card, Button, Input, Modal, Badge, LoadingSpinner } from '../../../comp
 import { useAuth } from '../../../context/AuthContext';
 import { getCompanyClients, getCompanyDebts } from '../../../services/databaseService';
 import { calculateCommissions } from '../../../services/paymentService';
+import { formatRut } from '../../../utils/formatters';
 import {
   Link as LinkIcon,
   Copy,
@@ -307,7 +308,7 @@ Si tienes dudas, contáctanos.`;
               <option value="">Mostrar todos los clientes corporativos</option>
               {corporateClients.map(client => (
                 <option key={client.id} value={client.id}>
-                  {client.company_name} - {client.company_rut}
+                  {client.company_name} - {formatRut(client.company_rut)}
                 </option>
               ))}
             </select>

@@ -10,6 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useAuth } from '../../../context/AuthContext';
 import { createClient, findExistingDebtors } from '../../../services/databaseService';
+import { formatRut } from '../../../utils/formatters';
 import {
   Users,
   Search,
@@ -467,7 +468,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                 matchInfoRut.style.display = 'block';
                 matchDetailsRut.innerHTML = matches.map(match => `
                   <div class="match-item">
-                    <strong>${match.full_name}</strong> (${match.rut})<br>
+                    <strong>${match.full_name}</strong> (${formatRut(match.rut)})<br>
                     <small>Score: ${match.match_score}% | Tipo: ${match.match_type}</small>
                   </div>
                 `).join('');
@@ -550,7 +551,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                   ${highScoreMatches.map(match => `
                     <div class="match-item" style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 0.375rem; padding: 0.75rem; margin: 0.5rem 0;">
                       <strong>${match.full_name}</strong><br>
-                      <small>RUT: ${match.rut} | Score: ${match.match_score}%</small><br>
+                      <small>RUT: ${formatRut(match.rut)} | Score: ${match.match_score}%</small><br>
                       <small>Estado: ${match.validation_status}</small>
                     </div>
                   `).join('')}
@@ -798,7 +799,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900">{client.name}</h4>
-                  <p className="text-sm text-gray-600">{client.rut}</p>
+                  <p className="text-sm text-gray-600">{formatRut(client.rut)}</p>
                   <div className="flex items-center gap-2 mt-1">
                     {client.companyName ? (
                       // Es un cliente corporativo (tiene companyName de la tabla corporate_clients)

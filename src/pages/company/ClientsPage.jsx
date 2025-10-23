@@ -32,6 +32,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../config/supabase';
 import { getCompanyDebts, getCompanyPayments, getCorporateClients, getCompanyClients } from '../../services/databaseService';
 import { getCompanyVerification, VERIFICATION_STATUS } from '../../services/verificationService';
+import { formatRut } from '../../utils/formatters';
 
 const ClientsPage = () => {
   const { profile } = useAuth();
@@ -252,7 +253,7 @@ const ClientsPage = () => {
       }));
 
       console.log(`📊 Clientes corporativos cargados en ClientsPage: ${normalized.length}`);
-      console.log('📋 Clientes corporativos:', normalized.map(c => `${c.company_name} (${c.company_rut})`));
+      console.log('📋 Clientes corporativos:', normalized.map(c => `${c.company_name} (${formatRut(c.company_rut)})`));
       setCorporateClients(normalized);
     } catch (error) {
       console.error('Error loading corporate clients:', error);
@@ -733,7 +734,7 @@ const ClientsPage = () => {
                 <option value="">Mostrar todos los clientes corporativos</option>
                 {corporateClients.map(client => (
                   <option key={client.id} value={client.id}>
-                    {client.company_name} - {client.company_rut}
+                    {client.company_name} - {formatRut(client.company_rut)}
                   </option>
                 ))}
               </select>
@@ -745,7 +746,7 @@ const ClientsPage = () => {
                   {corporateClients.find(c => c.id === selectedCorporateClient)?.company_name}
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                  <div>RUT: {corporateClients.find(c => c.id === selectedCorporateClient)?.company_rut}</div>
+                  <div>RUT: {formatRut(corporateClients.find(c => c.id === selectedCorporateClient)?.company_rut)}</div>
                   <div>Industria: {corporateClients.find(c => c.id === selectedCorporateClient)?.industry}</div>
                   <div>Valor Contrato: ${corporateClients.find(c => c.id === selectedCorporateClient)?.contract_value?.toLocaleString('es-CL')}</div>
                   <div>Estado: <span className="text-green-600 font-medium">Activo</span></div>

@@ -6,6 +6,7 @@
 
 import { Card, Input, Button } from '../common';
 import { Building, User, Mail, Phone, Edit, Save, X, CreditCard, DollarSign } from 'lucide-react';
+import { formatRut } from '../../utils/formatters';
 
 const CompanyInformationSection = ({
   formData,
@@ -82,7 +83,7 @@ const CompanyInformationSection = ({
                 <label className="block text-xs font-medium text-gray-700">RUT de la Empresa</label>
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                   <Building className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-900 font-medium">{formData.company_rut || 'No especificado'}</span>
+                  <span className="text-xs text-gray-900 font-medium">{formatRut(formData.company_rut) || 'No especificado'}</span>
                 </div>
               </div>
 
@@ -125,7 +126,7 @@ const CompanyInformationSection = ({
                 <label className="block text-xs font-medium text-gray-700">RUT del Representante</label>
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                   <User className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-900 font-medium">{formData.representative_rut || 'No especificado'}</span>
+                  <span className="text-xs text-gray-900 font-medium">{formatRut(formData.representative_rut) || 'No especificado'}</span>
                 </div>
               </div>
 
@@ -308,7 +309,7 @@ const CompanyInformationSection = ({
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                     <User className="w-3.5 h-3.5 text-gray-400" />
                     <span className="text-xs text-gray-900 font-medium">
-                      {formData.accountHolderRut || 'No configurado'}
+                      {formatRut(formData.accountHolderRut) || 'No configurado'}
                     </span>
                   </div>
                 )}
@@ -376,7 +377,7 @@ const CompanyInformationSection = ({
               <label className="block text-xs font-medium text-gray-700">RUT</label>
               <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                 <User className="w-3.5 h-3.5 text-gray-400" />
-                <span className="text-xs text-gray-900 font-medium">{formData.rut || 'No especificado'}</span>
+                <span className="text-xs text-gray-900 font-medium">{formatRut(formData.rut) || 'No especificado'}</span>
               </div>
             </div>
           </div>
