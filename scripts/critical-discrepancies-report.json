@@ -1,0 +1,325 @@
+{
+  "timestamp": "2025-10-23T12:54:35.213Z",
+  "summary": {
+    "totalTables": 8,
+    "totalCriticalIssues": 8,
+    "highSeverityIssues": 2
+  },
+  "databaseStructure": {
+    "users": {
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "full_name",
+        "email",
+        "rut",
+        "role",
+        "phone",
+        "wallet_balance",
+        "created_at",
+        "updated_at",
+        "password",
+        "invitation_token",
+        "invitation_status",
+        "invitation_expires_at",
+        "validation_status"
+      ]
+    },
+    "companies": {
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "user_id",
+        "company_name",
+        "rut",
+        "contact_email",
+        "contact_phone",
+        "nexupay_commission_type",
+        "nexupay_commission",
+        "user_incentive_type",
+        "user_incentive_percentage",
+        "created_at",
+        "updated_at",
+        "bank_account_info",
+        "mercadopago_beneficiary_id",
+        "validation_status",
+        "legal_representative_name",
+        "legal_representative_rut"
+      ]
+    },
+    "clients": {
+      "columnCount": 0,
+      "columns": []
+    },
+    "debts": {
+      "columnCount": 0,
+      "columns": []
+    },
+    "campaigns": {
+      "columnCount": 0,
+      "columns": []
+    },
+    "proposals": {
+      "columnCount": 0,
+      "columns": []
+    },
+    "agreements": {
+      "columnCount": 0,
+      "columns": []
+    },
+    "payments": {
+      "columnCount": 0,
+      "columns": []
+    }
+  },
+  "criticalIssues": [
+    {
+      "table": "companies",
+      "missingFields": [
+        "legal_representative_email",
+        "legal_representative_phone",
+        "company_address",
+        "company_region",
+        "company_commune",
+        "business_type",
+        "economic_activity",
+        "constitution_date",
+        "social_capital",
+        "identity_validation_status",
+        "verification_status",
+        "validation_documents",
+        "bank_account_number",
+        "bank_account_type",
+        "bank_name"
+      ],
+      "currentColumns": [
+        "id",
+        "user_id",
+        "company_name",
+        "rut",
+        "contact_email",
+        "contact_phone",
+        "nexupay_commission_type",
+        "nexupay_commission",
+        "user_incentive_type",
+        "user_incentive_percentage",
+        "created_at",
+        "updated_at",
+        "bank_account_info",
+        "mercadopago_beneficiary_id",
+        "validation_status",
+        "legal_representative_name",
+        "legal_representative_rut"
+      ],
+      "severity": 170
+    },
+    {
+      "table": "users",
+      "missingFields": [
+        "legal_representative_name",
+        "legal_representative_rut",
+        "legal_representative_email",
+        "legal_representative_phone",
+        "company_address",
+        "company_region",
+        "company_commune",
+        "business_type",
+        "economic_activity",
+        "constitution_date",
+        "social_capital",
+        "identity_validation_status",
+        "verification_status",
+        "validation_documents",
+        "bank_account_number",
+        "bank_account_type",
+        "bank_name"
+      ],
+      "currentColumns": [
+        "id",
+        "full_name",
+        "email",
+        "rut",
+        "role",
+        "phone",
+        "wallet_balance",
+        "created_at",
+        "updated_at",
+        "password",
+        "invitation_token",
+        "invitation_status",
+        "invitation_expires_at",
+        "validation_status"
+      ],
+      "severity": 85
+    },
+    {
+      "table": "clients",
+      "missingFields": [
+        "legal_representative_name",
+        "legal_representative_rut",
+        "legal_representative_email",
+        "legal_representative_phone",
+        "company_address",
+        "company_region",
+        "company_commune",
+        "business_type",
+        "economic_activity",
+        "constitution_date",
+        "social_capital",
+        "identity_validation_status",
+        "verification_status",
+        "validation_documents",
+        "bank_account_number",
+        "bank_account_type",
+        "bank_name"
+      ],
+      "currentColumns": [],
+      "severity": 0
+    },
+    {
+      "table": "debts",
+      "missingFields": [
+        "legal_representative_name",
+        "legal_representative_rut",
+        "legal_representative_email",
+        "legal_representative_phone",
+        "company_address",
+        "company_region",
+        "company_commune",
+        "business_type",
+        "economic_activity",
+        "constitution_date",
+        "social_capital",
+        "identity_validation_status",
+        "verification_status",
+        "validation_documents",
+        "bank_account_number",
+        "bank_account_type",
+        "bank_name"
+      ],
+      "currentColumns": [],
+      "severity": 0
+    },
+    {
+      "table": "campaigns",
+      "missingFields": [
+        "legal_representative_name",
+        "legal_representative_rut",
+        "legal_representative_email",
+        "legal_representative_phone",
+        "company_address",
+        "company_region",
+        "company_commune",
+        "business_type",
+        "economic_activity",
+        "constitution_date",
+        "social_capital",
+        "identity_validation_status",
+        "verification_status",
+        "validation_documents",
+        "bank_account_number",
+        "bank_account_type",
+        "bank_name"
+      ],
+      "currentColumns": [],
+      "severity": 0
+    },
+    {
+      "table": "proposals",
+      "missingFields": [
+        "legal_representative_name",
+        "legal_representative_rut",
+        "legal_representative_email",
+        "legal_representative_phone",
+        "company_address",
+        "company_region",
+        "company_commune",
+        "business_type",
+        "economic_activity",
+        "constitution_date",
+        "social_capital",
+        "identity_validation_status",
+        "verification_status",
+        "validation_documents",
+        "bank_account_number",
+        "bank_account_type",
+        "bank_name"
+      ],
+      "currentColumns": [],
+      "severity": 0
+    },
+    {
+      "table": "agreements",
+      "missingFields": [
+        "legal_representative_name",
+        "legal_representative_rut",
+        "legal_representative_email",
+        "legal_representative_phone",
+        "company_address",
+        "company_region",
+        "company_commune",
+        "business_type",
+        "economic_activity",
+        "constitution_date",
+        "social_capital",
+        "identity_validation_status",
+        "verification_status",
+        "validation_documents",
+        "bank_account_number",
+        "bank_account_type",
+        "bank_name"
+      ],
+      "currentColumns": [],
+      "severity": 0
+    },
+    {
+      "table": "payments",
+      "missingFields": [
+        "legal_representative_name",
+        "legal_representative_rut",
+        "legal_representative_email",
+        "legal_representative_phone",
+        "company_address",
+        "company_region",
+        "company_commune",
+        "business_type",
+        "economic_activity",
+        "constitution_date",
+        "social_capital",
+        "identity_validation_status",
+        "verification_status",
+        "validation_documents",
+        "bank_account_number",
+        "bank_account_type",
+        "bank_name"
+      ],
+      "currentColumns": [],
+      "severity": 0
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "urgent",
+      "table": "companies",
+      "description": "Agregar campos críticos faltantes en tabla companies",
+      "missingFields": [
+        "legal_representative_email",
+        "legal_representative_phone",
+        "company_address",
+        "company_region",
+        "company_commune",
+        "business_type",
+        "economic_activity",
+        "constitution_date",
+        "social_capital",
+        "identity_validation_status",
+        "verification_status",
+        "validation_documents",
+        "bank_account_number",
+        "bank_account_type",
+        "bank_name"
+      ],
+      "sql": "-- Migración para agregar campos críticos a la tabla companies\nALTER TABLE public.companies\nADD COLUMN IF NOT EXISTS legal_representative_email TEXT,\n    ADD COLUMN IF NOT EXISTS legal_representative_phone TEXT,\n    ADD COLUMN IF NOT EXISTS company_address TEXT,\n    ADD COLUMN IF NOT EXISTS company_region TEXT,\n    ADD COLUMN IF NOT EXISTS company_commune TEXT,\n    ADD COLUMN IF NOT EXISTS business_type TEXT,\n    ADD COLUMN IF NOT EXISTS economic_activity TEXT,\n    ADD COLUMN IF NOT EXISTS constitution_date DATE,\n    ADD COLUMN IF NOT EXISTS social_capital DECIMAL(15,2),\n    ADD COLUMN IF NOT EXISTS identity_validation_status VARCHAR(50),\n    ADD COLUMN IF NOT EXISTS verification_status VARCHAR(50),\n    ADD COLUMN IF NOT EXISTS validation_documents JSONB,\n    ADD COLUMN IF NOT EXISTS bank_account_number TEXT,\n    ADD COLUMN IF NOT EXISTS bank_account_type VARCHAR(50),\n    ADD COLUMN IF NOT EXISTS bank_name TEXT\n;"
+    }
+  ]
+}

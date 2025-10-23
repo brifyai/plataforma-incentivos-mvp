@@ -1,0 +1,24 @@
+{
+  "fecha": "2025-10-23T14:43:04.119Z",
+  "resumen": {
+    "totalTablasBD": 0,
+    "totalArchivosUI": 0,
+    "totalCamposUI": 0,
+    "totalRelaciones": 0,
+    "totalDiscrepancias": 0
+  },
+  "estructuraBD": {},
+  "camposUI": {
+    "admin": {},
+    "empresa": {},
+    "deudor": {}
+  },
+  "relaciones": [],
+  "discrepancias": [],
+  "analisisPorSeveridad": {
+    "ALTA": 0,
+    "MEDIA": 0,
+    "BAJA": 0
+  },
+  "recomendaciones": []
+}
