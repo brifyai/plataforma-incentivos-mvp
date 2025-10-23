@@ -3288,6 +3288,240 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                       </div>
                     </Card>
 
+                    {/* 🚀 SECCIÓN IA CONVERSACIONAL Y MÓDULO NUCLEAR */}
+                    <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-red-200">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 bg-gradient-to-r from-red-500 to-orange-600 rounded-xl text-white">
+                            <Brain className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h2 className="text-xl font-bold text-gray-900">
+                              🤖 IA Conversacional y Módulo Nuclear
+                            </h2>
+                            <p className="text-sm text-gray-600">
+                              Control avanzado del sistema de IA para negociación automática
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant="success"
+                          className="text-sm px-3 py-1"
+                        >
+                          ✅ SISTEMA ACTIVO
+                        </Badge>
+                      </div>
+
+                      {/* Botones de Control Principal */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <Button
+                          onClick={async () => {
+                            console.log('🚀 Activando IA Conversacional...');
+                            try {
+                              const { activateAIModule } = await import('../../modules/ai-negotiation/utils/activateAI.js');
+                              const result = await activateAIModule();
+                              if (result.success) {
+                                Swal.fire({
+                                  icon: 'success',
+                                  title: 'IA Conversacional Activada',
+                                  text: 'El sistema de IA está ahora operativo',
+                                  timer: 2000,
+                                  showConfirmButton: false
+                                });
+                              }
+                            } catch (error) {
+                              console.error('Error activando IA:', error);
+                              Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudo activar la IA conversacional'
+                              });
+                            }
+                          }}
+                          variant="primary"
+                          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold shadow-lg"
+                        >
+                          🚀 Activar IA Conversacional
+                        </Button>
+
+                        <Button
+                          onClick={async () => {
+                            console.log('🛑 Desactivando IA...');
+                            try {
+                              const { deactivateAIModule } = await import('../../modules/ai-negotiation/utils/activateAI.js');
+                              const result = await deactivateAIModule();
+                              if (result.success) {
+                                Swal.fire({
+                                  icon: 'success',
+                                  title: 'IA Desactivada',
+                                  text: 'El sistema de IA ha sido desactivado',
+                                  timer: 2000,
+                                  showConfirmButton: false
+                                });
+                              }
+                            } catch (error) {
+                              console.error('Error desactivando IA:', error);
+                            }
+                          }}
+                          variant="secondary"
+                          className="w-full"
+                        >
+                          🛑 Desactivar IA
+                        </Button>
+
+                        <Button
+                          onClick={async () => {
+                            console.log('💪 EJECUTANDO MÓDULO NUCLEAR...');
+                            try {
+                              Swal.fire({
+                                title: '⚠️ Confirmación Requerida',
+                                text: '¿Estás seguro de ejecutar el módulo nuclear? Esto forzará la activación completa del sistema.',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#dc2626',
+                                cancelButtonColor: '#6b7280',
+                                confirmButtonText: 'Sí, ejecutar nuclear',
+                                cancelButtonText: 'Cancelar'
+                              }).then(async (result) => {
+                                if (result.isConfirmed) {
+                                  // Método 1: Directo en localStorage
+                                  console.log('💾 Aplicando directamente en localStorage...');
+                                  const nuclearFlags = {
+                                    ai_module_enabled: true,
+                                    ai_negotiation_enabled: true,
+                                    ai_dashboard_enabled: true,
+                                    ai_config_enabled: true,
+                                    ai_analytics_enabled: true,
+                                    ai_real_time_enabled: true,
+                                    ai_escalation_enabled: true,
+                                    ai_groq_enabled: true,
+                                    ai_chutes_enabled: true,
+                                    ai_safe_mode: false,
+                                    ai_fallback_enabled: true,
+                                    ai_error_recovery_enabled: true
+                                  };
+
+                                  localStorage.setItem('ai_feature_flags', JSON.stringify(nuclearFlags));
+                                  console.log('✅ Flags nucleares aplicados:', nuclearFlags);
+
+                                  Swal.fire({
+                                    icon: 'success',
+                                    title: '💥 MÓDULO NUCLEAR EJECUTADO',
+                                    html: `
+                                      <div class="text-left">
+                                        <p class="mb-2">✅ Sistema activado con modo nuclear</p>
+                                        <p class="text-sm text-gray-600">Todas las funcionalidades de IA están ahora activas</p>
+                                      </div>
+                                    `,
+                                    timer: 3000,
+                                    showConfirmButton: false
+                                  });
+
+                                  // Recargar página después de 2 segundos
+                                  setTimeout(() => {
+                                    window.location.reload();
+                                  }, 2000);
+                                }
+                              });
+                            } catch (error) {
+                              console.error('Error en módulo nuclear:', error);
+                              Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudo ejecutar el módulo nuclear'
+                              });
+                            }
+                          }}
+                          variant="danger"
+                          className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold shadow-lg animate-pulse"
+                        >
+                          💥 MÓDULO NUCLEAR
+                        </Button>
+
+                        <Button
+                          onClick={async () => {
+                            console.log('🧪 Ejecutando pruebas completas...');
+                            try {
+                              const { testAIModule } = await import('../../modules/ai-negotiation/utils/testAI.js');
+                              const result = await testAIModule();
+                              
+                              Swal.fire({
+                                icon: result.success ? 'success' : 'error',
+                                title: result.success ? 'Pruebas Completadas' : 'Error en Pruebas',
+                                html: result.success ? `
+                                  <div class="text-left">
+                                    <p class="mb-2">✅ Todas las pruebas pasaron exitosamente</p>
+                                    <div class="text-sm text-gray-600">
+                                      <p>• Banderas: ${Object.keys(result.flags || {}).length} verificadas</p>
+                                      <p>• Servicios: ${result.services?.length || 0} disponibles</p>
+                                      <p>• Componentes: ${result.components?.length || 0} cargados</p>
+                                    </div>
+                                  </div>
+                                ` : `Error: ${result.error}`,
+                                confirmButtonText: 'Aceptar'
+                              });
+                            } catch (error) {
+                              console.error('Error en pruebas:', error);
+                              Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudieron ejecutar las pruebas'
+                              });
+                            }
+                          }}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          🧪 Probar Sistema
+                        </Button>
+                      </div>
+
+                      {/* Estado del Sistema */}
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <h3 className="text-lg font-semibold mb-3">📊 Estado del Sistema</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {[
+                            { key: 'ai_module_enabled', label: 'Módulo IA', icon: '🤖' },
+                            { key: 'ai_negotiation_enabled', label: 'Negociación', icon: '💬' },
+                            { key: 'ai_dashboard_enabled', label: 'Dashboard', icon: '📊' },
+                            { key: 'ai_config_enabled', label: 'Configuración', icon: '⚙️' },
+                            { key: 'ai_analytics_enabled', label: 'Analytics', icon: '📈' },
+                            { key: 'ai_real_time_enabled', label: 'Tiempo Real', icon: '⚡' },
+                            { key: 'ai_escalation_enabled', label: 'Escalada', icon: '🔥' },
+                            { key: 'ai_safe_mode', label: 'Modo Seguro', icon: '🛡️' }
+                          ].map((item) => {
+                            const isEnabled = localStorage.getItem('ai_feature_flags') ?
+                              JSON.parse(localStorage.getItem('ai_feature_flags'))[item.key] : false;
+                            
+                            return (
+                              <div key={item.key} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <span className="text-xs font-medium flex items-center gap-1">
+                                  <span>{item.icon}</span>
+                                  {item.label}
+                                </span>
+                                <Badge
+                                  variant={isEnabled ? "success" : "secondary"}
+                                  className="text-xs"
+                                >
+                                  {isEnabled ? "ON" : "OFF"}
+                                </Badge>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Instrucciones Rápidas */}
+                      <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 className="font-semibold text-blue-900 mb-2">📋 Instrucciones Rápidas</h4>
+                        <div className="text-sm text-blue-800 space-y-1">
+                          <p>• <strong>IA Conversacional:</strong> Activa el sistema de negociación automática</p>
+                          <p>• <strong>Módulo Nuclear:</strong> Forza la activación completa de todas las funcionalidades</p>
+                          <p>• <strong>Probar Sistema:</strong> Verifica el estado completo del módulo de IA</p>
+                        </div>
+                      </div>
+                    </Card>
+
                     <Card>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Rendimiento por Cliente</h3>
                       
