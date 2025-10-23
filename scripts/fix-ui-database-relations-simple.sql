@@ -263,13 +263,13 @@ SELECT
 FROM clients
 WHERE company_id IS NULL
 UNION ALL
-SELECT 
+SELECT
     'DIAGNÓSTICO FINAL' as diagnostic_type,
-    'Debts con amount <= 0' as issue_type,
+    'Debts con current_amount <= 0' as issue_type,
     COUNT(*) as count,
     'MEDIA' as severity
 FROM debts
-WHERE amount <= 0;
+WHERE current_amount <= 0;
 
 -- Paso 14: Verificar existencia de tabla corporate_clients
 SELECT 
