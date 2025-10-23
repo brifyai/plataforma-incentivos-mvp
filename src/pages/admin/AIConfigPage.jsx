@@ -232,10 +232,7 @@ const AIConfigPage = () => {
               label="API Key de Chutes"
               type="password"
               value={aiConfig.chutesApi.apiKey}
-              onChange={(e) => setAiConfig(prev => ({
-                ...prev,
-                chutesApi: { ...prev.chutesApi, apiKey: e.target.value }
-              }))}
+              onChange={(e) => updateChutesApi({ apiKey: e.target.value })}
               placeholder="chutes_..."
               leftIcon={<Settings className="w-4 h-4" />}
             />
@@ -243,10 +240,7 @@ const AIConfigPage = () => {
             <Input
               label="URL Base"
               value={aiConfig.chutesApi.baseUrl}
-              onChange={(e) => setAiConfig(prev => ({
-                ...prev,
-                chutesApi: { ...prev.chutesApi, baseUrl: e.target.value }
-              }))}
+              onChange={(e) => updateChutesApi({ baseUrl: e.target.value })}
               placeholder="https://chutes.ai"
               leftIcon={<Settings className="w-4 h-4" />}
             />
@@ -256,10 +250,7 @@ const AIConfigPage = () => {
                 type="checkbox"
                 id="chutesActive"
                 checked={aiConfig.chutesApi.isActive}
-                onChange={(e) => setAiConfig(prev => ({
-                  ...prev,
-                  chutesApi: { ...prev.chutesApi, isActive: e.target.checked }
-                }))}
+                onChange={(e) => updateChutesApi({ isActive: e.target.checked })}
                 className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
               />
               <label htmlFor="chutesActive" className="text-sm font-medium text-gray-700">
@@ -320,10 +311,7 @@ const AIConfigPage = () => {
               label="API Key de Groq"
               type="password"
               value={aiConfig.groqApi.apiKey}
-              onChange={(e) => setAiConfig(prev => ({
-                ...prev,
-                groqApi: { ...prev.groqApi, apiKey: e.target.value }
-              }))}
+              onChange={(e) => updateGroqApi({ apiKey: e.target.value })}
               placeholder="gsk_..."
               leftIcon={<Settings className="w-4 h-4" />}
             />
@@ -331,10 +319,7 @@ const AIConfigPage = () => {
             <Input
               label="URL Base"
               value={aiConfig.groqApi.baseUrl}
-              onChange={(e) => setAiConfig(prev => ({
-                ...prev,
-                groqApi: { ...prev.groqApi, baseUrl: e.target.value }
-              }))}
+              onChange={(e) => updateGroqApi({ baseUrl: e.target.value })}
               placeholder="https://api.groq.com"
               leftIcon={<Settings className="w-4 h-4" />}
             />
@@ -344,10 +329,7 @@ const AIConfigPage = () => {
                 type="checkbox"
                 id="groqActive"
                 checked={aiConfig.groqApi.isActive}
-                onChange={(e) => setAiConfig(prev => ({
-                  ...prev,
-                  groqApi: { ...prev.groqApi, isActive: e.target.checked }
-                }))}
+                onChange={(e) => updateGroqApi({ isActive: e.target.checked })}
                 className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
               />
               <label htmlFor="groqActive" className="text-sm font-medium text-gray-700">
@@ -407,7 +389,7 @@ const AIConfigPage = () => {
             <Select
               label="Proveedor de IA"
               value={aiConfig.selectedProvider}
-              onChange={(value) => setAiConfig(prev => ({ ...prev, selectedProvider: value }))}
+              onChange={(value) => updateConfig({ selectedProvider: value })}
               options={[
                 { value: 'chutes', label: 'Chutes AI' },
                 { value: 'groq', label: 'Groq AI' }
@@ -417,7 +399,7 @@ const AIConfigPage = () => {
             <Select
               label="Modelo Seleccionado"
               value={aiConfig.selectedModel}
-              onChange={(value) => setAiConfig(prev => ({ ...prev, selectedModel: value }))}
+              onChange={(value) => updateConfig({ selectedModel: value })}
               options={[
                 { value: 'gpt-4', label: 'GPT-4 (Chutes)' },
                 { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (Chutes)' },
