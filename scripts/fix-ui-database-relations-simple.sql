@@ -76,8 +76,26 @@ CREATE TABLE IF NOT EXISTS corporate_clients (
 );
 
 -- Paso 8: Eliminar constraints existentes si hay
-DROP CONSTRAINT IF EXISTS debts_company_id_fkey ON debts;
-DROP CONSTRAINT IF EXISTS debts_client_id_fkey ON debts;
+DO $$
+BEGIN
+    -- Eliminar constraint debts_company_id_fkey si existe
+    BEGIN
+        ALTER TABLE debts DROP CONSTRAINT debts_company_id_fkey;
+        RAISE NOTICE 'Constraint debts_company_id_fkey eliminado';
+    EXCEPTION
+        WHEN undefined_object THEN
+            RAISE NOTICE 'Constraint debts_company_id_fkey no existe, continuando...';
+    END;
+    
+    -- Eliminar constraint debts_client_id_fkey si existe
+    BEGIN
+        ALTER TABLE debts DROP CONSTRAINT debts_client_id_fkey;
+        RAISE NOTICE 'Constraint debts_client_id_fkey eliminado';
+    EXCEPTION
+        WHEN undefined_object THEN
+            RAISE NOTICE 'Constraint debts_client_id_fkey no existe, continuando...';
+    END;
+END $$;
 
 -- Paso 9: Agregar foreign key constraints mejorados
 ALTER TABLE debts 
