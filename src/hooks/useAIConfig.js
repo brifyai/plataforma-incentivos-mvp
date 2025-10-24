@@ -77,6 +77,11 @@ export const useAIConfig = () => {
         ...updates
       }
     }));
+    
+    // Auto-guardar el estado isActive cuando cambie
+    if (updates.hasOwnProperty('isActive')) {
+      saveChutesApiState(updates.isActive);
+    }
   };
 
   // Actualizar API de Groq
@@ -88,6 +93,11 @@ export const useAIConfig = () => {
         ...updates
       }
     }));
+    
+    // Auto-guardar el estado isActive cuando cambie
+    if (updates.hasOwnProperty('isActive')) {
+      saveGroqApiState(updates.isActive);
+    }
   };
 
   // Guardar configuración de servicio específico
@@ -134,6 +144,44 @@ export const useAIConfig = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Guardar estado de Groq API automáticamente
+  const saveGroqApiState = async (isActive) => {
+    try {
+      const configToSave = {
+        groq_api_active: isActive
+      };
+
+      const result = await updateSystemConfig(configToSave);
+      
+      if (result.error) {
+        console.error('❌ Error guardando estado Groq API:', result.error);
+      } else {
+        console.log('✅ Estado Groq API guardado:', isActive);
+      }
+    } catch (error) {
+      console.error('❌ Error en saveGroqApiState:', error);
+    }
+  };
+
+  // Guardar estado de Chutes API automáticamente
+  const saveChutesApiState = async (isActive) => {
+    try {
+      const configToSave = {
+        chutes_api_active: isActive
+      };
+
+      const result = await updateSystemConfig(configToSave);
+      
+      if (result.error) {
+        console.error('❌ Error guardando estado Chutes API:', result.error);
+      } else {
+        console.log('✅ Estado Chutes API guardado:', isActive);
+      }
+    } catch (error) {
+      console.error('❌ Error en saveChutesApiState:', error);
     }
   };
 
