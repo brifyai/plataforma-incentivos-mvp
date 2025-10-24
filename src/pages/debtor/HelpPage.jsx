@@ -376,7 +376,7 @@ const HelpPage = () => {
       <Card variant="elevated" className="p-8 bg-gradient-to-r from-green-50 via-blue-50 to-purple-50 border-green-200">
         <div className="text-center">
           <h3 className="text-3xl font-bold text-secondary-900 mb-4">
-            ¡Es hora de empezar a ganar dinero extra! 💰
+            ¡Es hora de empezar a recibir dinero extra! 💰
           </h3>
           <p className="text-xl text-secondary-700 mb-8 max-w-4xl mx-auto">
             Registra tus deudas ahora y comienza tu camino hacia ingresos adicionales.
