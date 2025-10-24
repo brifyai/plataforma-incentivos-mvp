@@ -3233,6 +3233,30 @@ export const createCorporateClient = async (corporateData) => {
 };
 
 /**
+ * Actualiza un cliente corporativo
+ * @param {string} corporateId - ID del cliente corporativo
+ * @param {Object} updates - Datos a actualizar
+ * @returns {Promise<{error}>}
+ */
+export const updateCorporateClient = async (corporateId, updates) => {
+  try {
+    const { error } = await supabase
+      .from('corporate_clients')
+      .update(updates)
+      .eq('id', corporateId);
+
+    if (error) {
+      return { error: handleSupabaseError(error) };
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error('Error in updateCorporateClient:', error);
+    return { error: 'Error al actualizar cliente corporativo.' };
+  }
+};
+
+/**
  * Obtiene segmentos de un cliente corporativo
  * @param {string} corporateId - ID del cliente corporativo
  * @returns {Promise<{segments, error}>}

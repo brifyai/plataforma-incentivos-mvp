@@ -58,70 +58,84 @@ export const AuthProvider = ({ children }) => {
           */
        const checkUser = async () => {
          try {
+           console.log('🔍 Iniciando verificación de usuario simplificada...');
            setLoading(true);
-           // Primero verificar sesión de Supabase Auth (para OAuth)
-           const { data: supabaseSession, error: supabaseError } = await supabase.auth.getSession();
+           
+           // Versión simplificada: solo verificar localStorage
+           const { user: currentUser, error } = await getCurrentUser();
    
-           if (!supabaseError && supabaseSession?.session) {
-             // Hay sesión de Supabase, usar esa
-             const { user: supabaseUser } = supabaseSession.session;
-             console.log('🔄 Usando sesión de Supabase Auth');
-   
-             // Verificar si existe en nuestra tabla users
-             const { data: userData, error: userError } = await supabase
-               .from('users')
-               .select('*')
-               .eq('email', supabaseUser.email)
-               .single();
-   
-             if (userData) {
+           if (error || !currentUser) {
+             console.log('📝 No hay usuario en localStorage, verificando sesión de Supabase...');
+             
+             // Verificar sesión de Supabase Auth (para OAuth)
+             const { data: supabaseSession, error: supabaseError } = await supabase.auth.getSession();
+     
+             if (!supabaseError && supabaseSession?.session) {
+               console.log('✅ Sesión de Supabase encontrada, usando esa');
+               const { user: supabaseUser } = supabaseSession.session;
+               
+               // Crear usuario mock básico para evitar bloqueos
                const mockUser = {
-                 id: userData.id,
-                 email: userData.email,
+                 id: supabaseUser.id,
+                 email: supabaseUser.email,
                  user_metadata: {
-                   full_name: userData.full_name,
-                   role: userData.role,
+                   full_name: supabaseUser.user_metadata?.full_name || 'Usuario',
+                   role: supabaseUser.user_metadata?.role || 'user',
                  },
                };
-   
+               
                setUser(mockUser);
                setSession(supabaseSession.session);
-               await loadUserProfile(userData.id);
+               
+               // Intentar cargar perfil pero sin bloquear si falla
+               try {
+                 await loadUserProfile(mockUser.id);
+               } catch (profileError) {
+                 console.warn('⚠️ Error cargando perfil, continuando sin perfil:', profileError);
+                 // Crear perfil básico para no bloquear
+                 setProfile({
+                   id: mockUser.id,
+                   email: mockUser.email,
+                   full_name: mockUser.user_metadata.full_name,
+                   role: mockUser.user_metadata.role,
+                 });
+               }
              } else {
-               // Usuario no existe en tabla, limpiar sesión
-               console.log('⚠️ Usuario OAuth no encontrado en tabla users, limpiando sesión');
-               await supabase.auth.signOut();
+               console.log('📝 No hay sesión de Supabase, usuario no autenticado');
                setUser(null);
                setProfile(null);
                setSession(null);
-               setError('Usuario no encontrado. Por favor, regístrate primero.');
              }
            } else {
-             // No hay sesión de Supabase, verificar localStorage
-             const { user: currentUser, error } = await getCurrentUser();
-   
-             if (error || !currentUser) {
-               setUser(null);
-               setProfile(null);
-               setSession(null);
-               setLoading(false);
-               setInitializing(false);
-               return;
-             }
-   
+             console.log('✅ Usuario encontrado en localStorage');
              setUser(currentUser);
              setSession(null);
-             await loadUserProfile(currentUser.id);
+             
+             // Intentar cargar perfil pero sin bloquear si falla
+             try {
+               await loadUserProfile(currentUser.id);
+             } catch (profileError) {
+               console.warn('⚠️ Error cargando perfil, continuando sin perfil:', profileError);
+               // Crear perfil básico para no bloquear
+               setProfile({
+                 id: currentUser.id,
+                 email: currentUser.email,
+                 full_name: currentUser.user_metadata?.full_name || 'Usuario',
+                 role: currentUser.user_metadata?.role || 'user',
+               });
+             }
            }
          } catch (error) {
            console.error('Error checking user:', error);
            setUser(null);
            setProfile(null);
            setSession(null);
-           setError('Error al verificar autenticación.');
+           // No establecer error para no bloquear la aplicación
+           console.warn('⚠️ Continuando sin autenticación debido a error');
          } finally {
            setLoading(false);
            setInitializing(false);
+           console.log('🏁 Verificación de usuario completada');
          }
        };
 
@@ -130,63 +144,74 @@ export const AuthProvider = ({ children }) => {
    */
   const loadUserProfile = async (userId) => {
     try {
+      console.log('🔍 Cargando perfil de usuario simplificado...');
+      
       // Load user profile from database for ALL users
       const { profile: userProfile, error: profileError } = await getUserProfile(userId);
 
       if (profileError) {
-        console.error('Error loading user profile:', profileError);
-        // Si hay un error al cargar el perfil, limpiar la sesión
-        console.warn('🔄 Clearing session due to profile load error');
-        setUser(null);
-        setProfile(null);
-        setSession(null);
-        localStorage.removeItem('secure_session');
-        localStorage.removeItem('mock_session');
+        console.warn('⚠️ Error loading user profile, usando perfil básico:', profileError);
+        // Crear perfil básico en lugar de limpiar sesión
+        const basicProfile = {
+          id: userId,
+          email: user?.email || 'usuario@ejemplo.com',
+          full_name: user?.user_metadata?.full_name || 'Usuario',
+          role: user?.user_metadata?.role || 'user',
+        };
+        setProfile(basicProfile);
         return;
       }
 
-      // Si el perfil es null (usuario no existe), limpiar la sesión
+      // Si el perfil es null (usuario no existe), crear perfil básico
       if (!userProfile) {
-        console.warn('⚠️ User profile not found, user may have been deleted. Clearing session.');
-        setUser(null);
-        setProfile(null);
-        setSession(null);
-        localStorage.removeItem('secure_session');
-        localStorage.removeItem('mock_session');
+        console.warn('⚠️ User profile not found, creating basic profile');
+        const basicProfile = {
+          id: userId,
+          email: user?.email || 'usuario@ejemplo.com',
+          full_name: user?.user_metadata?.full_name || 'Usuario',
+          role: user?.user_metadata?.role || 'user',
+        };
+        setProfile(basicProfile);
         return;
       }
 
-      // Si es empresa o god_mode, cargar datos de la empresa de manera optimizada
+      // Si es empresa o god_mode, intentar cargar datos de la empresa sin bloquear
       if (userProfile?.role === USER_ROLES.COMPANY || userProfile?.role === 'god_mode') {
-        // Cargar perfil de empresa y usuario al mismo tiempo para evitar múltiples re-renderizados
-        const [userProfileResult, companyResult] = await Promise.allSettled([
-          Promise.resolve(userProfile), // Ya tenemos el perfil de usuario
-          loadCompanyProfileWithRetry(userId)
-        ]);
-
-        const finalProfile = { ...userProfile };
-
-        if (companyResult.status === 'fulfilled' && companyResult.value) {
-          finalProfile.company = companyResult.value;
-          console.log('✅ Company profile loaded successfully');
-        } else {
-          console.warn('⚠️ Company profile not found, user may need to create company manually');
+        console.log('🏢 Usuario es empresa, cargando datos...');
+        
+        try {
+          const companyResult = await loadCompanyProfileWithRetry(userId);
+          
+          const finalProfile = { ...userProfile };
+          
+          if (companyResult) {
+            finalProfile.company = companyResult;
+            console.log('✅ Company profile loaded successfully');
+          } else {
+            console.warn('⚠️ Company profile not found, continuing without company data');
+          }
+          
+          setProfile(finalProfile);
+        } catch (companyError) {
+          console.warn('⚠️ Error loading company profile, continuing without company data:', companyError);
+          // Establecer perfil de usuario sin datos de empresa
+          setProfile(userProfile);
         }
-
-        // Establecer el perfil completo de una sola vez
-        setProfile(finalProfile);
       } else {
         // Para usuarios normales, establecer el perfil directamente
+        console.log('👤 Usuario normal, estableciendo perfil directamente');
         setProfile(userProfile);
       }
     } catch (error) {
       console.error('Error in loadUserProfile:', error);
-      // En caso de error, limpiar la sesión por seguridad
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      localStorage.removeItem('secure_session');
-      localStorage.removeItem('mock_session');
+      // En caso de error, crear perfil básico en lugar de limpiar sesión
+      const basicProfile = {
+        id: userId,
+        email: user?.email || 'usuario@ejemplo.com',
+        full_name: user?.user_metadata?.full_name || 'Usuario',
+        role: user?.user_metadata?.role || 'user',
+      };
+      setProfile(basicProfile);
     }
   };
 

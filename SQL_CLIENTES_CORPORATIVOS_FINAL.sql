@@ -1,71 +1,81 @@
--- =====================================================================
--- FIX PARA CLIENTES CORPORATIVOS - NEXUPAY
--- =====================================================================
--- Este SQL agrega las columnas faltantes para que funcionen los clientes corporativos
--- Ejecutar en: https://app.supabase.com/project/wvluqdldygmgncqqjkow/sql
--- =====================================================================
+-- ===================================
+-- SOLUCIÓN FINAL: CLIENTES CORPORATIVOS
+-- ===================================
+-- Ejecutar este archivo SQL directamente en el editor SQL de Supabase
+-- No contiene código JavaScript, solo SQL puro
 
--- Agregar client_id a la tabla debts (seguro - verifica si existe primero)
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'debts' 
-        AND column_name = 'client_id'
-        AND table_schema = 'public'
-    ) THEN
-        ALTER TABLE debts ADD COLUMN client_id UUID REFERENCES clients(id);
-        RAISE NOTICE '✅ Columna client_id agregada a debts';
-    ELSE
-        RAISE NOTICE '✅ Columna client_id ya existe en debts';
-    END IF;
-END $$;
+-- 1. Agregar campo name a la tabla corporate_clients
+ALTER TABLE corporate_clients
+ADD COLUMN IF NOT EXISTS name TEXT;
 
--- Agregar corporate_client_id a la tabla clients (seguro - verifica si existe primero)
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'clients' 
-        AND column_name = 'corporate_client_id'
-        AND table_schema = 'public'
-    ) THEN
-        ALTER TABLE clients ADD COLUMN corporate_client_id UUID REFERENCES corporate_clients(id);
-        RAISE NOTICE '✅ Columna corporate_client_id agregada a clients';
-    ELSE
-        RAISE NOTICE '✅ Columna corporate_client_id ya existe en clients';
-    END IF;
-END $$;
+-- 2. Agregar campo contact_info a la tabla corporate_clients
+ALTER TABLE corporate_clients
+ADD COLUMN IF NOT EXISTS contact_info JSONB;
 
--- Crear índices para mejor rendimiento
-CREATE INDEX IF NOT EXISTS idx_debts_client_id ON debts(client_id);
-CREATE INDEX IF NOT EXISTS idx_clients_corporate_client_id ON clients(corporate_client_id);
+-- 3. Agregar campo business_info a la tabla corporate_clients
+ALTER TABLE corporate_clients
+ADD COLUMN IF NOT EXISTS business_info JSONB;
 
--- Mensaje de éxito
-SELECT '🎉 Fix aplicado exitosamente - Columnas para clientes corporativos agregadas' as status;
+-- 4. Agregar campo display_category a la tabla corporate_clients
+ALTER TABLE corporate_clients
+ADD COLUMN IF NOT EXISTS display_category TEXT;
 
--- =====================================================================
--- VERIFICACIÓN (opcional - ejecutar después para confirmar)
--- =====================================================================
--- Verificar que las columnas existen
+-- 5. Agregar campo trust_level a la tabla corporate_clients
+ALTER TABLE corporate_clients
+ADD COLUMN IF NOT EXISTS trust_level TEXT;
+
+-- 6. Agregar campo segment_count a la tabla corporate_clients
+ALTER TABLE corporate_clients
+ADD COLUMN IF NOT EXISTS segment_count INTEGER DEFAULT 0;
+
+-- 7. Agregar campo is_active a la tabla corporate_clients
+ALTER TABLE corporate_clients
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+
+-- 8. Agregar campo company_id a la tabla corporate_clients
+ALTER TABLE corporate_clients
+ADD COLUMN IF NOT EXISTS company_id UUID;
+
+-- 3. Verificar que los campos se agregaron correctamente
 SELECT 
-    'debts' as table_name,
-    column_name,
-    data_type,
-    is_nullable
+    column_name, 
+    data_type, 
+    is_nullable,
+    column_default
 FROM information_schema.columns 
-WHERE table_name = 'debts' 
-AND column_name = 'client_id'
+WHERE table_name = 'corporate_clients' 
 AND table_schema = 'public'
+AND column_name IN ('contact_info', 'business_info')
+ORDER BY column_name;
 
-UNION ALL
-
+-- 4. Contar clientes corporativos existentes
 SELECT 
-    'clients' as table_name,
-    column_name,
-    data_type,
-    is_nullable
+    COUNT(*) as total_corporate_clients,
+    COUNT(CASE WHEN contact_info IS NOT NULL THEN 1 END) as with_contact_info,
+    COUNT(CASE WHEN business_info IS NOT NULL THEN 1 END) as with_business_info
+FROM corporate_clients;
+
+-- 5. Mostrar estructura completa de la tabla corporate_clients
+SELECT 
+    column_name, 
+    data_type, 
+    is_nullable,
+    column_default,
+    ordinal_position
 FROM information_schema.columns 
-WHERE table_name = 'clients' 
-AND column_name = 'corporate_client_id'
-AND table_schema = 'public';
+WHERE table_name = 'corporate_clients' 
+AND table_schema = 'public'
+ORDER BY ordinal_position;
+
+-- ===================================
+-- INSTRUCCIONES POST-EJECUCIÓN
+-- ===================================
+-- Después de ejecutar este SQL:
+-- 1. Ve a: http://localhost:3002/empresa/perfil/clientes
+-- 2. Intenta crear un nuevo cliente corporativo
+-- 3. Llena todos los campos incluyendo email, teléfono, etc.
+-- 4. Haz clic en "Crear Cliente"
+-- 5. Debería guardarse sin errores
+
+-- Si aún tienes problemas, ejecuta este diagnóstico:
+-- SELECT * FROM corporate_clients ORDER BY created_at DESC LIMIT 5;
