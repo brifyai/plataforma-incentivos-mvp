@@ -136,20 +136,29 @@ const AdminUsersPage = () => {
 
   const loadUsers = async () => {
     try {
+      console.log('🔄 Iniciando carga de usuarios...');
       setLoading(true);
       setError(null);
 
       const { users: usersData, error } = await getAllUsers();
 
       if (error) {
-        console.error('Error loading users:', error);
+        console.error('❌ Error loading users:', error);
         setError('Error al cargar usuarios');
         return;
       }
 
+      console.log('📊 Usuarios cargados:', usersData?.length || 0);
+      console.log('📋 Estados de validación:', usersData?.map(u => ({
+        email: u.email,
+        role: u.role,
+        status: u.validation_status
+      })));
+
       setUsers(usersData || []);
+      console.log('✅ Estado de usuarios actualizado en el componente');
     } catch (error) {
-      console.error('Error in loadUsers:', error);
+      console.error('❌ Error in loadUsers:', error);
       setError('Error al cargar la información de usuarios');
     } finally {
       setLoading(false);
@@ -433,9 +442,12 @@ const AdminUsersPage = () => {
   const handleRejectUser = async (userId) => {
     setIsSubmitting(true);
     try {
-      const { error } = await rejectUser(userId);
+      console.log('🚫 Iniciando rechazo de usuario:', userId);
+      
+      const { error, user } = await rejectUser(userId);
 
       if (error) {
+        console.error('❌ Error en rejectUser:', error);
         await Swal.fire({
           icon: 'error',
           title: 'Error al rechazar usuario',
@@ -445,11 +457,24 @@ const AdminUsersPage = () => {
         return;
       }
 
+      console.log('✅ Usuario rechazado exitosamente:', user?.email);
+
+      // Mostrar éxito
+      await Swal.fire({
+        icon: 'success',
+        title: 'Usuario Rechazado',
+        text: `El usuario ${user?.email || ''} ha sido rechazado exitosamente.`,
+        confirmButtonText: 'Aceptar'
+      });
+
       setShowRejectModal(false);
       setSelectedUser(null);
-      loadUsers(); // Recargar lista
+      
+      console.log('🔄 Recargando lista de usuarios...');
+      await loadUsers(); // Recargar lista
+      console.log('✅ Lista de usuarios recargada');
     } catch (error) {
-      console.error('Error rejecting user:', error);
+      console.error('❌ Error inesperado en handleRejectUser:', error);
       await Swal.fire({
         icon: 'error',
         title: 'Error al rechazar usuario',

@@ -5,15 +5,16 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, Badge, Button, LoadingSpinner } from '../../components/common';
-import { Settings, Shield, Database, Mail, Key, CreditCard, BarChart3, Bell, Brain, ArrowRight, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Settings, Shield, Database, Mail, Key, CreditCard, BarChart3, Bell, Brain, ArrowRight, CheckCircle, XCircle, AlertCircle, MessageCircle, Archive, FileText, Lock, Activity, Users } from 'lucide-react';
 import { getSystemConfig, getIntegrationStats } from '../../services/databaseService';
 import { getDefaultConfig } from '../../config/systemConfig';
-import AIModuleControl from '../../components/admin/AIModuleControl'; // Reactivado
+// import AIModuleControl from '../../components/admin/AIModuleControl'; // Movido a /admin/ia
 
 const AdminConfigPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [systemStatus, setSystemStatus] = useState(null);
@@ -74,6 +75,7 @@ const AdminConfigPage = () => {
 
   // Configuración de secciones disponibles
   const configSections = [
+    // Configuración Principal
     {
       id: 'general',
       title: 'Configuración General',
@@ -82,18 +84,105 @@ const AdminConfigPage = () => {
       path: '/admin/configuracion/general',
       color: 'from-blue-500 to-blue-600',
       status: config.oauthEnabled && config.userValidation ? 'success' : 'warning',
-      statusText: config.oauthEnabled && config.userValidation ? 'Completa' : 'Parcial'
+      statusText: config.oauthEnabled && config.userValidation ? 'Completa' : 'Parcial',
+      category: 'principal'
     },
+    {
+      id: 'ai',
+      title: 'Inteligencia Artificial',
+      description: 'Configuración completa de IA: modelos, conversacional y control del sistema',
+      icon: Brain,
+      path: '/admin/ia',
+      color: 'from-indigo-500 to-purple-600',
+      status: (config.chutesApiActive || config.groqApiActive) ? 'success' : 'warning',
+      statusText: (config.chutesApiActive || config.groqApiActive) ? 'Activa' : 'Inactiva',
+      category: 'principal'
+    },
+    
+    // Comunicaciones
+    {
+      id: 'email-config',
+      title: 'Email Marketing',
+      description: 'Configuración avanzada de servicios de email y plantillas',
+      icon: Mail,
+      path: '/admin/configuracion/email',
+      color: 'from-green-500 to-green-600',
+      status: config.emailNotifications ? 'success' : 'warning',
+      statusText: config.emailNotifications ? 'Configurado' : 'Sin configurar',
+      category: 'comunicaciones'
+    },
+    {
+      id: 'whatsapp-config',
+      title: 'WhatsApp Business',
+      description: 'Configuración de WhatsApp Business API y plantillas',
+      icon: MessageCircle,
+      path: '/admin/configuracion/whatsapp',
+      color: 'from-emerald-500 to-emerald-600',
+      status: config.whatsappEnabled ? 'success' : 'warning',
+      statusText: config.whatsappEnabled ? 'Activo' : 'Inactivo',
+      category: 'comunicaciones'
+    },
+    {
+      id: 'notificaciones',
+      title: 'Notificaciones Push',
+      description: 'Configuración de notificaciones push y SMS',
+      icon: Bell,
+      path: '/admin/notificaciones',
+      color: 'from-orange-500 to-orange-600',
+      status: config.pushNotifications ? 'success' : 'warning',
+      statusText: config.pushNotifications ? 'Activas' : 'Inactivas',
+      category: 'comunicaciones'
+    },
+    
+    // Pagos y Finanzas
     {
       id: 'mercadopago',
       title: 'Mercado Pago',
       description: 'Configuración de pagos en línea y webhooks',
       icon: CreditCard,
       path: '/admin/mercadopago',
-      color: 'from-green-500 to-green-600',
+      color: 'from-cyan-500 to-cyan-600',
       status: config.mercadoPagoEnabled ? 'success' : 'danger',
-      statusText: config.mercadoPagoEnabled ? 'Activo' : 'Inactivo'
+      statusText: config.mercadoPagoEnabled ? 'Activo' : 'Inactivo',
+      category: 'pagos'
     },
+    
+    // Seguridad y Sistema
+    {
+      id: 'security-config',
+      title: 'Seguridad Avanzada',
+      description: 'Configuración de seguridad, autenticación y permisos',
+      icon: Shield,
+      path: '/admin/configuracion/security',
+      color: 'from-red-500 to-red-600',
+      status: 'success',
+      statusText: 'Configurado',
+      category: 'seguridad'
+    },
+    {
+      id: 'logs',
+      title: 'Logs del Sistema',
+      description: 'Visualización y análisis de logs del sistema',
+      icon: FileText,
+      path: '/admin/configuracion/logs',
+      color: 'from-amber-500 to-amber-600',
+      status: 'success',
+      statusText: 'Disponible',
+      category: 'seguridad'
+    },
+    {
+      id: 'backup',
+      title: 'Backup y Restauración',
+      description: 'Gestión de backups y restauración del sistema',
+      icon: Archive,
+      path: '/admin/configuracion/backup',
+      color: 'from-slate-500 to-slate-600',
+      status: 'success',
+      statusText: 'Configurado',
+      category: 'seguridad'
+    },
+    
+    // Analytics y Monitoreo
     {
       id: 'analytics',
       title: 'Analytics',
@@ -102,37 +191,19 @@ const AdminConfigPage = () => {
       path: '/admin/analytics',
       color: 'from-purple-500 to-purple-600',
       status: 'success',
-      statusText: 'Configurado'
+      statusText: 'Configurado',
+      category: 'analytics'
     },
     {
-      id: 'notificaciones',
-      title: 'Notificaciones',
-      description: 'Configuración de emails, push y SMS',
-      icon: Bell,
-      path: '/admin/notificaciones',
-      color: 'from-orange-500 to-orange-600',
-      status: (config.emailNotifications || config.pushNotifications) ? 'success' : 'warning',
-      statusText: (config.emailNotifications || config.pushNotifications) ? 'Activas' : 'Inactivas'
-    },
-    {
-      id: 'ai',
-      title: 'Inteligencia Artificial',
-      description: 'Configuración de servicios de IA y modelos',
-      icon: Brain,
-      path: '/admin/ia',
-      color: 'from-indigo-500 to-indigo-600',
-      status: (config.chutesApiActive || config.groqApiActive) ? 'success' : 'warning',
-      statusText: (config.chutesApiActive || config.groqApiActive) ? 'Configurada' : 'Sin configurar'
-    },
-    {
-      id: 'ai-module',
-      title: 'Módulo de IA Conversacional',
-      description: 'Control del módulo de negociación con IA',
-      icon: Brain,
-      path: '/admin/ai-module',
-      color: 'from-purple-500 to-purple-600',
-      status: 'info',
-      statusText: 'Nuevo'
+      id: 'activity',
+      title: 'Actividad del Sistema',
+      description: 'Monitoreo de actividad y rendimiento del sistema',
+      icon: Activity,
+      path: '/admin/configuracion/activity',
+      color: 'from-teal-500 to-teal-600',
+      status: 'success',
+      statusText: 'Activo',
+      category: 'analytics'
     }
   ];
 
@@ -252,42 +323,295 @@ const AdminConfigPage = () => {
         </div>
       </div>
 
-      {/* Configuration Sections Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {configSections.map((section) => {
-          const Icon = section.icon;
-          return (
-            <Card
-              key={section.id}
-              className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary-200"
-              onClick={() => navigate(section.path)}
-            >
-              <div className="p-3">
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`p-2 bg-gradient-to-r ${section.color} rounded-lg text-white group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-5 h-5" />
+      {/* Configuration Sections by Category */}
+      <div className="space-y-8">
+        {/* Configuración Principal */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Settings className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-secondary-900">Configuración Principal</h2>
+              <p className="text-secondary-600 text-sm">Configuración fundamental del sistema</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {configSections.filter(section => section.category === 'principal').map((section) => {
+              const Icon = section.icon;
+              const hasSubSections = section.subSections && section.subSections.length > 0;
+              
+              return (
+                <Card
+                  key={section.id}
+                  className={`group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary-200 ${
+                    location.pathname === section.path ? 'ring-2 ring-primary-500 bg-primary-50' : ''
+                  }`}
+                  onClick={() => {
+                    if (section.id === 'ai') {
+                      // Para IA, navegar al dashboard principal
+                      navigate(section.path);
+                    } else {
+                      navigate(section.path);
+                    }
+                  }}
+                >
+                  <div className="p-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`p-2 bg-gradient-to-r ${section.color} rounded-lg text-white group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      {getStatusBadge(section.status)}
+                    </div>
+
+                    <h3 className="text-base font-semibold text-secondary-900 mb-2 group-hover:text-primary-700 transition-colors">
+                      {section.title}
+                    </h3>
+
+                    <p className="text-secondary-600 mb-3 leading-relaxed text-xs">
+                      {section.description}
+                    </p>
+
+                    {hasSubSections && (
+                      <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+                        <p className="text-xs font-medium text-gray-700 mb-2">Subsecciones:</p>
+                        <div className="space-y-1">
+                          {section.subSections.map((subSection) => {
+                            const SubIcon = subSection.icon;
+                            return (
+                              <div
+                                key={subSection.id}
+                                className="flex items-center gap-2 text-xs text-gray-600 hover:text-primary-600 transition-colors cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(subSection.path);
+                                }}
+                              >
+                                <SubIcon className="w-3 h-3" />
+                                <span>{subSection.title}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-secondary-500">
+                        {section.statusText}
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-secondary-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-300" />
+                    </div>
                   </div>
-                  {getStatusBadge(section.status)}
-                </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
 
-                <h3 className="text-base font-semibold text-secondary-900 mb-2 group-hover:text-primary-700 transition-colors">
-                  {section.title}
-                </h3>
+        {/* Comunicaciones */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <MessageCircle className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-secondary-900">Comunicaciones</h2>
+              <p className="text-secondary-600 text-sm">Email, WhatsApp y notificaciones</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {configSections.filter(section => section.category === 'comunicaciones').map((section) => {
+              const Icon = section.icon;
+              return (
+                <Card
+                  key={section.id}
+                  className={`group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary-200 ${
+                    location.pathname === section.path ? 'ring-2 ring-primary-500 bg-primary-50' : ''
+                  }`}
+                  onClick={() => navigate(section.path)}
+                >
+                  <div className="p-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`p-2 bg-gradient-to-r ${section.color} rounded-lg text-white group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      {getStatusBadge(section.status)}
+                    </div>
 
-                <p className="text-secondary-600 mb-3 leading-relaxed text-xs">
-                  {section.description}
-                </p>
+                    <h3 className="text-base font-semibold text-secondary-900 mb-2 group-hover:text-primary-700 transition-colors">
+                      {section.title}
+                    </h3>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-secondary-500">
-                    {section.statusText}
-                  </span>
-                  <ArrowRight className="w-4 h-4 text-secondary-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-300" />
-                </div>
-              </div>
-            </Card>
-          );
-        })}
+                    <p className="text-secondary-600 mb-3 leading-relaxed text-xs">
+                      {section.description}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-secondary-500">
+                        {section.statusText}
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-secondary-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-300" />
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Pagos y Finanzas */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-cyan-100 rounded-lg">
+              <CreditCard className="w-5 h-5 text-cyan-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-secondary-900">Pagos y Finanzas</h2>
+              <p className="text-secondary-600 text-sm">Procesamiento de pagos y métodos de pago</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {configSections.filter(section => section.category === 'pagos').map((section) => {
+              const Icon = section.icon;
+              return (
+                <Card
+                  key={section.id}
+                  className={`group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary-200 ${
+                    location.pathname === section.path ? 'ring-2 ring-primary-500 bg-primary-50' : ''
+                  }`}
+                  onClick={() => navigate(section.path)}
+                >
+                  <div className="p-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`p-2 bg-gradient-to-r ${section.color} rounded-lg text-white group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      {getStatusBadge(section.status)}
+                    </div>
+
+                    <h3 className="text-base font-semibold text-secondary-900 mb-2 group-hover:text-primary-700 transition-colors">
+                      {section.title}
+                    </h3>
+
+                    <p className="text-secondary-600 mb-3 leading-relaxed text-xs">
+                      {section.description}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-secondary-500">
+                        {section.statusText}
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-secondary-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-300" />
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Seguridad y Sistema */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <Shield className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-secondary-900">Seguridad y Sistema</h2>
+              <p className="text-secondary-600 text-sm">Seguridad, logs y backups del sistema</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {configSections.filter(section => section.category === 'seguridad').map((section) => {
+              const Icon = section.icon;
+              return (
+                <Card
+                  key={section.id}
+                  className={`group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary-200 ${
+                    location.pathname === section.path ? 'ring-2 ring-primary-500 bg-primary-50' : ''
+                  }`}
+                  onClick={() => navigate(section.path)}
+                >
+                  <div className="p-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`p-2 bg-gradient-to-r ${section.color} rounded-lg text-white group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      {getStatusBadge(section.status)}
+                    </div>
+
+                    <h3 className="text-base font-semibold text-secondary-900 mb-2 group-hover:text-primary-700 transition-colors">
+                      {section.title}
+                    </h3>
+
+                    <p className="text-secondary-600 mb-3 leading-relaxed text-xs">
+                      {section.description}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-secondary-500">
+                        {section.statusText}
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-secondary-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-300" />
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Analytics y Monitoreo */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <BarChart3 className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-secondary-900">Analytics y Monitoreo</h2>
+              <p className="text-secondary-600 text-sm">Análisis de datos y monitoreo del sistema</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {configSections.filter(section => section.category === 'analytics').map((section) => {
+              const Icon = section.icon;
+              return (
+                <Card
+                  key={section.id}
+                  className={`group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary-200 ${
+                    location.pathname === section.path ? 'ring-2 ring-primary-500 bg-primary-50' : ''
+                  }`}
+                  onClick={() => navigate(section.path)}
+                >
+                  <div className="p-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`p-2 bg-gradient-to-r ${section.color} rounded-lg text-white group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      {getStatusBadge(section.status)}
+                    </div>
+
+                    <h3 className="text-base font-semibold text-secondary-900 mb-2 group-hover:text-primary-700 transition-colors">
+                      {section.title}
+                    </h3>
+
+                    <p className="text-secondary-600 mb-3 leading-relaxed text-xs">
+                      {section.description}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-secondary-500">
+                        {section.statusText}
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-secondary-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-300" />
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* System Health Summary */}
@@ -333,8 +657,7 @@ const AdminConfigPage = () => {
         </div>
       </Card>
 
-      {/* AI Module Control Section */}
-      <AIModuleControl />
+      {/* AI Module Control movido a /admin/ia */}
     </div>
   );
 };

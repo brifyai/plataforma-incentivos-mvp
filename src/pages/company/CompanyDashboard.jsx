@@ -195,12 +195,12 @@ const CompanyDashboard = () => {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center max-w-md">
             <div className="text-blue-500 text-6xl mb-4">🏢</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Crear Empresa</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Crear Empresa Global</h2>
             <p className="text-gray-600 mb-6">
-              Como administrador, puedes crear tu propia empresa de cobranza para gestionar clientes y deudas.
+              Como administrador, puedes crear tu propia empresa global de cobranza para gestionar clientes y deudas.
             </p>
             <Button onClick={() => setShowCreateCompanyModal(true)}>
-              Crear Empresa
+              Crear Empresa Global
             </Button>
           </div>
         </div>
@@ -214,7 +214,7 @@ const CompanyDashboard = () => {
           <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
             <div className="text-center max-w-lg p-8">
               <div className="text-purple-500 text-6xl mb-4">🏢</div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Completa tu Perfil de Empresa</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Completa tu Perfil de Empresa Global</h2>
               <p className="text-gray-600 mb-6">
                 Bienvenido a NexuPay. Para comenzar a usar tu cuenta empresarial, necesitas completar la información de tu empresa.
               </p>
@@ -245,9 +245,9 @@ const CompanyDashboard = () => {
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center max-w-md">
               <div className="text-red-500 text-6xl mb-4">⚠️</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Perfil de Empresa No Encontrado</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Perfil de Empresa Global No Encontrado</h2>
               <p className="text-gray-600 mb-4">
-                No se pudo cargar el perfil de empresa. Esto puede deberse a que el usuario no tiene un perfil de empresa configurado.
+                No se pudo cargar el perfil de empresa global. Esto puede deberse a que el usuario no tiene un perfil de empresa global configurado.
               </p>
               <p className="text-sm text-gray-500 mb-4">
                 Rol actual: {profile?.role}<br/>
@@ -329,7 +329,7 @@ const CompanyDashboard = () => {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-amber-900">
-                  Verificación de Empresa
+                  Verificación de Empresa Global
                 </h3>
                 <p className="text-amber-700">
                   {safeVerification.status === VERIFICATION_STATUS.PENDING && "Complete su verificación para acceder a todas las funciones"}
@@ -461,7 +461,7 @@ const CompanyDashboard = () => {
               <Building className="w-12 h-12 md:w-16 md:h-16 text-indigo-600" />
             </div>
             <h2 className="text-2xl md:text-3xl font-display font-bold text-secondary-900 mb-2">
-              Crear Nueva Empresa
+              Crear Nueva Empresa Global
             </h2>
             <p className="text-secondary-600 text-base md:text-lg">
               Establece tu empresa de cobranza y comienza a gestionar deudas
@@ -470,13 +470,13 @@ const CompanyDashboard = () => {
 
           {/* Company Information */}
           <FormSection
-            title="Información de la Empresa"
+            title="Información de la Empresa Global"
             icon={<Building className="w-5 h-5 text-white" />}
             gradient="indigo"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
-                label="Nombre de Empresa *"
+                label="Nombre de Empresa Global *"
                 icon="🏢"
                 value={createCompanyForm.business_name}
                 onChange={(e) => setCreateCompanyForm(prev => ({ ...prev, business_name: e.target.value }))}
@@ -485,7 +485,7 @@ const CompanyDashboard = () => {
               />
 
               <FormField
-                label="RUT Empresa *"
+                label="RUT Empresa Global *"
                 icon="📄"
                 value={createCompanyForm.rut}
                 onChange={(e) => setCreateCompanyForm(prev => ({ ...prev, rut: e.target.value }))}
@@ -531,7 +531,7 @@ const CompanyDashboard = () => {
                   <span className="text-white font-bold">⚠️</span>
                 </div>
                 <div>
-                  <h4 className="font-bold text-red-900 font-display">Error al crear empresa</h4>
+                  <h4 className="font-bold text-red-900 font-display">Error al crear empresa global</h4>
                   <p className="text-red-700 mt-1">{createCompanyError}</p>
                 </div>
               </div>
@@ -572,7 +572,7 @@ const CompanyDashboard = () => {
           <ActionButtons
             onCancel={() => setShowCreateCompanyModal(false)}
             onConfirm={handleCreateCompany}
-            confirmText="Crear Empresa"
+            confirmText="Crear Empresa Global"
             confirmLoading={createCompanyLoading}
             cancelText="Cancelar"
           />

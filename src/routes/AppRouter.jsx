@@ -78,6 +78,7 @@ import NewMessagePage from '../pages/company/NewMessagePage';
 import CompanyNotificationsPage from '../pages/company/CompanyNotificationsPage';
 import NewDebtorPage from '../pages/company/NewDebtorPage';
 import ClientsPage from '../pages/company/ClientsPage';
+import CorporateClientsPage from '../pages/company/CorporateClientsPage';
 
 // Páginas de administrador
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -99,6 +100,11 @@ import AIConfigPage from '../pages/admin/AIConfigPage';
 import KnowledgeBaseManagementPage from '../pages/admin/KnowledgeBaseManagementPage';
 import MatchingManagementPage from '../pages/admin/MatchingManagementPage';
 import AIDashboardPage from '../pages/company/AIDashboardPage';
+import SecurityConfigPage from '../pages/admin/SecurityConfigPage';
+import LogsPage from '../pages/admin/LogsPage';
+import BackupPage from '../pages/admin/BackupPage';
+import EmailConfigPage from '../pages/admin/EmailConfigPage';
+import WhatsAppConfigPage from '../pages/admin/WhatsAppConfigPage';
 
 // Componente de ruta protegida
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -426,7 +432,7 @@ const AppContent = () => {
           element={
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
-                <CompanyProfilePage />
+                <CorporateClientsPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -543,6 +549,16 @@ const AppContent = () => {
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
                 <NewDebtorPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/clientes-corporativos"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <CorporateClientsPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -701,6 +717,16 @@ const AppContent = () => {
           }
         />
         <Route
+          path="/admin/ai-module"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <AdminConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/analytics"
           element={
             <ProtectedRoute allowedRoles={['god_mode']}>
@@ -781,11 +807,91 @@ const AppContent = () => {
           }
         />
         <Route
+          path="/admin/ia/servicios"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <AIConfigPage defaultSection="ai-services" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/ia/conversaciones"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <AIConfigPage defaultSection="conversations-module" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/ia/nuclear"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <AIConfigPage defaultSection="nuclear-module" />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/base-conocimiento"
           element={
             <ProtectedRoute allowedRoles={['god_mode']}>
               <DashboardLayout>
                 <KnowledgeBaseManagementPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/security"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <SecurityConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/logs"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <LogsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/backup"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <BackupPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/email"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <EmailConfigPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/configuracion/whatsapp"
+          element={
+            <ProtectedRoute allowedRoles={['god_mode']}>
+              <DashboardLayout>
+                <WhatsAppConfigPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

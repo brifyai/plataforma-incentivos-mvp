@@ -5,6 +5,8 @@
  */
 
 import { Card, Button } from '../../components/common';
+import { formatCurrency } from '../../utils/formatters';
+import { calculateCommissions } from '../../services/paymentService';
 import {
   HelpCircle,
   DollarSign,
@@ -22,6 +24,12 @@ const HelpPage = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  // Función para calcular comisión simple (compatibilidad)
+  const calculateCommission = (amount) => {
+    const commissionData = calculateCommissions(amount);
+    return commissionData.userIncentive; // $30.000 fijo por acuerdo exitoso
   };
 
   return (
@@ -142,7 +150,7 @@ const HelpPage = () => {
                 💰 ¿Cuánto dinero puedo ganar con mis deudas?
               </h3>
               <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl mb-6 border border-green-200">
-                <p className="text-3xl font-bold text-green-700 mb-2">$36.000 por cada deuda morosa que negocies exitosamente</p>
+                <p className="text-3xl font-bold text-green-700 mb-2">{formatCurrency(calculateCommission(60000))} por cada deuda morosa que negocies exitosamente</p>
                 <p className="text-lg text-green-600">¡Es una cantidad fija que no depende del tamaño de tu deuda!</p>
               </div>
               <p className="text-lg text-secondary-700 mb-4">
@@ -153,7 +161,7 @@ const HelpPage = () => {
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-blue-800">
                   <strong>Ejemplo real:</strong> Una deuda de $500.000 que negocias por $300.000
-                  (40% de descuento) te paga $36.000 de comisión. ¡El descuento lo obtienes tú,
+                  (40% de descuento) te paga {formatCurrency(calculateCommission(60000))} de comisión. ¡El descuento lo obtienes tú,
                   pero la comisión es extra!
                 </p>
               </div>
@@ -184,7 +192,7 @@ const HelpPage = () => {
                 </div>
                 <div className="text-center p-6 bg-green-50 rounded-xl border border-green-200">
                   <div className="text-4xl mb-3">3️⃣</div>
-                  <h4 className="font-bold text-green-800 mb-2">¡Ganas $36.000!</h4>
+                  <h4 className="font-bold text-green-800 mb-2">¡Ganas {formatCurrency(calculateCommission(60000))}!</h4>
                   <p className="text-sm text-green-700">Por cada acuerdo exitoso</p>
                 </div>
               </div>
@@ -192,7 +200,7 @@ const HelpPage = () => {
                 El proceso es completamente automático. Solo registras tus deudas con sus fechas de vencimiento,
                 y cuando pasan la fecha límite, automáticamente se convierten en deudas morosas. Las empresas
                 de cobranza te contactarán para ofrecer acuerdos de negociación. Tú decides aceptar o rechazar
-                cualquier oferta. ¡Si aceptas y cumples, ganas $36.000 por cada acuerdo exitoso!
+                cualquier oferta. ¡Si aceptas y cumples, ganas {formatCurrency(calculateCommission(60000))} por cada acuerdo exitoso!
               </p>
             </div>
           </div>
@@ -212,7 +220,7 @@ const HelpPage = () => {
                 <div className="flex items-start gap-4 p-4 bg-green-50 rounded-xl border border-green-200">
                   <span className="text-green-600 font-bold text-2xl">✓</span>
                   <div>
-                    <p className="font-bold text-green-800 text-lg">Comisión garantizada de $36.000 fijos</p>
+                    <p className="font-bold text-green-800 text-lg">Comisión garantizada de {formatCurrency(calculateCommission(60000))} fijos</p>
                     <p className="text-green-700">No importa si tu deuda es de $100.000 o $5.000.000, siempre ganas lo mismo por acuerdo exitoso</p>
                   </div>
                 </div>
@@ -234,7 +242,7 @@ const HelpPage = () => {
                   <span className="text-orange-600 font-bold text-2xl">✓</span>
                   <div>
                     <p className="font-bold text-orange-800 text-lg">Ingresos ilimitados</p>
-                    <p className="text-orange-700">Puedes registrar tantas deudas como tengas. Cada una es una oportunidad de ganar $36.000</p>
+                    <p className="text-orange-700">Puedes registrar tantas deudas como tengas. Cada una es una oportunidad de ganar {formatCurrency(calculateCommission(60000))}</p>
                   </div>
                 </div>
               </div>
@@ -332,7 +340,7 @@ const HelpPage = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div className="text-center p-6 bg-green-50 rounded-xl border border-green-200">
-                  <p className="text-3xl font-bold text-green-600 mb-2">$36.000</p>
+                  <p className="text-3xl font-bold text-green-600 mb-2">{formatCurrency(calculateCommission(60000))}</p>
                   <p className="text-lg text-green-700 font-medium">Por deuda negociada</p>
                   <p className="text-sm text-green-600">Comisión fija garantizada</p>
                 </div>
@@ -372,7 +380,7 @@ const HelpPage = () => {
           </h3>
           <p className="text-xl text-secondary-700 mb-8 max-w-4xl mx-auto">
             Registra tus deudas ahora y comienza tu camino hacia ingresos adicionales.
-            ¡Cada deuda morosa es una oportunidad de ganar $36.000!
+            ¡Cada deuda morosa es una oportunidad de ganar {formatCurrency(calculateCommission(60000))}!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button

@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Badge, Button, Input, LoadingSpinner, DateFilter, Modal } from '../../components/common';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import Swal from 'sweetalert2';
 import {
   getAllCompanies,
   getCompanyDebts,
@@ -14,6 +15,10 @@ import {
   getCompanyAgreements,
   getAllCorporateClients
 } from '../../services/databaseService';
+import {
+  getCompanyVerification,
+  VERIFICATION_STATUS
+} from '../../services/verificationService';
 import {
   Building,
   Search,
@@ -293,6 +298,30 @@ const AdminCompaniesPage = () => {
   const getCompanyTypeLabel = (type) => {
     // Por ahora no hay campo company_type, mostrar tipo genérico
     return 'Empresa de Cobranza';
+  };
+
+  const getVerificationStatusText = (status) => {
+    const statusMap = {
+      [VERIFICATION_STATUS.PENDING]: 'Pendiente',
+      [VERIFICATION_STATUS.SUBMITTED]: 'Enviado',
+      [VERIFICATION_STATUS.UNDER_REVIEW]: 'En Revisión',
+      [VERIFICATION_STATUS.APPROVED]: 'Aprobado',
+      [VERIFICATION_STATUS.REJECTED]: 'Rechazado',
+      [VERIFICATION_STATUS.NEEDS_CORRECTIONS]: 'Correcciones Requeridas'
+    };
+    return statusMap[status] || 'Desconocido';
+  };
+
+  const getVerificationStatusBadge = (status) => {
+    const statusConfig = {
+      [VERIFICATION_STATUS.PENDING]: { variant: 'secondary', text: 'Pendiente' },
+      [VERIFICATION_STATUS.SUBMITTED]: { variant: 'info', text: 'Enviado' },
+      [VERIFICATION_STATUS.UNDER_REVIEW]: { variant: 'warning', text: 'En Revisión' },
+      [VERIFICATION_STATUS.APPROVED]: { variant: 'success', text: 'Aprobado' },
+      [VERIFICATION_STATUS.REJECTED]: { variant: 'danger', text: 'Rechazado' },
+      [VERIFICATION_STATUS.NEEDS_CORRECTIONS]: { variant: 'warning', text: 'Correcciones Requeridas' }
+    };
+    return statusConfig[status] || statusConfig[VERIFICATION_STATUS.PENDING];
   };
 
   if (loading) {
@@ -620,6 +649,105 @@ const AdminCompaniesPage = () => {
                           variant="outline"
                           size="sm"
                           leftIcon={<Eye className="w-4 h-4" />}
+                          onClick={async () => {
+                            console.log('🔍 Ver detalles de empresa:', company);
+                            
+                            // Obtener documentos de verificación
+                            let verificationDocuments = null;
+                            try {
+                              const { verification } = await getCompanyVerification(company.id);
+                              verificationDocuments = verification;
+                            } catch (error) {
+                              console.error('Error obteniendo documentos de verificación:', error);
+                            }
+                            
+                            Swal.fire({
+                              title: `Detalles de ${company.company_name}`,
+                              html: `
+                                <div class="text-left space-y-3">
+                                  <div class="border-b pb-2">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Información Básica</h4>
+                                    <p><strong>RUT:</strong> ${company.rut}</p>
+                                    <p><strong>Email:</strong> ${company.contact_email || 'No especificado'}</p>
+                                    <p><strong>Teléfono:</strong> ${company.contact_phone || 'No especificado'}</p>
+                                    <p><strong>Estado:</strong> <span class="badge ${company.validation_status === 'validated' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} px-2 py-1 rounded">${company.validation_status === 'validated' ? 'Validada' : 'Pendiente'}</span></p>
+                                  </div>
+                                  
+                                  <div class="border-b pb-2">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Estadísticas de Gestión</h4>
+                                    <p><strong>Deudas gestionadas:</strong> ${company.stats?.totalDebts || 0}</p>
+                                    <p><strong>Monto gestionado:</strong> ${formatCurrency(company.stats?.totalDebtAmount || 0)}</p>
+                                    <p><strong>Recuperado:</strong> ${formatCurrency(company.stats?.totalRecovered || 0)}</p>
+                                    <p><strong>Acuerdos activos:</strong> ${company.stats?.activeAgreements || 0}</p>
+                                  </div>
+                                  
+                                  <div class="border-b pb-2">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Documentos de Verificación</h4>
+                                    ${verificationDocuments ? `
+                                      <div class="space-y-2">
+                                        <div>
+                                          <strong>Estado de Verificación:</strong>
+                                          <span class="ml-2 badge ${getVerificationStatusBadge(verificationDocuments.status).variant === 'success' ? 'bg-green-100 text-green-800' : getVerificationStatusBadge(verificationDocuments.status).variant === 'warning' ? 'bg-yellow-100 text-yellow-800' : getVerificationStatusBadge(verificationDocuments.status).variant === 'info' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'} px-2 py-1 rounded">
+                                            ${getVerificationStatusText(verificationDocuments.status)}
+                                          </span>
+                                        </div>
+                                        
+                                        <div>
+                                          <strong>Certificado de Vigencia:</strong>
+                                          ${verificationDocuments.certificado_vigencia_url ? `
+                                            <div class="mt-1">
+                                              <span class="text-green-600">✅ Subido</span>
+                                              <a href="${verificationDocuments.certificado_vigencia_url}" target="_blank" class="ml-2 text-blue-600 hover:underline text-sm">
+                                                Ver documento
+                                              </a>
+                                              ${verificationDocuments.certificado_vigencia_filename ? `<span class="text-gray-600 text-xs block">(${verificationDocuments.certificado_vigencia_filename})</span>` : ''}
+                                            </div>
+                                          ` : '<span class="text-red-600">❌ No subido</span>'}
+                                        </div>
+                                        
+                                        <div>
+                                          <strong>Informe Equifax:</strong>
+                                          ${verificationDocuments.informe_equifax_url ? `
+                                            <div class="mt-1">
+                                              <span class="text-green-600">✅ Subido</span>
+                                              <a href="${verificationDocuments.informe_equifax_url}" target="_blank" class="ml-2 text-blue-600 hover:underline text-sm">
+                                                Ver documento
+                                              </a>
+                                              ${verificationDocuments.informe_equifax_filename ? `<span class="text-gray-600 text-xs block">(${verificationDocuments.informe_equifax_filename})</span>` : ''}
+                                            </div>
+                                          ` : '<span class="text-red-600">❌ No subido</span>'}
+                                        </div>
+                                        
+                                        ${verificationDocuments.submitted_at ? `
+                                          <div class="text-sm text-gray-600">
+                                            <strong>Enviado para revisión:</strong> ${formatDate(new Date(verificationDocuments.submitted_at))}
+                                          </div>
+                                        ` : ''}
+                                      </div>
+                                    ` : '<p class="text-gray-600">No hay documentos de verificación registrados</p>'}
+                                  </div>
+                                  
+                                  ${company.stats?.totalDebtAmount > 0 ? `
+                                  <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Tasa de Recuperación</h4>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                      <div class="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" style="width: ${Math.min(company.stats.recoveryRate, 100)}%"></div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">${company.stats.recoveryRate.toFixed(1)}%</p>
+                                  </div>
+                                  ` : ''}
+                                </div>
+                              `,
+                              icon: 'info',
+                              confirmButtonText: 'Cerrar',
+                              confirmButtonColor: '#3B82F6',
+                              width: '700px',
+                              customClass: {
+                                container: 'font-sans'
+                              }
+                            });
+                          }}
+                          className="hover:bg-blue-50 hover:border-blue-300"
                         >
                           Ver
                         </Button>

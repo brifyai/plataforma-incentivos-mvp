@@ -36,8 +36,28 @@ const initializeApp = async () => {
       healthCheck = { status: 'WARNING', summary: 'Health check failed' };
     }
     
-    // Verificar si Supabase está en modo mock
-    const isSupabaseMock = window.SUPABASE_MOCK_MODE || false;
+    // Debug en desarrollo - verificar variables de entorno ANTES de importar
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Environment Variables Debug:');
+      console.log('- import.meta.env.VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+      console.log('- import.meta.env.VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? `${import.meta.env.VITE_SUPABASE_ANON_KEY.substring(0, 20)}...` : 'UNDEFINED');
+      console.log('- process.env.NODE_ENV:', process.env.NODE_ENV);
+    }
+    
+    // Verificar si Supabase está configurado correctamente
+    const { isSupabaseConfigured } = await import('./config/supabase.js');
+    const isConfigured = isSupabaseConfigured();
+    const isSupabaseMock = !isConfigured;
+    
+    // Debug en desarrollo
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Supabase Status Debug:');
+      console.log('- isSupabaseConfigured():', isConfigured);
+      console.log('- isSupabaseMock:', isSupabaseMock);
+      console.log('- window.SUPABASE_MOCK_MODE:', window.SUPABASE_MOCK_MODE);
+      console.log('- window.SUPABASE_MISSING_CONFIG:', window.SUPABASE_MISSING_CONFIG);
+    }
+    
     if (isSupabaseMock) {
       console.warn('⚠️ Supabase está en modo mock. La aplicación funcionará con funcionalidad limitada.');
       

@@ -21,9 +21,7 @@ import { aiService } from './aiService';
 import {
   createUnifiedCampaign,
   updateUnifiedCampaign,
-  getCampaignDebtors,
-  createSecureMessage,
-  updateCampaignResults
+  getCampaignDebtors
 } from './databaseService';
 
 export class CampaignService {
@@ -265,13 +263,17 @@ export class CampaignService {
         const persuasiveContent = await this.generatePersuasiveContent(debtor, personalizedOffer);
 
         // Crear mensaje seguro
-        const secureMessage = await createSecureMessage({
-          campaign_id: campaign.id,
-          debtor_id: debtor.id,
-          offer_data: personalizedOffer,
-          content: persuasiveContent,
-          status: 'pending'
-        });
+        const secureMessage = await supabase
+          .from('secure_messages')
+          .insert({
+            campaign_id: campaign.id,
+            debtor_id: debtor.id,
+            offer_data: personalizedOffer,
+            content: persuasiveContent,
+            status: 'pending'
+          })
+          .select()
+          .single();
 
         results.push({
           debtorId: debtor.id,
@@ -315,8 +317,22 @@ export class CampaignService {
   }
 
   enhanceSegmentation(segmentation, debtors) {
-    // Lógica adicional para mejorar la segmentación
-    return segmentation;
+    // Mejorar segmentación con análisis avanzado
+    const enhancedSegments = { ...segmentation };
+    
+    // Análisis de riesgo adicional
+    if (debtors && debtors.length > 0) {
+      const riskDistribution = debtors.reduce((acc, debtor) => {
+        const risk = debtor.riskLevel || 'unknown';
+        acc[risk] = (acc[risk] || 0) + 1;
+        return acc;
+      }, {});
+      
+      enhancedSegments.riskDistribution = riskDistribution;
+      enhancedSegments.insights.push(`Análisis de riesgo: ${JSON.stringify(riskDistribution)}`);
+    }
+    
+    return enhancedSegments;
   }
 
   fallbackSegmentation(debtors) {

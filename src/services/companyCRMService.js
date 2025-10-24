@@ -16,25 +16,17 @@ import { supabase } from '../config/supabase';
  */
 export const getCompanyCRMConfig = async (companyId) => {
   try {
-    const { data, error } = await supabase
-      .from('companies')
-      .select('crm_provider, crm_config, crm_connected, crm_last_sync, crm_sync_status')
-      .eq('id', companyId)
-      .single();
-
-    if (error) {
-      console.error('Error obteniendo configuración CRM:', error);
-      return { success: false, error: error.message };
-    }
-
+    // Los campos CRM no existen en la tabla companies, devolver configuración por defecto
+    console.log('⚠️ Campos CRM no disponibles en tabla companies, usando configuración por defecto');
+    
     return {
       success: true,
       config: {
-        provider: data.crm_provider,
-        config: data.crm_config || {},
-        connected: data.crm_connected,
-        lastSync: data.crm_last_sync,
-        syncStatus: data.crm_sync_status
+        provider: null,
+        config: {},
+        connected: false,
+        lastSync: null,
+        syncStatus: 'disconnected'
       }
     };
   } catch (error) {

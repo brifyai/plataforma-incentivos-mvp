@@ -11,7 +11,7 @@
  * Última actualización: 2025-10-08 - Agregada exportación de hashPassword
  */
 
-import { supabase, handleSupabaseError } from '../config/supabase';
+import { supabase } from '../config/supabase';
 import { USER_ROLES } from '../config/constants';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
@@ -424,8 +424,38 @@ const signUp = async (userData, currentUserRole = null) => {
       return { user: null, error: handleSupabaseError(insertError) };
     }
 
-    // 3. Si es empresa, crear registro en companies
+    // 3. Si es empresa, validar y crear registro en companies
     if (role === USER_ROLES.COMPANY && companyData) {
+      // Validaciones específicas para empresas en orden de prioridad
+      
+      // Prioridad 1: Validar RUT de empresa
+      const { exists: companyRutExists, error: rutCheckError } = await checkCompanyRutExists(companyData.companyRut);
+      if (rutCheckError) {
+        return { user: null, error: rutCheckError };
+      }
+      if (companyRutExists) {
+        return { user: null, error: 'El RUT de empresa ya está registrado. Cada empresa debe tener un RUT único.' };
+      }
+
+      // Prioridad 2: Validar Razón Social
+      const { exists: companyNameExists, error: nameCheckError } = await checkCompanyNameExists(companyData.businessName);
+      if (nameCheckError) {
+        return { user: null, error: nameCheckError };
+      }
+      if (companyNameExists) {
+        return { user: null, error: 'La razón social ya está registrada. Verifica los datos e intenta con otra razón social.' };
+      }
+
+      // Prioridad 3: Validar dominio corporativo
+      const { exists: domainExists, error: domainCheckError } = await checkCorporateDomainExists(email);
+      if (domainCheckError) {
+        return { user: null, error: domainCheckError };
+      }
+      if (domainExists) {
+        return { user: null, error: 'El dominio corporativo ya está registrado. Usa un email corporativo único para tu empresa (@nombredeempresa.cl).' };
+      }
+
+      // Si todas las validaciones pasan, crear la empresa
       const { error: companyError } = await supabase
         .from('companies')
         .insert({
@@ -439,7 +469,9 @@ const signUp = async (userData, currentUserRole = null) => {
 
       if (companyError) {
         console.error('Error creating company profile:', companyError);
-        // No eliminar el usuario, solo registrar el error
+        // Eliminar el usuario si no se puede crear la empresa
+        await supabase.from('users').delete().eq('id', userDataResult.id);
+        return { user: null, error: `Error al crear empresa: ${companyError.message}` };
       } else {
         console.log('✅ Empresa registrada exitosamente');
         
@@ -520,8 +552,8 @@ const signUp = async (userData, currentUserRole = null) => {
       // No fallar el registro por problemas de email
     }
 
-    // Crear un objeto user simulado para mantener compatibilidad
-    const mockUser = {
+    // Crear un objeto user real basado en los datos de la base de datos
+    const realUser = {
       id: userDataResult.id,
       email: userDataResult.email,
       user_metadata: {
@@ -531,7 +563,7 @@ const signUp = async (userData, currentUserRole = null) => {
       },
     };
 
-    return { user: mockUser, error: null };
+    return { user: realUser, error: null };
   } catch (error) {
     console.error('Error in signUp:', error);
     return { user: null, error: 'Error al registrar usuario. Por favor, intenta de nuevo.' };
@@ -660,13 +692,6 @@ const signIn = async (email, password) => {
     // Guardar en localStorage (mantener compatibilidad pero con tokens seguros)
     localStorage.setItem('secure_session', JSON.stringify(secureSession));
 
-    // También guardar versión compatible con el sistema anterior
-    localStorage.setItem('mock_session', JSON.stringify({
-      user: realUser,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    }));
-
     console.log('✅ Sesión segura creada con JWT');
     return { user: realUser, session: secureSession, error: null };
   } catch (error) {
@@ -683,8 +708,8 @@ const signOut = async () => {
   try {
     // Limpiar sesiones seguras
     localStorage.removeItem('secure_session');
-    // Limpiar sesiones antiguas para compatibilidad
-    localStorage.removeItem('mock_session');
+    // Limpiar solo sesión segura
+    localStorage.removeItem('secure_session');
 
     console.log('✅ Sesión cerrada correctamente');
     return { error: null };
@@ -732,14 +757,8 @@ const getCurrentUser = async () => {
       return { user, error: null };
     }
 
-    // Fallback al sistema anterior para compatibilidad
-    const sessionData = localStorage.getItem('mock_session');
-    if (!sessionData) {
-      return { user: null, error: null };
-    }
-
-    const session = JSON.parse(sessionData);
-    return { user: session.user, error: null };
+    // Solo usar sesión segura
+    return { user: null, error: null };
   } catch (error) {
     clearCorruptedSessions();
     const authError = handleSupabaseAuthError(error, 'getCurrentUser');
@@ -766,14 +785,8 @@ const getSession = async () => {
       return { session: null, error: null };
     }
 
-    // Fallback al sistema anterior para compatibilidad
-    const sessionData = localStorage.getItem('mock_session');
-    if (!sessionData) {
-      return { session: null, error: null };
-    }
-
-    const session = JSON.parse(sessionData);
-    return { session, error: null };
+    // Solo usar sesión segura
+    return { session: null, error: null };
   } catch (error) {
     clearCorruptedSessions();
     const authError = handleSupabaseAuthError(error, 'getSession');
@@ -1026,6 +1039,83 @@ const checkPhoneExists = async (phone) => {
 };
 
 /**
+ * Verifica si el RUT de empresa ya está registrado
+ * @param {string} rut - RUT de empresa a verificar
+ * @returns {Promise<{exists, error}>}
+ */
+const checkCompanyRutExists = async (rut) => {
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('rut', rut)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      return { exists: false, error: handleSupabaseError(error) };
+    }
+
+    return { exists: !!data, error: null };
+  } catch (error) {
+    console.error('Error in checkCompanyRutExists:', error);
+    return { exists: false, error: 'Error al verificar RUT de empresa.' };
+  }
+};
+
+/**
+ * Verifica si la razón social de empresa ya está registrada
+ * @param {string} companyName - Razón social a verificar
+ * @returns {Promise<{exists, error}>}
+ */
+const checkCompanyNameExists = async (companyName) => {
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('company_name', companyName)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      return { exists: false, error: handleSupabaseError(error) };
+    }
+
+    return { exists: !!data, error: null };
+  } catch (error) {
+    console.error('Error in checkCompanyNameExists:', error);
+    return { exists: false, error: 'Error al verificar razón social.' };
+  }
+};
+
+/**
+ * Verifica si el dominio corporativo ya está registrado por otra empresa
+ * @param {string} email - Email corporativo a verificar
+ * @returns {Promise<{exists, error}>}
+ */
+const checkCorporateDomainExists = async (email) => {
+  try {
+    const domain = email.split('@')[1]?.toLowerCase();
+    if (!domain) {
+      return { exists: false, error: null };
+    }
+
+    // Buscar empresas que usen el mismo dominio en su email de contacto
+    const { data, error } = await supabase
+      .from('companies')
+      .select('id, contact_email')
+      .like('contact_email', `%@${domain}`);
+
+    if (error) {
+      return { exists: false, error: handleSupabaseError(error) };
+    }
+
+    return { exists: data && data.length > 0, error: null };
+  } catch (error) {
+    console.error('Error in checkCorporateDomainExists:', error);
+    return { exists: false, error: 'Error al verificar dominio corporativo.' };
+  }
+};
+
+/**
  * Suscribe a cambios en el estado de autenticación
  * @param {Function} callback - Función a ejecutar cuando cambia el estado
  * @returns {Object} Subscription object
@@ -1230,8 +1320,8 @@ const handleAuthCallback = async () => {
       }
     }
 
-    // Crear objeto user con el rol correcto
-    const mockUser = {
+    // Crear objeto user real con el rol correcto
+    const realUser = {
       id: user.id,
       email: user.email,
       user_metadata: {
@@ -1240,16 +1330,16 @@ const handleAuthCallback = async () => {
       },
     };
 
-    // Crear sesión compatible con localStorage
-    const mockSession = {
-      user: mockUser,
-      access_token: session?.access_token || 'mock_token_' + Date.now(),
-      refresh_token: session?.refresh_token || 'mock_refresh_' + Date.now(),
+    // Crear sesión segura con tokens reales
+    const secureSession = {
+      user: realUser,
+      access_token: session?.access_token || 'oauth_token_' + Date.now(),
+      refresh_token: session?.refresh_token || 'oauth_refresh_' + Date.now(),
     };
 
-    // Guardar en localStorage para mantener compatibilidad con el resto del sistema
-    localStorage.setItem('mock_session', JSON.stringify(mockSession));
-    console.log('💾 Sesión guardada en localStorage');
+    // Guardar en localStorage como sesión segura
+    localStorage.setItem('secure_session', JSON.stringify(secureSession));
+    console.log('💾 Sesión OAuth guardada como sesión segura');
 
     // Intentar crear el usuario en background (sin bloquear el login)
     try {
@@ -1380,8 +1470,8 @@ const handleAuthCallback = async () => {
 
     console.log('✅ Autenticación con Google exitosa');
     return {
-      user: mockUser,
-      session: mockSession,
+      user: realUser,
+      session: secureSession,
       error: null,
       redirectToProfile: redirectToProfile || needsProfileCompletion
     };
@@ -1637,24 +1727,79 @@ const validateUserManually = async (userId) => {
   try {
     console.log('🔍 Validando usuario manualmente:', userId);
 
-    // Actualizar el estado de validación del usuario
-    const { data: userData, error: updateError } = await supabase
+    // Primero obtener los datos del usuario para saber si es empresa
+    const { data: existingUser, error: userError } = await supabase
       .from('users')
-      .update({
-        validation_status: 'validated',
-        email_verified: true,
-        updated_at: new Date().toISOString()
-      })
+      .select('role, email, full_name, rut')
+      .eq('id', userId)
+      .single();
+
+    if (userError) {
+      console.error('❌ Error obteniendo datos del usuario:', userError);
+      return { user: null, error: handleSupabaseError(userError) };
+    }
+
+    // Intentar actualizar con email_verified primero
+    let updateData = {
+      validation_status: 'validated',
+      email_verified: true,
+      updated_at: new Date().toISOString()
+    };
+
+    let { data: userData, error: updateError } = await supabase
+      .from('users')
+      .update(updateData)
       .eq('id', userId)
       .select()
       .single();
+
+    // Si falla por columna email_verified no existente, intentar sin ella
+    if (updateError && updateError.message.includes('email_verified')) {
+      console.warn('⚠️ Columna email_verified no existe, intentando sin ella...');
+      
+      updateData = {
+        validation_status: 'validated',
+        updated_at: new Date().toISOString()
+      };
+
+      const retryResult = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single();
+
+      userData = retryResult.data;
+      updateError = retryResult.error;
+    }
 
     if (updateError) {
       console.error('❌ Error actualizando usuario:', updateError);
       return { user: null, error: handleSupabaseError(updateError) };
     }
 
-    console.log('✅ Usuario validado manualmente:', userData.email);
+    console.log('✅ Usuario validado manualmente en tabla users:', userData.email);
+
+    // Si es empresa, también actualizar la tabla companies
+    if (existingUser.role === 'company') {
+      console.log('🏢 Actualizando estado en tabla companies para empresa:', existingUser.email);
+      
+      const { error: companyUpdateError } = await supabase
+        .from('companies')
+        .update({
+          validation_status: 'validated',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (companyUpdateError) {
+        console.error('❌ Error actualizando tabla companies:', companyUpdateError);
+        // No fallar la operación principal, pero registrar el error
+        console.warn('⚠️ Usuario validado en users pero no se actualizó companies');
+      } else {
+        console.log('✅ Empresa también validada en tabla companies');
+      }
+    }
 
     // Crear objeto user para retorno
     const user = {
@@ -1684,6 +1829,18 @@ const rejectUser = async (userId) => {
   try {
     console.log('🔍 Rechazando usuario:', userId);
 
+    // Primero obtener los datos del usuario para saber si es empresa
+    const { data: existingUser, error: userError } = await supabase
+      .from('users')
+      .select('role, email, full_name, rut')
+      .eq('id', userId)
+      .single();
+
+    if (userError) {
+      console.error('❌ Error obteniendo datos del usuario:', userError);
+      return { user: null, error: handleSupabaseError(userError) };
+    }
+
     // Actualizar el estado de validación del usuario
     const { data: userData, error: updateError } = await supabase
       .from('users')
@@ -1700,7 +1857,28 @@ const rejectUser = async (userId) => {
       return { user: null, error: handleSupabaseError(updateError) };
     }
 
-    console.log('✅ Usuario rechazado:', userData.email);
+    console.log('✅ Usuario rechazado en tabla users:', userData.email);
+
+    // Si es empresa, también actualizar la tabla companies
+    if (existingUser.role === 'company') {
+      console.log('🏢 Actualizando estado en tabla companies para empresa:', existingUser.email);
+      
+      const { error: companyUpdateError } = await supabase
+        .from('companies')
+        .update({
+          validation_status: 'rejected',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (companyUpdateError) {
+        console.error('❌ Error actualizando tabla companies:', companyUpdateError);
+        // No fallar la operación principal, pero registrar el error
+        console.warn('⚠️ Usuario rechazado en users pero no se actualizó companies');
+      } else {
+        console.log('✅ Empresa también rechazada en tabla companies');
+      }
+    }
 
     // Crear objeto user para retorno
     const user = {
@@ -1775,20 +1953,57 @@ const sendPasswordResetForUser = async (userId) => {
  */
 const setupCompanyBankAccount = async (bankAccountData) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    console.log('🚀 Iniciando setupCompanyBankAccount...');
+    console.log('📋 Datos recibidos:', bankAccountData);
+
+    // Primero intentar obtener el usuario de la sesión actual
+    console.log('🔍 Verificando sesión actual...');
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    console.log('📊 Datos de sesión:', { session: sessionData?.session ? 'presente' : 'ausente', error: sessionError });
+
+    // Si no hay sesión, intentar obtener el usuario directamente
+    let user = sessionData?.session?.user;
+    if (!user) {
+      console.log('🔄 Intentando obtener usuario directamente...');
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      console.log('📊 Datos de usuario:', { user: userData?.user ? 'presente' : 'ausente', error: userError });
+      user = userData?.user;
+    }
+
+    // Si todavía no hay usuario, intentar desde localStorage (sistema legacy)
+    if (!user) {
+      console.log('🔄 Intentando obtener desde localStorage...');
+      try {
+        const sessionData = localStorage.getItem('secure_session');
+        if (sessionData) {
+          const parsedSession = JSON.parse(sessionData);
+          user = parsedSession.user;
+          console.log('✅ Usuario obtenido desde localStorage:', user?.email);
+        }
+      } catch (localStorageError) {
+        console.warn('⚠️ Error leyendo localStorage:', localStorageError);
+      }
+    }
+
+    console.log('👤 Usuario final:', user ? { id: user.id, email: user.email } : 'No encontrado');
 
     if (!user) {
-      return { success: false, error: 'Usuario no autenticado.' };
+      console.error('❌ Usuario no autenticado - No se encontró ninguna sesión');
+      return { success: false, error: 'Usuario no autenticado. Por favor, inicia sesión nuevamente.' };
     }
 
     // Obtener información de la empresa
+    console.log('🏢 Buscando información de la empresa...');
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
+    console.log('📊 Resultado búsqueda empresa:', { company: company ? 'encontrada' : 'no encontrada', error: companyError });
+
     if (companyError || !company) {
+      console.error('❌ Empresa no encontrada:', companyError);
       return { success: false, error: 'Empresa no encontrada.' };
     }
 
@@ -1832,7 +2047,7 @@ const setupCompanyBankAccount = async (bankAccountData) => {
     // Los datos del beneficiario se proporcionan con cada solicitud de pago.
     // Simplemente marcamos como "registrado" ya que tenemos la información necesaria.
     mercadopagoBeneficiaryId = `verified-${user.id}-${Date.now()}`;
-    console.log('✅ Beneficiario listo para Mercado Pago (no requiere registro previo)');
+    console.log('✅ Beneficiario listo para Mercado Pago (no requiere registro previo):', mercadopagoBeneficiaryId);
 
     // Guardar información bancaria
     bankAccountInfo = {
@@ -1842,8 +2057,10 @@ const setupCompanyBankAccount = async (bankAccountData) => {
       accountHolderName: bankAccountData.accountHolderName,
       bankId: bankCodeMap[bankAccountData.bankName.toLowerCase()] || '000'
     };
+    console.log('💳 Información bancaria preparada:', bankAccountInfo);
 
     // Actualizar empresa con información bancaria
+    console.log('💾 Actualizando empresa con información bancaria...');
     const { error: updateError } = await supabase
       .from('companies')
       .update({
@@ -1853,7 +2070,10 @@ const setupCompanyBankAccount = async (bankAccountData) => {
       })
       .eq('user_id', user.id);
 
+    console.log('📊 Resultado actualización:', { error: updateError });
+
     if (updateError) {
+      console.error('❌ Error actualizando empresa:', updateError);
       return { success: false, error: handleSupabaseError(updateError) };
     }
 
@@ -1865,8 +2085,9 @@ const setupCompanyBankAccount = async (bankAccountData) => {
     };
 
   } catch (error) {
-    console.error('Error configurando cuenta bancaria:', error);
-    return { success: false, error: 'Error al configurar cuenta bancaria. Por favor, intenta de nuevo.' };
+    console.error('❌ Error en setupCompanyBankAccount:', error);
+    console.error('Stack trace:', error.stack);
+    return { success: false, error: `Error al configurar cuenta bancaria: ${error.message}` };
   }
 };
 
@@ -1882,6 +2103,9 @@ export {
   checkEmailExists,
   checkRutExists,
   checkPhoneExists,
+  checkCompanyRutExists,
+  checkCompanyNameExists,
+  checkCorporateDomainExists,
   onAuthStateChange,
   updateUserProfile,
   signInWithGoogle,

@@ -1,0 +1,82 @@
+{
+  "fecha_verificacion": "2025-10-23T17:54:39.026Z",
+  "archivo_verificado": "src/pages/company/ProfilePage.jsx",
+  "verificaciones_pasadas": 11,
+  "total_verificaciones": 11,
+  "porcentaje_exito": 100,
+  "todas_correctas": true,
+  "detalles": {
+    "correcciones_criticas": [
+      {
+        "nombre": "Carga de representante legal para empresas",
+        "descripcion": "Debe usar profile.company.legal_representative_name",
+        "patron": "/legal_representative_name:\\s*profile\\.company\\.legal_representative_name/g",
+        "correcto": true
+      },
+      {
+        "nombre": "Carga de RUT de representante legal para empresas",
+        "descripcion": "Debe usar profile.company.legal_representative_rut",
+        "patron": "/legal_representative_rut:\\s*profile\\.company\\.legal_representative_rut/g",
+        "correcto": true
+      },
+      {
+        "nombre": "Guardado de representante legal en userUpdates",
+        "descripcion": "Debe usar formData.legal_representative_name para full_name del usuario",
+        "patron": "/full_name:\\s*formData\\.legal_representative_name/g",
+        "correcto": true
+      },
+      {
+        "nombre": "Guardado de RUT de representante legal en userUpdates",
+        "descripcion": "Debe usar formData.legal_representative_rut para rut del usuario",
+        "patron": "/rut:\\s*formData\\.legal_representative_rut/g",
+        "correcto": true
+      },
+      {
+        "nombre": "Actualización de formulario en modo god_mode",
+        "descripcion": "Debe actualizar formData.legal_representative_name",
+        "patron": "/legal_representative_name:\\s*formData\\.legal_representative_name/g",
+        "correcto": true
+      },
+      {
+        "nombre": "Uso en cambio de email",
+        "descripcion": "Debe usar legal_representative_name como primera opción",
+        "patron": "/formData\\.legal_representative_name\\s*\\|\\|\\s*user\\.user_metadata\\?\\.full_name/g",
+        "correcto": true
+      }
+    ],
+    "patrones_incorrectos": [
+      {
+        "nombre": "Uso incorrecto de full_name para representante legal",
+        "descripcion": "No debe usar profile?.full_name para representante legal",
+        "patron": "/full_name:\\s*profile\\?\\.full_name/g",
+        "ausente": true
+      },
+      {
+        "nombre": "Uso incorrecto de representative_rut",
+        "descripcion": "No debe usar formData.representative_rut",
+        "patron": "/rut:\\s*formData\\.representative_rut/g",
+        "ausente": true
+      },
+      {
+        "nombre": "Uso incorrecto de full_name en actualización",
+        "descripcion": "No debe usar formData.full_name para representante legal",
+        "patron": "/full_name:\\s*formData\\.full_name/g",
+        "ausente": true
+      }
+    ],
+    "estructura_bancaria": [
+      {
+        "nombre": "Estructura JSON para bank_account_info",
+        "descripcion": "Debe mantener estructura JSON anidada para datos bancarios",
+        "patron": "/bank_account_info\\s*=\\s*\\{/g",
+        "correcto": true
+      },
+      {
+        "nombre": "Campos bancarios en formData",
+        "descripcion": "Debe mantener campos bancarios individuales en formData",
+        "patron": "/bankName|accountType|accountNumber|accountHolderName|accountHolderRut/g",
+        "correcto": true
+      }
+    ]
+  }
+}

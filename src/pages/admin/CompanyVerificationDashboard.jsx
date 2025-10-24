@@ -25,7 +25,7 @@ import {
   Calendar
 } from 'lucide-react';
 import {
-  getPendingVerifications,
+  getAllVerifications,
   makeVerificationDecision,
   getVerificationStats,
   VERIFICATION_STATUS
@@ -59,10 +59,23 @@ const CompanyVerificationDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Dashboard: Cargando datos con filtros:', filters);
+      
       const [verificationsResult, statsResult] = await Promise.all([
-        getPendingVerifications(filters),
+        getAllVerifications(filters),
         getVerificationStats()
       ]);
+
+      console.log('📊 Dashboard: Resultado de getAllVerifications:', {
+        error: verificationsResult.error,
+        count: verificationsResult.verifications?.length || 0,
+        verifications: verificationsResult.verifications?.map(v => ({
+          id: v.id,
+          company_name: v.company?.company_name,
+          status: v.status,
+          company_id: v.company_id
+        }))
+      });
 
       if (verificationsResult.error) {
         console.error('Error loading verifications:', verificationsResult.error);
@@ -112,17 +125,22 @@ const CompanyVerificationDashboard = () => {
   };
 
   const handleDecision = async () => {
+    console.log('🚀 handleDecision iniciado:', { reviewDecision, rejectionReason, selectedVerificationId: selectedVerification?.id });
+    
     if (!reviewDecision) {
+      console.log('❌ Error: No se seleccionó decisión');
       Swal.fire('Error', 'Debe seleccionar una decisión', 'error');
       return;
     }
 
     if (reviewDecision === 'reject' && !rejectionReason.trim()) {
+      console.log('❌ Error: No se especificó motivo de rechazo');
       Swal.fire('Error', 'Debe especificar el motivo del rechazo', 'error');
       return;
     }
 
     try {
+      console.log('⏳ Iniciando procesamiento de decisión...');
       setProcessingDecision(true);
 
       const decision = {
@@ -132,24 +150,34 @@ const CompanyVerificationDashboard = () => {
         previousStatus: selectedVerification.status
       };
 
+      console.log('📋 Decisión a procesar:', decision);
+      console.log('📋 Enviando a makeVerificationDecision...');
+
       const { success, error } = await makeVerificationDecision(
         selectedVerification.id,
         decision,
         'admin-user-id' // En implementación real, obtener del contexto
       );
 
+      console.log('📊 Resultado de makeVerificationDecision:', { success, error });
+
       if (success) {
+        console.log('✅ Decisión procesada exitosamente');
         Swal.fire('Éxito', 'Decisión registrada correctamente', 'success');
         setShowReviewModal(false);
-        loadData(); // Recargar datos
+        console.log('🔄 Recargando datos...');
+        await loadData(); // Recargar datos
+        console.log('✅ Datos recargados');
       } else {
+        console.error('❌ Error en makeVerificationDecision:', error);
         Swal.fire('Error', error, 'error');
       }
     } catch (error) {
-      console.error('Error processing decision:', error);
+      console.error('💥 Error inesperado en handleDecision:', error);
       Swal.fire('Error', 'Error al procesar la decisión', 'error');
     } finally {
       setProcessingDecision(false);
+      console.log('🏁 handleDecision finalizado');
     }
   };
 
@@ -592,7 +620,7 @@ const CompanyVerificationDashboard = () => {
           <div className="space-y-6">
             {/* Company Info */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Información de la Empresa</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Información de la Empresa Global</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="font-medium">Empresa:</span> {selectedVerification.company?.company_name}

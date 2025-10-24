@@ -30,8 +30,9 @@ import {
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../config/supabase';
-import { getCompanyDebts, getCompanyPayments, getCorporateClients } from '../../services/databaseService';
+import { getCompanyDebts, getCompanyPayments, getCorporateClients, getCompanyClients } from '../../services/databaseService';
 import { getCompanyVerification, VERIFICATION_STATUS } from '../../services/verificationService';
+import { formatRut } from '../../utils/formatters';
 
 const ClientsPage = () => {
   const { profile } = useAuth();
@@ -47,6 +48,7 @@ const ClientsPage = () => {
   const [stats, setStats] = useState({
     totalClients: 0,
     activeClients: 0,
+    corporateClients: 0,
     totalDebt: 0,
     totalPaid: 0,
     totalPending: 0
@@ -142,29 +144,27 @@ const ClientsPage = () => {
   const isPageBlocked = () => {
     if (!profile?.company?.id) return false;
     
-    // Si no hay estado de verificación, la empresa no ha iniciado el proceso
-    if (!verificationStatus) {
+    // 🏢 LÓGICA CORRECTA: La verificación es solo para la Empresa principal
+    // Las Empresas Corporativas registradas por una empresa verificada están habilitadas por defecto
+    
+    // Usar validation_status de la empresa en lugar de verification_status
+    const companyValidationStatus = profile.company.validation_status;
+    
+    console.log('🔍 Estado de validación de la empresa:', companyValidationStatus);
+    
+    // Si no hay estado de validación o no está validada, la página está bloqueada
+    if (!companyValidationStatus || companyValidationStatus !== 'validated') {
       return {
         blocked: true,
-        title: 'Verificación Requerida',
-        message: 'Debes completar el proceso de verificación de tu empresa antes de poder gestionar clientes.',
-        action: 'Iniciar Verificación',
+        title: 'Validación Requerida',
+        message: 'Debes completar el proceso de validación de tu empresa antes de poder gestionar clientes.',
+        action: 'Iniciar Validación',
         actionLink: '/empresa/verificacion'
       };
     }
 
-    // Si está pendiente de documentos
-    if (verificationStatus.status === VERIFICATION_STATUS.PENDING) {
-      return {
-        blocked: true,
-        title: 'Documentos Requeridos',
-        message: 'Debes subir los documentos de verificación de tu empresa antes de poder gestionar clientes.',
-        action: 'Subir Documentos',
-        actionLink: '/empresa/verificacion'
-      };
-    }
-
-    // Si está en revisión o ya fue aprobada, no está bloqueada
+    // Si está validada, no está bloqueada
+    console.log('✅ Empresa validada - página desbloqueada');
     return { blocked: false };
   };
 
@@ -210,8 +210,7 @@ const ClientsPage = () => {
         const { data: allClients, error } = await supabase
           .from('corporate_clients')
           .select('*')
-          .eq('is_active', true)
-          .order('name');
+          .order('contact_email');
         
         if (error) {
           console.error('Error loading all corporate clients:', error);
@@ -220,16 +219,22 @@ const ClientsPage = () => {
         }
         corporateClients = allClients;
       } else {
-        // Para usuarios normales, usar su company_id
+        // Para usuarios normales, usar su company_id - FILTRAR POR EMPRESA CORRECTA
         if (!profile?.company?.id) {
           console.warn('No company ID found for normal user');
           setCorporateClients([]);
           return;
         }
 
-        const { corporateClients: companyClients, error } = await getCorporateClients(profile.company.id);
+        console.log(`🏢 Cargando clientes corporativos para empresa: ${profile.company.id}`);
+        const { data: companyClients, error } = await supabase
+          .from('corporate_clients')
+          .select('*')
+          .eq('company_id', profile.company.id)
+          .order('contact_email');
+        
         if (error) {
-          console.error('Error loading corporate clients:', error);
+          console.error('Error loading company corporate clients:', error);
           setCorporateClients([]);
           return;
         }
@@ -239,15 +244,16 @@ const ClientsPage = () => {
       // Normalizar a estructura usada por el filtro local
       const normalized = (corporateClients || []).map((c) => ({
         id: c.id,
-        company_name: c.name || c.business_name || 'Cliente',
-        company_rut: c.rut || c.company_rut || '',
+        company_name: c.contact_email || 'Cliente',
+        company_rut: c.rut || '',
         industry: c.industry || '',
-        contract_value: c.contract_value || null,
-        status: c.is_active ? 'active' : 'inactive',
+        contract_value: null,
+        status: 'active',
         created_at: c.created_at || null
       }));
 
       console.log(`📊 Clientes corporativos cargados en ClientsPage: ${normalized.length}`);
+      console.log('📋 Clientes corporativos:', normalized.map(c => `${c.company_name} (${formatRut(c.company_rut)})`));
       setCorporateClients(normalized);
     } catch (error) {
       console.error('Error loading corporate clients:', error);
@@ -264,6 +270,7 @@ const ClientsPage = () => {
         setStats({
           totalClients: 0,
           activeClients: 0,
+          corporateClients: 0,
           totalDebt: 0,
           totalPaid: 0,
           totalPending: 0
@@ -273,16 +280,30 @@ const ClientsPage = () => {
 
       const companyId = profile.company.id;
 
-      const [debtsRes, paymentsRes] = await Promise.all([
+      // Cargar datos en paralelo: deudas, pagos, clientes corporativos y clientes individuales
+      const [debtsRes, paymentsRes, corporateClientsRes, companyClientsRes] = await Promise.all([
         getCompanyDebts(companyId),
-        getCompanyPayments(companyId)
+        getCompanyPayments(companyId),
+        getCorporateClients(companyId), // ← Clientes corporativos reales
+        getCompanyClients(companyId) // ← Clientes individuales de la tabla clients
       ]);
 
       if (debtsRes.error) console.error('Error fetching company debts:', debtsRes.error);
       if (paymentsRes.error) console.error('Error fetching company payments:', paymentsRes.error);
+      if (corporateClientsRes.error) console.error('Error fetching corporate clients:', corporateClientsRes.error);
+      if (companyClientsRes.error) console.error('Error fetching company clients:', companyClientsRes.error);
 
       const debts = debtsRes.debts || [];
       const payments = (paymentsRes.payments || []).filter(p => p.status === 'completed');
+      const corporateClients = corporateClientsRes || []; // ← Clientes corporativos reales de la tabla corporate_clients
+      const companyClients = companyClientsRes || []; // ← Clientes individuales de la tabla clients
+
+      console.log('📊 ClientsPage - Datos cargados:', {
+        debts: debts.length,
+        payments: payments.length,
+        corporateClients: corporateClients.length,
+        companyClients: companyClients.length
+      });
 
       // Agrupar pagos por usuario
       const payByUser = {};
@@ -296,7 +317,7 @@ const ClientsPage = () => {
         if (!payByUser[uid].last || dt > payByUser[uid].last) payByUser[uid].last = dt;
       }
 
-      // Agregar deudas por usuario
+      // 1. PRIMERO: Crear deudores con deudas (lógica existente)
       const mapByUser = new Map();
       for (const d of debts) {
         const uid = d.user?.id || d.user_id;
@@ -313,10 +334,11 @@ const ClientsPage = () => {
             pendingAmount: 0,
             lastPayment: null,
             status: 'active',
-            companyName: profile?.company?.business_name || profile?.company?.name || 'Empresa',
+            companyName: profile?.company?.company_name || profile?.company?.name || 'Empresa',
             corporateClientName: d.client?.business_name || null,
             corporateClientId: d.client?.id || null,
-            firstDebtDate: d.created_at
+            firstDebtDate: d.created_at,
+            type: 'debtor' // ← Tipo: deudor con deudas
           });
         }
         const item = mapByUser.get(uid);
@@ -333,10 +355,13 @@ const ClientsPage = () => {
         }
         // Si hay cliente asociado, mantener el último visto como etiqueta
         if (d.client?.business_name) item.corporateClientName = d.client.business_name;
-        if (d.client?.id) item.corporateClientId = d.client.id;
+        if (d.client?.id) {
+          item.corporateClientId = d.client.id;
+          item.corporate_client_id = d.client.id; // ← Agregar ambos formatos
+        }
       }
 
-      // Aplicar pagos
+      // Aplicar pagos a deudores
       mapByUser.forEach((item, uid) => {
         const pay = payByUser[uid];
         item.paidAmount = pay ? pay.total : 0;
@@ -347,20 +372,103 @@ const ClientsPage = () => {
         }
       });
 
-      const clientSummaries = Array.from(mapByUser.values()).sort((a, b) => b.pendingAmount - a.pendingAmount);
+      // 2. SEGUNDO: Agregar clientes corporativos reales de la tabla corporate_clients
+      const corporateClientSummaries = (corporateClients || []).map(client => ({
+        id: client.id,
+        name: client.contact_email || 'Cliente Corporativo', // ← Usar contact_email como nombre
+        email: client.contact_email || '',
+        phone: client.contact_phone || '',
+        rut: client.rut || '',
+        totalDebt: 0, // Los clientes corporativos no tienen deudas directas
+        paidAmount: 0,
+        pendingAmount: 0,
+        lastPayment: null,
+        status: 'corporate', // ← Estado especial para clientes corporativos
+        companyName: profile?.company?.company_name || profile?.company?.name || 'Empresa',
+        corporateClientName: client.contact_email, // ← Usar contact_email como nombre
+        corporateClientId: client.id,
+        corporate_client_id: null, // ← Los clientes corporativos no tienen padre
+        firstDebtDate: client.created_at,
+        type: 'corporate' // ← Tipo: cliente corporativo
+      }));
 
-      setClients(clientSummaries);
+      // 3. TERCERO: Agregar clientes individuales de la tabla clients
+      const individualClientSummaries = (companyClients || []).map(client => {
+        // Buscar el cliente corporativo asociado
+        const associatedCorporate = (corporateClients || []).find(corp => corp.id === client.corporate_client_id);
+        
+        return {
+          id: client.id,
+          name: client.business_name || 'Cliente Individual',
+          email: client.contact_email || '',
+          phone: client.contact_phone || '',
+          rut: client.rut || '',
+          totalDebt: 0, // Los clientes individuales no tienen deudas directas en este contexto
+          paidAmount: 0,
+          pendingAmount: 0,
+          lastPayment: null,
+          status: 'active', // ← Estado para clientes individuales
+          companyName: profile?.company?.company_name || profile?.company?.name || 'Empresa',
+          corporateClientName: associatedCorporate?.contact_email || 'Sin cliente corporativo',
+          corporateClientId: client.corporate_client_id,
+          corporate_client_id: client.corporate_client_id, // ← Agregar ambos formatos
+          firstDebtDate: client.created_at,
+          type: 'individual' // ← Tipo: cliente individual
+        };
+      });
 
-      // Calcular estadísticas reales
-      const totalClients = clientSummaries.length;
-      const activeClients = clientSummaries.filter(c => c.status !== 'completed').length;
-      const totalDebt = clientSummaries.reduce((sum, c) => sum + c.totalDebt, 0);
-      const totalPaid = clientSummaries.reduce((sum, c) => sum + c.paidAmount, 0);
-      const totalPending = clientSummaries.reduce((sum, c) => sum + c.pendingAmount, 0);
+      // 4. CUARTO: Solo mostrar deudores con deuda real (excluir clientes corporativos e individuales sin deuda)
+      const allClientSummaries = Array.from(mapByUser.values()) // Solo deudores con deudas
+        .filter(debtor => debtor.totalDebt > 0) // Solo deudores con deuda mayor a 0
+        .sort((a, b) => {
+          // Ordenar por: mayor deuda primero
+          return b.totalDebt - a.totalDebt;
+        });
+
+      console.log('✅ ClientsPage - Clientes combinados (solo deudores con deuda):', {
+        totalDebtors: mapByUser.size,
+        debtorsWithDebt: allClientSummaries.length,
+        totalFiltered: allClientSummaries.length
+      });
+
+      console.log('📋 ClientsPage - Detalle de deudores con deuda:', allClientSummaries.map(d => ({
+        id: d.id,
+        name: d.name,
+        type: d.type,
+        totalDebt: d.totalDebt,
+        status: d.status,
+        corporateClientId: d.corporateClientId,
+        corporate_client_id: d.corporate_client_id
+      })));
+
+      console.log('🔍 ClientsPage - Datos completos antes de establecer en estado:', allClientSummaries);
+      console.log('🔍 ClientsPage - Estableciendo clients en el estado:', {
+        total: allClientSummaries.length,
+        clients: allClientSummaries.map(c => ({
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          totalDebt: c.totalDebt,
+          status: c.status,
+          corporateClientId: c.corporateClientId,
+          corporate_client_id: c.corporate_client_id
+        }))
+      });
+      
+      setClients(allClientSummaries);
+
+      // Calcular estadísticas combinadas
+      const totalClients = allClientSummaries.length;
+      const activeClients = allClientSummaries.filter(c => c.status !== 'completed' && c.status !== 'corporate').length;
+      const corporateClientsCount = allClientSummaries.filter(c => c.type === 'corporate').length;
+      const totalDebt = allClientSummaries.reduce((sum, c) => sum + c.totalDebt, 0);
+      const totalPaid = allClientSummaries.reduce((sum, c) => sum + c.paidAmount, 0);
+      const totalPending = allClientSummaries.reduce((sum, c) => sum + c.pendingAmount, 0);
 
       setStats({
         totalClients,
         activeClients,
+        corporateClients: corporateClientsCount,
         totalDebt,
         totalPaid,
         totalPending
@@ -371,6 +479,7 @@ const ClientsPage = () => {
       setStats({
         totalClients: 0,
         activeClients: 0,
+        corporateClients: 0,
         totalDebt: 0,
         totalPaid: 0,
         totalPending: 0
@@ -625,7 +734,7 @@ const ClientsPage = () => {
                 <option value="">Mostrar todos los clientes corporativos</option>
                 {corporateClients.map(client => (
                   <option key={client.id} value={client.id}>
-                    {client.company_name} - {client.company_rut}
+                    {client.company_name} - {formatRut(client.company_rut)}
                   </option>
                 ))}
               </select>
@@ -637,7 +746,7 @@ const ClientsPage = () => {
                   {corporateClients.find(c => c.id === selectedCorporateClient)?.company_name}
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                  <div>RUT: {corporateClients.find(c => c.id === selectedCorporateClient)?.company_rut}</div>
+                  <div>RUT: {formatRut(corporateClients.find(c => c.id === selectedCorporateClient)?.company_rut)}</div>
                   <div>Industria: {corporateClients.find(c => c.id === selectedCorporateClient)?.industry}</div>
                   <div>Valor Contrato: ${corporateClients.find(c => c.id === selectedCorporateClient)?.contract_value?.toLocaleString('es-CL')}</div>
                   <div>Estado: <span className="text-green-600 font-medium">Activo</span></div>
@@ -767,6 +876,19 @@ const ClientsPage = () => {
       </div>
 
       {/* Client Management Component */}
+      {console.log('🔍 ClientsPage - Props pasando a ClientManagement:', {
+        clientsLength: clients.length,
+        clientsData: clients.map(c => ({
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          totalDebt: c.totalDebt,
+          status: c.status
+        })),
+        loading,
+        selectedCorporateClient,
+        corporateClientsLength: corporateClients.length
+      })}
       <ClientManagement
         clients={clients} // Usar deudores calculados (como debe ser)
         loading={loading}

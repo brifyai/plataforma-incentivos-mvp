@@ -26,7 +26,6 @@ import VerificationProgress from '../../components/company/VerificationProgress'
 import CRMConfiguration from '../../components/company/CRMConfiguration';
 import CRMSyncDashboard from '../../components/company/CRMSyncDashboard';
 import CRMCustomFields from '../../components/company/CRMCustomFields';
-import BulkImportDebts from '../../components/company/BulkImportDebts';
 
 // New organized section components
 import CompanyMetricsDashboard from '../../components/company/CompanyMetricsDashboard';
@@ -68,7 +67,9 @@ const ProfilePage = () => {
   const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const [error, setError] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [analytics, setAnalytics] = useState(null);
@@ -94,8 +95,9 @@ const ProfilePage = () => {
     contact_email: '',
     contact_phone: '',
     company_rut: '',
-    full_name: '',
-    representative_rut: '',
+    // Campos del representante legal
+    legal_representative_name: '',
+    legal_representative_rut: '',
     company_type: 'direct_creditor',
     // Campos bancarios
     bankName: '',
@@ -143,40 +145,55 @@ const ProfilePage = () => {
 
   // Cargar datos iniciales
   useEffect(() => {
-    if (isGodMode) {
-      // Para modo administrador, cargar datos del usuario
-      setFormData({
-        business_name: 'Administrador del Sistema',
-        contact_email: user?.email || '',
-        contact_phone: profile?.phone || '',
-        rut: profile?.rut || 'GOD-MODE',
-        full_name: profile?.full_name || '',
-      });
-    } else if (profile?.company) {
-      // Para empresas normales, cargar datos de la empresa
-      const bankAccountInfo = profile.company.bank_account_info || {};
-      setFormData({
-        company_name: profile.company.company_name || '',
-        contact_email: user?.email || '',
-        contact_phone: profile.company.contact_phone || '',
-        company_rut: profile.company.rut || '',
-        full_name: profile?.full_name || '',
-        representative_rut: profile?.rut || '',
-        company_type: profile.company.company_type || 'direct_creditor',
-        // Cargar datos bancarios si existen
-        bankName: bankAccountInfo.bankName || '',
-        accountType: bankAccountInfo.accountType || '',
-        accountNumber: bankAccountInfo.accountNumber || '',
-        accountHolderName: bankAccountInfo.accountHolderName || '',
-        accountHolderRut: bankAccountInfo.accountHolderRut || '',
-      });
-    }
+    const loadInitialData = async () => {
+      setPageLoading(true);
+      
+      if (isGodMode) {
+        // Para modo administrador, cargar datos del usuario
+        setFormData({
+          business_name: 'Administrador del Sistema',
+          contact_email: user?.email || '',
+          contact_phone: profile?.phone || '',
+          rut: profile?.rut || 'GOD-MODE',
+          legal_representative_name: profile?.company?.legal_representative_name || '',
+        });
+      } else if (profile?.company) {
+        // Para empresas normales, cargar datos de la empresa
+        const bankAccountInfo = profile.company.bank_account_info || {};
+        setFormData({
+          company_name: profile.company.company_name || '',
+          contact_email: user?.email || '',
+          contact_phone: profile.company.contact_phone || '',
+          company_rut: profile.company.rut || '',
+          // Usar campos correctos del representante legal desde la empresa
+          legal_representative_name: profile.company.legal_representative_name || '',
+          legal_representative_rut: profile.company.legal_representative_rut || '',
+          company_type: profile.company.company_type || 'direct_creditor',
+          // Cargar datos bancarios si existen
+          bankName: bankAccountInfo.bankName || '',
+          accountType: bankAccountInfo.accountType || '',
+          accountNumber: bankAccountInfo.accountNumber || '',
+          accountHolderName: bankAccountInfo.accountHolderName || '',
+          accountHolderRut: bankAccountInfo.accountHolderRut || '',
+        });
+      }
+      
+      // Marcar que los datos iniciales se han cargado
+      setInitialDataLoaded(true);
+      
+      // Pequeña espera para asegurar que todos los datos estén cargados
+      setTimeout(() => {
+        setPageLoading(false);
+      }, 100);
+    };
+
+    loadInitialData();
   }, [profile, user, isGodMode]);
 
   // Cargar estadísticas de la empresa
   useEffect(() => {
     const loadAnalytics = async () => {
-      if (!isGodMode && profile?.company?.id) {
+      if (!isGodMode && profile?.company?.id && initialDataLoaded) {
         try {
           setAnalyticsLoading(true);
           const result = await getCompanyAnalytics(profile.company.id);
@@ -196,12 +213,12 @@ const ProfilePage = () => {
     };
 
     loadAnalytics();
-  }, [profile, isGodMode]);
+  }, [profile, isGodMode, initialDataLoaded]);
 
   // Load verification data for companies
   useEffect(() => {
     const loadVerification = async () => {
-      if (!isGodMode && profile?.company?.id) {
+      if (!isGodMode && profile?.company?.id && initialDataLoaded) {
         try {
           setVerificationLoading(true);
           const { verification: data, error } = await getCompanyVerification(profile.company.id);
@@ -222,12 +239,12 @@ const ProfilePage = () => {
     };
 
     loadVerification();
-  }, [profile, isGodMode]);
+  }, [profile, isGodMode, initialDataLoaded]);
 
   // Load CRM configuration for companies
   useEffect(() => {
     const loadCRMConfig = async () => {
-      if (!isGodMode && profile?.company?.id) {
+      if (!isGodMode && profile?.company?.id && initialDataLoaded) {
         try {
           setCrmLoading(true);
           const result = await getCompanyCRMConfig(profile.company.id);
@@ -246,7 +263,7 @@ const ProfilePage = () => {
     };
 
     loadCRMConfig();
-  }, [profile, isGodMode]);
+  }, [profile, isGodMode, initialDataLoaded]);
 
   const handleSave = async () => {
     try {
@@ -256,9 +273,9 @@ const ProfilePage = () => {
       if (isGodMode) {
         // Para modo administrador, actualizar perfil de usuario
         const updates = {
-          full_name: formData.full_name,
+          full_name: formData.legal_representative_name,
           phone: formData.contact_phone,
-          rut: formData.rut,
+          rut: formData.legal_representative_rut,
           updated_at: new Date().toISOString(),
         };
 
@@ -283,7 +300,7 @@ const ProfilePage = () => {
               user.id,
               formData.contact_email,
               user.email,
-              formData.full_name || user.user_metadata?.full_name || 'Usuario'
+              formData.legal_representative_name || user.user_metadata?.full_name || 'Usuario'
             );
 
             if (!result.success) {
@@ -335,8 +352,8 @@ const ProfilePage = () => {
 
         // Actualizar datos del usuario (representante) - excluyendo email que ya se actualizó
         const userUpdates = {
-          full_name: formData.full_name,
-          rut: formData.representative_rut,
+          full_name: formData.legal_representative_name,
+          rut: formData.legal_representative_rut,
           phone: formData.contact_phone,
           updated_at: new Date().toISOString(),
         };
@@ -362,6 +379,9 @@ const ProfilePage = () => {
           company_name: formData.company_name,
           contact_phone: formData.contact_phone,
           rut: formData.company_rut,
+          // Agregar campos del representante legal
+          legal_representative_name: formData.legal_representative_name,
+          legal_representative_rut: formData.legal_representative_rut,
           updated_at: new Date().toISOString(),
         };
 
@@ -408,7 +428,7 @@ const ProfilePage = () => {
       if (isGodMode) {
         setFormData(prev => ({
           ...prev,
-          full_name: formData.full_name,
+          legal_representative_name: formData.legal_representative_name,
           contact_phone: formData.contact_phone,
           rut: formData.rut,
         }));
@@ -418,8 +438,8 @@ const ProfilePage = () => {
           company_name: formData.company_name,
           contact_phone: formData.contact_phone,
           company_rut: formData.company_rut,
-          full_name: formData.full_name,
-          representative_rut: formData.representative_rut,
+          legal_representative_name: formData.legal_representative_name,
+          legal_representative_rut: formData.legal_representative_rut,
           company_type: formData.company_type,
           bankName: formData.bankName,
           accountType: formData.accountType,
@@ -706,7 +726,8 @@ const ProfilePage = () => {
     }
   };
 
-  if (analyticsLoading && !isGodMode) {
+  // Mostrar pantalla de carga completa solo al inicio
+  if (pageLoading) {
     return <LoadingSpinner fullScreen />;
   }
 

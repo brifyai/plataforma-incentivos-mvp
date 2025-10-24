@@ -12,7 +12,8 @@
  */
 
 import { supabase, handleSupabaseError } from '../config/supabase';
-import { registerCompanyBeneficiary } from './bankTransferService';
+import { cachedFunction, invalidatePattern } from './optimization/cacheService';
+import { buildOptimizedDebtsQuery, getOptimizedAnalytics, analyzeQueryPerformance } from './optimization/queryOptimizer';
 
 // ==================== USUARIOS ====================
 
@@ -21,16 +22,23 @@ import { registerCompanyBeneficiary } from './bankTransferService';
  * @param {string} userId - ID del usuario
  * @returns {Promise<{profile, error}>}
  */
-export const getUserProfile = async (userId) => {
+// Función original sin caché para uso interno
+const _getUserProfileOriginal = async (userId) => {
   try {
     const { data, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle(); // Cambiado a maybeSingle para manejar usuarios que no existen
 
     if (error) {
+      console.error('❌ Error en getUserProfile:', error);
       return { profile: null, error: handleSupabaseError(error) };
+    }
+
+    if (!data) {
+      console.warn(`⚠️ Usuario no encontrado: ${userId}`);
+      return { profile: null, error: null }; // No hay error, solo no existe el usuario
     }
 
     return { profile: data, error: null };
@@ -39,6 +47,9 @@ export const getUserProfile = async (userId) => {
     return { profile: null, error: 'Error al obtener perfil del usuario.' };
   }
 };
+
+// Versión con caché
+export const getUserProfile = cachedFunction(_getUserProfileOriginal, 'user_profile');
 
 /**
  * Actualiza el perfil de un usuario
@@ -65,28 +76,66 @@ export const updateUserProfile = async (userId, updates) => {
 };
 
 /**
- * Obtiene los datos de una empresa
+ * Obtiene los datos de una empresa (Nivel 2 de la jerarquía)
+ *
+ * ESTRUCTURA JERÁRQUICA:
+ * Usuario (Nivel 1) → Empresa (Nivel 2) → Empresa Corporativa (Nivel 3) → Clientes (Nivel 4) → Deudas (Nivel 5)
+ *
  * @param {string} userId - ID del usuario empresa
  * @returns {Promise<{company, error}>}
  */
-export const getCompanyProfile = async (userId) => {
+// Función original sin caché para uso interno
+const _getCompanyProfileOriginal = async (userId) => {
   try {
-    const { data, error } = await supabase
+    console.log('🔍 getCompanyProfile called for userId:', userId);
+    console.log('📋 Nivel 2: Buscando Empresa del usuario');
+    
+    // Obtener todas las empresas del usuario (Nivel 2)
+    const { data: companies, error } = await supabase
       .from('companies')
       .select('*')
       .eq('user_id', userId)
-      .maybeSingle(); // Cambiado de .single() a .maybeSingle() para manejar 0 resultados
+      .order('created_at', { ascending: false }); // Más reciente primero
 
     if (error) {
+      console.error('❌ Error in getCompanyProfile:', error);
       return { company: null, error: handleSupabaseError(error) };
     }
 
-    return { company: data, error: null };
+    console.log(`📊 Found ${companies?.length || 0} companies for user ${userId}`);
+
+    if (!companies || companies.length === 0) {
+      console.log('⚠️ No companies found for user');
+      return { company: null, error: null };
+    }
+
+    // Priorizar empresas validadas
+    let selectedCompany = companies.find(c => c.validation_status === 'validated');
+    
+    // Si no hay validadas, tomar la primera
+    if (!selectedCompany) {
+      selectedCompany = companies[0];
+      console.log('⚠️ No validated companies found, using first available');
+    } else {
+      console.log('✅ Using validated company:', selectedCompany.company_name);
+    }
+
+    console.log('📋 Selected company (Nivel 2):', {
+      id: selectedCompany.id,
+      company_name: selectedCompany.company_name,
+      contact_email: selectedCompany.contact_email,
+      validation_status: selectedCompany.validation_status
+    });
+
+    return { company: selectedCompany, error: null };
   } catch (error) {
-    console.error('Error in getCompanyProfile:', error);
+    console.error('💥 Error in getCompanyProfile:', error);
     return { company: null, error: 'Error al obtener datos de empresa.' };
   }
 };
+
+// Versión con caché
+export const getCompanyProfile = cachedFunction(_getCompanyProfileOriginal, 'company_profile');
 
 /**
  * Actualiza el perfil de una empresa
@@ -152,7 +201,7 @@ export const getDebtById = async (debtId) => {
       .from('debts')
       .select(`
         *,
-        company:companies(id, business_name, contact_email, contact_phone),
+        company:companies(id, company_name, contact_email, contact_phone),
         user:users(id, full_name, email)
       `)
       .eq('id', debtId)
@@ -175,87 +224,104 @@ export const getDebtById = async (debtId) => {
  * @param {string} [clientId] - ID del cliente (opcional)
  * @returns {Promise<{debts, error}>}
  */
-export const getCompanyDebts = async (companyId, clientId = null) => {
+// Función original sin caché para uso interno
+const _getCompanyDebtsOriginal = async (companyId, clientId = null) => {
   try {
     console.log('🔍 getCompanyDebts called with:', { companyId, clientId });
     
-    // First check if client_id column exists
-    const { data: columnCheck, error: columnError } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_name', 'debts')
-      .eq('column_name', 'client_id')
-      .eq('table_schema', 'public')
-      .single();
-
-    const hasClientIdColumn = !columnError && columnCheck;
-    console.log('🔍 client_id column exists:', hasClientIdColumn);
-
+    // Construir consulta base sin incluir client relationship inicialmente
     let query = supabase
       .from('debts')
       .select(`
         *,
         user:users(id, full_name, email, rut)
-      `);
+      `)
+      .eq('company_id', companyId);
 
-    if (hasClientIdColumn) {
-      if (clientId) {
-        // Si hay clientId específico, filtrar por ese cliente
-        query = query.eq('client_id', clientId);
-      } else {
-        // Si no hay clientId específico, obtener deudas de dos maneras:
-        // 1. Deudas asociadas a clientes de la empresa
-        // 2. Deudas directas de la empresa (sin client_id)
-        const { data: clients, error: clientsError } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('company_id', companyId);
-
-        if (clientsError) {
-          console.warn('Error getting clients for company:', clientsError);
-        }
-
-        const clientIds = clients?.map(c => c.id) || [];
-        
-        if (clientIds.length > 0) {
-          // Si hay clientes, obtener deudas de clientes Y deudas directas de la empresa
-          query = query.or(`client_id.in.(${clientIds.join(',')}),company_id.eq.${companyId}`);
-        } else {
-          // Si no hay clientes, obtener solo deudas directas de la empresa
-          query = query.eq('company_id', companyId);
-        }
-      }
-    } else {
-      // Si no existe la columna client_id, filtrar solo por company_id
-      console.log('⚠️ client_id column does not exist, filtering only by company_id');
-      query = query.eq('company_id', companyId);
+    // Intentar incluir client relationship si clientId está presente
+    if (clientId) {
+      query = query.eq('client_id', clientId);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error in getCompanyDebts query:', error);
+      console.error('❌ Error en getCompanyDebts:', error);
       return { debts: [], error: handleSupabaseError(error) };
     }
 
     console.log(`📊 Found ${data?.length || 0} debts for company ${companyId}`);
-    
-    // Log detallado de las deudas encontradas para depuración
-    if (data && data.length > 0) {
-      console.log('📋 Debts found:', data.map(d => ({
-        id: d.id,
-        user_id: d.user_id,
-        company_id: d.company_id,
-        client_id: hasClientIdColumn ? d.client_id : 'N/A (column not exists)',
-        user_name: d.user?.full_name,
-        client_name: hasClientIdColumn && d.client ? d.client.business_name : 'N/A',
-        amount: d.current_amount || d.original_amount
-      })));
-    }
 
-    return { debts: data || [], error: null };
+    // Enriquecer datos para compatibilidad con UI
+    const enrichedDebts = (data || []).map(debt => ({
+      ...debt,
+      debtor_name: debt.user?.full_name || 'Deudor desconocido',
+      debtor_rut: debt.user?.rut || null,
+      debtor_email: debt.user?.email || null,
+      debtor_phone: null,
+      client_info: null,
+      user_info: debt.user
+    }));
+    
+    console.log('📋 Debts found:', enrichedDebts.length);
+    return { debts: enrichedDebts, error: null };
   } catch (error) {
     console.error('💥 Error in getCompanyDebts:', error);
+    return { debts: [], error: 'Error al obtener deudas de la empresa.' };
+  }
+};
+
+// Versión optimizada con caché y query optimizer
+export const getCompanyDebts = async (companyId, clientId = null, options = {}) => {
+  const { page = 1, pageSize = 20, useOptimization = true } = options;
+  
+  if (!useOptimization) {
+    return await _getCompanyDebtsOriginal(companyId, clientId);
+  }
+
+  try {
+    // Usar query optimizer para mejor rendimiento
+    const query = buildOptimizedDebtsQuery(supabase, {
+      companyId,
+      clientId,
+      page,
+      pageSize,
+      includeUser: true,
+      includeClient: true
+    });
+
+    const { data, error, count } = await analyzeQueryPerformance(
+      query,
+      `getCompanyDebts_${companyId}`
+    );
+
+    if (error) {
+      return { debts: [], error: handleSupabaseError(error) };
+    }
+
+    // Enriquecer datos para compatibilidad con UI
+    const enrichedDebts = (data || []).map(debt => ({
+      ...debt,
+      debtor_name: debt.client?.business_name || debt.user?.full_name || 'Deudor desconocido',
+      debtor_rut: debt.client?.rut || debt.user?.rut || null,
+      debtor_email: debt.client?.contact_email || debt.user?.email || null,
+      debtor_phone: debt.client?.contact_phone || null,
+      client_info: debt.client,
+      user_info: debt.user
+    }));
+    
+    return {
+      debts: enrichedDebts,
+      error: null,
+      pagination: {
+        page,
+        pageSize,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / pageSize)
+      }
+    };
+  } catch (error) {
+    console.error('Error in getCompanyDebts:', error);
     return { debts: [], error: 'Error al obtener deudas de la empresa.' };
   }
 };
@@ -275,6 +341,14 @@ export const createDebt = async (debtData) => {
 
     if (error) {
       return { debt: null, error: handleSupabaseError(error) };
+    }
+
+    // Invalidar caché relacionada con deudas de la empresa
+    if (debtData.company_id) {
+      invalidatePattern(`getCompanyDebts:${debtData.company_id}`);
+      invalidatePattern(`getCompanyAnalytics:${debtData.company_id}`);
+      invalidatePattern(`getCompanyAnalyticsCached:${debtData.company_id}`);
+      invalidatePattern(`getCompanyDashboardStats:${debtData.company_id}`);
     }
 
     return { debt: data, error: null };
@@ -300,6 +374,13 @@ export const updateDebt = async (debtId, updates) => {
     if (error) {
       return { error: handleSupabaseError(error) };
     }
+
+    // Invalidar caché relacionada con deudas
+    // Nota: Para mayor precisión, podríamos obtener el company_id primero
+    invalidatePattern('getCompanyDebts:');
+    invalidatePattern('getCompanyAnalytics:');
+    invalidatePattern('getCompanyAnalyticsCached:');
+    invalidatePattern('getCompanyDashboardStats:');
 
     return { error: null };
   } catch (error) {
@@ -761,6 +842,14 @@ export const createPayment = async (paymentData) => {
       return { payment: null, error: handleSupabaseError(error) };
     }
 
+    // Invalidar caché relacionada con analytics y estadísticas
+    if (paymentData.company_id) {
+      invalidatePattern(`getCompanyAnalytics:${paymentData.company_id}`);
+      invalidatePattern(`getCompanyAnalyticsCached:${paymentData.company_id}`);
+      invalidatePattern(`getCompanyDashboardStats:${paymentData.company_id}`);
+      invalidatePattern(`getCompanyPayments:${paymentData.company_id}`);
+    }
+
     return { payment: data, error: null };
   } catch (error) {
     console.error('Error in createPayment:', error);
@@ -784,6 +873,13 @@ export const updatePayment = async (paymentId, updates) => {
     if (error) {
       return { error: handleSupabaseError(error) };
     }
+
+    // Invalidar caché relacionada con analytics y estadísticas
+    // Nota: Para mayor precisión, podríamos obtener el company_id primero
+    invalidatePattern('getCompanyAnalytics:');
+    invalidatePattern('getCompanyAnalyticsCached:');
+    invalidatePattern('getCompanyDashboardStats:');
+    invalidatePattern('getCompanyPayments:');
 
     return { error: null };
   } catch (error) {
@@ -1477,8 +1573,12 @@ export const updatePaymentReceiptValidation = async (receiptId, validationData) 
 };
 
 /**
- * Crea una nueva empresa
- * @param {Object} companyData - Datos de la empresa
+ * Crea una nueva empresa (Nivel 2) y automáticamente su empresa corporativa (Nivel 3)
+ *
+ * ESTRUCTURA JERÁRQUICA:
+ * Usuario (Nivel 1) → Empresa (Nivel 2) → Empresa Corporativa (Nivel 3) → Clientes (Nivel 4) → Deudas (Nivel 5)
+ *
+ * @param {Object} companyData - Datos de la empresa (Nivel 2)
  * @returns {Promise<{company, error}>}
  */
 export const createCompany = async (companyData) => {
@@ -1493,23 +1593,22 @@ export const createCompany = async (companyData) => {
       return { company: null, error: handleSupabaseError(error) };
     }
 
-    // AUTOMATIZACIÓN: Registrar como beneficiario en MP si tiene datos bancarios
-    if (data && data.bank_account_info) {
+    // Crear automáticamente cliente corporativo asociado
+    if (data?.id) {
       try {
-        const registerResult = await registerCompanyBeneficiary({
-          companyId: data.id,
-          businessName: data.business_name,
-          bankAccountInfo: data.bank_account_info,
-        });
+        const corporateClientData = {
+          company_id: data.id,
+          contact_email: data.contact_email,
+          contact_phone: data.contact_phone || null,
+          rut: data.rut || null,
+          industry: 'Corporativo'
+        };
 
-        if (registerResult.success) {
-          console.log(`✅ Empresa ${data.business_name} registrada como beneficiario en MP`);
-        } else {
-          console.warn(`⚠️ No se pudo registrar beneficiario para ${data.business_name}: ${registerResult.error}`);
-        }
-      } catch (registerError) {
-        console.error('Error registering company beneficiary:', registerError);
-        // No fallar la creación de empresa por esto
+        await supabase
+          .from('corporate_clients')
+          .insert(corporateClientData);
+      } catch (corporateError) {
+        console.warn('Error creating corporate client:', corporateError);
       }
     }
 
@@ -1520,28 +1619,115 @@ export const createCompany = async (companyData) => {
   }
 };
 
+/**
+ * Actualiza una empresa (solo para administradores)
+ * @param {string} companyId - ID de la empresa
+ * @param {Object} updates - Datos a actualizar
+ * @returns {Promise<{error}>}
+ */
+export const updateCompany = async (companyId, updates) => {
+  try {
+    if (!companyId) {
+      return { error: 'El ID de la empresa es obligatorio.' };
+    }
+
+    const validFields = [
+      'company_name', 'contact_email', 'contact_phone', 'rut', 'contact_person',
+      'address', 'phone', 'email', 'website', 'description', 'industry',
+      'employees_count', 'annual_revenue', 'nexupay_commission',
+      'nexupay_commission_type', 'user_incentive_percentage',
+      'user_incentive_type', 'bank_account_info', 'mercadopago_beneficiary_id',
+      'logo_url', 'is_active', 'validation_status', 'notes'
+    ];
+
+    const cleanUpdates = { updated_at: new Date().toISOString() };
+
+    Object.keys(updates).forEach(key => {
+      if (validFields.includes(key) && key !== 'id') {
+        cleanUpdates[key] = updates[key] === '' || updates[key] === undefined ? null : updates[key];
+      }
+    });
+
+    delete cleanUpdates.id;
+    delete cleanUpdates.created_at;
+    delete cleanUpdates.user_id;
+
+    const requiredFields = ['company_name', 'contact_email', 'rut', 'validation_status'];
+    for (const field of requiredFields) {
+      if (!cleanUpdates[field]?.trim()) {
+        return { error: `El campo ${field} es obligatorio.` };
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('companies')
+      .update(cleanUpdates)
+      .eq('id', companyId)
+      .select()
+      .single();
+
+    if (error) {
+      return { error: handleSupabaseError(error) };
+    }
+
+    return { error: null, data };
+  } catch (error) {
+    console.error('Error in updateCompany:', error);
+    return { error: 'Error al actualizar empresa.' };
+  }
+};
+
 // ==================== CLIENTES ====================
 
 /**
- * Obtiene todos los clientes de una empresa de cobranza
+ * Obtiene todos los clientes individuales de una empresa de cobranza
+ *
+ * IMPORTANTE: Los clientes individuales están asociados a corporate_clients,
+ * no directamente a companies. Esta función obtiene los clientes individuales
+ * que pertenecen a los clientes corporativos de la empresa especificada.
+ *
  * @param {string} companyId - ID de la empresa de cobranza
  * @returns {Promise<{clients, error}>}
  */
 export const getCompanyClients = async (companyId) => {
   try {
+    console.log('🔍 getCompanyClients: Obteniendo clientes individuales para empresa:', companyId);
+    
+    // PRIMERO: Obtener todos los clientes corporativos de esta empresa
+    const { data: corporateClients, error: corporateError } = await supabase
+      .from('corporate_clients')
+      .select('id')
+      .eq('company_id', companyId);
+
+    if (corporateError) {
+      console.error('❌ Error obteniendo clientes corporativos:', corporateError);
+      return { clients: [], error: handleSupabaseError(corporateError) };
+    }
+
+    if (!corporateClients || corporateClients.length === 0) {
+      console.log('⚠️ No hay clientes corporativos para esta empresa, no hay clientes individuales');
+      return { clients: [], error: null };
+    }
+
+    // SEGUNDO: Obtener todos los clientes individuales asociados a esos clientes corporativos
+    const corporateClientIds = corporateClients.map(cc => cc.id);
+    
     const { data, error } = await supabase
       .from('clients')
       .select('*')
-      .eq('company_id', companyId)
+      .in('corporate_client_id', corporateClientIds)
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error('❌ Error obteniendo clientes individuales:', error);
       return { clients: [], error: handleSupabaseError(error) };
     }
 
+    console.log(`✅ Encontrados ${data?.length || 0} clientes individuales para ${corporateClientIds.length} clientes corporativos`);
+    
     return { clients: data || [], error: null };
   } catch (error) {
-    console.error('Error in getCompanyClients:', error);
+    console.error('💥 Error in getCompanyClients:', error);
     return { clients: [], error: 'Error al obtener clientes de la empresa.' };
   }
 };
@@ -1692,111 +1878,66 @@ export const findExistingDebtors = async (rut, fullName = null) => {
  */
 export const createClient = async (clientData) => {
   try {
-    console.log('🔄 createClient: Iniciando creación de cliente:', JSON.stringify(clientData, null, 2));
-
     // Validaciones básicas
-    if (!clientData.company_id) {
-      console.error('❌ Validación fallida: company_id está vacío:', clientData.company_id);
-      throw new Error('El ID de la empresa es obligatorio');
+    if (!clientData.company_id?.trim()) {
+      return { client: null, error: 'El ID de la empresa es obligatorio' };
     }
 
-    if (!clientData.business_name || clientData.business_name.trim() === '') {
-      console.error('❌ Validación fallida: business_name está vacío:', clientData.business_name);
-      throw new Error('El nombre del cliente es obligatorio');
+    if (!clientData.business_name?.trim()) {
+      return { client: null, error: 'El nombre del cliente es obligatorio' };
     }
 
-    if (!clientData.contact_email || clientData.contact_email.trim() === '') {
-      console.error('❌ Validación fallida: contact_email está vacío:', clientData.contact_email);
-      throw new Error('El email del cliente es obligatorio');
+    if (!clientData.contact_email?.trim()) {
+      return { client: null, error: 'El email del cliente es obligatorio' };
     }
 
-    // Validación para evitar duplicados: verificar si ya existe un cliente con el mismo email o RUT para esta empresa
-    console.log('🔍 Verificando duplicados para empresa:', clientData.company_id);
-    const { data: existingClients, error: checkError } = await supabase
+    // Obtener corporate_client_id automáticamente si no se proporciona
+    let corporateClientId = clientData.corporate_client_id;
+    if (!corporateClientId) {
+      const { data: corporateClient } = await supabase
+        .from('corporate_clients')
+        .select('id')
+        .eq('company_id', clientData.company_id)
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      if (!corporateClient) {
+        return { client: null, error: 'Esta empresa no tiene un cliente corporativo activo.' };
+      }
+      corporateClientId = corporateClient.id;
+    }
+
+    // Verificar duplicados
+    const { data: existingClients } = await supabase
       .from('clients')
       .select('id, business_name, contact_email, rut')
       .eq('company_id', clientData.company_id)
       .or(`contact_email.eq.${clientData.contact_email}${clientData.rut ? `,rut.eq.${clientData.rut}` : ''}`);
 
-    if (checkError) {
-      console.warn('⚠️ Error verificando duplicados:', checkError);
-      // Continuar con la creación aunque falle la verificación
-    } else if (existingClients && existingClients.length > 0) {
+    if (existingClients?.length > 0) {
       const duplicate = existingClients[0];
-      console.error('❌ Cliente duplicado encontrado:', duplicate);
-
       let errorMessage = 'Ya existe un cliente con ';
-      if (duplicate.contact_email === clientData.contact_email) {
-        errorMessage += 'este email';
-      }
+      if (duplicate.contact_email === clientData.contact_email) errorMessage += 'este email';
       if (duplicate.rut === clientData.rut) {
         errorMessage += (duplicate.contact_email === clientData.contact_email ? ' y ' : '') + 'este RUT';
       }
       errorMessage += ' en esta empresa.';
-
-      throw new Error(errorMessage);
+      return { client: null, error: errorMessage };
     }
 
-    // Preparar datos limpios para la inserción
+    // Validar y preparar datos
     const cleanClientData = {
       company_id: clientData.company_id,
       business_name: clientData.business_name,
       contact_email: clientData.contact_email,
       contact_phone: clientData.contact_phone || null,
       rut: clientData.rut || null,
-      corporate_client_id: clientData.corporate_client_id || null,
+      corporate_client_id: corporateClientId,
       created_at: clientData.created_at || new Date().toISOString(),
       updated_at: clientData.updated_at || new Date().toISOString()
     };
 
-    console.log('📋 Datos limpios para inserción:', JSON.stringify(cleanClientData, null, 2));
-    console.log('🔍 Verificando conexión con Supabase...');
-    
-    // Verificar que Supabase esté disponible
-    if (!supabase) {
-      console.error('❌ Error: Supabase client no está disponible');
-      throw new Error('Error de conexión con la base de datos');
-    }
-
-    console.log('✅ Supabase disponible, validando company_id antes de insertar...');
-    
-    // Validar que company_id exista en tabla companies.
-    // Si no existe, intentar mapearlo desde user_id (caso builds antiguos que enviaban user.id)
-    try {
-      let companyToUse = cleanClientData.company_id;
-      const { data: companyById, error: companyByIdError } = await supabase
-        .from('companies')
-        .select('id,user_id')
-        .eq('id', companyToUse)
-        .maybeSingle();
-
-      if (companyByIdError) {
-        console.warn('⚠️ Error verificando empresa por ID:', companyByIdError);
-      }
-
-      if (!companyById) {
-        console.warn('⚠️ company_id no encontrado en companies. Intentando usarlo como user_id para resolver empresa.');
-        const { data: companyByUser, error: companyByUserError } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('user_id', companyToUse)
-          .maybeSingle();
-
-        if (!companyByUserError && companyByUser?.id) {
-          console.log('🔁 Mapeando user_id -> company_id resuelto:', companyByUser.id);
-          cleanClientData.company_id = companyByUser.id;
-        } else {
-          console.error('❌ No se encontró empresa válida asociada al identificador proporcionado.');
-          return { client: null, error: new Error('No se encontró una empresa válida asociada al usuario. Verifica tu Perfil de Empresa y vuelve a intentarlo.') };
-        }
-      }
-    } catch (verifyErr) {
-      console.warn('⚠️ Excepción durante verificación de empresa:', verifyErr);
-      // Continuar; el insert entregará un error más específico si corresponde
-    }
-
-    console.log('✅ Supabase disponible, ejecutando inserción...');
-    
     const { data, error } = await supabase
       .from('clients')
       .insert(cleanClientData)
@@ -1804,52 +1945,13 @@ export const createClient = async (clientData) => {
       .single();
 
     if (error) {
-      console.error('❌ Error de Supabase en createClient:', JSON.stringify(error, null, 2));
-      console.error('📊 Detalles del error:', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        table: error.table,
-        constraint: error.constraint
-      });
-      
-      // Manejo específico de errores comunes
-      if (error.code === '23505') {
-        console.error('🔑 Error de clave duplicada');
-        return { client: null, error: new Error('Ya existe un cliente con este email o RUT en esta empresa.') };
-      } else if (error.code === '23503') {
-        console.error('🔑 Error de llave foránea');
-        const detailsText = `${error.details || ''} ${error.message || ''}`;
-        if (detailsText.includes('clients_company_id_fkey') || detailsText.includes('company_id')) {
-          return { client: null, error: new Error('La empresa asociada (company_id) no existe o no es válida. Abre tu Perfil de Empresa y confirma que la empresa esté creada y activa.') };
-        }
-        if (detailsText.includes('clients_corporate_client_id_fkey') || detailsText.includes('corporate_client_id')) {
-          return { client: null, error: new Error('El cliente corporativo seleccionado no es válido.') };
-        }
-        return { client: null, error: new Error('Relación inválida en los datos proporcionados.') };
-      } else if (error.code === '23502') {
-        console.error('🔑 Error de valor nulo no permitido');
-        return { client: null, error: new Error('Faltan campos obligatorios. Por favor, verifica todos los datos.') };
-      } else if (error.code === '42501') {
-        console.error('🔑 Error de permisos');
-        return { client: null, error: new Error('No tienes permisos para crear clientes.') };
-      } else if (error.code === '42P01') {
-        console.error('🔑 Error: tabla no existe');
-        return { client: null, error: new Error('La tabla de clientes no existe. Contacte al administrador.') };
-      } else {
-        console.error('🔑 Error genérico de Supabase');
-        const errorMessage = handleSupabaseError(error);
-        console.error('📝 Mensaje procesado:', errorMessage);
-        return { client: null, error: new Error(errorMessage) };
-      }
+      return { client: null, error: handleSupabaseError(error) };
     }
 
-    console.log('✅ Cliente creado exitosamente:', JSON.stringify(data, null, 2));
     return { client: data, error: null };
   } catch (error) {
-    console.error('💥 Error in createClient:', error);
-    return { client: null, error: error };
+    console.error('Error in createClient:', error);
+    return { client: null, error: 'Error al crear cliente.' };
   }
 };
 
@@ -2383,7 +2485,7 @@ export const getAdminAnalytics = async () => {
           id: `company-${company.id}`,
           type: 'company_validated',
           title: 'Nueva empresa registrada',
-          description: `${company.business_name || 'Empresa'} se registró en la plataforma`,
+          description: `${company.company_name || 'Empresa'} se registró en la plataforma`,
           timestamp: new Date(company.created_at),
           icon: 'Building',
           color: 'green'
@@ -2475,6 +2577,109 @@ export const getAllCompanies = async () => {
 };
 
 /**
+ * Obtiene todas las empresas con sus empresas corporativas correspondientes
+ * @returns {Promise<{companiesWithCorporates, error}>}
+ */
+export const getAllCompaniesWithCorporates = async () => {
+  try {
+    console.log('🔍 getAllCompaniesWithCorporates: Obteniendo empresas y sus corporativas');
+    
+    // Obtener todas las empresas
+    const { data: companies, error: companiesError } = await supabase
+      .from('companies')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (companiesError) {
+      console.error('❌ Error obteniendo empresas:', companiesError);
+      return { companiesWithCorporates: [], error: handleSupabaseError(companiesError) };
+    }
+
+    console.log(`📊 Found ${companies?.length || 0} companies`);
+
+    // Para cada empresa, obtener sus empresas corporativas
+    const companiesWithCorporates = await Promise.all(
+      (companies || []).map(async (company) => {
+        try {
+          // Obtener empresas corporativas de esta empresa
+          const { data: corporates, error: corporatesError } = await supabase
+            .from('corporate_clients')
+            .select('*')
+            .eq('company_id', company.id)
+            .order('created_at', { ascending: false });
+
+          if (corporatesError) {
+            console.warn(`⚠️ Error obteniendo corporativas para empresa ${company.id}:`, corporatesError);
+            return {
+              ...company,
+              corporate_clients: []
+            };
+          }
+
+          // Obtener estadísticas adicionales para cada empresa corporativa
+          const corporatesWithStats = await Promise.all(
+            (corporates || []).map(async (corporate) => {
+              try {
+                // Contar clientes asociados a esta empresa corporativa
+                const { count: clientCount, error: clientCountError } = await supabase
+                  .from('clients')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('corporate_client_id', corporate.id);
+
+                // Contar deudas asociadas a esta empresa corporativa
+                const { count: debtCount, error: debtCountError } = await supabase
+                  .from('debts')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('client_id', corporate.id);
+
+                return {
+                  ...corporate,
+                  client_count: clientCountError ? 0 : clientCount || 0,
+                  debt_count: debtCountError ? 0 : debtCount || 0,
+                  total_debt_amount: 0 // Se puede calcular si se necesita
+                };
+              } catch (statsError) {
+                console.warn(`⚠️ Error obteniendo estadísticas para corporate ${corporate.id}:`, statsError);
+                return {
+                  ...corporate,
+                  client_count: 0,
+                  debt_count: 0,
+                  total_debt_amount: 0
+                };
+              }
+            })
+          );
+
+          return {
+            ...company,
+            corporate_clients: corporatesWithStats,
+            total_corporate_clients: corporatesWithStats.length,
+            total_clients: corporatesWithStats.reduce((sum, corp) => sum + corp.client_count, 0),
+            total_debts: corporatesWithStats.reduce((sum, corp) => sum + corp.debt_count, 0)
+          };
+        } catch (corporateError) {
+          console.error(`💥 Error procesando corporativas para empresa ${company.id}:`, corporateError);
+          return {
+            ...company,
+            corporate_clients: [],
+            total_corporate_clients: 0,
+            total_clients: 0,
+            total_debts: 0
+          };
+        }
+      })
+    );
+
+    console.log(`✅ Procesadas ${companiesWithCorporates.length} empresas con sus corporativas`);
+    
+    return { companiesWithCorporates, error: null };
+  } catch (error) {
+    console.error('💥 Error in getAllCompaniesWithCorporates:', error);
+    return { companiesWithCorporates: [], error: 'Error al obtener empresas con sus corporativas.' };
+  }
+};
+
+/**
  * Obtiene estadísticas reales de comisiones desde la base de datos
  * @returns {Promise<{commissionStats, error}>}
  */
@@ -2491,7 +2696,7 @@ export const getCommissionStats = async () => {
         company_id,
         companies!inner(
           id,
-          business_name,
+          company_name,
           nexupay_commission,
           nexupay_commission_type,
           user_incentive_percentage,
@@ -2652,7 +2857,7 @@ export const getCompanyCommissionDetails = async (companyId) => {
     const companyCommissions = {
       company: {
         id: company.id,
-        businessName: company.business_name,
+        businessName: company.company_name,
         nexupayCommissionType: company.nexupay_commission_type || 'percentage',
         nexupayCommission: parseFloat(company.nexupay_commission) || 15,
         userIncentiveType: company.user_incentive_type || 'percentage',
@@ -2881,21 +3086,25 @@ export const updateUnifiedCampaign = async (campaignId, updates) => {
 };
 
 /**
- * Obtiene clientes corporativos de una empresa
- * @param {string} companyId - ID de la empresa
+ * Obtiene empresas corporativas de una empresa (Nivel 3)
+ *
+ * ESTRUCTURA JERÁRQUICA:
+ * Usuario (Nivel 1) → Empresa (Nivel 2) → Empresa Corporativa (Nivel 3) → Clientes (Nivel 4) → Deudas (Nivel 5)
+ *
+ * @param {string} companyId - ID de la empresa (Nivel 2)
  * @returns {Promise<{corporateClients, error}>}
  */
 export const getCorporateClients = async (companyId) => {
   try {
-    console.log('🔍 getCorporateClients called for company:', companyId);
+    console.log('🔍 getCorporateClients: Buscando Empresas Corporativas (Nivel 3) de la Empresa (Nivel 2):', companyId);
+    console.log('📋 Jerarquía: Empresa → Empresa Corporativa');
 
-    // Intentar primero obtener de la tabla 'corporate_clients' con campos correctos
+    // Obtener de la tabla 'corporate_clients' con campos correctos
     let { data, error } = await supabase
       .from('corporate_clients')
       .select('*')
       .eq('company_id', companyId)
-      .eq('is_active', true)
-      .order('name');
+      .order('created_at', { ascending: false }); // Ordenar por fecha de creación
 
     // Si no hay datos o hay error, intentar con la tabla 'clients' como fallback
     if (error || !data || data.length === 0) {
@@ -2918,20 +3127,18 @@ export const getCorporateClients = async (companyId) => {
 
     // Transformar los datos para mantener compatibilidad con el formato esperado
     const transformedClients = (data || []).map(client => {
-      // Para corporate_clients, los campos están en contact_info (JSONB)
-      // Para clients, los campos están directamente disponibles
-      const contactInfo = client.contact_info || {};
-      
+      // Para corporate_clients, los campos están directamente disponibles
+      // Para clients, los campos están directamente disponibles también
       return {
         id: client.id,
-        name: client.name || client.business_name || 'Cliente sin nombre',
+        name: client.business_name || client.contact_email || 'Cliente sin nombre',
         display_category: client.display_category || 'Corporativo',
-        contact_email: contactInfo.email || client.contact_email,
-        contact_phone: contactInfo.phone || client.contact_phone,
-        company_rut: contactInfo.rut || client.rut || client.company_rut,
-        industry: contactInfo.industry || client.industry || 'General',
-        contract_value: contactInfo.contract_value || client.contract_value || 0,
-        is_active: client.is_active !== false,
+        contact_email: client.contact_email,
+        contact_phone: client.contact_phone,
+        company_rut: client.rut || client.company_rut,
+        industry: client.industry || 'General',
+        contract_value: client.contract_value || 0,
+        is_active: true, // Por defecto activos ya que el campo no existe en corporate_clients
         segment_count: client.segment_count || 0,
         debtor_count: client.debtor_count || 0,
         total_debt_amount: client.total_debt_amount || 0,
@@ -2943,9 +3150,9 @@ export const getCorporateClients = async (companyId) => {
       };
     });
 
-    console.log(`✅ Corporate clients found: ${transformedClients.length}`);
+    console.log(`✅ Empresas Corporativas (Nivel 3) encontradas: ${transformedClients.length}`);
     if (transformedClients.length > 0) {
-      console.log('📋 Client details:', transformedClients.map(c => ({
+      console.log('📋 Corporate Client details:', transformedClients.map(c => ({
         id: c.id,
         name: c.name,
         email: c.contact_email,
@@ -2956,7 +3163,7 @@ export const getCorporateClients = async (companyId) => {
     return { corporateClients: transformedClients, error: null };
   } catch (error) {
     console.error('💥 Error in getCorporateClients:', error);
-    return { corporateClients: [], error: 'Error al obtener clientes corporativos.' };
+    return { corporateClients: [], error: 'Error al obtener empresas corporativas.' };
   }
 };
 
@@ -3022,6 +3229,30 @@ export const createCorporateClient = async (corporateData) => {
   } catch (error) {
     console.error('Error in createCorporateClient:', error);
     return { corporateClient: null, error: 'Error al crear cliente corporativo.' };
+  }
+};
+
+/**
+ * Actualiza un cliente corporativo
+ * @param {string} corporateId - ID del cliente corporativo
+ * @param {Object} updates - Datos a actualizar
+ * @returns {Promise<{error}>}
+ */
+export const updateCorporateClient = async (corporateId, updates) => {
+  try {
+    const { error } = await supabase
+      .from('corporate_clients')
+      .update(updates)
+      .eq('id', corporateId);
+
+    if (error) {
+      return { error: handleSupabaseError(error) };
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error('Error in updateCorporateClient:', error);
+    return { error: 'Error al actualizar cliente corporativo.' };
   }
 };
 
@@ -3152,7 +3383,7 @@ export const getDebtorSecureMessages = async (debtorId) => {
           company_id
         ),
         companies (
-          business_name
+          company_name
         )
       `)
       .eq('debtor_id', debtorId)
@@ -3211,7 +3442,7 @@ export const validateSecureMessageToken = async (token, debtorId) => {
           communication_config
         ),
         companies (
-          business_name,
+          company_name,
           logo_url
         )
       `)
@@ -3299,7 +3530,7 @@ export const getCompanyMessages = async (companyId) => {
     // Get company data
     const { data: company, error: companyError } = await supabase
       .from('companies')
-      .select('id, business_name')
+      .select('id, company_name')
       .eq('id', companyId)
       .single();
 
@@ -3343,7 +3574,7 @@ export const getCompanyMessages = async (companyId) => {
         conversationId: message.conversation_id,
         debtorId: conversation?.user?.id,
         debtorName: conversation?.user?.full_name || 'Usuario desconocido',
-        companyName: conversation?.company?.business_name || 'Empresa',
+        companyName: conversation?.company?.company_name || 'Empresa',
         senderType: message.sender_type,
         content: message.content,
         attachments: message.attachments || [],
@@ -3426,7 +3657,7 @@ export const sendMessage = async (messageData) => {
         *,
         conversation:conversations(
           user:users(id, full_name, email),
-          company:companies(id, business_name)
+          company:companies(id, company_name)
         )
       `)
       .single();
@@ -3442,7 +3673,7 @@ export const sendMessage = async (messageData) => {
       conversationId: data.conversation_id,
       debtorId: data.conversation?.user?.id,
       debtorName: data.conversation?.user?.full_name || 'Usuario desconocido',
-      companyName: data.conversation?.company?.business_name || 'Empresa',
+      companyName: data.conversation?.company?.company_name || 'Empresa',
       senderType: data.sender_type,
       content: data.content,
       attachments: data.attachments || [],
@@ -3562,24 +3793,16 @@ export const getCompanyAdvancedAnalytics = async (companyId) => {
       console.warn('Error calculando estadísticas de campañas:', error);
     }
 
-    // Calcular métricas de IA (de la tabla ai_interventions si existe)
-    let aiStats = { totalInterventions: 0, effectiveInterventions: 0, conversionsFromAI: 0 };
-    try {
-      const { data: aiData, error: aiError } = await supabase
-        .from('ai_interventions')
-        .select('intervention_type, effectiveness_score, conversion_result')
-        .eq('company_id', companyId);
-
-      if (!aiError && aiData) {
-        aiStats = aiData.reduce((acc, intervention) => ({
-          totalInterventions: acc.totalInterventions + 1,
-          effectiveInterventions: acc.effectiveInterventions + (intervention.effectiveness_score >= 7 ? 1 : 0),
-          conversionsFromAI: acc.conversionsFromAI + (intervention.conversion_result !== 'none' ? 1 : 0)
-        }), { totalInterventions: 0, effectiveInterventions: 0, conversionsFromAI: 0 });
-      }
-    } catch (error) {
-      console.warn('Tabla ai_interventions no disponible, usando métricas de IA simuladas');
-    }
+    // Calcular métricas de IA (tabla ai_interventions no existe, usar valores simulados)
+    let aiStats = {
+      totalInterventions: 0,
+      effectiveInterventions: 0,
+      conversionsFromAI: 0
+    };
+    
+    // La tabla ai_interventions no existe en la base de datos actual
+    // Usamos métricas simuladas para mantener compatibilidad
+    console.log('⚠️ Tabla ai_interventions no disponible, usando métricas simuladas');
 
     // Calcular tendencias mensuales (últimos 6 meses)
     const monthlyTrend = [];
@@ -3627,6 +3850,8 @@ export const getCompanyAdvancedAnalytics = async (companyId) => {
       totalDebtors,
       totalDebts,
       totalDebtAmount,
+      total_debts: totalDebtAmount, // Para compatibilidad con CompanyMetricsDashboard
+      total_recovered: totalRevenue, // Para compatibilidad con CompanyMetricsDashboard
       recoveryRate: totalDebtAmount > 0 ? (totalRevenue / totalDebtAmount) * 100 : 0,
       averagePayment: paymentsResult.data?.length > 0 ? totalRevenue / paymentsResult.data.length : 0,
 
@@ -3774,30 +3999,152 @@ export const getCompanyAdditionalMetrics = async (companyId) => {
  * @param {string} companyId - ID de la empresa
  * @returns {Promise<{analytics, error}>}
  */
-export const getCompanyAnalytics = async (companyId) => {
+// Función original sin caché para uso interno
+const _getCompanyAnalyticsOriginal = async (companyId) => {
   try {
-    const { analytics, error } = await getCompanyAdvancedAnalytics(companyId);
+    console.log('🔄 getCompanyAnalytics: Usando misma lógica que ClientsPage para consistencia');
+    
+    // USAR LA MISMA LÓGICA QUE CLIENTSPAGE PARA CONSISTENCIA
+    // Obtener datos en paralelo: deudas, pagos, clientes corporativos y clientes individuales
+    const [debtsRes, paymentsRes, corporateClientsRes, companyClientsRes] = await Promise.all([
+      getCompanyDebts(companyId),
+      getCompanyPayments(companyId),
+      getCorporateClients(companyId), // ← Clientes corporativos reales
+      getCompanyClients(companyId) // ← Clientes individuales de la tabla clients
+    ]);
 
-    if (error) return { analytics: null, error };
+    if (debtsRes.error) console.error('Error fetching company debts:', debtsRes.error);
+    if (paymentsRes.error) console.error('Error fetching company payments:', paymentsRes.error);
+    if (corporateClientsRes.error) console.error('Error fetching corporate clients:', corporateClientsRes.error);
+    if (companyClientsRes.error) console.error('Error fetching company clients:', companyClientsRes.error);
 
-    // Obtener métricas adicionales
+    const debts = debtsRes.debts || [];
+    const payments = (paymentsRes.payments || []).filter(p => p.status === 'completed');
+    const corporateClients = corporateClientsRes || []; // ← Clientes corporativos reales de la tabla corporate_clients
+    const companyClients = companyClientsRes || []; // ← Clientes individuales de la tabla clients
+
+    console.log('📊 getCompanyAnalytics - Datos cargados (misma lógica que ClientsPage):', {
+      debts: debts.length,
+      payments: payments.length,
+      corporateClients: corporateClients.length,
+      companyClients: companyClients.length
+    });
+
+    // Agrupar pagos por usuario (misma lógica que ClientsPage)
+    const payByUser = {};
+    for (const p of payments) {
+      const uid = p.user?.id || p.user_id;
+      if (!uid) continue;
+      if (!payByUser[uid]) payByUser[uid] = { total: 0, last: null };
+      const amt = parseFloat(p.amount) || 0;
+      payByUser[uid].total += amt;
+      const dt = new Date(p.transaction_date || p.date || p.created_at || Date.now());
+      if (!payByUser[uid].last || dt > payByUser[uid].last) payByUser[uid].last = dt;
+    }
+
+    // 1. PRIMERO: Crear deudores con deudas (misma lógica que ClientsPage)
+    const mapByUser = new Map();
+    for (const d of debts) {
+      const uid = d.user?.id || d.user_id;
+      if (!uid) continue;
+      if (!mapByUser.has(uid)) {
+        mapByUser.set(uid, {
+          id: uid,
+          name: d.user?.full_name || 'Usuario',
+          email: d.user?.email || '',
+          phone: d.user?.phone || '',
+          rut: d.user?.rut || '',
+          totalDebt: 0,
+          paidAmount: 0,
+          pendingAmount: 0,
+          lastPayment: null,
+          status: 'active',
+          companyName: 'Empresa', // Simplificado para analytics
+          corporateClientName: d.client?.business_name || null,
+          corporateClientId: d.client?.id || null,
+          firstDebtDate: d.created_at,
+          type: 'debtor'
+        });
+      }
+      const item = mapByUser.get(uid);
+      const current = parseFloat(d.current_amount ?? d.amount ?? d.original_amount ?? 0);
+      item.totalDebt += isNaN(current) ? 0 : current;
+
+      if (d.status === 'completed') {
+        item.status = 'completed';
+      }
+      if (!item.firstDebtDate || new Date(d.created_at) < new Date(item.firstDebtDate)) {
+        item.firstDebtDate = d.created_at;
+      }
+      if (d.client?.business_name) item.corporateClientName = d.client.business_name;
+      if (d.client?.id) {
+        item.corporateClientId = d.client.id;
+        item.corporate_client_id = d.client.id;
+      }
+    }
+
+    // Aplicar pagos a deudores (misma lógica que ClientsPage)
+    mapByUser.forEach((item, uid) => {
+      const pay = payByUser[uid];
+      item.paidAmount = pay ? pay.total : 0;
+      item.lastPayment = pay && pay.last ? pay.last.toISOString() : null;
+      item.pendingAmount = Math.max(item.totalDebt - item.paidAmount, 0);
+      if (item.pendingAmount <= 0 && item.totalDebt > 0) {
+        item.status = 'completed';
+      }
+    });
+
+    // 4. CUARTO: Solo mostrar deudores con deuda real (misma lógica que ClientsPage)
+    const allClientSummaries = Array.from(mapByUser.values())
+      .filter(debtor => debtor.totalDebt > 0) // Solo deudores con deuda mayor a 0
+      .sort((a, b) => b.totalDebt - a.totalDebt);
+
+    console.log('✅ getCompanyAnalytics - Clientes combinados (misma lógica que ClientsPage):', {
+      totalDebtors: mapByUser.size,
+      debtorsWithDebt: allClientSummaries.length,
+      totalFiltered: allClientSummaries.length
+    });
+
+    // Calcular estadísticas combinadas (misma lógica que ClientsPage)
+    const totalClients = allClientSummaries.length;
+    const activeClients = allClientSummaries.filter(c => c.status !== 'completed' && c.status !== 'corporate').length;
+    const corporateClientsCount = corporateClients.length;
+    const totalDebt = allClientSummaries.reduce((sum, c) => sum + c.totalDebt, 0);
+    const totalPaid = allClientSummaries.reduce((sum, c) => sum + c.paidAmount, 0);
+    const totalPending = allClientSummaries.reduce((sum, c) => sum + c.pendingAmount, 0);
+
+    // Obtener métricas adicionales para tendencias
     const { additionalMetrics } = await getCompanyAdditionalMetrics(companyId);
 
-    // Transformar para mantener compatibilidad con la versión anterior
+    // Transformar para mantener compatibilidad con CompanyMetricsDashboard
     const simplifiedAnalytics = {
-      totalRevenue: analytics.totalRevenue,
-      totalClients: analytics.totalClients,
-      totalDebtors: analytics.totalDebtors,
-      recoveryRate: analytics.recoveryRate,
-      averagePayment: analytics.averagePayment,
-      monthlyGrowth: analytics.monthlyGrowth,
-      efficiencyRate: analytics.efficiencyRate,
-      avgProcessingTime: analytics.avgProcessingTime,
-      avgRecoveryTime: additionalMetrics.avgRecoveryTime,
-      bestMonth: additionalMetrics.bestMonth,
+      // Datos reales calculados como en ClientsPage
+      totalRevenue: totalPaid, // Usar totalPaid como revenue real
+      totalClients: totalClients,
+      totalDebtors: new Set(debts.map(d => d.user_id)).size,
+      totalDebts: debts.length,
+      total_debts: totalDebt, // Para compatibilidad con CompanyMetricsDashboard
+      total_recovered: totalPaid, // Para compatibilidad con CompanyMetricsDashboard
+      recoveryRate: totalDebt > 0 ? (totalPaid / totalDebt) * 100 : 0,
+      averagePayment: payments.length > 0 ? totalPaid / payments.length : 0,
+      
+      // Métricas adicionales
+      monthlyGrowth: 0, // Se puede calcular si es necesario
+      efficiencyRate: payments.length > 0 ? 100 : 0,
+      avgProcessingTime: additionalMetrics.avgRecoveryTime || 7,
+      avgRecoveryTime: additionalMetrics.avgRecoveryTime || 45,
+      bestMonth: additionalMetrics.bestMonth || 'Sin datos',
       topPerformingClients: [], // Se puede calcular si es necesario
-      monthlyTrend: analytics.monthlyTrend
+      monthlyTrend: [], // Se puede calcular si es necesario
+      active_clients: activeClients // Para compatibilidad con CompanyMetricsDashboard
     };
+
+    console.log('✅ getCompanyAnalytics - Estadísticas calculadas (datos reales):', {
+      totalDebt: simplifiedAnalytics.total_debts,
+      totalRecovered: simplifiedAnalytics.total_recovered,
+      recoveryRate: simplifiedAnalytics.recoveryRate,
+      active_clients: simplifiedAnalytics.active_clients
+    });
 
     return { analytics: simplifiedAnalytics, error: null };
   } catch (error) {
@@ -3805,6 +4152,215 @@ export const getCompanyAnalytics = async (companyId) => {
     return { analytics: null, error: 'Error al obtener métricas de analytics.' };
   }
 };
+
+// Versión optimizada con caché y query optimizer
+export const getCompanyAnalytics = async (companyId, options = {}) => {
+  const { useOptimization = true, useCache = true } = options;
+  
+  if (!useOptimization || !useCache) {
+    return await _getCompanyAnalyticsOriginal(companyId);
+  }
+
+  try {
+    console.log('🚀 getCompanyAnalytics: Usando versión optimizada con caché');
+    
+    // Usar query optimizer para obtener datos optimizados
+    const startTime = performance.now();
+    
+    // Obtener datos optimizados en paralelo
+    const [optimizedDebtsResult, optimizedPaymentsResult] = await Promise.all([
+      // Usar la versión optimizada de getCompanyDebts con paginación
+      getCompanyDebts(companyId, null, { page: 1, pageSize: 100, useOptimization: true }),
+      // Optimizar consulta de pagos
+      getOptimizedAnalytics(supabase, 'payments', companyId, {
+        fields: ['id', 'amount', 'transaction_date', 'status', 'user_id'],
+        filters: { status: 'completed' },
+        orderBy: { field: 'transaction_date', ascending: false }
+      })
+    ]);
+
+    // Obtener datos adicionales sin optimización por ahora
+    const [corporateClientsRes, companyClientsRes] = await Promise.all([
+      getCorporateClients(companyId),
+      getCompanyClients(companyId)
+    ]);
+
+    // Analizar rendimiento de las consultas
+    const queryTime = performance.now() - startTime;
+    console.log(`⚡ Queries ejecutadas en ${queryTime.toFixed(2)}ms`);
+
+    const debts = optimizedDebtsResult.debts || [];
+    const payments = optimizedPaymentsResult.data || [];
+    const corporateClients = corporateClientsRes || [];
+    const companyClients = companyClientsRes || [];
+
+    console.log('📊 getCompanyAnalytics - Datos optimizados cargados:', {
+      debts: debts.length,
+      payments: payments.length,
+      corporateClients: corporateClients.length,
+      companyClients: companyClients.length,
+      queryTime: `${queryTime.toFixed(2)}ms`
+    });
+
+    // Procesamiento optimizado de datos
+    const processingStart = performance.now();
+    
+    // Agrupar pagos por usuario (optimizado)
+    const payByUser = payments.reduce((acc, p) => {
+      const uid = p.user_id;
+      if (!uid) return acc;
+      
+      if (!acc[uid]) {
+        acc[uid] = { total: 0, last: null };
+      }
+      
+      const amt = parseFloat(p.amount) || 0;
+      acc[uid].total += amt;
+      
+      const dt = new Date(p.transaction_date || p.created_at || Date.now());
+      if (!acc[uid].last || dt > acc[uid].last) {
+        acc[uid].last = dt;
+      }
+      
+      return acc;
+    }, {});
+
+    // Crear mapa de deudores (optimizado)
+    const mapByUser = new Map();
+    for (const d of debts) {
+      const uid = d.user_id;
+      if (!uid) continue;
+      
+      if (!mapByUser.has(uid)) {
+        mapByUser.set(uid, {
+          id: uid,
+          name: d.user?.full_name || d.debtor_name || 'Usuario',
+          email: d.user?.email || d.debtor_email || '',
+          phone: d.user?.phone || d.debtor_phone || '',
+          rut: d.user?.rut || d.debtor_rut || '',
+          totalDebt: 0,
+          paidAmount: 0,
+          pendingAmount: 0,
+          lastPayment: null,
+          status: 'active',
+          companyName: 'Empresa',
+          corporateClientName: d.client?.business_name || d.debtor_name || null,
+          corporateClientId: d.client?.id || null,
+          firstDebtDate: d.created_at,
+          type: 'debtor'
+        });
+      }
+      
+      const item = mapByUser.get(uid);
+      const current = parseFloat(d.current_amount ?? d.amount ?? d.original_amount ?? 0);
+      item.totalDebt += isNaN(current) ? 0 : current;
+
+      if (d.status === 'completed') {
+        item.status = 'completed';
+      }
+      if (!item.firstDebtDate || new Date(d.created_at) < new Date(item.firstDebtDate)) {
+        item.firstDebtDate = d.created_at;
+      }
+      if (d.client?.business_name) item.corporateClientName = d.client.business_name;
+      if (d.client?.id) {
+        item.corporateClientId = d.client.id;
+        item.corporate_client_id = d.client.id;
+      }
+    }
+
+    // Aplicar pagos a deudores (optimizado)
+    mapByUser.forEach((item, uid) => {
+      const pay = payByUser[uid];
+      if (pay) {
+        item.paidAmount = pay.total;
+        item.lastPayment = pay.last ? pay.last.toISOString() : null;
+      }
+      item.pendingAmount = Math.max(item.totalDebt - item.paidAmount, 0);
+      if (item.pendingAmount <= 0 && item.totalDebt > 0) {
+        item.status = 'completed';
+      }
+    });
+
+    const processingTime = performance.now() - processingStart;
+    console.log(`⚡ Procesamiento de datos completado en ${processingTime.toFixed(2)}ms`);
+
+    // Filtrar y ordenar deudores
+    const allClientSummaries = Array.from(mapByUser.values())
+      .filter(debtor => debtor.totalDebt > 0)
+      .sort((a, b) => b.totalDebt - a.totalDebt);
+
+    // Calcular estadísticas (optimizado)
+    const statsStart = performance.now();
+    
+    const totalClients = allClientSummaries.length;
+    const activeClients = allClientSummaries.filter(c => c.status !== 'completed' && c.status !== 'corporate').length;
+    const totalDebt = allClientSummaries.reduce((sum, c) => sum + c.totalDebt, 0);
+    const totalPaid = allClientSummaries.reduce((sum, c) => sum + c.paidAmount, 0);
+    const uniqueDebtors = new Set(debts.map(d => d.user_id)).size;
+
+    // Obtener métricas adicionales (con caché si está disponible)
+    const { additionalMetrics } = await getCompanyAdditionalMetrics(companyId);
+
+    const statsTime = performance.now() - statsStart;
+    const totalTime = performance.now() - startTime;
+    
+    console.log(`⚡ Estadísticas calculadas en ${statsTime.toFixed(2)}ms`);
+    console.log(`🎯 Tiempo total de ejecución: ${totalTime.toFixed(2)}ms (${((totalTime - queryTime) / totalTime * 100).toFixed(1)}% en procesamiento)`);
+
+    // Construir objeto de analytics optimizado
+    const optimizedAnalytics = {
+      // Datos reales calculados
+      totalRevenue: totalPaid,
+      totalClients: totalClients,
+      totalDebtors: uniqueDebtors,
+      totalDebts: debts.length,
+      total_debts: totalDebt, // Compatibilidad
+      total_recovered: totalPaid, // Compatibilidad
+      recoveryRate: totalDebt > 0 ? (totalPaid / totalDebt) * 100 : 0,
+      averagePayment: payments.length > 0 ? totalPaid / payments.length : 0,
+      
+      // Métricas adicionales
+      monthlyGrowth: 0,
+      efficiencyRate: payments.length > 0 ? 100 : 0,
+      avgProcessingTime: additionalMetrics.avgRecoveryTime || 7,
+      avgRecoveryTime: additionalMetrics.avgRecoveryTime || 45,
+      bestMonth: additionalMetrics.bestMonth || 'Sin datos',
+      topPerformingClients: [],
+      monthlyTrend: [],
+      active_clients: activeClients, // Compatibilidad
+      
+      // Métricas de rendimiento
+      performance: {
+        queryTime: Math.round(queryTime),
+        processingTime: Math.round(processingTime),
+        totalTime: Math.round(totalTime),
+        optimizationGain: totalTime > 0 ? Math.round(((1000 - totalTime) / 1000) * 100) : 0
+      }
+    };
+
+    console.log('✅ getCompanyAnalytics - Estadísticas optimizadas calculadas:', {
+      totalDebt: optimizedAnalytics.total_debts,
+      totalRecovered: optimizedAnalytics.total_recovered,
+      recoveryRate: optimizedAnalytics.recoveryRate,
+      active_clients: optimizedAnalytics.active_clients,
+      performance: optimizedAnalytics.performance
+    });
+
+    return { analytics: optimizedAnalytics, error: null };
+  } catch (error) {
+    console.error('Error in getCompanyAnalytics (optimized version):', error);
+    
+    // Fallback a versión original si la optimización falla
+    console.log('🔄 Realizando fallback a versión original...');
+    return await _getCompanyAnalyticsOriginal(companyId);
+  }
+};
+
+// Versión con caché para uso general
+export const getCompanyAnalyticsCached = cachedFunction(
+  async (companyId) => await getCompanyAnalytics(companyId, { useOptimization: true, useCache: true }),
+  'company_analytics'
+);
 
 // ==================== FUNCIONES PARA GESTIÓN DE BASE DE DATOS ====================
 
@@ -4510,30 +5066,6 @@ export const completeUserRegistration = async (token, password) => {
   }
 };
 
-/**
- * Crea un nuevo usuario (solo para administradores) - LEGACY
- * @deprecated Use createUserWithInvitation instead
- * @param {Object} userData - Datos del usuario
- * @returns {Promise<{user, error}>}
- */
-export const createUser = async (userData) => {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .insert(userData)
-      .select()
-      .single();
-
-    if (error) {
-      return { user: null, error: handleSupabaseError(error) };
-    }
-
-    return { user: data, error: null };
-  } catch (error) {
-    console.error('Error in createUser:', error);
-    return { user: null, error: 'Error al crear usuario.' };
-  }
-};
 
 /**
  * Actualiza un usuario (solo para administradores)
@@ -4600,44 +5132,16 @@ export const deleteUser = async (userId) => {
  */
 export const getCampaignDebtors = async (campaignId) => {
   try {
-    // 1) campaign_debtors -> debtors (si existe)
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('campaign_debtors')
-      .select(`
-        debtor:debtors(*)
-      `)
+      .select('debtor:debtors(*)')
       .eq('campaign_id', campaignId);
 
-    if (!error && Array.isArray(data)) {
-      // Mapear a arreglo plano de deudores
-      return data
-        .map((row) => row.debtor || row)
-        .filter(Boolean);
-    }
+    return data?.map(row => row.debtor).filter(Boolean) || [];
   } catch (err) {
-    // Tabla puede no existir en entornos locales
-    console.warn('getCampaignDebtors: fallback por ausencia de tabla campaign_debtors', err?.message || err);
+    console.warn('getCampaignDebtors fallback:', err?.message || err);
+    return [];
   }
-
-  try {
-    // 2) Fallback a configuración de campaña
-    const { data: campaign, error: campError } = await supabase
-      .from('unified_campaigns')
-      .select('ai_config')
-      .eq('id', campaignId)
-      .maybeSingle();
-
-    if (!campError && campaign?.ai_config?.segmentation) {
-      // Si existiera una estructura con IDs de deudores dentro de la segmentación, podríamos resolverlos aquí.
-      // Por ahora devolvemos un arreglo vacío para no romper ejecución.
-      return [];
-    }
-  } catch (err) {
-    console.warn('getCampaignDebtors: fallback por ausencia de unified_campaigns.ai_config', err?.message || err);
-  }
-
-  // Fallback final: sin deudores asignados
-  return [];
 };
 
 /**
@@ -4650,26 +5154,17 @@ export const getCampaignDebtors = async (campaignId) => {
  */
 export const updateCampaignResults = async (campaignId, results) => {
   try {
-    const payload = {
-      campaign_id: campaignId,
-      last_results: results,
-      updated_at: new Date().toISOString()
-    };
-
     const { error } = await supabase
       .from('campaign_results_summary')
-      .upsert(payload, { onConflict: 'campaign_id' });
+      .upsert({
+        campaign_id: campaignId,
+        last_results: results,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'campaign_id' });
 
-    if (error) {
-      // Si la tabla no existe o hay restricción no crítica, registrar y continuar
-      console.warn('updateCampaignResults: no se pudo persistir en campaign_results_summary:', error);
-      return { success: true };
-    }
-
-    return { success: true };
+    return { success: !error };
   } catch (err) {
-    console.warn('updateCampaignResults: fallback no-op por error inesperado:', err?.message || err);
-    // No bloquear el flujo de la app
+    console.warn('updateCampaignResults fallback:', err?.message || err);
     return { success: true };
   }
 };
@@ -4732,6 +5227,7 @@ export default {
 
   // Empresas
   createCompany,
+  updateCompany,
 
   // Clientes
   getCompanyClients,
@@ -4754,6 +5250,7 @@ export default {
 
   // Funciones para admin
   getAllCompanies,
+  getAllCompaniesWithCorporates,
 
   // Sistema y configuración
   getDatabaseSystemInfo,
@@ -4762,7 +5259,6 @@ export default {
   getIntegrationStats,
 
   // Gestión de usuarios para admin
-  createUser,
   createUserWithInvitation,
   validateInvitationToken,
   completeUserRegistration,
@@ -4781,12 +5277,12 @@ export default {
   getCompanyAdditionalMetrics,
 
   // Gestión de comisiones
-    getCommissionStats,
-    getCompanyCommissionDetails,
+  getCommissionStats,
+  getCompanyCommissionDetails,
 
-    // Gestión de objetivos de pago
-    savePaymentGoals,
-    getPaymentGoals,
+  // Gestión de objetivos de pago
+  savePaymentGoals,
+  getPaymentGoals,
 
   // Gestión de campañas unificadas
   getCompanyCampaigns,
@@ -4802,6 +5298,7 @@ export default {
   createSecureMessage,
   validateSecureMessageToken,
   updateSecureMessage,
+
   // ==================== SEGURIDAD Y PRIVACIDAD ====================
 
   /**
@@ -5149,7 +5646,6 @@ export default {
 
 };
 
-
 /**
  * Obtiene estadísticas de comisiones en tiempo real (fallback)
  * @returns {Promise<{commissionStats, error}>}
@@ -5166,7 +5662,7 @@ export const getCommissionStatsRealtime = async () => {
         transaction_date,
         companies!inner(
           id,
-          business_name,
+          company_name,
           nexupay_commission,
           nexupay_commission_type,
           user_incentive_percentage,

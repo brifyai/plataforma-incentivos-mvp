@@ -150,36 +150,49 @@ class AIImportService {
     try {
       console.log('🔍 Analizando estructura de la base de datos...');
 
-      // Obtener estructura de tablas principales
-      const supabaseAdmin = getSupabaseInstance('admin');
-      const { data: tables, error: tablesError } = await supabaseAdmin
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_schema', 'public')
-        .in('table_name', ['users', 'debts', 'companies']);
-
-      if (tablesError) throw tablesError;
-
-      const schema = {};
-
-      for (const table of tables) {
-        const { data: columns, error: columnsError } = await supabaseAdmin
-          .from('information_schema.columns')
-          .select('column_name, data_type, is_nullable, column_default')
-          .eq('table_schema', 'public')
-          .eq('table_name', table.table_name);
-
-        if (columnsError) throw columnsError;
-
-        schema[table.table_name] = columns;
-      }
-
-      console.log('✅ Estructura de base de datos analizada:', schema);
-      return schema;
+      // EVITAR information_schema que causa errores 404
+      // Usar estructura por defecto directamente
+      console.log('⚠️ Evitando acceso a information_schema por errores 404, usando estructura por defecto');
+      return this.getDefaultSchema();
     } catch (error) {
-      console.error('❌ Error analizando estructura de BD:', error);
-      throw error;
+      console.warn('⚠️ Error analizando estructura de BD, usando estructura por defecto:', error.message);
+      // Siempre retornar estructura por defecto como fallback
+      return this.getDefaultSchema();
     }
+  }
+
+  /**
+   * Obtener estructura por defecto de la base de datos
+   */
+  getDefaultSchema() {
+    return {
+      users: [
+        { column_name: 'id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'email', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'rut', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'full_name', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'phone', data_type: 'text', is_nullable: 'YES' }
+      ],
+      debts: [
+        { column_name: 'id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'user_id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'company_id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'client_id', data_type: 'uuid', is_nullable: 'YES' }, // La columna existe
+        { column_name: 'original_amount', data_type: 'numeric', is_nullable: 'NO' },
+        { column_name: 'current_amount', data_type: 'numeric', is_nullable: 'NO' },
+        { column_name: 'due_date', data_type: 'date', is_nullable: 'YES' },
+        { column_name: 'description', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'status', data_type: 'text', is_nullable: 'YES' }
+      ],
+      companies: [
+        { column_name: 'id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'user_id', data_type: 'uuid', is_nullable: 'NO' },
+        { column_name: 'company_name', data_type: 'text', is_nullable: 'NO' },
+        { column_name: 'contact_email', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'contact_phone', data_type: 'text', is_nullable: 'YES' },
+        { column_name: 'rut', data_type: 'text', is_nullable: 'YES' }
+      ]
+    };
   }
 
   /**

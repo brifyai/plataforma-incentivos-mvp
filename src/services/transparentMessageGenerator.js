@@ -305,7 +305,7 @@ export class TransparentMessageGenerator {
       .select(`
         *,
         companies (
-          business_name
+          company_name
         )
       `)
       .eq('id', campaignId)
@@ -315,7 +315,7 @@ export class TransparentMessageGenerator {
 
     return {
       ...data,
-      company_name_visible: data.companies?.business_name || 'Empresa',
+      company_name_visible: data.companies?.company_name || 'Empresa',
       debt_reference_visible: `REF-${campaignId.slice(-6).toUpperCase()}`
     };
   }
@@ -460,7 +460,7 @@ Procesado de forma segura por NexuPay`;
           communication_config
         ),
         companies (
-          business_name,
+          company_name,
           logo_url
         )
       `)

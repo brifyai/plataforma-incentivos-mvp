@@ -127,9 +127,9 @@ const MobileNavigation = ({ profile }) => {
             </div>
             <div>
               <h3 className="font-semibold text-secondary-900">
-                {profile?.company?.business_name || 'Mi Empresa'}
+                {profile?.company?.company_name || 'Mi Empresa Global'}
               </h3>
-              <p className="text-sm text-secondary-600">Panel de Empresa</p>
+              <p className="text-sm text-secondary-600">Panel de Empresa Global</p>
             </div>
           </div>
 

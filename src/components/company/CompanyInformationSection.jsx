@@ -6,6 +6,7 @@
 
 import { Card, Input, Button } from '../common';
 import { Building, User, Mail, Phone, Edit, Save, X, CreditCard, DollarSign } from 'lucide-react';
+import { formatRut } from '../../utils/formatters';
 
 const CompanyInformationSection = ({
   formData,
@@ -28,7 +29,7 @@ const CompanyInformationSection = ({
                   <Building className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Datos de la Empresa</h3>
+                  <h3 className="text-base font-bold text-gray-900">Datos de la Empresa Global</h3>
                   <p className="text-xs text-gray-600">Información legal y comercial</p>
                 </div>
               </div>
@@ -82,7 +83,7 @@ const CompanyInformationSection = ({
                 <label className="block text-xs font-medium text-gray-700">RUT de la Empresa</label>
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                   <Building className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-900 font-medium">{formData.company_rut || 'No especificado'}</span>
+                  <span className="text-xs text-gray-900 font-medium">{formatRut(formData.company_rut) || 'No especificado'}</span>
                 </div>
               </div>
 
@@ -115,18 +116,40 @@ const CompanyInformationSection = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-0.5">
                 <label className="block text-xs font-medium text-gray-700">Nombre Completo</label>
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  <User className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-900 font-medium">{formData.full_name || 'No especificado'}</span>
-                </div>
+                {isEditing ? (
+                  <Input
+                    type="text"
+                    value={formData.legal_representative_name || ''}
+                    onChange={(e) => onFormDataChange({...formData, legal_representative_name: e.target.value})}
+                    leftIcon={<User className="w-3.5 h-3.5" />}
+                    placeholder="Nombre completo del representante legal"
+                    className="bg-white/50 text-xs py-2"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-xs text-gray-900 font-medium">{formData.legal_representative_name || 'No especificado'}</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-0.5">
                 <label className="block text-xs font-medium text-gray-700">RUT del Representante</label>
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  <User className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-900 font-medium">{formData.representative_rut || 'No especificado'}</span>
-                </div>
+                {isEditing ? (
+                  <Input
+                    type="text"
+                    value={formData.legal_representative_rut || ''}
+                    onChange={(e) => onFormDataChange({...formData, legal_representative_rut: e.target.value})}
+                    leftIcon={<User className="w-3.5 h-3.5" />}
+                    placeholder="Ej: 12.345.678-9"
+                    className="bg-white/50 text-xs py-2"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-xs text-gray-900 font-medium">{formatRut(formData.legal_representative_rut) || 'No especificado'}</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-0.5">
@@ -308,7 +331,7 @@ const CompanyInformationSection = ({
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                     <User className="w-3.5 h-3.5 text-gray-400" />
                     <span className="text-xs text-gray-900 font-medium">
-                      {formData.accountHolderRut || 'No configurado'}
+                      {formatRut(formData.accountHolderRut) || 'No configurado'}
                     </span>
                   </div>
                 )}
@@ -376,7 +399,7 @@ const CompanyInformationSection = ({
               <label className="block text-xs font-medium text-gray-700">RUT</label>
               <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                 <User className="w-3.5 h-3.5 text-gray-400" />
-                <span className="text-xs text-gray-900 font-medium">{formData.rut || 'No especificado'}</span>
+                <span className="text-xs text-gray-900 font-medium">{formatRut(formData.rut) || 'No especificado'}</span>
               </div>
             </div>
           </div>

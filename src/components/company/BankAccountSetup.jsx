@@ -10,7 +10,7 @@ import { Card, Button, Input, Modal, Select } from '../common';
 import { formatCurrency } from '../../utils/formatters';
 import { validateRutInput } from '../../utils/validators';
 import { setupCompanyBankAccount } from '../../services/authService';
-import { supabase } from '../../config/supabase';
+import { supabase, isSupabaseMockMode } from '../../config/supabase';
 import Swal from 'sweetalert2';
 import {
   CreditCard,
@@ -75,20 +75,31 @@ const BankAccountSetup = ({ onComplete, onSkip }) => {
   useEffect(() => {
     const getCompanyInfo = async () => {
       try {
+        console.log('🔍 Verificando autenticación y empresa...');
         const { data: { user } } = await supabase.auth.getUser();
+        console.log('👤 Usuario autenticado:', user ? { id: user.id, email: user.email } : 'No');
+        
         if (user) {
-          const { data: company } = await supabase
+          console.log('🏢 Buscando empresa para user_id:', user.id);
+          const { data: company, error } = await supabase
             .from('companies')
             .select('company_name')
             .eq('user_id', user.id)
             .single();
 
+          console.log('📊 Resultado búsqueda empresa:', { company, error });
+
           if (company) {
+            console.log('✅ Empresa encontrada:', company.company_name);
             setCompanyName(company.company_name);
+          } else {
+            console.warn('⚠️ No se encontró empresa para el usuario');
           }
+        } else {
+          console.warn('⚠️ No hay usuario autenticado');
         }
       } catch (error) {
-        console.error('Error obteniendo información de la empresa:', error);
+        console.error('❌ Error obteniendo información de la empresa:', error);
       }
     };
 
@@ -169,13 +180,32 @@ const BankAccountSetup = ({ onComplete, onSkip }) => {
   };
 
   const handleConfirmSetup = async () => {
+    console.log('🚀 Iniciando handleConfirmSetup...');
+    
+    // Verificar si estamos en modo mock
+    if (isSupabaseMockMode()) {
+      console.error('❌ Supabase está en modo mock - no se puede configurar cuenta bancaria');
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Configuración No Disponible',
+        html: '⚠️ La base de datos no está configurada correctamente.<br><br>Por favor, contacta al administrador del sistema para configurar las variables de entorno de Supabase.',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#F59E0B'
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      console.log('📋 Datos a enviar:', formData);
+      
       // Usar el servicio para configurar la cuenta bancaria
+      console.log('⏳ Llamando a setupCompanyBankAccount...');
       const result = await setupCompanyBankAccount(formData);
+      console.log('📊 Resultado recibido:', result);
 
-      if (result.success) {
+      if (result && result.success) {
         console.log('✅ Cuenta bancaria configurada exitosamente');
 
         // Mostrar mensaje de éxito al usuario
@@ -183,7 +213,7 @@ const BankAccountSetup = ({ onComplete, onSkip }) => {
           icon: 'success',
           title: '¡Cuenta Bancaria Configurada!',
           html: '✅ ¡Cuenta bancaria configurada exitosamente!<br><br>Ahora podrás recibir transferencias automáticas cuando los deudores realicen pagos.',
-          confirmButtonText: 'Aceptar',
+          confirmButtonText: 'Ir al Dashboard',
           confirmButtonColor: '#10B981',
           timer: 4000,
           timerProgressBar: true
@@ -191,31 +221,38 @@ const BankAccountSetup = ({ onComplete, onSkip }) => {
 
         // Llamar al callback de completado
         if (onComplete) {
+          console.log('📞 Llamando al callback onComplete...');
           await onComplete(formData);
         }
 
+        // Redirigir al dashboard de la empresa
+        console.log('🔄 Redirigiendo al dashboard...');
+        navigate('/empresa/dashboard');
+
         setShowConfirmModal(false);
       } else {
-        console.error('❌ Error configurando cuenta bancaria:', result.error);
+        console.error('❌ Error configurando cuenta bancaria:', result?.error || 'Resultado inválido');
         await Swal.fire({
           icon: 'error',
           title: 'Error de Configuración',
-          text: 'Error al configurar la cuenta bancaria. Por favor, intenta de nuevo.',
+          text: result?.error || 'Error al configurar la cuenta bancaria. Por favor, intenta de nuevo.',
           confirmButtonText: 'Entendido',
           confirmButtonColor: '#EF4444'
         });
       }
 
     } catch (error) {
-      console.error('Error configurando cuenta bancaria:', error);
+      console.error('❌ Error en handleConfirmSetup:', error);
+      console.error('Stack trace:', error.stack);
       await Swal.fire({
         icon: 'error',
         title: 'Error de Conexión',
-        text: 'Error al configurar la cuenta bancaria. Por favor, intenta de nuevo.',
+        text: `Error al configurar la cuenta bancaria: ${error.message || 'Error desconocido'}`,
         confirmButtonText: 'Entendido',
         confirmButtonColor: '#EF4444'
       });
     } finally {
+      console.log('🏁 Finalizando handleConfirmSetup, setLoading(false)');
       setLoading(false);
     }
   };

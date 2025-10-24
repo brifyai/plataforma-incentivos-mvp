@@ -10,6 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useAuth } from '../../../context/AuthContext';
 import { createClient, findExistingDebtors } from '../../../services/databaseService';
+import { formatRut } from '../../../utils/formatters';
 import {
   Users,
   Search,
@@ -262,6 +263,13 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
   useEffect(() => {
     // Usar SIEMPRE datos reales recibidos por props; no hacer fallback a mocks
     let filtered = Array.isArray(clients) ? clients : [];
+    
+    // Debug: Mostrar qué datos están llegando
+    console.log('🔍 ClientManagement - Datos recibidos:', {
+      totalClients: clients.length,
+      clientTypes: clients.map(c => ({ id: c.id, name: c.name, type: c.type, status: c.status, totalDebt: c.totalDebt })),
+      loading: loading
+    });
 
     // Calcular nivel de riesgo y días de atraso para cada cliente si no lo tiene
     filtered = filtered.map(client => ({
@@ -272,8 +280,24 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
     // Filter by corporate client
     if (selectedCorporateClient) {
-      filtered = filtered.filter(client => client.corporateClientId === selectedCorporateClient);
+      filtered = filtered.filter(client =>
+        client.corporateClientId === selectedCorporateClient ||
+        client.corporate_client_id === selectedCorporateClient
+      );
     }
+
+    // Debug: Mostrar clientes antes del filtrado de búsqueda y estado
+    console.log('🔍 ClientManagement - Clientes antes de filtros:', {
+      total: filtered.length,
+      clientes: filtered.map(c => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        status: c.status,
+        totalDebt: c.totalDebt,
+        corporateClientId: c.corporateClientId
+      }))
+    });
 
     // Filter by search term
     if (searchTerm) {
@@ -288,6 +312,18 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
     if (filterStatus !== 'all') {
       filtered = filtered.filter(client => client.status === filterStatus);
     }
+
+    // Debug: Mostrar clientes finales después de todos los filtros
+    console.log('🔍 ClientManagement - Clientes finales:', {
+      total: filtered.length,
+      clientes: filtered.map(c => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        status: c.status,
+        totalDebt: c.totalDebt
+      }))
+    });
 
     setFilteredClients(filtered);
     setCurrentPage(1); // Reset to first page when filters change
@@ -393,9 +429,8 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           </div>
           ${corporateClients && corporateClients.length > 0 ? `
             <div class="mb-3">
-              <label>Cliente Corporativo Asociado</label>
-              <select id="swal-input6">
-                <option value="">Sin cliente corporativo</option>
+              <label>Cliente Corporativo Asociado *</label>
+              <select id="swal-input6" required>
                 ${corporateClients.map(client => `<option value="${client.id}">${client.company_name}</option>`).join('')}
               </select>
             </div>
@@ -433,7 +468,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                 matchInfoRut.style.display = 'block';
                 matchDetailsRut.innerHTML = matches.map(match => `
                   <div class="match-item">
-                    <strong>${match.full_name}</strong> (${match.rut})<br>
+                    <strong>${match.full_name}</strong> (${formatRut(match.rut)})<br>
                     <small>Score: ${match.match_score}% | Tipo: ${match.match_type}</small>
                   </div>
                 `).join('');
@@ -464,6 +499,11 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
 
         if (!name || !email || !rut) {
           Swal.showValidationMessage('Por favor, completa los campos obligatorios: nombre, email y RUT');
+          return false;
+        }
+
+        if (corporateClients && corporateClients.length > 0 && !corporateClientId) {
+          Swal.showValidationMessage('Por favor, selecciona un cliente corporativo asociado');
           return false;
         }
 
@@ -511,7 +551,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                   ${highScoreMatches.map(match => `
                     <div class="match-item" style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 0.375rem; padding: 0.75rem; margin: 0.5rem 0;">
                       <strong>${match.full_name}</strong><br>
-                      <small>RUT: ${match.rut} | Score: ${match.match_score}%</small><br>
+                      <small>RUT: ${formatRut(match.rut)} | Score: ${match.match_score}%</small><br>
                       <small>Estado: ${match.validation_status}</small>
                     </div>
                   `).join('')}
@@ -542,7 +582,7 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
           contact_email: formValues.email,
           contact_phone: formValues.phone || null,
           rut: formValues.rut || null,
-          corporate_client_id: formValues.corporateClientId && formValues.corporateClientId !== '' ? formValues.corporateClientId : null, // Permitir null si no se selecciona
+          corporate_client_id: formValues.corporateClientId || null, // Ahora es obligatorio si hay clientes corporativos disponibles
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
@@ -759,11 +799,28 @@ const ClientManagement = ({ clients, loading, selectedCorporateClient, corporate
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900">{client.name}</h4>
-                  <p className="text-sm text-gray-600">{client.rut}</p>
+                  <p className="text-sm text-gray-600">{formatRut(client.rut)}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-blue-600 font-medium">{client.companyName}</span>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-blue-600 font-medium">{client.corporateClientName}</span>
+                    {client.companyName ? (
+                      // Es un cliente corporativo (tiene companyName de la tabla corporate_clients)
+                      <>
+                        <span className="text-xs text-blue-600 font-medium">{client.companyName}</span>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs text-blue-600 font-medium">Cliente Corporativo</span>
+                      </>
+                    ) : client.corporateClientName ? (
+                      // Es un cliente individual asociado a un cliente corporativo
+                      <>
+                        <span className="text-xs text-blue-600 font-medium">{client.corporateClientName}</span>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs text-gray-600">Cliente Individual</span>
+                      </>
+                    ) : (
+                      // Es un deudor individual sin asociación corporativa
+                      <>
+                        <span className="text-xs text-gray-600">Deudor Individual</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

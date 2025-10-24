@@ -91,7 +91,9 @@ import {
   PieChart,
   LineChart,
   ScatterChart,
-  Radar
+  Radar,
+  Building,
+  FileText
 } from 'lucide-react';
 
 const AdminDashboardSprint3 = () => {
@@ -111,6 +113,11 @@ const AdminDashboardSprint3 = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredStats, setFilteredStats] = useState(null);
+  
+  // Estados para la vista de empresas
+  const [companiesWithCorporates, setCompaniesWithCorporates] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [companiesError, setCompaniesError] = useState(null);
   
   // Estados del Sprint 3
   const [aiFeatures, setAiFeatures] = useState({
@@ -136,6 +143,7 @@ const AdminDashboardSprint3 = () => {
     { id: 'reports', name: 'Reportes', icon: Download, sprint: 2 },
     { id: 'gamification', name: 'Gamificación', icon: Trophy, sprint: 2 },
     { id: 'performance', name: 'Rendimiento', icon: Zap, sprint: 1 },
+    { id: 'companies', name: 'Empresas Globales', icon: Building, sprint: 1 },
     { id: 'ai-assistant', name: 'Asistente IA', icon: Brain, sprint: 3 },
     { id: 'streaming', name: 'Streaming', icon: Database, sprint: 3 },
     { id: 'visualization', name: 'Visualización', icon: PieChart, sprint: 3 },
@@ -186,6 +194,36 @@ const AdminDashboardSprint3 = () => {
       setFilteredStats(stats);
     }
   }, [searchQuery, stats]);
+
+  // Cargar datos de empresas cuando se selecciona la vista de empresas
+  useEffect(() => {
+    if (selectedView === 'companies') {
+      loadCompaniesWithCorporates();
+    }
+  }, [selectedView]);
+
+  // Función para cargar empresas y sus corporativas
+  const loadCompaniesWithCorporates = async () => {
+    setLoadingCompanies(true);
+    setCompaniesError(null);
+    
+    try {
+      const { companiesWithCorporates: data, error } = await databaseService.getAllCompaniesWithCorporates();
+      
+      if (error) {
+        setCompaniesError(error);
+        console.error('Error loading companies:', error);
+      } else {
+        setCompaniesWithCorporates(data || []);
+        console.log('Companies loaded:', data?.length || 0);
+      }
+    } catch (error) {
+      setCompaniesError('Error al cargar las empresas');
+      console.error('Error loading companies:', error);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
 
   // Inicializar servicios
   const initializeServices = async () => {
@@ -308,6 +346,8 @@ const AdminDashboardSprint3 = () => {
         return renderGamificationView();
       case 'performance':
         return renderPerformanceView();
+      case 'companies':
+        return renderCompaniesView();
       case 'ai-assistant':
         return renderAIAssistantView();
       case 'streaming':
@@ -490,11 +530,201 @@ const AdminDashboardSprint3 = () => {
         </div>
       </div>
       
-      <PerformanceCache 
+      <PerformanceCache
         userId={user?.id}
         showDetails={showDetails}
         onRefresh={handleRefresh}
       />
+    </div>
+  );
+
+  // Renderizar vista de empresas y sus corporativas
+  const renderCompaniesView = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900">Empresas Globales y Empresas Corporativas</h2>
+        <div className="flex items-center gap-2">
+          <Badge variant="info" className="flex items-center gap-1">
+            <Building className="w-3 h-3" />
+            Jerarquía Completa
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadCompaniesWithCorporates}
+            disabled={loadingCompanies}
+          >
+            <RefreshCw className={`w-4 h-4 ${loadingCompanies ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      </div>
+
+      {loadingCompanies ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Cargando Empresas Globales</h3>
+            <p className="text-gray-600">Obteniendo datos de empresas globales y sus corporativas...</p>
+          </div>
+        </div>
+      ) : companiesError ? (
+        <Card className="p-6">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al Cargar Datos</h3>
+            <p className="text-gray-600 mb-4">{companiesError}</p>
+            <Button onClick={loadCompaniesWithCorporates}>
+              Reintentar
+            </Button>
+          </div>
+        </Card>
+      ) : companiesWithCorporates.length === 0 ? (
+        <Card className="p-6">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Building className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Hay Empresas Globales Registradas</h3>
+            <p className="text-gray-600">No se encontraron empresas globales en el sistema.</p>
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {/* Resumen general */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Building className="w-6 h-6 text-blue-600" />
+                </div>
+                <Badge variant="info">Total</Badge>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">{companiesWithCorporates.length}</h3>
+              <p className="text-sm text-gray-600">Empresas Globales</p>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Users className="w-6 h-6 text-green-600" />
+                </div>
+                <Badge variant="success">Corporativas</Badge>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {companiesWithCorporates.reduce((sum, company) => sum + company.total_corporate_clients, 0)}
+              </h3>
+              <p className="text-sm text-gray-600">Empresas Corporativas</p>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Target className="w-6 h-6 text-purple-600" />
+                </div>
+                <Badge variant="warning">Clientes</Badge>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {companiesWithCorporates.reduce((sum, company) => sum + company.total_clients, 0)}
+              </h3>
+              <p className="text-sm text-gray-600">Clientes Totales</p>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <FileText className="w-6 h-6 text-orange-600" />
+                </div>
+                <Badge variant="info">Deudas</Badge>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {companiesWithCorporates.reduce((sum, company) => sum + company.total_debts, 0)}
+              </h3>
+              <p className="text-sm text-gray-600">Deudas Totales</p>
+            </Card>
+          </div>
+
+          {/* Lista de empresas con sus corporativas */}
+          <div className="space-y-4">
+            {companiesWithCorporates.map((company) => (
+              <Card key={company.id} className="p-6">
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">{company.business_name}</h3>
+                    <Badge
+                      variant={company.validation_status === 'validated' ? 'success' : 'warning'}
+                      className="flex items-center gap-1"
+                    >
+                      {company.validation_status === 'validated' ? 'Validada' : 'Pendiente'}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">Email:</span> {company.contact_email}
+                    </div>
+                    <div>
+                      <span className="font-medium">RUT:</span> {company.rut || 'No especificado'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Creada:</span> {new Date(company.created_at).toLocaleDateString('es-CL')}
+                    </div>
+                  </div>
+                </div>
+
+                {company.corporate_clients && company.corporate_clients.length > 0 ? (
+                  <div>
+                    <h4 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Empresas Corporativas ({company.corporate_clients.length})
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {company.corporate_clients.map((corporate) => (
+                        <div
+                          key={corporate.id}
+                          className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="font-medium text-gray-900">
+                              {corporate.contact_email || 'Sin email'}
+                            </h5>
+                            <Badge variant="outline" className="text-xs">
+                              Corporativa
+                            </Badge>
+                          </div>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <div className="flex justify-between">
+                              <span>Clientes:</span>
+                              <span className="font-medium">{corporate.client_count || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Deudas:</span>
+                              <span className="font-medium">{corporate.debt_count || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>RUT:</span>
+                              <span className="font-medium">{corporate.rut || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Industria:</span>
+                              <span className="font-medium">{corporate.industry || 'General'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    <Users className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <p>Esta empresa no tiene empresas corporativas registradas</p>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 

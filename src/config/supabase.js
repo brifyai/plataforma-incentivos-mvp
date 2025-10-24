@@ -11,9 +11,47 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Estado de configuración
-let isConfigured = !!(supabaseUrl && supabaseAnonKey);
+// Validar que las variables de entorno tengan valores válidos
+const isValidUrl = (url) => {
+  try {
+    new URL(url);
+    return url.startsWith('https://') || url.startsWith('http://');
+  } catch {
+    return false;
+  }
+};
+
+const isValidKey = (key) => key && typeof key === 'string' && key.length > 50;
+
+// Debug extendido en desarrollo
+if (import.meta.env.DEV) {
+  console.log('🔍 Supabase Configuration Debug:');
+  console.log('- Raw URL:', supabaseUrl);
+  console.log('- Raw Key length:', supabaseAnonKey ? supabaseAnonKey.length : 0);
+  console.log('- URL type:', typeof supabaseUrl);
+  console.log('- Key type:', typeof supabaseAnonKey);
+  console.log('- URL Valid:', isValidUrl(supabaseUrl));
+  console.log('- Key Valid:', isValidKey(supabaseAnonKey));
+}
+
+// Estado de configuración - Validar realmente
+let isConfigured = isValidUrl(supabaseUrl) && isValidKey(supabaseAnonKey);
 let isMockMode = !isConfigured;
+
+// Debug de estado final en desarrollo
+if (import.meta.env.DEV) {
+  console.log('🔍 Supabase Final State:');
+  console.log('- isConfigured:', isConfigured);
+  console.log('- isMockMode:', isMockMode);
+}
+
+// FORZAR CONFIGURACIÓN CORRECTA EN DESARROLLO (temporal para diagnóstico)
+if (import.meta.env.DEV && supabaseUrl && supabaseAnonKey) {
+  console.log('🔧 FORZANDO CONFIGURACIÓN CORRECTA EN DESARROLLO');
+  isConfigured = true;
+  isMockMode = false;
+  console.log('✅ Configuración forzada como correcta');
+}
 
 // Crear un cliente mock para cuando no hay configuración
 const createMockSupabase = () => {
@@ -77,26 +115,7 @@ const createMockSupabase = () => {
   };
 };
 
-// Validar que las variables de entorno estén configuradas
-if (!isConfigured) {
-  // En desarrollo, mostrar error detallado
-  if (!import.meta.env.PROD) {
-    console.error(
-      `❌ Variables de entorno faltantes:\n` +
-      `- VITE_SUPABASE_URL: ${supabaseUrl ? '✅' : '❌ FALTANTE'}\n` +
-      `- VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✅' : '❌ FALTANTE'}\n\n` +
-      `🔧 Crea un archivo .env con estas variables:\n` +
-      `VITE_SUPABASE_URL=tu_url_de_supabase\n` +
-      `VITE_SUPABASE_ANON_KEY=tu_anon_key_de_supabase\n\n` +
-      `📋 Revisa la documentación para obtener las credenciales.`
-    );
-  } else {
-    // En producción, solo advertir pero continuar con modo mock
-    console.warn('⚠️ Supabase no configurado en producción. La aplicación funcionará en modo limitado.');
-  }
-}
-
-// Crear el cliente de Supabase (real o mock)
+// Crear el cliente de Supabase (solo si está configurado correctamente)
 let supabaseClient;
 
 if (isConfigured) {
@@ -118,13 +137,22 @@ if (isConfigured) {
         headers: {},
       },
     });
+    console.log('✅ Supabase configurado correctamente');
   } catch (error) {
-    console.error('Error creando cliente de Supabase, usando modo mock:', error);
+    console.error('❌ Error creando cliente de Supabase:', error);
+    // Crear cliente mock para evitar que la aplicación se rompa completamente
     supabaseClient = createMockSupabase();
     isMockMode = true;
   }
 } else {
+  console.error('❌ Supabase no está configurado correctamente');
+  console.error('🔧 Revisa tus variables de entorno:');
+  console.error(`   - VITE_SUPABASE_URL: ${supabaseUrl ? 'PRESENT but invalid' : 'MISSING'}`);
+  console.error(`   - VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? 'PRESENT but invalid' : 'MISSING'}`);
+  
+  // Crear cliente mock para evitar que la aplicación se rompa
   supabaseClient = createMockSupabase();
+  isMockMode = true;
 }
 
 // Función helper para manejar errores de Supabase de manera consistente

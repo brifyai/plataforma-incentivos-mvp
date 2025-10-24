@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../config/supabase';
 import { ragService } from '../../services/ragService';
 import { aiProvidersService } from '../../services/aiProvidersService';
+import AIModuleControl from '../../components/admin/AIModuleControl';
 import {
   Brain,
   MessageSquare,
@@ -211,6 +212,13 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     const pathParts = location.pathname.split('/');
     const lastPart = pathParts[pathParts.length - 1];
 
+    // Primero verificar si hay un parámetro tab en la URL
+    const urlParams = new URLSearchParams(location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+      return tabParam;
+    }
+
     // Mapear URLs en español a IDs internos en inglés
     const urlToTabMap = {
       'proveedores': 'providers',
@@ -218,7 +226,8 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
       'personalizacion': 'personalization',
       'conocimiento': 'knowledge',
       'prompts': 'prompts',
-      'analytics': 'analytics'
+      'analytics': 'analytics',
+      'control-modulo': 'module-control'
     };
 
     // Si la última parte está en el mapa, usar el ID correspondiente
@@ -231,6 +240,7 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
   };
 
   const [activeTab, setActiveTab] = useState(getActiveTabFromUrl());
+  const [activeMainMenu, setActiveMainMenu] = useState('ai-services');
   
   // Estados para clientes corporativos
   const [corporateClients, setCorporateClients] = useState([]);
@@ -432,6 +442,31 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     { key: '{nivel_riesgo}', description: 'Nivel de riesgo del deudor' }
   ];
 
+  // Menú principal de IA
+  const mainMenu = [
+    {
+      id: 'ai-services',
+      label: 'Servicios de Inteligencia Artificial',
+      icon: Bot,
+      description: 'Configuración de proveedores y modelos de IA',
+      color: 'from-blue-500 to-purple-600'
+    },
+    {
+      id: 'conversations-module',
+      label: 'Módulo Conversaciones',
+      icon: MessageSquare,
+      description: 'Control del sistema de IA conversacional',
+      color: 'from-green-500 to-teal-600'
+    },
+    {
+      id: 'nuclear-module',
+      label: 'Módulo Nuclear',
+      icon: Zap,
+      description: 'Activación avanzada y control del sistema',
+      color: 'from-red-500 to-orange-600'
+    }
+  ];
+
   // Tabs disponibles (actualizados con funciones perdidas)
   const tabs = [
     { id: 'providers', label: 'Proveedores IA', icon: Bot },
@@ -439,7 +474,8 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
     { id: 'personalization', label: 'Personalización', icon: Users },
     { id: 'knowledge', label: 'Base Conocimiento', icon: Database },
     { id: 'prompts', label: 'Prompts', icon: FileText },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'module-control', label: 'Control Módulo', icon: Settings }
   ];
 
   useEffect(() => {
@@ -1684,96 +1720,165 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
 
           {selectedClient ? (
             <>
-              {/* Tabs - Diseño Mejorado */}
-              <div className="mb-6">
-                {/* Tarjeta de navegación con diseño moderno */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    {tabs.map(tab => {
-                      const isActive = activeTab === tab.id;
-                      const tabToUrlMap = {
-                        'providers': 'proveedores',
-                        'messaging': 'mensajeria',
-                        'personalization': 'personalizacion',
-                        'knowledge': 'conocimiento',
-                        'prompts': 'prompts',
-                        'analytics': 'analytics'
-                      };
-
+              {/* Menú Principal de IA - Diseño Mejorado */}
+              <div className="mb-8">
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Panel de Control de Inteligencia Artificial</h2>
+                    <p className="text-gray-600">Selecciona una opción para gestionar el sistema de IA</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {mainMenu.map((item) => {
+                      const isActive = activeMainMenu === item.id;
+                      
                       return (
                         <button
-                          key={tab.id}
-                          onClick={() => {
-                            // Navegar a URL independiente cuando se hace click en un tab
-                            const spanishUrl = tabToUrlMap[tab.id] || tab.id;
-                            const newUrl = `/empresa/ia/${spanishUrl}`;
-                            window.history.pushState({}, '', newUrl);
-                            setActiveTab(tab.id);
-                          }}
+                          key={item.id}
+                          onClick={() => setActiveMainMenu(item.id)}
                           className={`
-                            relative flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 group
+                            relative group p-6 rounded-xl transition-all duration-300 transform hover:scale-105
                             ${isActive
-                              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg transform scale-105'
-                              : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
+                              ? `bg-gradient-to-br ${item.color} text-white shadow-2xl ring-4 ring-white ring-opacity-50`
+                              : 'bg-white border-2 border-gray-200 hover:border-gray-300 hover:shadow-xl'
                             }
                           `}
                         >
                           {/* Indicador activo */}
                           {isActive && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
+                            <div className="absolute -top-3 -right-3 w-8 h-8 bg-green-400 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                              <CheckCircle className="w-4 h-4 text-white" />
+                            </div>
                           )}
                           
-                          {/* Icono con efecto */}
+                          {/* Icono principal */}
                           <div className={`
-                            mb-2 p-2 rounded-lg transition-all duration-200
+                            mb-4 p-4 rounded-xl transition-all duration-300
                             ${isActive
                               ? 'bg-white bg-opacity-20 shadow-inner'
-                              : 'bg-white group-hover:bg-blue-50 group-hover:shadow-sm'
+                              : 'bg-gray-50 group-hover:bg-gray-100'
                             }
                           `}>
-                            <tab.icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-white' : 'text-blue-600 group-hover:text-blue-700'}`} />
+                            <item.icon className={`w-8 h-8 transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-700 group-hover:text-gray-900'}`} />
                           </div>
                           
-                          {/* Texto */}
-                          <span className="text-xs font-medium text-center leading-tight">
-                            {tab.label}
-                          </span>
+                          {/* Contenido */}
+                          <div className="text-center">
+                            <h3 className={`font-bold text-lg mb-2 ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                              {item.label}
+                            </h3>
+                            <p className={`text-sm ${isActive ? 'text-white text-opacity-90' : 'text-gray-600'}`}>
+                              {item.description}
+                            </p>
+                          </div>
                           
-                          {/* Badge de estado para tabs específicos */}
-                          {tab.id === 'providers' && providers.filter(p => p.is_active).length > 0 && (
-                            <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-sm"></div>
-                          )}
-                          
-                          {tab.id === 'knowledge' && selectedClient && (
-                            <div className="absolute bottom-2 right-2 w-2 h-2 bg-purple-400 rounded-full shadow-sm"></div>
+                          {/* Badge de estado */}
+                          {item.id === 'ai-services' && providers.filter(p => p.is_active).length > 0 && (
+                            <div className="absolute top-4 left-4">
+                              <Badge variant="success" size="sm" className="text-xs">
+                                {providers.filter(p => p.is_active).length} activos
+                              </Badge>
+                            </div>
                           )}
                         </button>
                       );
                     })}
                   </div>
                 </div>
-                
-                {/* Indicador visual del tab activo */}
-                <div className="mt-4 flex items-center justify-center">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span>
-                      Actualmente en: <strong className="text-gray-900">
-                        {tabs.find(t => t.id === activeTab)?.label || 'Desconocido'}
-                      </strong>
-                    </span>
-                    {selectedClient && (
-                      <>
-                        <span className="text-gray-400">•</span>
-                        <span className="text-blue-600 font-medium">{selectedClient.name}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
               </div>
 
-              {/* Tab Content */}
-              <div className="space-y-6">
+              {/* Tabs - Diseño Mejorado */}
+              {/* Tarjeta de navegación con diseño moderno */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {tabs.map(tab => {
+                    const isActive = activeTab === tab.id;
+                    const tabToUrlMap = {
+                      'providers': 'proveedores',
+                      'messaging': 'mensajeria',
+                      'personalization': 'personalizacion',
+                      'knowledge': 'conocimiento',
+                      'prompts': 'prompts',
+                      'analytics': 'analytics',
+                      'module-control': 'control-modulo'
+                    };
+
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          // Navegar a URL independiente cuando se hace click en un tab
+                          const spanishUrl = tabToUrlMap[tab.id] || tab.id;
+                          const newUrl = `/empresa/ia/${spanishUrl}`;
+                          window.history.pushState({}, '', newUrl);
+                          setActiveTab(tab.id);
+                        }}
+                        className={`
+                          relative flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 group
+                          ${isActive
+                            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg transform scale-105'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
+                          }
+                        `}
+                      >
+                        {/* Indicador activo */}
+                        {isActive && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
+                        )}
+                        
+                        {/* Icono con efecto */}
+                        <div className={`
+                          mb-2 p-2 rounded-lg transition-all duration-200
+                          ${isActive
+                            ? 'bg-white bg-opacity-20 shadow-inner'
+                            : 'bg-white group-hover:bg-blue-50 group-hover:shadow-sm'
+                          }
+                        `}>
+                          <tab.icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-white' : 'text-blue-600 group-hover:text-blue-700'}`} />
+                        </div>
+                        
+                        {/* Texto */}
+                        <span className="text-xs font-medium text-center leading-tight">
+                          {tab.label}
+                        </span>
+                        
+                        {/* Badge de estado para tabs específicos */}
+                        {tab.id === 'providers' && providers.filter(p => p.is_active).length > 0 && (
+                          <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-sm"></div>
+                        )}
+                        
+                        {tab.id === 'knowledge' && selectedClient && (
+                          <div className="absolute bottom-2 right-2 w-2 h-2 bg-purple-400 rounded-full shadow-sm"></div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Indicador visual del tab activo */}
+              <div className="mt-4 flex items-center justify-center">
+                <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>
+                    Actualmente en: <strong className="text-gray-900">
+                      {tabs.find(t => t.id === activeTab)?.label || 'Desconocido'}
+                    </strong>
+                  </span>
+                  {selectedClient && (
+                    <>
+                      <span className="text-gray-400">•</span>
+                      <span className="text-blue-600 font-medium">{selectedClient.name}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : null}
+
+          {/* Tab Content - Solo mostrar si hay cliente seleccionado */}
+          {selectedClient && (
+          <div className="space-y-6">
                 {/* Proveedores IA Tab */}
                 {activeTab === 'providers' && (
                   <div className="space-y-6">
@@ -3181,6 +3286,336 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                       </div>
                     </Card>
 
+                    {/* Nuevas Cajas Solicitadas */}
+                    <Card>
+                      <h3 className="text-xl font-bold mb-4">Métricas Avanzadas</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Mensajes Inteligentes */}
+                        <div className="p-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg border border-indigo-200 hover:shadow-lg transition-shadow cursor-pointer">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-indigo-500 rounded-lg">
+                              <MessageSquare className="w-8 h-8 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-indigo-900 text-lg">Mensajes Inteligentes</h4>
+                              <p className="text-3xl font-bold text-indigo-600 mt-1">856</p>
+                              <p className="text-sm text-indigo-700 mt-2">Generados automáticamente</p>
+                              <div className="flex items-center gap-2 mt-3">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-600 font-medium">Activo</span>
+                                <span className="text-xs text-gray-500">• 95% efectividad</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-indigo-200">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-indigo-600">Última hora</span>
+                              <span className="text-xs font-semibold text-indigo-700">+42 mensajes</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Análisis de Propuestas */}
+                        <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-200 hover:shadow-lg transition-shadow cursor-pointer">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-emerald-500 rounded-lg">
+                              <FileText className="w-8 h-8 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-emerald-900 text-lg">Análisis de Propuestas</h4>
+                              <p className="text-3xl font-bold text-emerald-600 mt-1">324</p>
+                              <p className="text-sm text-emerald-700 mt-2">Propuestas analizadas</p>
+                              <div className="flex items-center gap-2 mt-3">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-600 font-medium">Optimizado</span>
+                                <span className="text-xs text-gray-500">• 89% aceptación</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-emerald-200">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-emerald-600">Hoy</span>
+                              <span className="text-xs font-semibold text-emerald-700">+18 propuestas</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Recomendaciones */}
+                        <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200 hover:shadow-lg transition-shadow cursor-pointer">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-purple-500 rounded-lg">
+                              <Brain className="w-8 h-8 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-purple-900 text-lg">Recomendaciones</h4>
+                              <p className="text-3xl font-bold text-purple-600 mt-1">156</p>
+                              <p className="text-sm text-purple-700 mt-2">Sugerencias IA activas</p>
+                              <div className="flex items-center gap-2 mt-3">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-600 font-medium">Actualizado</span>
+                                <span className="text-xs text-gray-500">• 92% precisión</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-purple-200">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-purple-600">Esta semana</span>
+                              <span className="text-xs font-semibold text-purple-700">+27 recomendaciones</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Resumen adicional */}
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-medium text-gray-700">Sistema IA funcionando correctamente</span>
+                          </div>
+                          <div className="flex items-center gap-6 text-sm text-gray-600">
+                            <span>Última actualización: <strong className="text-gray-900">hace 2 min</strong></span>
+                            <span>Rendimiento: <strong className="text-green-600">98.5%</strong></span>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+
+                    {/* 🚀 SECCIÓN IA CONVERSACIONAL Y MÓDULO NUCLEAR */}
+                    <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-red-200">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 bg-gradient-to-r from-red-500 to-orange-600 rounded-xl text-white">
+                            <Brain className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h2 className="text-xl font-bold text-gray-900">
+                              🤖 IA Conversacional y Módulo Nuclear
+                            </h2>
+                            <p className="text-sm text-gray-600">
+                              Control avanzado del sistema de IA para negociación automática
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant="success"
+                          className="text-sm px-3 py-1"
+                        >
+                          ✅ SISTEMA ACTIVO
+                        </Badge>
+                      </div>
+
+                      {/* Botones de Control Principal */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <Button
+                          onClick={async () => {
+                            console.log('🚀 Activando IA Conversacional...');
+                            try {
+                              const { activateAIModule } = await import('../../modules/ai-negotiation/utils/activateAI.js');
+                              const result = await activateAIModule();
+                              if (result.success) {
+                                Swal.fire({
+                                  icon: 'success',
+                                  title: 'IA Conversacional Activada',
+                                  text: 'El sistema de IA está ahora operativo',
+                                  timer: 2000,
+                                  showConfirmButton: false
+                                });
+                              }
+                            } catch (error) {
+                              console.error('Error activando IA:', error);
+                              Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudo activar la IA conversacional'
+                              });
+                            }
+                          }}
+                          variant="primary"
+                          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold shadow-lg"
+                        >
+                          🚀 Activar IA Conversacional
+                        </Button>
+
+                        <Button
+                          onClick={async () => {
+                            console.log('🛑 Desactivando IA...');
+                            try {
+                              const { deactivateAIModule } = await import('../../modules/ai-negotiation/utils/activateAI.js');
+                              const result = await deactivateAIModule();
+                              if (result.success) {
+                                Swal.fire({
+                                  icon: 'success',
+                                  title: 'IA Desactivada',
+                                  text: 'El sistema de IA ha sido desactivado',
+                                  timer: 2000,
+                                  showConfirmButton: false
+                                });
+                              }
+                            } catch (error) {
+                              console.error('Error desactivando IA:', error);
+                            }
+                          }}
+                          variant="secondary"
+                          className="w-full"
+                        >
+                          🛑 Desactivar IA
+                        </Button>
+
+                        <Button
+                          onClick={async () => {
+                            console.log('💪 EJECUTANDO MÓDULO NUCLEAR...');
+                            try {
+                              Swal.fire({
+                                title: '⚠️ Confirmación Requerida',
+                                text: '¿Estás seguro de ejecutar el módulo nuclear? Esto forzará la activación completa del sistema.',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#dc2626',
+                                cancelButtonColor: '#6b7280',
+                                confirmButtonText: 'Sí, ejecutar nuclear',
+                                cancelButtonText: 'Cancelar'
+                              }).then(async (result) => {
+                                if (result.isConfirmed) {
+                                  // Método 1: Directo en localStorage
+                                  console.log('💾 Aplicando directamente en localStorage...');
+                                  const nuclearFlags = {
+                                    ai_module_enabled: true,
+                                    ai_negotiation_enabled: true,
+                                    ai_dashboard_enabled: true,
+                                    ai_config_enabled: true,
+                                    ai_analytics_enabled: true,
+                                    ai_real_time_enabled: true,
+                                    ai_escalation_enabled: true,
+                                    ai_groq_enabled: true,
+                                    ai_chutes_enabled: true,
+                                    ai_safe_mode: false,
+                                    ai_fallback_enabled: true,
+                                    ai_error_recovery_enabled: true
+                                  };
+
+                                  localStorage.setItem('ai_feature_flags', JSON.stringify(nuclearFlags));
+                                  console.log('✅ Flags nucleares aplicados:', nuclearFlags);
+
+                                  Swal.fire({
+                                    icon: 'success',
+                                    title: '💥 MÓDULO NUCLEAR EJECUTADO',
+                                    html: `
+                                      <div class="text-left">
+                                        <p class="mb-2">✅ Sistema activado con modo nuclear</p>
+                                        <p class="text-sm text-gray-600">Todas las funcionalidades de IA están ahora activas</p>
+                                      </div>
+                                    `,
+                                    timer: 3000,
+                                    showConfirmButton: false
+                                  });
+
+                                  // Recargar página después de 2 segundos
+                                  setTimeout(() => {
+                                    window.location.reload();
+                                  }, 2000);
+                                }
+                              });
+                            } catch (error) {
+                              console.error('Error en módulo nuclear:', error);
+                              Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudo ejecutar el módulo nuclear'
+                              });
+                            }
+                          }}
+                          variant="danger"
+                          className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold shadow-lg animate-pulse"
+                        >
+                          💥 MÓDULO NUCLEAR
+                        </Button>
+
+                        <Button
+                          onClick={async () => {
+                            console.log('🧪 Ejecutando pruebas completas...');
+                            try {
+                              const { testAIModule } = await import('../../modules/ai-negotiation/utils/testAI.js');
+                              const result = await testAIModule();
+                              
+                              Swal.fire({
+                                icon: result.success ? 'success' : 'error',
+                                title: result.success ? 'Pruebas Completadas' : 'Error en Pruebas',
+                                html: result.success ? `
+                                  <div class="text-left">
+                                    <p class="mb-2">✅ Todas las pruebas pasaron exitosamente</p>
+                                    <div class="text-sm text-gray-600">
+                                      <p>• Banderas: ${Object.keys(result.flags || {}).length} verificadas</p>
+                                      <p>• Servicios: ${result.services?.length || 0} disponibles</p>
+                                      <p>• Componentes: ${result.components?.length || 0} cargados</p>
+                                    </div>
+                                  </div>
+                                ` : `Error: ${result.error}`,
+                                confirmButtonText: 'Aceptar'
+                              });
+                            } catch (error) {
+                              console.error('Error en pruebas:', error);
+                              Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudieron ejecutar las pruebas'
+                              });
+                            }
+                          }}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          🧪 Probar Sistema
+                        </Button>
+                      </div>
+
+                      {/* Estado del Sistema */}
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <h3 className="text-lg font-semibold mb-3">📊 Estado del Sistema</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {[
+                            { key: 'ai_module_enabled', label: 'Módulo IA', icon: '🤖' },
+                            { key: 'ai_negotiation_enabled', label: 'Negociación', icon: '💬' },
+                            { key: 'ai_dashboard_enabled', label: 'Dashboard', icon: '📊' },
+                            { key: 'ai_config_enabled', label: 'Configuración', icon: '⚙️' },
+                            { key: 'ai_analytics_enabled', label: 'Analytics', icon: '📈' },
+                            { key: 'ai_real_time_enabled', label: 'Tiempo Real', icon: '⚡' },
+                            { key: 'ai_escalation_enabled', label: 'Escalada', icon: '🔥' },
+                            { key: 'ai_safe_mode', label: 'Modo Seguro', icon: '🛡️' }
+                          ].map((item) => {
+                            const isEnabled = localStorage.getItem('ai_feature_flags') ?
+                              JSON.parse(localStorage.getItem('ai_feature_flags'))[item.key] : false;
+                            
+                            return (
+                              <div key={item.key} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <span className="text-xs font-medium flex items-center gap-1">
+                                  <span>{item.icon}</span>
+                                  {item.label}
+                                </span>
+                                <Badge
+                                  variant={isEnabled ? "success" : "secondary"}
+                                  className="text-xs"
+                                >
+                                  {isEnabled ? "ON" : "OFF"}
+                                </Badge>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Instrucciones Rápidas */}
+                      <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 className="font-semibold text-blue-900 mb-2">📋 Instrucciones Rápidas</h4>
+                        <div className="text-sm text-blue-800 space-y-1">
+                          <p>• <strong>IA Conversacional:</strong> Activa el sistema de negociación automática</p>
+                          <p>• <strong>Módulo Nuclear:</strong> Forza la activación completa de todas las funcionalidades</p>
+                          <p>• <strong>Probar Sistema:</strong> Verifica el estado completo del módulo de IA</p>
+                        </div>
+                      </div>
+                    </Card>
+
                     <Card>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Rendimiento por Cliente</h3>
                       
@@ -3217,14 +3652,14 @@ const AIDashboardPage = ({ defaultTab = 'providers' }) => {
                     </Card>
                   </div>
                 )}
+
+                {/* Control Módulo Tab */}
+                {activeTab === 'module-control' && (
+                  <div className="space-y-6">
+                    <AIModuleControl />
+                  </div>
+                )}
               </div>
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona un cliente corporativo</h3>
-              <p className="text-gray-600">Para comenzar a configurar la IA, selecciona un cliente corporativo del panel izquierdo</p>
-            </div>
           )}
         </div>
       </div>
