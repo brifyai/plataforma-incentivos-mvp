@@ -1125,7 +1125,7 @@ const DebtorDashboard = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-display font-bold text-white mb-1">
-                    💰 ¿Listo para ganar dinero extra?
+                    💰 ¿Listo para recibir dinero extra?
                   </h3>
                   <p className="text-white/90 text-sm leading-relaxed">
                     Registra tus deudas morosas y recibe <span className="font-bold text-yellow-300">{formatCurrency((safeStats.totalDebtAmount || 0) * 0.5)}</span> en comisiones por acuerdos exitosos

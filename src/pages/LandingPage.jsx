@@ -68,7 +68,7 @@ const LandingPage = () => {
   const features = [
     {
       icon: DollarSign,
-      title: "Gana Money Extra",
+      title: "Recibe Dinero Extra",
       description: "Recibe hasta el 50% de comisión solo por facilitar tu pago de deuda",
       gradient: "from-emerald-400 to-green-600"
     },
@@ -266,8 +266,8 @@ const LandingPage = () => {
           </h2>
 
           <p className="text-xl text-white mb-12 max-w-3xl mx-auto leading-relaxed">
-            La plataforma que <span className="font-semibold text-blue-400">facilita tus negociaciones de deuda</span> y te permite
-            <span className="font-semibold text-purple-400"> ganar dinero extra</span> por resolver tus compromisos.
+            La plataforma que <span className="font-semibold text-blue-400">facilita tus negociaciones de deuda en mora</span> y te permite
+            <span className="font-semibold text-purple-400"> obtener un dinero extra</span> por resolver tus compromisos de pago.
           </p>
 
           {/* Enhanced Stats */}
@@ -785,7 +785,7 @@ const LandingPage = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-10 transition-opacity duration-500"></div>
             <div className="relative z-10">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                ¿Listo para facilitar tus pagos y ganar dinero?
+                ¿Listo para facilitar tus pagos y recibir dinero?
               </h2>
 
               <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
