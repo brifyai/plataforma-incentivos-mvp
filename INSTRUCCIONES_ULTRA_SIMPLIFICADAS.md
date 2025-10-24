@@ -1,35 +1,34 @@
-# 🚨 **INSTRUCCIONES ULTRA SIMPLIFICADAS**
+# 🚨 **INSTRUCCIONES ULTRA SIMPLIFICADAS - CLIENTES CORPORATIVOS**
 
-## ⚠️ **PROBLEMA ACTUAL**
-Las columnas `client_id` y `corporate_client_id` AÚN NO EXISTEN en la base de datos.
+## ⚠️ **PROBLEMA CONFIRMADO**
+Las columnas `client_id` y `corporate_client_id` NO EXISTEN en la base de datos.
+- ❌ `debts.client_id` NO existe
+- ❌ `clients.corporate_client_id` NO existe
 
-## ✅ **SOLUCIÓN INMEDIATA**
+## ✅ **SOLUCIÓN INMEDIATA (2 PASOS)**
 
-### **PASO 1: Ir a Supabase**
-1. Abrir navegador: https://app.supabase.com
+### **📋 PASO 1: Ejecutar SQL en Supabase**
+1. Abrir: https://app.supabase.com
 2. Iniciar sesión
 3. Seleccionar proyecto: **wvluqdldygmgncqqjkow**
-4. Hacer clic en **"SQL Editor"** (menú lateral izquierdo)
+4. Ir a **"SQL Editor"** (menú izquierdo)
+5. Hacer clic en **"New query"**
+6. **COPIAR TODO EL CONTENIDO** del archivo: [`SQL_CLIENTES_CORPORATIVOS_FINAL.sql`](SQL_CLIENTES_CORPORATIVOS_FINAL.sql)
+7. Pegar en el editor SQL
+8. Hacer clic en **"Run"**
+9. ✅ Debe mostrar: "🎉 Fix aplicado exitosamente"
 
-### **PASO 2: Copiar y Ejecutar SQL**
-1. Hacer clic en **"New query"**
-2. Copiar **ESTE SQL EXACTO** (todo el contenido):
+### **🔍 PASO 2: Verificar que funcionó**
+1. Volver a la terminal
+2. Ejecutar: `node scripts/check-client-debt-structure.cjs`
+3. Debe mostrar "✅ SÍ" para ambas columnas
 
-```sql
--- Add client_id column to debts table
-ALTER TABLE debts ADD COLUMN client_id UUID REFERENCES clients(id);
-
--- Add corporate_client_id column to clients table  
-ALTER TABLE clients ADD COLUMN corporate_client_id UUID REFERENCES corporate_clients(id);
-
--- Create indexes
-CREATE INDEX idx_debts_client_id ON debts(client_id);
-CREATE INDEX idx_clients_corporate_client_id ON clients(corporate_client_id);
-```
-
-3. Pegar en el editor SQL
-4. Hacer clic en **"Run"**
-5. Esperar mensaje "Success"
+### **🚀 PASO 3: Probar la aplicación**
+1. Recargar: http://localhost:3002
+2. Iniciar sesión como empresa
+3. Ir a "Clientes"
+4. Agregar cliente corporativo
+5. ✅ Debe funcionar sin errores
 
 ### **PASO 3: Verificar**
 1. Volver a la terminal
