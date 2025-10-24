@@ -78,6 +78,7 @@ import NewMessagePage from '../pages/company/NewMessagePage';
 import CompanyNotificationsPage from '../pages/company/CompanyNotificationsPage';
 import NewDebtorPage from '../pages/company/NewDebtorPage';
 import ClientsPage from '../pages/company/ClientsPage';
+import CorporateClientsPage from '../pages/company/CorporateClientsPage';
 
 // Páginas de administrador
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -548,6 +549,16 @@ const AppContent = () => {
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
                 <NewDebtorPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empresa/clientes-corporativos"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <DashboardLayout>
+                <CorporateClientsPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

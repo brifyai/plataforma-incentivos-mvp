@@ -130,6 +130,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Dashboard', path: '/empresa/dashboard', icon: Home, description: 'Vista general' },
     { name: 'Perfil', path: '/empresa/perfil', icon: User, description: 'Editar perfil y verificación' },
     { name: 'Clientes', path: '/empresa/clientes', icon: Users, description: 'Gestión de deudores' },
+    { name: 'Clientes Corporativos', path: '/empresa/clientes-corporativos', icon: Building, description: 'Gestión de empresas corporativas' },
     { name: 'Propuestas', path: '/empresa/propuestas', icon: Users, description: 'Propuestas de pago' },
     { name: 'Transferencias', path: '/empresa/transferencias', icon: FileText, description: 'Transferencias bancarias' },
     { name: 'Crear Oferta', path: '/empresa/ofertas', icon: CreditCard, description: 'Crear ofertas de pago' },
