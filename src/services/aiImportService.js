@@ -150,48 +150,10 @@ class AIImportService {
     try {
       console.log('🔍 Analizando estructura de la base de datos...');
 
-      // Obtener estructura de tablas principales
-      const supabaseAdmin = getSupabaseInstance('admin');
-      let tables, columns;
-      
-      try {
-        const { data: tablesData, error: tablesError } = await supabaseAdmin
-          .from('information_schema.tables')
-          .select('table_name')
-          .eq('table_schema', 'public')
-          .in('table_name', ['users', 'debts', 'companies']);
-
-        if (tablesError) throw tablesError;
-        tables = tablesData;
-      } catch (schemaError) {
-        console.warn('⚠️ No se puede acceder a information_schema.tables, usando estructura por defecto:', schemaError.message);
-        // Retornar estructura por defecto si no hay permisos para information_schema
-        return this.getDefaultSchema();
-      }
-
-      const schema = {};
-
-      for (const table of tables) {
-        try {
-          const { data: columnsData, error: columnsError } = await supabaseAdmin
-            .from('information_schema.columns')
-            .select('column_name, data_type, is_nullable, column_default')
-            .eq('table_schema', 'public')
-            .eq('table_name', table.table_name);
-
-          if (columnsError) throw columnsError;
-          columns = columnsData;
-        } catch (columnError) {
-          console.warn(`⚠️ No se puede acceder a information_schema.columns para tabla ${table.table_name}, usando estructura por defecto:`, columnError.message);
-          // Retornar estructura por defecto si no hay permisos para information_schema
-          return this.getDefaultSchema();
-        }
-
-        schema[table.table_name] = columns;
-      }
-
-      console.log('✅ Estructura de base de datos analizada:', schema);
-      return schema;
+      // EVITAR information_schema que causa errores 404
+      // Usar estructura por defecto directamente
+      console.log('⚠️ Evitando acceso a information_schema por errores 404, usando estructura por defecto');
+      return this.getDefaultSchema();
     } catch (error) {
       console.warn('⚠️ Error analizando estructura de BD, usando estructura por defecto:', error.message);
       // Siempre retornar estructura por defecto como fallback

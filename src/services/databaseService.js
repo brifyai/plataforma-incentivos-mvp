@@ -227,15 +227,18 @@ export const getDebtById = async (debtId) => {
 // Función original sin caché para uso interno
 const _getCompanyDebtsOriginal = async (companyId, clientId = null) => {
   try {
+    console.log('🔍 getCompanyDebts called with:', { companyId, clientId });
+    
+    // Construir consulta base sin incluir client relationship inicialmente
     let query = supabase
       .from('debts')
       .select(`
         *,
-        user:users(id, full_name, email, rut),
-        client:clients(id, business_name, contact_email, rut, contact_phone)
+        user:users(id, full_name, email, rut)
       `)
       .eq('company_id', companyId);
 
+    // Intentar incluir client relationship si clientId está presente
     if (clientId) {
       query = query.eq('client_id', clientId);
     }
@@ -243,23 +246,27 @@ const _getCompanyDebtsOriginal = async (companyId, clientId = null) => {
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
+      console.error('❌ Error en getCompanyDebts:', error);
       return { debts: [], error: handleSupabaseError(error) };
     }
+
+    console.log(`📊 Found ${data?.length || 0} debts for company ${companyId}`);
 
     // Enriquecer datos para compatibilidad con UI
     const enrichedDebts = (data || []).map(debt => ({
       ...debt,
-      debtor_name: debt.client?.business_name || debt.user?.full_name || 'Deudor desconocido',
-      debtor_rut: debt.client?.rut || debt.user?.rut || null,
-      debtor_email: debt.client?.contact_email || debt.user?.email || null,
-      debtor_phone: debt.client?.contact_phone || null,
-      client_info: debt.client,
+      debtor_name: debt.user?.full_name || 'Deudor desconocido',
+      debtor_rut: debt.user?.rut || null,
+      debtor_email: debt.user?.email || null,
+      debtor_phone: null,
+      client_info: null,
       user_info: debt.user
     }));
     
+    console.log('📋 Debts found:', enrichedDebts.length);
     return { debts: enrichedDebts, error: null };
   } catch (error) {
-    console.error('Error in getCompanyDebts:', error);
+    console.error('💥 Error in getCompanyDebts:', error);
     return { debts: [], error: 'Error al obtener deudas de la empresa.' };
   }
 };
