@@ -1,31 +1,30 @@
-FROM denoland/deno:latest
+# Usar una imagen de Node.js para construir la aplicación
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Copiar archivos de configuración
+COPY package*.json ./
+COPY vite.config.js ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+
+# Instalar dependencias
+RUN npm ci
+
+# Copiar el código fuente
 COPY . .
 
-# Verificar la estructura de archivos
-RUN echo "=== Buscando archivos TypeScript/JavaScript ===" && \
-    find . -name "*.ts" -o -name "*.js" | head -20
+# Construir la aplicación
+RUN npm run build
 
-# Intentar diferentes archivos principales comunes
-RUN if [ -f "src/main.ts" ]; then \
-        echo "Encontrado src/main.ts" && deno cache src/main.ts; \
-    elif [ -f "main.ts" ]; then \
-        echo "Encontrado main.ts" && deno cache main.ts; \
-    elif [ -f "app.ts" ]; then \
-        echo "Encontrado app.ts" && deno cache app.ts; \
-    elif [ -f "src/app.ts" ]; then \
-        echo "Encontrado src/app.ts" && deno cache src/app.ts; \
-    elif [ -f "index.ts" ]; then \
-        echo "Encontrado index.ts" && deno cache index.ts; \
-    else \
-        echo "No se encontró archivo principal. Archivos disponibles:" && \
-        find . -name "*.ts" -o -name "*.js"; \
-        exit 1; \
-    fi
+# Usar un servidor web liviano para servir los archivos estáticos
+FROM nginx:alpine
 
-EXPOSE 8000
+# Copiar los archivos construidos
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# El CMD lo ajustaremos después de identificar el archivo
-CMD ["run", "--allow-net", "--allow-env", "src/main.ts"]
+# Exponer el puerto
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
