@@ -285,6 +285,18 @@ export const isFeatureEnabled = (feature, systemConfig = null) => {
 };
 
 // =============================================
+// EXPORTS DIRECTOS DE INTEGRACIONES
+// =============================================
+
+// Exportaciones directas para compatibilidad con servicios existentes
+export const {
+  MERCADO_PAGO_ENABLED,
+  MERCADO_PAGO_SANDBOX,
+  MERCADO_PAGO_PUBLIC_KEY,
+  MERCADO_PAGO_ACCESS_TOKEN,
+} = INTEGRATION_CONFIG;
+
+// =============================================
 // EXPORTS
 // =============================================
 
