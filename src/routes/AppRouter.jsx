@@ -432,7 +432,7 @@ const AppContent = () => {
           element={
             <ProtectedRoute allowedRoles={['company']}>
               <DashboardLayout>
-                <CompanyProfilePage />
+                <CorporateClientsPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
