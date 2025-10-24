@@ -17,7 +17,7 @@ export const useNotificationConfig = () => {
   const [notificationConfig, setNotificationConfig] = useState({
     emailService: {
       provider: 'sendgrid',
-      apiKey: '',
+      apiKey: import.meta.env.VITE_SENDGRID_API_KEY || '',
       fromEmail: 'noreply@plataforma.com',
       fromName: 'Plataforma de Cobranzas',
       smtpHost: '',
@@ -62,7 +62,7 @@ export const useNotificationConfig = () => {
             emailService: {
               ...prev.emailService,
               provider: config.email_provider || 'sendgrid',
-              apiKey: config.email_api_key || '',
+              apiKey: config.email_api_key || import.meta.env.VITE_SENDGRID_API_KEY || '',
               fromEmail: config.email_from_address || 'noreply@plataforma.com',
               fromName: config.email_from_name || 'Plataforma de Cobranzas',
               smtpHost: config.email_smtp_host || '',

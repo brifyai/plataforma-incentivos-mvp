@@ -9,11 +9,17 @@
 
 import axios from 'axios';
 import { supabase } from '@/config/supabase';
+import { MERCADO_PAGO_ACCESS_TOKEN, MERCADO_PAGO_PUBLIC_KEY } from '../../config/systemConfig';
 
 class MercadoPagoService {
   constructor() {
-    this.accessToken = import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN;
-    this.publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
+    // Prioridad: Variables de entorno > Configuración del sistema > Valores por defecto
+    this.accessToken = import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN ||
+                      MERCADO_PAGO_ACCESS_TOKEN ||
+                      'TEST-6067386116315126-100316-c4c8792007b0416b3669ebe53f17d2c5-2485402971';
+    this.publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY ||
+                    MERCADO_PAGO_PUBLIC_KEY ||
+                    'TEST-3a7fe3e8-44a8-475e-b203-aa815c2cbeb1';
     this.baseURL = 'https://api.mercadopago.com';
     this.sandboxMode = import.meta.env.VITE_MERCADOPAGO_SANDBOX === 'true';
   }

@@ -79,6 +79,8 @@ export const INTEGRATION_CONFIG = {
   // Mercado Pago
   MERCADO_PAGO_ENABLED: true,
   MERCADO_PAGO_SANDBOX: true,
+  MERCADO_PAGO_PUBLIC_KEY: import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY || 'TEST-3a7fe3e8-44a8-475e-b203-aa815c2cbeb1',
+  MERCADO_PAGO_ACCESS_TOKEN: import.meta.env.VITE_MERCADO_PAGO_ACCESS_TOKEN || 'TEST-6067386116315126-100316-c4c8792007b0416b3669ebe53f17d2c5-2485402971',
 
   // WhatsApp
   WHATSAPP_ENABLED: true,
@@ -87,6 +89,7 @@ export const INTEGRATION_CONFIG = {
   // Email (SendGrid)
   EMAIL_ENABLED: true,
   EMAIL_PROVIDER: 'sendgrid',
+  SENDGRID_API_KEY: import.meta.env.VITE_SENDGRID_API_KEY || 'your_sendgrid_api_key_here',
 
   // CRM
   CRM_ENABLED: false,
