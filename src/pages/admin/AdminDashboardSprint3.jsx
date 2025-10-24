@@ -143,7 +143,7 @@ const AdminDashboardSprint3 = () => {
     { id: 'reports', name: 'Reportes', icon: Download, sprint: 2 },
     { id: 'gamification', name: 'Gamificación', icon: Trophy, sprint: 2 },
     { id: 'performance', name: 'Rendimiento', icon: Zap, sprint: 1 },
-    { id: 'companies', name: 'Empresas', icon: Building, sprint: 1 },
+    { id: 'companies', name: 'Empresas Globales', icon: Building, sprint: 1 },
     { id: 'ai-assistant', name: 'Asistente IA', icon: Brain, sprint: 3 },
     { id: 'streaming', name: 'Streaming', icon: Database, sprint: 3 },
     { id: 'visualization', name: 'Visualización', icon: PieChart, sprint: 3 },
@@ -542,7 +542,7 @@ const AdminDashboardSprint3 = () => {
   const renderCompaniesView = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Empresas y Empresas Corporativas</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Empresas Globales y Empresas Corporativas</h2>
         <div className="flex items-center gap-2">
           <Badge variant="info" className="flex items-center gap-1">
             <Building className="w-3 h-3" />
@@ -563,8 +563,8 @@ const AdminDashboardSprint3 = () => {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Cargando Empresas</h3>
-            <p className="text-gray-600">Obteniendo datos de empresas y sus corporativas...</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Cargando Empresas Globales</h3>
+            <p className="text-gray-600">Obteniendo datos de empresas globales y sus corporativas...</p>
           </div>
         </div>
       ) : companiesError ? (
@@ -586,8 +586,8 @@ const AdminDashboardSprint3 = () => {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Building className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Hay Empresas Registradas</h3>
-            <p className="text-gray-600">No se encontraron empresas en el sistema.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Hay Empresas Globales Registradas</h3>
+            <p className="text-gray-600">No se encontraron empresas globales en el sistema.</p>
           </div>
         </Card>
       ) : (
@@ -602,7 +602,7 @@ const AdminDashboardSprint3 = () => {
                 <Badge variant="info">Total</Badge>
               </div>
               <h3 className="text-2xl font-bold text-gray-900">{companiesWithCorporates.length}</h3>
-              <p className="text-sm text-gray-600">Empresas</p>
+              <p className="text-sm text-gray-600">Empresas Globales</p>
             </Card>
 
             <Card className="p-6">

@@ -620,7 +620,7 @@ const CompanyVerificationDashboard = () => {
           <div className="space-y-6">
             {/* Company Info */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Información de la Empresa</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Información de la Empresa Global</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="font-medium">Empresa:</span> {selectedVerification.company?.company_name}

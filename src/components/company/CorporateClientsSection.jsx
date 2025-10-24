@@ -475,7 +475,7 @@ const CorporateClientsSection = ({ profile, onUpdate }) => {
             {/* Company Information */}
             <div className="space-y-3">
               <h5 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-1">
-                Información de la Empresa
+                Información de la Empresa Global
               </h5>
 
               <Input

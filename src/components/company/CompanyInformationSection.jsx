@@ -29,7 +29,7 @@ const CompanyInformationSection = ({
                   <Building className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Datos de la Empresa</h3>
+                  <h3 className="text-base font-bold text-gray-900">Datos de la Empresa Global</h3>
                   <p className="text-xs text-gray-600">Información legal y comercial</p>
                 </div>
               </div>

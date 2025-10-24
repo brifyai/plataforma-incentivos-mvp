@@ -548,7 +548,7 @@ const MessagesPage = () => {
                         </div>
                         <div>
                           <h3 className="font-bold text-secondary-900 font-display">{selectedConversation.company_name}</h3>
-                          <p className="text-sm text-secondary-600 font-medium">Empresa acreedora</p>
+                          <p className="text-sm text-secondary-600 font-medium">Empresa Global acreedora</p>
                         </div>
                         <div className="ml-auto flex items-center gap-2 px-3 py-1 bg-success-50 rounded-xl border border-success-200/50">
                           <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
