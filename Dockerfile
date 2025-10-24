@@ -2,15 +2,15 @@ FROM denoland/deno:latest
 
 WORKDIR /app
 
-# Copiar archivos de configuración primero
+# Copiar primero los archivos de configuración
 COPY deno.json deno.lock ./
 COPY src/ ./src/
 
-# Instalar dependencias y cachear
+# Cachear usando el archivo principal de tu app
+# CAMBIA "main.ts" por el nombre real de tu archivo principal
 RUN deno cache src/main.ts
 
-# Exponer puerto
 EXPOSE 8000
 
-# Comando para ejecutar
-CMD ["run", "--allow-net", "--allow-env", "src/main.ts"]
+# Comando para ejecutar (ajusta los permisos según necesites)
+CMD ["run", "--allow-net", "--allow-env", "--allow-read", "src/main.ts"]
