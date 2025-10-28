@@ -8,7 +8,7 @@ cmds = [
 ]
 
 [phases.start]
-cmds = ["npm run preview"]
+cmds = ["npm install", "npm run preview"]
 
 [start]
 cmd = "npm run preview"
