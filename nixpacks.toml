@@ -8,10 +8,10 @@ cmds = [
 ]
 
 [phases.start]
-cmds = ["npm install --production=false", "npx vite preview --host 0.0.0.0 --port 3000 --no-open"]
+cmds = ["npm install --production=false", "npm run preview"]
 
 [start]
-cmd = "npx vite preview --host 0.0.0.0 --port 3000 --no-open"
+cmd = "npm run preview"
 
 [variables]
 NODE_ENV = "production"
