@@ -1,17 +1,25 @@
-# Logs
-logs
-*.log
+# Dependencies
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencies
-node_modules
-dist
-dist-ssr
+# Build outputs
+dist/
+dist-ssr/
+build/
 *.local
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+.env.backup
 
 # Editor directories and files
 .vscode/*
@@ -24,21 +32,8 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment variables (excluyendo .env.test para pruebas)
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.production
-.env.backup
-
-# Build outputs
-build
-dist
-
 # Testing
-coverage
+coverage/
 **/*.test.js
 **/*.test.jsx
 **/*.test.ts
@@ -48,10 +43,95 @@ coverage
 **/test_*.ts
 **/test_*.tsx
 **/__tests__/
-**/scripts/test_*
-**/scripts/manual_test_*
 
-# Misc
+# Development and documentation files
+docs/
+dev-scripts/
+database/
+deployment/
+analysis/
+backup/
+examples/
+logs/
+
+# Scripts and temporary files
+scripts/*.cjs
+scripts/*.js
+*.sql
+*.md
+*.pdf
+*.json
+!package.json
+!package-lock.json
+
+# Cache and temp
+.cache/
+.parcel-cache/
+.eslintcache
+*.tmp
+*.temp
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
-.eslintcache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Vite
+.vite/

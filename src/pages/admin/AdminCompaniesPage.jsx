@@ -1,7 +1,7 @@
 /**
- * Admin Companies Management Page - Gestión de Empresas
+ * Admin Companies Management Page - Gestión de Empresas Globales
  *
- * Página administrativa para gestionar todas las empresas de cobranza
+ * Página administrativa para gestionar todas las empresas globales de cobranza
  */
 
 import { useState, useEffect } from 'react';
@@ -361,10 +361,10 @@ const AdminCompaniesPage = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-display font-bold tracking-tight">
-                  Gestión de Empresas
+                  Gestión de Empresas Globales
                 </h1>
                 <p className="text-primary-100 text-sm">
-                  Administra todas las empresas de cobranza registradas
+                  Administra todas las empresas globales de cobranza registradas
                 </p>
               </div>
             </div>
@@ -542,7 +542,7 @@ const AdminCompaniesPage = () => {
                 className="px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-w-[180px]"
               >
                 <option value="all">Todos</option>
-                <option value="collection_agency">Empresas de Cobranza</option>
+                <option value="collection_agency">Empresas Globales de Cobranza</option>
                 <option value="direct_creditor">Acreedor Directo</option>
               </select>
             </div>
@@ -571,7 +571,7 @@ const AdminCompaniesPage = () => {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-secondary-900">
-              Lista de Empresas ({filteredCompanies.length})
+              Lista de Empresas Globales ({filteredCompanies.length})
             </h2>
             <Button
               variant="outline"
@@ -592,7 +592,7 @@ const AdminCompaniesPage = () => {
             <div className="text-center py-12">
               <Building className="w-16 h-16 text-secondary-300 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-secondary-900 mb-2">
-                No se encontraron empresas
+                No se encontraron empresas globales
               </h3>
               <p className="text-secondary-600">
                 {searchTerm || filterStatus !== 'all' || filterType !== 'all'
@@ -826,7 +826,7 @@ const AdminCompaniesPage = () => {
           setShowEditModal(false);
           setSelectedCompany(null);
         }}
-        title="Editar Empresa"
+        title="Editar Empresa Global"
         size="lg"
       >
         <div className="space-y-6">
@@ -835,7 +835,7 @@ const AdminCompaniesPage = () => {
               <Edit className="w-12 h-12 text-green-600" />
             </div>
             <h3 className="text-xl font-bold text-secondary-900 mb-2">
-              Editar Empresa
+              Editar Empresa Global
             </h3>
             <p className="text-secondary-600">
               Modifique la información de la empresa
@@ -861,7 +861,7 @@ const AdminCompaniesPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-secondary-700 mb-2">
-                    Nombre de la Empresa *
+                    Nombre de la Empresa Global *
                   </label>
                   <Input
                     name="company_name"
@@ -905,7 +905,7 @@ const AdminCompaniesPage = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-secondary-700 mb-2">
-                    Tipo de Empresa
+                    Tipo de Empresa Global
                   </label>
                   <select
                     name="company_type"
@@ -913,7 +913,7 @@ const AdminCompaniesPage = () => {
                     className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   >
                     <option value="">Seleccionar tipo</option>
-                    <option value="collection_agency">Empresa de Cobranza</option>
+                    <option value="collection_agency">Empresa Global de Cobranza</option>
                     <option value="direct_creditor">Acreedor Directo</option>
                   </select>
                 </div>

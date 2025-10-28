@@ -8,7 +8,7 @@
  */
 
 import axios from 'axios';
-import { supabase } from '@/config/supabase';
+import { supabase } from '../../config/supabase';
 import { MERCADO_PAGO_ACCESS_TOKEN, MERCADO_PAGO_PUBLIC_KEY } from '../../config/systemConfig';
 
 class MercadoPagoService {
