@@ -4,7 +4,7 @@
  * Maneja el estado del tema (claro/oscuro) de la aplicación
  */
 
-import { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const ThemeContext = createContext({});

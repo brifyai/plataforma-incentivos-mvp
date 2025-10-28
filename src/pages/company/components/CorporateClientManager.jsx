@@ -90,8 +90,19 @@ const CorporateClientManager = ({ companyId }) => {
         segment_count: 0
       };
 
+      console.log('🔍 [CorporateClientManager] Datos que se van a enviar:', clientData);
+      console.log('🔍 [CorporateClientManager] companyId:', companyId);
+      console.log('🔍 [CorporateClientManager] newClient:', newClient);
+
       const result = await createCorporateClient(clientData);
-      if (result.error) throw result.error;
+      console.log('🔍 [CorporateClientManager] Resultado de createCorporateClient:', result);
+      
+      if (result.error) {
+        console.error('🔍 [CorporateClientManager] Error detallado:', result.error);
+        throw result.error;
+      }
+
+      console.log('🔍 [CorporateClientManager] Cliente creado exitosamente:', result.corporateClient);
 
       setShowCreateModal(false);
       setNewClient({
@@ -104,8 +115,10 @@ const CorporateClientManager = ({ companyId }) => {
 
       loadData();
     } catch (error) {
-      console.error('Error creating corporate client:', error);
-      alert('Error al crear cliente corporativo');
+      console.error('🔍 [CorporateClientManager] Error completo creating corporate client:', error);
+      console.error('🔍 [CorporateClientManager] Error message:', error.message);
+      console.error('🔍 [CorporateClientManager] Error details:', error.details);
+      alert(`Error al crear cliente corporativo: ${error.message || 'Error desconocido'}`);
     }
   };
 
