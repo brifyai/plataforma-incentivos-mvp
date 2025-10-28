@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_20"]
+nixPkgs = ["nodejs_22"]
 
 [phases.build]
 cmds = [
@@ -8,10 +8,10 @@ cmds = [
 ]
 
 [phases.start]
-cmds = ["npx vite preview --host 0.0.0.0 --port 3000"]
+cmds = ["npm run preview"]
 
 [start]
-cmd = "npx vite preview --host 0.0.0.0 --port 3000"
+cmd = "npm run preview"
 
 [variables]
 NODE_ENV = "production"
